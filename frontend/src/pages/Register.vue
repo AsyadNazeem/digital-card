@@ -167,6 +167,15 @@
             <span v-else>Create Account</span>
           </button>
 
+          <!-- Google Register -->
+          <div class="social-login">
+            <button class="google-btn" @click="handleGoogleRegister">
+              <img class="g-image" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+              Continue with Google
+            </button>
+          </div>
+
+
           <div v-if="message" class="message-box" :class="messageType">
             <svg v-if="messageType === 'error'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
@@ -211,6 +220,8 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
+import { googleOneTap } from 'google-one-tap'
+
 
 const router = useRouter()
 
@@ -247,6 +258,100 @@ watch(email, (newEmail) => {
     verifiedEmail.value = ''
   }
 })
+
+async function handleGoogleRegister() {
+  try {
+    loading.value = true;
+    message.value = "";
+
+    console.log("🔵 Starting Google Sign-In...");
+
+    // Load Google script dynamically
+    if (!window.google) {
+      console.log("🔵 Loading Google SDK...");
+      await new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.onload = resolve;
+        script.onerror = () => {
+          throw new Error("Failed to load Google SDK");
+        };
+        document.head.appendChild(script);
+      });
+      console.log("✅ Google SDK loaded");
+    }
+
+    const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    console.log("🔵 Google Client ID:", GOOGLE_CLIENT_ID);
+
+    if (!GOOGLE_CLIENT_ID) {
+      throw new Error("Google Client ID not configured");
+    }
+
+    const client = window.google.accounts.oauth2.initCodeClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: "openid email profile",
+      ux_mode: "popup",
+      callback: async (response) => {
+        try {
+          if (response.error) {
+            console.error("❌ Google OAuth error:", response.error);
+            throw new Error(response.error);
+          }
+
+          if (!response.code) {
+            throw new Error("No authorization code received");
+          }
+
+          console.log("✅ Got authorization code from Google");
+          console.log("🔵 Sending to backend...");
+
+          const res = await api.post("/auth/google-register", {
+            code: response.code
+          });
+
+          console.log("✅ Backend response:", res.data);
+
+          if (res.data.success && res.data.token) {
+            // Store JWT token
+            localStorage.setItem("token", res.data.token);
+
+            // Store user info if needed
+            if (res.data.user) {
+              localStorage.setItem("user", JSON.stringify(res.data.user));
+            }
+
+            messageType.value = "success";
+            message.value = "Successfully signed in with Google!";
+
+            // Redirect after a short delay
+            setTimeout(() => {
+              router.push("/dashboard");
+            }, 1000);
+          } else {
+            throw new Error("Invalid response from server");
+          }
+
+        } catch (err) {
+          console.error("❌ Callback error:", err);
+          messageType.value = "error";
+          message.value = err.response?.data?.message || "Google Sign-In failed. Please try again.";
+        } finally {
+          loading.value = false;
+        }
+      },
+    });
+
+    console.log("🔵 Requesting authorization code...");
+    client.requestCode();
+
+  } catch (err) {
+    console.error("❌ Google Register Error:", err);
+    messageType.value = "error";
+    message.value = err.message || "Google Sign-In failed. Please try again.";
+    loading.value = false;
+  }
+}
 
 // Send OTP
 async function sendOtp() {
@@ -482,6 +587,43 @@ async function register() {
 
 .verify-button:disabled {
   background-color: #9ca3af; /* Disabled gray */
+  cursor: not-allowed;
+}
+/* Google Button */
+.social-login-top {
+  margin-bottom: 0.5rem;
+}
+
+.g-image{
+  width: 18px;
+}
+
+.google-btn {
+  width: 100%;
+  padding: 0.875rem;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.2s;
+}
+
+.google-btn:hover:not(:disabled) {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.google-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 

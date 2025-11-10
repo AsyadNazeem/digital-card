@@ -15,9 +15,7 @@ import adminAuthRoutes from "./routes/adminAuth.js";
 import adminRoutes from "./routes/admin.js";
 import otpRoutes from "./routes/otp.js";
 import settingsRoutes from "./routes/settings.js";
-
-
-
+import googleAuthRoutes from "./routes/auth.js"; // if you added it there
 
 
 
@@ -37,7 +35,7 @@ app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/otp", otpRoutes);
 app.use("/api/settings", settingsRoutes);
-
+app.use("/api/auth", googleAuthRoutes);
 
 app.get("/", (req, res) => {
     res.send("🚀 Express backend is running!");
