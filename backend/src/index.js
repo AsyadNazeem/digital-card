@@ -13,6 +13,10 @@ import publicRoutes from "./routes/public.js";
 import Admin from "./models/Admin.js";
 import adminAuthRoutes from "./routes/adminAuth.js";
 import adminRoutes from "./routes/admin.js";
+import otpRoutes from "./routes/otp.js";
+import settingsRoutes from "./routes/settings.js";
+
+
 
 
 
@@ -31,6 +35,8 @@ app.use("/api/public", publicRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/otp", otpRoutes);
+app.use("/api/settings", settingsRoutes);
 
 
 app.get("/", (req, res) => {

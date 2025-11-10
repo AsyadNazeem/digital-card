@@ -48,9 +48,50 @@
                   class="form-input"
                   placeholder="Enter your email"
                   required
+                  :disabled="otpSent && !otpVerified"
               />
+              <button
+                  v-if="!otpVerified"
+                  type="button"
+                  class="send-otp-button"
+                  @click="sendOtp"
+                  :disabled="sendingOtp"
+              >
+                <span v-if="!sendingOtp">Verify Email</span>
+                <span v-else>Sending...</span>
+              </button>
+
+              <span v-if="otpVerified" class="otp-send-btn verified-icon">✅</span>
             </div>
+
+            <!-- OTP Field -->
+            <div v-if="otpSent && !otpVerified" class="otp-field">
+              <label class="form-label">Enter OTP</label>
+              <div class="input-wrapper">
+                <input
+                    v-model="otp"
+                    type="text"
+                    class="form-input"
+                    placeholder="Enter OTP"
+                />
+                <button
+                    type="button"
+                    class="verify-button"
+                    @click="verifyOtp"
+                    :disabled="verifyingOtp"
+                >
+                  <span v-if="!verifyingOtp">Verify OTP</span>
+                  <span v-else>Verifying...</span>
+                </button>
+
+              </div>
+            </div>
+
+            <p v-if="otpMessage" :class="['otp-message', otpVerified ? 'success' : 'error']">
+              {{ otpMessage }}
+            </p>
           </div>
+
 
           <div class="form-group">
             <label class="form-label">Phone Number</label>
@@ -167,25 +208,129 @@
 </template>
 
 <script setup>
-import {ref, computed} from 'vue'
-import {useRouter} from 'vue-router'
+import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '../services/api'
 
 const router = useRouter()
+
+// Form fields
 const name = ref('')
 const email = ref('')
 const phone = ref('')
 const password = ref('')
+
+// UI states
 const message = ref('')
 const messageType = ref('error')
 const showPassword = ref(false)
 const agreeTerms = ref(false)
 const loading = ref(false)
 
-// Password strength indicator
+// OTP states
+const otp = ref('')
+const otpSent = ref(false)
+const otpVerified = ref(false)
+const otpMessage = ref('')
+const sendingOtp = ref(false)
+const verifyingOtp = ref(false)
+const verifiedEmail = ref('') // ✅ Track which email was verified
+
+// ✅ FIXED: Only reset OTP if email actually changes from verified email
+watch(email, (newEmail) => {
+  // Only reset if the email is different from the one that was verified
+  if (otpVerified.value && newEmail.trim() !== verifiedEmail.value) {
+    otpVerified.value = false
+    otpSent.value = false
+    otp.value = ''
+    otpMessage.value = 'Email changed. Please verify your new email.'
+    verifiedEmail.value = ''
+  }
+})
+
+// Send OTP
+async function sendOtp() {
+  const emailValue = email.value.trim()
+
+  if (!emailValue) {
+    otpMessage.value = "Enter your email first!"
+    return
+  }
+
+  try {
+    sendingOtp.value = true
+    otpMessage.value = ''
+
+    const res = await api.post('/otp/send', { email: emailValue })
+
+    otpSent.value = true
+    message.value = ''
+    otpMessage.value = res.data.message || "OTP sent successfully! Check your email."
+  } catch (err) {
+    console.error('Send OTP error:', err)
+    otpMessage.value = err.response?.data?.message || "Failed to send OTP. Please check the email address."
+  } finally {
+    sendingOtp.value = false
+  }
+}
+
+// Verify OTP
+async function verifyOtp() {
+  const otpValue = otp.value.trim()
+  const emailValue = email.value.trim()
+
+  if (!otpValue) {
+    otpMessage.value = "Enter the OTP!"
+    return
+  }
+
+  try {
+    verifyingOtp.value = true
+    otpMessage.value = ''
+
+    console.log('📤 Sending OTP verification request:', { email: emailValue, otp: otpValue })
+
+    const res = await api.post('/otp/verify', {
+      email: emailValue,
+      otp: otpValue,
+    })
+
+    console.log('📥 OTP Verify Full Response:', res) // Full response object
+    console.log('📥 OTP Verify Response Data:', res.data) // Just the data
+    console.log('📥 Success value:', res.data.success)
+    console.log('📥 Success type:', typeof res.data.success)
+    console.log('📥 OTP Verify Response:', res.data);
+    console.log('📥 OTP Verify success value:', res.data.success);
+    console.log('📥 OTP Verify status:', res.status);
+
+
+    // Check multiple conditions
+    if (res.data && (res.data.success === true || res.data.success === 'true')) {
+      console.log('✅ Setting otpVerified to TRUE')
+      otpVerified.value = true
+      verifiedEmail.value = emailValue
+      otpMessage.value = res.data.message || "✅ Email verified successfully!"
+      console.log('✅ otpVerified is now TRUE')
+    } else {
+      console.log('❌ OTP verification failed:', res.data)
+      otpVerified.value = false
+      otpMessage.value = res.data?.message || "Invalid OTP."
+    }
+  } catch (err) {
+    console.error('❌ Verify OTP error:', err)
+    console.error('❌ Error response:', err.response)
+    otpVerified.value = false
+    otpMessage.value = err.response?.data?.message || "Invalid OTP or Server Error."
+  } finally {
+    verifyingOtp.value = false
+    console.log('🏁 Final otpVerified state:', otpVerified.value)
+  }
+}
+
+// Password Strength
 const passwordStrength = computed(() => {
   const pwd = password.value
-  if (!pwd) return {class: '', width: '0%', text: ''}
+  if (!pwd) return { class: '', width: '0%', text: '' }
 
   let strength = 0
   if (pwd.length >= 8) strength++
@@ -194,16 +339,44 @@ const passwordStrength = computed(() => {
   if (/\d/.test(pwd)) strength++
   if (/[^A-Za-z0-9]/.test(pwd)) strength++
 
-  if (strength <= 2) {
-    return {class: 'weak', width: '33%', text: 'Weak password'}
-  } else if (strength <= 4) {
-    return {class: 'medium', width: '66%', text: 'Medium strength'}
-  } else {
-    return {class: 'strong', width: '100%', text: 'Strong password'}
-  }
+  if (strength <= 2) return { class: 'weak', width: '33%', text: 'Weak password' }
+  if (strength <= 4) return { class: 'medium', width: '66%', text: 'Medium strength' }
+  return { class: 'strong', width: '100%', text: 'Strong password' }
 })
 
+// Register user (requires verified OTP)
 async function register() {
+  console.log('Register clicked. OTP Verified:', otpVerified.value) // ✅ Debug log
+
+  // 1. Check all fields are filled
+  if (!name.value.trim() || !email.value.trim() || !phone.value.trim() || !password.value.trim()) {
+    messageType.value = 'error'
+    message.value = 'Please fill out all required fields (Name, Email, Phone, Password).'
+    return
+  }
+
+  // 2. Check password strength
+  if (passwordStrength.value.class === 'weak') {
+    messageType.value = 'error'
+    message.value = 'Please choose a stronger password.'
+    return
+  }
+
+  // 3. Check OTP verification status
+  if (!otpVerified.value) {
+    messageType.value = 'error'
+    message.value = 'Please verify your email address before registering.'
+    return
+  }
+
+  // 4. Ensure email hasn't changed since verification
+  if (email.value.trim() !== verifiedEmail.value) {
+    messageType.value = 'error'
+    message.value = 'Email has changed. Please verify your new email address.'
+    otpVerified.value = false
+    return
+  }
+
   if (loading.value || !agreeTerms.value) return
 
   try {
@@ -211,10 +384,10 @@ async function register() {
     message.value = ''
 
     const res = await api.post('/auth/register', {
-      name: name.value,
-      email: email.value,
-      phone: phone.value,
-      password: password.value,
+      name: name.value.trim(),
+      email: email.value.trim(),
+      phone: phone.value.trim(),
+      password: password.value.trim(),
     })
 
     messageType.value = 'success'
@@ -224,6 +397,7 @@ async function register() {
       router.push('/login')
     }, 2000)
   } catch (err) {
+    console.error("Registration error:", err)
     messageType.value = 'error'
     message.value = err.response?.data?.message || 'Registration failed. Please try again.'
   } finally {
@@ -231,6 +405,7 @@ async function register() {
   }
 }
 </script>
+
 
 <style scoped>
 * {
@@ -252,6 +427,62 @@ async function register() {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.verify-button {
+  background-color: #2563eb; /* Blue */
+  color: #ffffff; /* White text */
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.verify-button:hover:not(:disabled) {
+  background-color: #000000; /* Black on hover */
+  color: #ffffff; /* White text stays */
+}
+
+.send-otp-button {
+  background-color: #2563eb; /* Blue */
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.25s;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.send-otp-button:hover:not(:disabled) {
+  background-color: #000000; /* Hover Black */
+  color: white;
+}
+
+.send-otp-button:disabled {
+  background-color: #9ca3af; /* Disabled Gray */
+  cursor: not-allowed;
+}
+
+.verified-email-icon {
+  margin-left: 8px;
+  font-size: 20px;
+  color: #22c55e; /* Green */
+}
+
+
+.verify-button:disabled {
+  background-color: #9ca3af; /* Disabled gray */
+  cursor: not-allowed;
 }
 
 /* Header */
@@ -285,6 +516,33 @@ async function register() {
   color: rgba(255, 255, 255, 0.9);
   margin: 0;
 }
+
+.otp-send-btn, .otp-verify-btn {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.otp-field {
+  margin-top: 1rem;
+}
+
+.otp-message {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.otp-message.success {
+  color: #16a34a;
+}
+
+.otp-message.error {
+  color: #dc2626;
+}
+
 
 /* Card */
 .auth-card {
