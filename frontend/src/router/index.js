@@ -3,6 +3,8 @@ import Login from '../pages/Login.vue';
 import Register from '../pages/Register.vue';
 import Dashboard from '../pages/Dashboard.vue';
 import PublicCard from '../pages/PublicCard.vue';
+import AdminLogin from '../pages/AdminLogin.vue';
+import AdminDashboard from '../pages/AdminDashboard.vue';
 
 const routes = [
     { path: '/', redirect: '/login' },
@@ -10,6 +12,21 @@ const routes = [
     { path: '/register', component: Register },
     { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true } },
     { path: '/card/:phone', component: PublicCard },
+
+    { path: '/admin/login', component: AdminLogin },
+    { path: '/admin', component: AdminDashboard, meta: { requiresAdmin: true } },
+
+    {
+        path: "/admin/login",
+        name: "AdminLogin",
+        component: AdminLogin,
+    },
+    {
+        path: "/admin/dashboard",
+        name: "AdminDashboard",
+        component: AdminDashboard,
+        meta: { requiresAdminAuth: true }, // ✅ Protected route
+    },
 ];
 
 const router = createRouter({
@@ -30,6 +47,10 @@ router.beforeEach((to, from, next) => {
     } else {
         next();
     }
+
+    const adminToken = localStorage.getItem('admin_token');
+    if (to.meta.requiresAdmin && !adminToken) return next('/admin/login');
+    next();
 });
 
 export default router;

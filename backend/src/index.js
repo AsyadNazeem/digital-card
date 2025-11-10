@@ -10,6 +10,12 @@ import dashboardRoutes from "./routes/dashboard.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import publicRoutes from "./routes/public.js";
+import Admin from "./models/Admin.js";
+import adminAuthRoutes from "./routes/adminAuth.js";
+import adminRoutes from "./routes/admin.js";
+
+
+
 
 dotenv.config();
 
@@ -23,6 +29,9 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/public", publicRoutes);
 // Serve uploaded images
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/api/admin/auth", adminAuthRoutes);
+app.use("/api/admin", adminRoutes);
+
 
 app.get("/", (req, res) => {
     res.send("🚀 Express backend is running!");
@@ -34,7 +43,7 @@ async function startServer() {
         console.log("✅ Database connected successfully");
 
         // 🔥 THIS LINE CREATES TABLES AUTOMATICALLY
-        await sequelize.sync({ alter: true });
+        await sequelize.sync();
         console.log("✅ Tables synchronized");
 
         const PORT = process.env.PORT || 4000;

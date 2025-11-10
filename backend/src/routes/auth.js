@@ -2,7 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-
+import { authenticateToken } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 // ✅ REGISTER ROUTE
@@ -71,5 +71,20 @@ router.post("/login", async (req, res) => {
         res.status(500).json({ message: "Server error during login" });
     }
 });
+
+router.get("/me", authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findByPk(req.user.id, {
+            attributes: ["id", "name", "email", "phone"],
+        });
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+        res.json(user);
+    } catch (err) {
+        console.error("Error fetching user profile:", err);
+        res.status(500).json({ message: "Error fetching user info" });
+    }
+});
+
 
 export default router;

@@ -387,11 +387,11 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Mobile <span class="required">*</span></label>
-                <input v-model="contactForm.mobile" type="tel" class="form-input" required />
+                <input v-model="contactForm.mobile" type="tel" class="form-input" readonly />
               </div>
               <div class="form-group">
                 <label class="form-label">Email <span class="required">*</span></label>
-                <input v-model="contactForm.email" type="email" class="form-input" required />
+                <input v-model="contactForm.email" type="email" class="form-input" readonly />
               </div>
               <div class="form-group">
                 <label class="form-label">Designation <span class="required">*</span></label>
@@ -473,6 +473,12 @@ const contactForm = ref({
   status: "active",
 });
 
+const user = ref({
+  email: "",
+  phone: ""
+});
+
+
 // Social Media
 const mainSocialMedia = ref([
   { name: 'facebook', label: 'Facebook', enabled: false, url: '' },
@@ -549,15 +555,29 @@ function removeCustomSocial(index) {
 
 async function loadData() {
   try {
+    // Fetch dashboard data
     const res = await api.get("/dashboard/data", {
-      headers: {Authorization: `Bearer ${token}`},
+      headers: { Authorization: `Bearer ${token}` },
     });
     company.value = res.data.company;
     contacts.value = res.data.contacts;
+
+    // Fetch logged-in user info
+    const userRes = await api.get("/auth/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    user.value.email = userRes.data.email;
+    user.value.phone = userRes.data.phone;
+
+    // Pre-fill contact form
+    contactForm.value.email = user.value.email;
+    contactForm.value.mobile = user.value.phone;
+
   } catch (err) {
     console.error("❌ Load dashboard error:", err);
   }
 }
+
 
 async function saveCompany() {
   try {
