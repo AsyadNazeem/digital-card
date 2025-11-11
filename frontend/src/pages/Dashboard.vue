@@ -394,13 +394,21 @@
                 <input v-model="contactForm.lastName" type="text" class="form-input" required/>
               </div>
               <div class="form-group">
-                <label class="form-label">Telephone</label>
-                <input v-model="contactForm.telephone" type="tel" class="form-input"/>
+                <label>Telephone</label>
+                <div class="phone-input-group">
+                  <CountryCodeDropdown v-model="telephoneCountryCode"/>
+                  <input v-model="contactForm.telephone" type="tel" class="form-input"/>
+                </div>
               </div>
+
               <div class="form-group">
-                <label class="form-label">Mobile <span class="required">*</span></label>
-                <input v-model="contactForm.mobile" type="tel" class="form-input" readonly/>
+                <label>Mobile</label>
+                <div class="phone-input-group">
+                  <CountryCodeDropdown v-model="mobileCountryCode"/>
+                  <input v-model="contactForm.mobile" type="tel" class="form-input"/>
+                </div>
               </div>
+
               <div class="form-group">
                 <label class="form-label">Email <span class="required">*</span></label>
                 <input v-model="contactForm.email" type="email" class="form-input" readonly/>
@@ -409,10 +417,27 @@
                 <label class="form-label">Designation <span class="required">*</span></label>
                 <input v-model="contactForm.designation" type="text" class="form-input" required/>
               </div>
+
               <div class="form-group">
                 <label class="form-label">Company</label>
-                <input v-model="contactForm.company" type="text" class="form-input"/>
+                <select v-model="contactForm.company" class="form-input">
+                  <option disabled value="">Select a company</option>
+                  <option
+                      v-for="company in userCompanies"
+                      :key="company.id"
+                      :value="company.companyName"
+                  >
+                    {{ company.companyName }}
+                  </option>
+                </select>
+
+                <!-- Optional: Add note if no active companies -->
+                <p v-if="userCompanies.length === 0" class="no-companies-note">
+                  ⚠️ You don’t have any active companies. Please activate or create one first.
+                </p>
               </div>
+
+
               <div class="form-group">
                 <label class="form-label">Status <span class="required">*</span></label>
                 <select v-model="contactForm.status" class="form-input" required>
@@ -634,14 +659,58 @@
           </div>
         </div>
       </transition>
+
+      <!-- Force Phone Modal -->
+      <transition name="modal">
+        <div v-if="showPhonePopup" class="phone-popup-overlay">
+          <div class="phone-popup-container">
+            <div class="phone-popup-header">
+              <h2 class="phone-popup-title">Add Your Phone Number</h2>
+              <p class="phone-popup-description">
+                Please provide your phone number to access your dashboard. This step is mandatory.
+              </p>
+            </div>
+
+            <form class="phone-popup-form" @submit.prevent="submitPhone">
+              <div class="phone-form-group">
+
+                <label class="phone-form-label">Phone Number</label>
+                <div class="phone-input-group">
+                  <CountryCodeDropdown v-model="CountryCode"/>
+                  <input
+                      v-model="phoneNumber"
+                      maxlength="10"
+                      type="tel"
+                      placeholder="Enter 10-digit number"
+                      class="phone-form-input"
+                  />
+                </div>
+              </div>
+
+
+              <button
+                  type="submit"
+                  class="phone-submit-btn"
+                  :disabled="loading"
+              >
+                {{ loading ? "Saving..." : "Save & Continue" }}
+              </button>
+
+              <p v-if="errorMsg" class="phone-error-message">{{ errorMsg }}</p>
+            </form>
+          </div>
+        </div>
+      </transition>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import {onMounted, ref} from "vue";
+import {computed, nextTick, onMounted, onUnmounted, ref} from 'vue'
 import api from "../services/api";
 import {useRouter} from 'vue-router';
+import CountryCodeDropdown from '../components/CountryCodeDropdown.vue'
 
 const passwordForm = ref({
   current: '',
@@ -649,6 +718,13 @@ const passwordForm = ref({
   confirm: ''
 });
 
+const userCompanies = ref([]) // holds the list of companies
+
+const showPhonePopup = ref(false);
+const phoneNumber = ref("");
+const countryCode = ref("+94");
+const errorMsg = ref("");
+const loading = ref(false);
 
 const passwordMessage = ref('');
 const passwordSuccess = ref(false);
@@ -724,6 +800,9 @@ const mainSocialMedia = ref([
   {name: 'tiktok', label: 'TikTok', enabled: false, url: ''}
 ]);
 
+const telephoneCountryCode = ref('+94')
+const mobileCountryCode = ref('+94')
+
 const customSocialMedia = ref([]);
 
 // Image Upload States
@@ -732,8 +811,25 @@ const logoFileName = ref('');
 const photoPreview = ref(null);
 const photoFileName = ref('');
 
-
 const token = localStorage.getItem("token");
+
+async function loadUserCompanies() {
+  try {
+    const res = await api.get('/dashboard/companies', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    userCompanies.value = res.data || [];
+  } catch (err) {
+    console.error("❌ Failed to load companies:", err);
+    userCompanies.value = [];
+  }
+}
+
+onMounted(() => {
+  loadUserCompanies();
+});
+
 
 function logout() {
   localStorage.removeItem('token');
@@ -742,6 +838,48 @@ function logout() {
 
 function openSettings() {
   showSettings.value = true;
+}
+
+onMounted(async () => {
+  try {
+    const res = await api.get("/auth/me", {
+      headers: {Authorization: `Bearer ${token}`},
+    });
+
+    if (!res.data.phone || res.data.phone === "") {
+      showPhonePopup.value = true; // Force popup
+    }
+  } catch (err) {
+    console.error("Error checking phone:", err);
+  }
+});
+
+async function submitPhone() {
+  if (!/^\d{10}$/.test(phoneNumber.value)) {
+    errorMsg.value = "Please enter a valid 10-digit phone number.";
+    return;
+  }
+
+  try {
+    loading.value = true;
+    const res = await api.post(
+        "/settings/add-phone",
+        {
+          countryCode: countryCode.value,
+          phone: phoneNumber.value,
+        },
+        {
+          headers: {Authorization: `Bearer ${token}`},
+        }
+    );
+
+    alert(res.data.message || "Phone number saved!");
+    showPhonePopup.value = false;
+  } catch (err) {
+    errorMsg.value = err.response?.data?.message || "Failed to save phone number.";
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function updateUsername() {
@@ -1069,12 +1207,17 @@ async function saveContact() {
       }
     });
 
+    formData.append('telephoneCountryCode', telephoneCountryCode.value);
+    formData.append('mobileCountryCode', mobileCountryCode.value);
+
+
     const res = await api.post("/dashboard/contact", formData, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'multipart/form-data'
       },
     });
+
     alert(res.data.message);
     showContactForm.value = false;
     loadData();
@@ -1143,6 +1286,329 @@ onMounted(loadData);
   color: white;
   font-size: 0.875rem;
   font-weight: 500;
+}
+
+/* Phone Popup Modal */
+.phone-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.phone-popup-container {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 480px;
+  width: 100%;
+  padding: 2rem;
+  animation: modalSlideUp 0.3s ease-out;
+  position: relative;
+}
+
+.phone-popup-header {
+  margin-bottom: 1.5rem;
+}
+
+.phone-popup-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem 0;
+}
+
+.phone-popup-description {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.phone-popup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.phone-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.phone-form-select,
+.phone-form-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-family: inherit;
+}
+
+.phone-form-select:focus,
+.phone-form-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.phone-form-select {
+  cursor: pointer;
+}
+
+.phone-form-input::placeholder {
+  color: #94a3b8;
+}
+
+.phone-submit-btn {
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  margin-top: 0.5rem;
+}
+
+.phone-submit-btn:hover:not(:disabled) {
+  background: #4338ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.phone-submit-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.phone-error-message {
+  font-size: 0.875rem;
+  color: #ef4444;
+  text-align: center;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #fee2e2;
+  border-radius: 0.5rem;
+  border: 1px solid #fecaca;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .phone-popup-container {
+    padding: 1.5rem;
+  }
+
+  .phone-popup-title {
+    font-size: 1.25rem;
+  }
+
+  .phone-popup-description {
+    font-size: 0.8125rem;
+  }
+}
+
+.phone-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+/* Country Dropdown Styles */
+.country-dropdown-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.country-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
+  user-select: none;
+}
+
+.country-trigger:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.selected-country {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.dropdown-arrow.rotate {
+  transform: rotate(180deg);
+}
+
+.country-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 320px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.search-box {
+  position: relative;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.country-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.country-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.country-item:last-child {
+  border-bottom: none;
+}
+
+.country-item:hover {
+  background: #f8fafc;
+}
+
+.country-item.active {
+  background: #eef2ff;
+  border-left: 3px solid #4f46e5;
+}
+
+.country-flag {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.country-name {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #0f172a;
+}
+
+.country-code {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.no-results {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.phone-number-input {
+  flex: 1;
+}
+
+/* Dropdown transition */
+.dropdown-slide-enter-active,
+.dropdown-slide-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-slide-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.dropdown-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+/* Scrollbar styling */
+.country-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.country-list::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.country-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.country-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .btn-settings {

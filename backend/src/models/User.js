@@ -22,14 +22,27 @@ const User = sequelize.define(
                 isEmail: true,
             },
         },
+        countryCode: {
+            type: DataTypes.STRING(5),
+            allowNull: true,
+        },
         phone: {
-            type: DataTypes.STRING,
-            allowNull: true,  // ✅ Allow null for Google users
-            defaultValue: "",
+            type: DataTypes.STRING(10),
+            allowNull: true,  // ✅ Allow null
+            validate: {
+                // ✅ FIXED: Only validate if phone is provided and not empty
+                isValidPhone(value) {
+                    if (value && value.trim() !== '') {
+                        if (!/^[0-9]{10}$/.test(value)) {
+                            throw new Error('Phone must be exactly 10 digits');
+                        }
+                    }
+                }
+            },
         },
         password: {
             type: DataTypes.STRING,
-            allowNull: true,  // ✅ CRITICAL: Allow null for Google users
+            allowNull: true,  // ✅ Allow null for Google users
             defaultValue: null,
         },
         googleId: {

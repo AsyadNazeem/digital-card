@@ -95,19 +95,96 @@
 
           <div class="form-group">
             <label class="form-label">Phone Number</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            <div class="input-wrapper phone-input-group">
+              <svg
+                  class="input-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+              >
+                <path
+                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                ></path>
               </svg>
+
+              <!-- ✅ Searchable Country Code Dropdown -->
+              <div class="country-dropdown-wrapper" ref="dropdownRef">
+                <div class="country-trigger" @click="toggleDropdown">
+                  <span class="selected-country">{{ selectedCountry?.name || '+94' }}</span>
+                  <svg
+                      class="dropdown-arrow"
+                      :class="{ 'rotate': isDropdownOpen }"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <transition name="dropdown-slide">
+                  <div v-if="isDropdownOpen" class="country-dropdown-menu" @click="handleDropdownClick">
+                    <div class="search-box">
+                      <svg
+                          class="search-icon"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                      >
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                      </svg>
+                      <input
+                          ref="searchInputRef"
+                          v-model="searchQuery"
+                          type="text"
+                          class="search-input"
+                          placeholder="Search country..."
+                      />
+                    </div>
+
+                    <div class="country-list">
+                      <div
+                          v-for="country in filteredCountries"
+                          :key="country.code + country.name"
+                          class="country-item"
+                          :class="{ active: country.code === countryCode }"
+                          @click="selectCountry(country)"
+                      >
+                        <span class="country-flag">{{ country.flag }}</span>
+                        <span class="country-name">{{ country.fullName }}</span>
+                        <span class="country-code">{{ country.code }}</span>
+                      </div>
+
+                      <div v-if="filteredCountries.length === 0" class="no-results">
+                        No countries found
+                      </div>
+                    </div>
+                  </div>
+                </transition>
+              </div>
+
+              <!-- 📱 Phone Input -->
               <input
                   v-model="phone"
                   type="tel"
-                  class="form-input"
+                  class="form-input phone-number-input"
                   placeholder="Enter your phone number"
                   required
               />
             </div>
           </div>
+
 
           <div class="form-group">
             <label class="form-label">Password</label>
@@ -214,18 +291,19 @@
       </div>
     </div>
   </div>
+
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
-import { googleOneTap } from 'google-one-tap'
-
+import countriesData from '../assets/country_code.json' // ✅ Import JSON file
 
 const router = useRouter()
 
 // Form fields
+const countryCode = ref("+94");
 const name = ref('')
 const email = ref('')
 const phone = ref('')
@@ -245,7 +323,86 @@ const otpVerified = ref(false)
 const otpMessage = ref('')
 const sendingOtp = ref(false)
 const verifyingOtp = ref(false)
-const verifiedEmail = ref('') // ✅ Track which email was verified
+const verifiedEmail = ref('')
+
+// ✅ Country dropdown states
+const isDropdownOpen = ref(false)
+const searchQuery = ref('')
+const dropdownRef = ref(null)
+const searchInputRef = ref(null)
+
+// ✅ Load countries from JSON file
+const allCountries = ref(
+    countriesData.map(country => ({
+      flag: country.flag,
+      name: `${country.flag} ${country.code}`,
+      fullName: country.name,
+      code: country.code,
+      searchText: country.name.toLowerCase()
+    }))
+);
+
+// Filtered countries based on search
+const normalize = str =>
+    str.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+const filteredCountries = computed(() => {
+  const query = normalize(searchQuery.value.trim());
+  if (!query) return allCountries.value;
+
+  return allCountries.value.filter((country) =>
+      [country.fullName, country.code].some(field =>
+          normalize(field).includes(query)
+      )
+  );
+});
+
+
+// Selected country display
+const selectedCountry = computed(() => {
+  return allCountries.value.find(c => c.code === countryCode.value)
+})
+
+// Toggle dropdown
+function toggleDropdown() {
+  isDropdownOpen.value = !isDropdownOpen.value
+  if (isDropdownOpen.value) {
+    nextTick(() => {
+      searchInputRef.value?.focus()
+    })
+  } else {
+    searchQuery.value = ''
+  }
+}
+
+// Select country
+function selectCountry(country) {
+  countryCode.value = country.code
+  isDropdownOpen.value = false
+  searchQuery.value = ''
+}
+
+// Close dropdown when clicking outside
+function handleClickOutside(event) {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+    isDropdownOpen.value = false
+    searchQuery.value = ''
+  }
+}
+
+// Prevent dropdown from closing when clicking inside
+function handleDropdownClick(event) {
+  event.stopPropagation()
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+  console.log('✅ Loaded', allCountries.value.length, 'countries')
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 // ✅ FIXED: Only reset OTP if email actually changes from verified email
 watch(email, (newEmail) => {
@@ -482,6 +639,7 @@ async function register() {
     return
   }
 
+
   if (loading.value || !agreeTerms.value) return
 
   try {
@@ -493,6 +651,7 @@ async function register() {
       email: email.value.trim(),
       phone: phone.value.trim(),
       password: password.value.trim(),
+      countryCode: countryCode.value,
     })
 
     messageType.value = 'success'
@@ -589,6 +748,196 @@ async function register() {
   background-color: #9ca3af; /* Disabled gray */
   cursor: not-allowed;
 }
+
+.phone-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.input-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+/* Country Dropdown Styles */
+.country-dropdown-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.country-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
+  user-select: none;
+}
+
+.country-trigger:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.selected-country {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.dropdown-arrow.rotate {
+  transform: rotate(180deg);
+}
+
+.country-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 320px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.search-box {
+  position: relative;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.country-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.country-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.country-item:last-child {
+  border-bottom: none;
+}
+
+.country-item:hover {
+  background: #f8fafc;
+}
+
+.country-item.active {
+  background: #eef2ff;
+  border-left: 3px solid #4f46e5;
+}
+
+.country-flag {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.country-name {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #0f172a;
+}
+
+.country-code {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.no-results {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.phone-number-input {
+  flex: 1;
+}
+
+/* Dropdown transition */
+.dropdown-slide-enter-active,
+.dropdown-slide-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-slide-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.dropdown-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+/* Scrollbar styling */
+.country-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.country-list::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.country-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.country-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+
 /* Google Button */
 .social-login-top {
   margin-bottom: 0.5rem;

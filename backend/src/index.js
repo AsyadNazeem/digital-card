@@ -17,8 +17,6 @@ import otpRoutes from "./routes/otp.js";
 import settingsRoutes from "./routes/settings.js";
 import googleAuthRoutes from "./routes/auth.js"; // if you added it there
 
-
-
 dotenv.config();
 
 const app = express();
@@ -47,7 +45,7 @@ async function startServer() {
         console.log("✅ Database connected successfully");
 
         // 🔥 THIS LINE CREATES TABLES AUTOMATICALLY
-        await sequelize.sync();
+        await sequelize.sync(); //{ force: true }
         console.log("✅ Tables synchronized");
 
         const PORT = process.env.PORT || 4000;

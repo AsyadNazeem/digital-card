@@ -19,9 +19,9 @@ const oauthClient = new OAuth2Client(
 // ✅ REGISTER ROUTE
 router.post("/register", async (req, res) => {
     try {
-        const { name, email, phone, password } = req.body;
+        const { name, email, phone, password, countryCode } = req.body;
 
-        if (!name || !email || !phone || !password)
+        if (!name || !email || !phone || !password || !countryCode)
             return res.status(400).json({ message: "All fields are required" });
 
         // Check if email or phone already exists
@@ -34,6 +34,7 @@ router.post("/register", async (req, res) => {
             name,
             email,
             phone,
+            countryCode,
             password: hashedPassword,
         });
 
@@ -209,6 +210,8 @@ router.post("/google-register", async (req, res) => {
                 email,
                 phone: "", // Empty phone for Google users
                 password: null, // No password for Google users
+                googleId: googleId, // ✅ Also store the Google ID
+                provider: 'google', // ✅ Mark as Google user
             });
 
             console.log("✅ User created:", user.id);

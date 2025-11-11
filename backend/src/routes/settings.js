@@ -158,5 +158,28 @@ router.post("/change-username", authenticateToken, async (req, res) => {
     }
 });
 
+router.post("/add-phone", authenticateToken, async (req, res) => {
+    try {
+        const { phone, countryCode } = req.body;
+
+        if (!phone || !/^\d{10}$/.test(phone)) {
+            return res.status(400).json({ message: "Invalid phone number format." });
+        }
+
+        const user = await User.findByPk(req.user.id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        user.phone = phone;
+        user.countryCode = countryCode || "+94";
+        await user.save();
+
+        res.json({ message: "Phone number added successfully!" });
+    } catch (err) {
+        console.error("❌ Add phone error:", err);
+        res.status(500).json({ message: "Failed to save phone number." });
+    }
+});
+
+
 
 export default router;

@@ -4,6 +4,8 @@ import path from "path";
 import jwt from "jsonwebtoken";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
+import { authenticateToken } from "../middleware/authMiddleware.js";
+import { ensurePhoneNumber } from "../middleware/checkPhone.js";
 
 const router = express.Router();
 
@@ -105,13 +107,15 @@ router.post(
     upload.single("photo"),
     async (req, res) => {
         try {
-            const { firstName, lastName, telephone, mobile, email, designation, company, status } = req.body;
+            const { firstName, lastName, telephoneCountryCode, telephone, mobileCountryCode, mobile, email, designation, company, status } = req.body;
             const photo = req.file ? `/uploads/photos/${req.file.filename}` : null;
 
             const contact = await Contact.create({
                 firstName,
                 lastName,
+                telephoneCountryCode,
                 telephone,
+                mobileCountryCode,
                 mobile,
                 email,
                 designation,
@@ -140,5 +144,32 @@ router.get("/data", authenticate, async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+router.get("/data", authenticateToken, ensurePhoneNumber, async (req, res) => {
+    // Only users with phone number reach here
+    res.json({ message: "Dashboard data loaded!" });
+});
+
+// 🟢 Get all companies for the logged-in user
+// 🟢 Get all ACTIVE companies for the logged-in user
+router.get("/companies", authenticate, async (req, res) => {
+    try {
+        const companies = await Company.findAll({
+            where: {
+                userId: req.userId,
+                status: "active", // ✅ Only fetch active companies
+            },
+            attributes: ["id", "companyName", "status"],
+            order: [["companyName", "ASC"]],
+        });
+
+        res.json(companies);
+    } catch (err) {
+        console.error("❌ Error fetching companies:", err);
+        res.status(500).json({ message: "Failed to load companies" });
+    }
+});
+
+
 
 export default router;
