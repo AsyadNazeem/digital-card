@@ -22,31 +22,43 @@
     <div class="dashboard-container">
       <!-- Tabs -->
       <div class="tabs-container">
-        <button
-            @click="activeTab = 'company'"
-            :class="['tab-button', { active: activeTab === 'company' }]"
-        >
-          <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2">
-            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-            <path
-                d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"></path>
+        <div class="tab-buttons">
+          <button
+              @click="activeTab = 'company'"
+              :class="['tab-button', { active: activeTab === 'company' }]"
+          >
+            <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2">
+              <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+              <path
+                  d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01">
+              </path>
+            </svg>
+            Company Details
+          </button>
+
+          <button
+              @click="activeTab = 'contact'"
+              :class="['tab-button', { active: activeTab === 'contact' }]"
+          >
+            <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Contact Details
+          </button>
+        </div>
+
+        <button @click="showLinkPopup = true" class="btn-secondary link-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 1 7 7l-3 3a5 5 0 0 1-7-7l3-3zm4-4a5 5 0 0 0-7-7L4 5a5 5 0 0 0 7 7l3-3z"/>
           </svg>
-          Company Details
-        </button>
-        <button
-            @click="activeTab = 'contact'"
-            :class="['tab-button', { active: activeTab === 'contact' }]"
-        >
-          <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-          Contact Details
+          Contact Card Link
         </button>
       </div>
+
 
       <!-- COMPANY TAB -->
       <div v-if="activeTab === 'company'" class="content-card">
@@ -702,6 +714,38 @@
         </div>
       </transition>
 
+      <!-- Contact Card Link Popup -->
+      <transition name="modal">
+        <div v-if="showLinkPopup" class="link-popup-overlay" @click.self="showLinkPopup = false">
+          <div class="link-popup-container">
+            <!-- Header -->
+            <div class="link-popup-header">
+              <h2 class="link-popup-title">Your Contact Card Link</h2>
+              <button class="close-btn" @click="showLinkPopup = false">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Link and Copy -->
+            <div class="link-popup-body">
+              <input type="text" :value="cardLink" readonly class="link-display" />
+              <button @click="copyLink" class="copy-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </button>
+            </div>
+
+            <p v-if="copyMessage" class="copy-message">{{ copyMessage }}</p>
+          </div>
+        </div>
+      </transition>
+
+
     </div>
   </div>
 </template>
@@ -812,6 +856,32 @@ const photoPreview = ref(null);
 const photoFileName = ref('');
 
 const token = localStorage.getItem("token");
+
+const showLinkPopup = ref(false);
+const copyMessage = ref("");
+
+const userPhone = ref(""); // store the logged user's phone
+const cardLink = computed(() => `http://localhost:5173/card/${userPhone.value}`);
+
+// ✅ Fetch user's phone (from API or localStorage)
+onMounted(() => {
+  const userData = JSON.parse(localStorage.getItem("user"));
+  if (userData && userData.phone) {
+    userPhone.value = userData.phone;
+  }
+});
+
+// ✅ Copy function
+const copyLink = async () => {
+  try {
+    await navigator.clipboard.writeText(cardLink.value);
+    copyMessage.value = "✅ Link copied!";
+    setTimeout(() => (copyMessage.value = ""), 2000);
+  } catch (err) {
+    copyMessage.value = "❌ Failed to copy!";
+  }
+};
+
 
 async function loadUserCompanies() {
   try {
@@ -1237,7 +1307,7 @@ onMounted(loadData);
 }
 
 .dashboard-wrapper {
-  min-height: 100vh;
+  min-height: 98vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
@@ -1287,6 +1357,162 @@ onMounted(loadData);
   font-size: 0.875rem;
   font-weight: 500;
 }
+
+.link-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: white;
+  color: #1a472a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.link-btn:hover {
+  background: #1a472a;
+  color: white;
+  border-color: #1a472a;
+}
+
+/* Popup Overlay */
+.link-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+/* Popup Box */
+.link-popup-container {
+  background: #fff;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 420px;
+  padding: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  position: relative;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Header */
+.link-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.link-popup-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a472a;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #333;
+  transition: transform 0.2s ease;
+}
+
+.close-btn:hover {
+  transform: rotate(90deg);
+}
+
+/* Body */
+.link-popup-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.link-display {
+  flex: 1;
+  border: 2px solid #e0e0e0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #333;
+  background: #fafafa;
+}
+
+.copy-btn {
+  background: #1a472a;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.copy-btn:hover {
+  background: #c5663a;
+}
+
+.copy-message {
+  margin-top: 12px;
+  text-align: center;
+  color: #1a472a;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+@keyframes fadeIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.tabs-container {
+  display: flex;
+  justify-content: space-between; /* left group + right button */
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.tab-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Ensure tab buttons align properly */
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Style for the right button */
+.link-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: white;
+  color: #1a472a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.link-btn:hover {
+  background: #1a472a;
+  color: white;
+  border-color: #1a472a;
+}
+
 
 /* Phone Popup Modal */
 .phone-popup-overlay {
@@ -2457,6 +2683,4 @@ onMounted(loadData);
     grid-template-columns: repeat(3, 1fr);
   }
 }
-
-
 </style>

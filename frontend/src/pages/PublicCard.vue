@@ -1,614 +1,687 @@
 <template>
-  <div class="public-card-wrapper" v-if="loaded">
-    <!-- Header Profile Section -->
-    <div class="profile-header">
-      <div class="profile-avatar">
-        <img
-            v-if="company.logo"
-            :src="`http://localhost:4000${company.logo}`"
-            alt="Company Logo"
-        />
-        <div v-else class="avatar-placeholder">
-          {{ company.companyName?.charAt(0) }}
-        </div>
-      </div>
-      <h1 class="profile-name">{{ company.heading || company.companyName }}</h1>
-      <p class="profile-bio">{{ company.bio }}</p>
-    </div>
+  <div
+      class="public-card-container"
+      v-if="loaded"
+  >
+    <!-- Inner Card -->
+    <div class="public-card">
+      <!-- Header Section -->
 
-    <!-- Action Buttons -->
-    <div class="action-buttons">
-      <a :href="`tel:${company.phone}`" class="action-btn primary">
-        <span class="btn-icon">📞</span>
-        Call
-      </a>
-      <a :href="`mailto:${company.email}`" class="action-btn primary">
-        <span class="btn-icon">✉️</span>
-        Email
-      </a>
-      <a :href="company.website" target="_blank" class="action-btn primary">
-        <span class="btn-icon">🌐</span>
-        Website
-      </a>
-      <button @click="saveContact" class="action-btn secondary">
-        <span class="btn-icon">💾</span>
-        Save Contact
-      </button>
-    </div>
+      <!-- Header Section -->
+      <div class="header-section">
+        <!-- Contact Photo (Half-screen background) -->
+        <div class="contact-photo-container" v-if="contacts.length">
+          <img
+              :src="`http://localhost:4000${contacts[0].photo}`"
+              alt="Contact Photo"
+              class="contact-photo-bg"
+          />
+          <div class="photo-overlay"></div>
+        </div>
 
-    <!-- Company Information Card -->
-    <div class="info-card">
-      <div class="info-header">
-        <span class="info-icon">🏢</span>
-        <h2>Company Information</h2>
-      </div>
-      <div class="info-list">
-        <div class="info-row">
-          <span class="label">Company</span>
-          <span class="value">{{ company.companyName }}</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Email</span>
-          <span class="value">{{ company.email }}</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Website</span>
-          <a :href="company.website" target="_blank" class="link-value">
-            {{ company.displayUrl || company.website }}
-          </a>
-        </div>
-        <div class="info-row">
-          <span class="label">Status</span>
-          <span class="badge" :class="company.status?.toLowerCase()">{{ company.status }}</span>
+        <!-- Centered Company Logo (Overlapping Boundary) -->
+        <div class="company-logo-center" v-if="company.logo">
+          <img
+              :src="`http://localhost:4000${company.logo}`"
+              alt="Company Logo"
+              class="company-logo-circle"
+          />
         </div>
       </div>
-    </div>
 
-    <!-- Contacts Section -->
-    <div class="info-card" v-if="contacts.length">
-      <div class="info-header">
-        <span class="info-icon">👥</span>
-        <h2>Team Members</h2>
-      </div>
-      <div class="contacts-list">
-        <div v-for="c in contacts" :key="c.id" class="contact-item">
-          <div class="contact-avatar-small">
-            <img
-                v-if="c.photo"
-                :src="`http://localhost:4000${c.photo}`"
-                alt="Contact Photo"
-            />
-            <div v-else class="avatar-placeholder-small">
-              {{ c.firstName?.charAt(0) }}{{ c.lastName?.charAt(0) }}
-            </div>
-          </div>
-          <div class="contact-info">
-            <h3>{{ c.firstName }} {{ c.lastName }}</h3>
-            <p class="designation">{{ c.designation }}</p>
-            <div class="contact-details">
-              <a :href="`mailto:${c.email}`" class="contact-link">
-                <span class="icon">📧</span>
-                {{ c.email }}
-              </a>
-              <a :href="`tel:${c.mobile}`" class="contact-link">
-                <span class="icon">📱</span>
-                {{ c.mobile }}
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      <!-- Company Info Section (White Background) -->
+      <div class="company-info">
+        <h1 class="company-name" v-if="contacts.length">{{`${contacts[0].firstName} ${contacts[0].lastName}`}}</h1>
 
-    <!-- Social Links -->
-    <div class="info-card" v-if="company.socialLinks">
-      <div class="info-header">
-        <span class="info-icon">🔗</span>
-        <h2>Connect With Us</h2>
+        <p class="company-designation" v-if="contacts.length">
+          {{ contacts[0].designation }}
+        </p>
+
+        <p class="company-bio" v-if="company.bio">
+          {{ company.bio }}
+        </p>
       </div>
-      <div class="social-grid">
-        <a
-            v-for="(url, name) in company.socialLinks"
-            :key="name"
-            :href="url"
-            target="_blank"
-            class="social-btn"
-        >
-          <span class="social-icon">{{ getSocialIcon(name) }}</span>
-          <span>{{ name }}</span>
+
+
+      <!-- Action Buttons (3x2 Grid) -->
+      <div class="action-buttons">
+        <!-- Row 1: Personal Contact Actions -->
+
+        <!-- 1. Contact Mobile/Call (contacts[0].mobile) -->
+        <a :href="`tel:${contacts[0].mobile}`" class="action-btn call" v-if="contacts.length && contacts[0].mobile">
+          <span v-html="getIcon('phone')" class="action-icon"></span>
+          <span>Mobile</span>
+        </a>
+
+        <!-- 2. Contact WhatsApp (contacts[0].mobile) -->
+        <a :href="`https://wa.me/${contacts[0].mobile?.replace(/[^0-9]/g, '')}`" target="_blank" class="action-btn whatsapp" v-if="contacts.length && contacts[0].mobile">
+          <span v-html="getIcon('whatsapp')" class="action-icon"></span>
+          <span>WhatsApp</span>
+        </a>
+
+        <!-- 3. Contact Email (contacts[0].email) -->
+        <a :href="`mailto:${contacts[0].email}`" class="action-btn email" v-if="contacts.length && contacts[0].email">
+          <span v-html="getIcon('mail')" class="action-icon"></span>
+          <span>Email</span>
+        </a>
+
+        <!-- Row 2: Company/General Actions -->
+
+        <!-- 4. Company Phone/Office (company.phone) -->
+        <a :href="`tel:${company.phone}`" class="action-btn office-phone">
+          <span v-html="getIcon('phone-office')" class="action-icon"></span>
+          <span>Office</span>
+        </a>
+
+        <!-- 5. Company Website (company.website) -->
+        <a :href="formatUrl(company.website)" target="_blank" class="action-btn website">
+          <span v-html="getIcon('globe')" class="action-icon"></span>
+          <span>Website</span>
+        </a>
+
+        <!-- 6. Google Maps (company.address) -->
+        <a :href="company.googleLocation" target="_blank" class="action-btn maps">
+          <span v-html="getIcon('map')" class="action-icon"></span>
+          <span>Location</span>
         </a>
       </div>
+
+      <!-- Save Contact Button (Full Width) -->
+      <button @click="saveContact" class="action-btn save">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        Save Contact
+      </button>
+
+      <!-- Additional Action Buttons (360 & Reviews) -->
+      <div class="additional-actions" v-if="company.view360 || company.googleReviews">
+        <!-- 360° View -->
+        <a
+            v-if="company.view360"
+            :href="company.view360"
+            target="_blank"
+            class="action-link-secondary"
+        >
+          <span v-html="getIcon('360')" class="action-icon"></span>
+          <span>360° View</span>
+        </a>
+
+        <!-- Google Reviews -->
+        <a
+            v-if="company.googleReviews"
+            :href="company.googleReviews"
+            target="_blank"
+            class="action-link-secondary"
+        >
+          <span v-html="getIcon('review')" class="action-icon"></span>
+          <span>Reviews</span>
+        </a>
+      </div>
+
+      <div class="company-details">
+        <h2 v-if="company.companyName">{{company.companyName}}</h2>
+        <h2 v-if="company.website">{{company.website}}</h2>
+      </div>
+
+
+      <!-- Social Links -->
+      <div class="social-section" v-if="company.socialLinks && Object.keys(company.socialLinks).length > 0">
+        <div class="social-divider"></div>
+        <div class="social-links">
+          <a
+              v-for="(url, name) in company.socialLinks"
+              :key="name"
+              :href="formatUrl(url)"
+              target="_blank"
+              class="social-icon-link"
+              :title="name.charAt(0).toUpperCase() + name.slice(1)"
+          >
+            <span v-html="getSocialIcon(name)"></span>
+          </a>
+        </div>
+        <div class="social-divider"></div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="footer">
+        Powered by <span>Digital Business Card</span>
+      </footer>
     </div>
 
-    <!-- Footer -->
-    <div class="footer">
-      <p>Powered by Your Company</p>
-    </div>
   </div>
 
-  <div v-else class="loading-screen">
+  <div v-else class="loading">
     <div class="spinner"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import api from '../services/api'
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import api from "../services/api";
 
-const route = useRoute()
-const company = ref({})
-const contacts = ref([])
-const user = ref({})
-const loaded = ref(false)
+const route = useRoute();
+const company = ref({});
+const contacts = ref([]);
+const loaded = ref(false);
 
 onMounted(async () => {
   try {
-    const phone = route.params.phone
-    const res = await api.get(`/public/${phone}`)
-    company.value = res.data.company || {}
-    contacts.value = res.data.contacts || []
-    user.value = res.data.user
-    loaded.value = true
+    const phone = route.params.phone;
+    const res = await api.get(`/public/${phone}`);
+    company.value = res.data.company || {};
+    contacts.value = res.data.contacts || [];
   } catch (err) {
-    console.error("❌ Error loading public card:", err)
+    console.error("❌ Error loading public card:", err);
+  } finally {
+    loaded.value = true;
   }
-})
+});
+
+const formatUrl = (url) => {
+  if (!url) return "";
+  if (!/^https?:\/\//i.test(url)) {
+    return `https://${url}`;
+  }
+  return url;
+};
 
 const saveContact = () => {
-  alert('Contact save functionality coming soon!')
-}
+  if (!contacts.value.length) {
+    console.error("No contact information available to save.");
+    return;
+  }
+
+  const contact = contacts.value[0];
+
+  const vcard = `BEGIN:VCARD
+VERSION:3.0
+FN:${contact.firstName} ${contact.lastName}
+N:${contact.lastName};${contact.firstName};;;
+ORG:${company.value.companyName}
+TITLE:${contact.designation}
+TEL;TYPE=CELL:${contact.mobile}
+TEL;TYPE=WORK:${company.value.phone}
+EMAIL;TYPE=PREF,INTERNET:${contact.email}
+URL;TYPE=WORK:${company.value.website}
+ADR;TYPE=WORK:;;;${company.value.address};;;
+END:VCARD`;
+
+  const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${contact.firstName}_${contact.lastName}.vcf`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+  console.log("Contact VCF download triggered.");
+};
+
+const getIcon = (name) => {
+  const icons = {
+    phone: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`,
+    whatsapp: `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>`,
+    mail: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`,
+    'phone-office': `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><path d="M14.05 2a9 9 0 0 1 8 7.94"/><path d="M14.05 6A5 5 0 0 1 18 10"/></svg>`,
+    globe: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`,
+    map: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
+    '360': `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/><path d="M12 2c2.5 0 5 4.5 5 10s-2.5 10-5 10M12 2C9.5 2 7 6.5 7 12s2.5 10 5 10"/></svg>`,
+    review: `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>`,
+  };
+  return icons[name] || icons.phone;
+};
 
 const getSocialIcon = (name) => {
+  const normalizedName = name.toLowerCase();
   const icons = {
-    facebook: '📘',
-    twitter: '🐦',
-    linkedin: '💼',
-    instagram: '📷',
-    youtube: '📺',
-    tiktok: '🎵',
-    whatsapp: '💬'
-  }
-  return icons[name.toLowerCase()] || '🔗'
-}
+    facebook: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+    twitter: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#1DA1F2"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>`,
+    linkedin: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`,
+    youtube: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
+    tiktok: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#000000"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>`,
+    instagram: `<svg width="28" height="28" viewBox="0 0 24 24" fill="url(#instagram-gradient)"><defs><linearGradient id="instagram-gradient" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FD5949;stop-opacity:1" /><stop offset="50%" style="stop-color:#D6249F;stop-opacity:1" /><stop offset="100%" style="stop-color:#285AEB;stop-opacity:1" /></linearGradient></defs><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/></svg>`,
+    whatsapp: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>`,
+  };
+  return icons[normalizedName] || icons.facebook;
+};
 </script>
 
 <style scoped>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-.public-card-wrapper {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1e 100%);
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-}
-
-/* Profile Header */
-.profile-header {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  padding: 60px 20px 40px;
-  text-align: center;
+/* HEADER SECTION */
+.header-section {
   position: relative;
+  width: 100%;
+  height: 45vh;
+  background: #1a472a;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
 }
 
-.profile-header::before {
+/* Contact photo background */
+.contact-photo-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.contact-photo-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% center;
+  transform: scale(1.05);
+  transition: transform 0.8s ease;
+}
+
+.contact-photo-container:hover .contact-photo-bg {
+  transform: scale(1.08);
+}
+
+/* Smooth fade into bottom */
+.photo-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(26, 71, 42, 0) 0%, #ffffff 100%);
+}
+
+.company-logo-center {
+  position: absolute;
+  bottom: -75px; /* moved higher so full logo shows */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  background: white;
+  border-radius: 50%;
+  padding: 18px; /* more padding for presence */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+}
+
+.company-logo-circle {
+  width: 160px;  /* bigger logo */
+  height: 160px;
+  object-fit: contain;
+  border-radius: 30%;
+}
+
+/* Company Info (white background below) */
+.company-info {
+  background: white;
+  text-align: center;
+  padding: 100px 25px 35px;
+  margin-top: -15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.company-name {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1a472a;
+  margin-bottom: 8px;
+}
+
+.company-designation {
+  font-size: 1rem;
+  color: #c5663a;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.company-bio {
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.6;
+  max-width: 90%;
+  margin: 0 auto;
+}
+
+
+/* Company Details Section */
+.company-details {
+  background: white;
+  text-align: center;
+  padding: 30px 25px;
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+.company-details h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1a472a;
+  margin: 12px 0;
+  line-height: 1.5;
+  letter-spacing: 0.3px;
+  transition: color 0.3s ease;
+}
+
+.company-details h2:first-child {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d5a3d;
+  margin-bottom: 8px;
+}
+
+.company-details h2:last-child {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #c5663a;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.company-details h2:last-child:hover {
+  color: #a04d28;
+  text-decoration: underline;
+}
+
+
+/* GENERAL STYLES */
+.public-card-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 30px 15px;
+}
+
+.public-card {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  margin: 0 auto;
+}
+
+
+
+.company-name {
+  margin-top: 24px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+
+/* ACTION BUTTONS (3x2 Grid) */
+.action-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 24px;
+  background-color: #fff;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #d97642 0%, #c5663a 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 18px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(197, 102, 58, 0.25);
+  font-size: 0.875rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('data:image/svg+xml,<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="2" fill="rgba(255,255,255,0.1)"/></svg>');
-  opacity: 0.3;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.profile-avatar {
-  width: 120px;
-  height: 120px;
-  margin: 0 auto 20px;
-  position: relative;
-  z-index: 1;
+.action-btn:hover::before {
+  opacity: 1;
 }
 
-.profile-avatar img {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+.action-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(197, 102, 58, 0.4);
+}
+
+.action-btn:active {
+  transform: translateY(-2px);
+}
+
+.action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-icon svg {
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Save Button Styling */
+.action-btn.save {
+  grid-column: 1 / -1;
+  margin: 0 24px 0;
+  padding: 16px;
+  flex-direction: row;
+  gap: 10px;
+  font-size: 1rem;
+  width: calc(100% - 48px);
+  background: linear-gradient(135deg, #1a472a 0%, #0d2818 100%);
+  box-shadow: 0 4px 15px rgba(26, 71, 42, 0.3);
+}
+
+.action-btn.save:hover {
+  box-shadow: 0 8px 25px rgba(26, 71, 42, 0.5);
+}
+
+/* Additional Actions */
+.additional-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px;
+  background: #fafbfc;
+}
+
+.action-link-secondary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1a472a;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  transition: all 0.3s ease;
+  background: white;
+  border: 2px solid #e8ecf1;
+  min-width: 120px;
+}
+
+.action-link-secondary:hover {
+  background-color: #f0f4f8;
+  border-color: #c5663a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(197, 102, 58, 0.15);
+}
+
+.action-link-secondary .action-icon svg {
+  width: 28px;
+  height: 28px;
+  color: #c5663a;
+  stroke-width: 2;
+}
+
+/* Social Links Section */
+.social-section {
+  padding: 24px 20px;
   background: white;
 }
 
-.avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+.social-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #e0e0e0 50%, transparent 100%);
+  margin: 0 auto 20px;
+  width: 80%;
+}
+
+.social-section .social-divider:last-child {
+  margin: 20px auto 0;
+}
+
+.social-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.social-icon-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
-  font-weight: 700;
-  color: white;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.profile-name {
-  font-size: 2rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
   position: relative;
-  z-index: 1;
 }
 
-.profile-bio {
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.9);
-  max-width: 600px;
-  margin: 0 auto;
-  line-height: 1.6;
-  position: relative;
-  z-index: 1;
-}
-
-/* Action Buttons */
-.action-buttons {
-  padding: 30px 20px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.action-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px;
-  border-radius: 16px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.action-btn.primary {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
-}
-
-.action-btn.primary:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
-}
-
-.action-btn.secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.action-btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-4px);
-}
-
-.btn-icon {
-  font-size: 1.5rem;
-}
-
-/* Info Cards */
-.info-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 24px;
-  margin: 20px;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.info-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.info-icon {
-  font-size: 1.5rem;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  border-radius: 12px;
-}
-
-.info-header h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: white;
-  margin: 0;
-}
-
-/* Info List */
-.info-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.info-row:last-child {
-  border-bottom: none;
-}
-
-.label {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 500;
-}
-
-.value {
-  font-size: 0.95rem;
-  color: white;
-  font-weight: 500;
-  text-align: right;
-}
-
-.link-value {
-  font-size: 0.95rem;
-  color: #8b5cf6;
-  text-decoration: none;
-  font-weight: 500;
-  text-align: right;
-  transition: color 0.2s;
-}
-
-.link-value:hover {
-  color: #a78bfa;
-}
-
-.badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: capitalize;
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.badge.inactive {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-/* Contacts List */
-.contacts-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.contact-item {
-  display: flex;
-  gap: 16px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.3s ease;
-}
-
-.contact-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  transform: translateX(4px);
-}
-
-.contact-avatar-small {
-  flex-shrink: 0;
-  width: 60px;
-  height: 60px;
-}
-
-.contact-avatar-small img {
-  width: 100%;
-  height: 100%;
+.social-icon-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.avatar-placeholder-small {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white;
-  border: 2px solid rgba(139, 92, 246, 0.3);
+.social-icon-link:hover::before {
+  opacity: 1;
 }
 
-.contact-info {
-  flex: 1;
-  min-width: 0;
+.social-icon-link:hover {
+  transform: translateY(-4px) scale(1.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-.contact-info h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 4px;
+.social-icon-link svg {
+  width: 28px;
+  height: 28px;
+  transition: transform 0.3s ease;
 }
 
-.designation {
-  font-size: 0.875rem;
-  color: #8b5cf6;
-  margin-bottom: 8px;
+.social-icon-link:hover svg {
+  transform: scale(1.1);
 }
 
-.contact-details {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.contact-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.contact-link:hover {
-  color: white;
-}
-
-.contact-link .icon {
-  font-size: 1rem;
-}
-
-/* Social Grid */
-.social-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
-}
-
-.social-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  color: white;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  text-transform: capitalize;
-}
-
-.social-btn:hover {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  border-color: transparent;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
-}
-
-.social-icon {
-  font-size: 1.25rem;
-}
-
-/* Footer */
+/* FOOTER */
 .footer {
   text-align: center;
-  padding: 40px 20px;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.875rem;
+  padding: 24px;
+  color: #999;
+  font-size: 0.8rem;
+  background: #fafbfc;
+  border-top: 1px solid #f0f0f0;
 }
 
-/* Loading Screen */
-.loading-screen {
+.footer span {
+  font-weight: 700;
+  background: linear-gradient(135deg, #1a472a 0%, #c5663a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* LOADING */
+.loading {
   min-height: 100vh;
-  background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1e 100%);
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(139, 92, 246, 0.2);
-  border-top-color: #8b5cf6;
+  width: 56px;
+  height: 56px;
+  border: 5px solid rgba(217, 118, 66, 0.2);
+  border-top-color: #d97642;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 1s ease-in-out infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-  .profile-name {
-    font-size: 1.5rem;
-  }
-
-  .profile-bio {
-    font-size: 0.9rem;
-  }
-
+/* Responsive Design */
+@media (max-width: 400px) {
   .action-buttons {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .info-card {
-    margin: 16px;
+    gap: 10px;
     padding: 20px;
   }
 
-  .info-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+  .action-btn {
+    padding: 14px 8px;
+    font-size: 0.8rem;
   }
 
-  .value, .link-value {
-    text-align: left;
+  .action-icon svg {
+    width: 22px;
+    height: 22px;
   }
 
-  .contact-item {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  .social-icon-link {
+    width: 44px;
+    height: 44px;
   }
 
-  .contact-details {
-    align-items: center;
+  .social-icon-link svg {
+    width: 24px;
+    height: 24px;
   }
 
-  .social-grid {
-    grid-template-columns: 1fr;
+  .company-details h2:first-child {
+    font-size: 1.3rem;
+  }
+
+  .company-details h2 {
+    font-size: 1.1rem;
   }
 }
 </style>
