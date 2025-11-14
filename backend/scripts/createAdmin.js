@@ -11,13 +11,13 @@ async function run() {
         await sequelize.sync(); // ensure table exists
         const username = "superadmin";
         const email = "admin@example.com";
-        const password = "SuperStrongPassword123!";
+        const password = "test@123";
         const hashed = await bcrypt.hash(password, 10);
         const [admin, created] = await Admin.findOrCreate({
             where: { username },
-            defaults: { username, email, password: hashed, name: "Super Admin", status: "active" }
+            defaults: { username, email, password: hashed, name: "Super admin", status: "active" }
         });
-        console.log("Admin created:", admin.username, "created?", created);
+        console.log("admin created:", admin.username, "created?", created);
         process.exit(0);
     } catch (err) {
         console.error(err);
@@ -25,3 +25,7 @@ async function run() {
     }
 }
 run();
+
+
+// cd backend
+// node scripts/createAdmin.js

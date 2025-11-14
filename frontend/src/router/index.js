@@ -1,31 +1,50 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import Login from '../pages/Login.vue';
-import Register from '../pages/Register.vue';
-import Dashboard from '../pages/Dashboard.vue';
-import PublicCard from '../pages/PublicCard.vue';
-import AdminLogin from '../pages/AdminLogin.vue';
-import AdminDashboard from '../pages/AdminDashboard.vue';
+import { createRouter, createWebHistory } from "vue-router";
+
+import Login from "../pages/Login.vue";
+import Register from "../pages/Register.vue";
+import Dashboard from "../pages/Dashboard.vue";
+import PublicCard from "../pages/PublicCard.vue";
+
+import AdminLogin from "../pages/admin/AdminLogin.vue";
 
 const routes = [
-    { path: '/', redirect: '/login' },
-    { path: '/login', component: Login },
-    { path: '/register', component: Register },
-    { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true } },
-    { path: '/card/:phone', component: PublicCard },
+    // USER ROUTES
+    { path: "/", redirect: "/login" },
+    { path: "/login", component: Login },
+    { path: "/register", component: Register },
+    { path: "/dashboard", component: Dashboard, meta: { requiresAuth: true } },
+    { path: "/card/:phone", component: PublicCard },
 
-    { path: '/admin/login', component: AdminLogin },
-    { path: '/admin', component: AdminDashboard, meta: { requiresAdmin: true } },
+    // ADMIN LOGIN
+    { path: "/admin/login", name: "AdminLogin", component: AdminLogin },
 
+    // ADMIN LAYOUT + ADMIN PAGES
     {
-        path: "/admin/login",
-        name: "AdminLogin",
-        component: AdminLogin,
-    },
-    {
-        path: "/admin/dashboard",
-        name: "AdminDashboard",
-        component: AdminDashboard,
-        meta: { requiresAdminAuth: true }, // ✅ Protected route
+        path: "/admin",
+        component: () => import("../components/admin/AdminLayout.vue"),
+        meta: { requiresAdminAuth: true },
+        children: [
+            {
+                path: "dashboard",
+                name: "AdminDashboard",
+                component: () => import("../pages/admin/AdminDashboard.vue"),
+            },
+            {
+                path: "users",
+                name: "AdminUsers",
+                component: () => import("../pages/admin/AdminUsers.vue"),
+            },
+            {
+                path: "requests",
+                name: "AdminRequests",
+                component: () => import("../pages/admin/AdminRequests.vue"),
+            },
+            {
+                path: "settings",
+                name: "AdminSettings",
+                component: () => import("../pages/admin/AdminSettings.vue"),
+            },
+        ],
     },
 ];
 
@@ -34,23 +53,35 @@ const router = createRouter({
     routes,
 });
 
-// ✅ Navigation Guard
-router.beforeEach((to, from, next) => {
-    const token = localStorage.getItem('token');
 
-    if (to.meta.requiresAuth && !token) {
-        // User not logged in — redirect to login
-        next('/login');
-    } else if ((to.path === '/login' || to.path === '/register') && token) {
-        // Already logged in — redirect to dashboard
-        next('/dashboard');
-    } else {
-        next();
+// =============================================
+// 🚀 FIXED & SECURE NAVIGATION GUARD
+// =============================================
+router.beforeEach((to, from, next) => {
+    const userToken = localStorage.getItem("token");
+    const adminToken = localStorage.getItem("adminToken");
+
+    // -----------------------------
+    // USER-PROTECTED ROUTES
+    // -----------------------------
+    if (to.meta.requiresAuth && !userToken) {
+        return next("/login");
     }
 
-    const adminToken = localStorage.getItem('admin_token');
-    if (to.meta.requiresAdmin && !adminToken) return next('/admin/login');
-    next();
+    if ((to.path === "/login" || to.path === "/register") && userToken) {
+        return next("/dashboard");
+    }
+
+    // -----------------------------
+    // ADMIN-PROTECTED ROUTES
+    // -----------------------------
+    if (to.meta.requiresAdminAuth && !adminToken) {
+        return next("/admin/login");
+    }
+
+    // Always allow navigation if no conditions block it
+    return next();
 });
+
 
 export default router;

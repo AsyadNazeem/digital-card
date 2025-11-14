@@ -27,14 +27,14 @@ const User = sequelize.define(
             allowNull: true,
         },
         phone: {
-            type: DataTypes.STRING(10),
+            type: DataTypes.STRING,
             allowNull: true,  // ✅ Allow null
             validate: {
                 // ✅ FIXED: Only validate if phone is provided and not empty
                 isValidPhone(value) {
                     if (value && value.trim() !== '') {
-                        if (!/^[0-9]{10}$/.test(value)) {
-                            throw new Error('Phone must be exactly 10 digits');
+                        if (!/^[0-9+]+$/.test(value)) {
+                            throw new Error("Telephone can contain only digits and + symbol.");
                         }
                     }
                 }
@@ -55,6 +55,13 @@ const User = sequelize.define(
             allowNull: true,
             defaultValue: "local", // 'local' or 'google'
         },
+        status: {
+            type: DataTypes.STRING,
+            defaultValue: "active",
+        },
+        companyLimit: { type: DataTypes.INTEGER, defaultValue: 1 },
+        contactLimit: { type: DataTypes.INTEGER, defaultValue: 1 },
+        role: { type: DataTypes.STRING, defaultValue: "user" },
     },
     {
         timestamps: true,

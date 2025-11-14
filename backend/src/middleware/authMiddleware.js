@@ -1,15 +1,31 @@
+// middleware/authMiddleware.js
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-dotenv.config();
+import User from "../models/User.js";
 
-export const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
-    if (!token) return res.status(401).json({ message: "No token provided" });
+export const authenticateToken = async (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader)
+            return res.status(401).json({ message: "No token provided" });
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ message: "Invalid token" });
-        req.user = user; // This gives us user.id from the JWT payload
+        const token = authHeader.split(" ")[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        console.log("🟢 Decoded token payload:", decoded);
+
+        const user = await User.findByPk(decoded.id);
+
+        if (!user) {
+            console.error("❌ User not found for ID:", decoded.id);
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        req.user = user;
+        req.userId = user.id;
+
         next();
-    });
+    } catch (err) {
+        console.error("❌ Token authentication error:", err);
+        res.status(403).json({ message: "Invalid or expired token" });
+    }
 };

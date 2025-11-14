@@ -7,7 +7,7 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-// Admin login
+// admin login
 router.post("/login", async (req, res) => {
     try {
         const { usernameOrEmail, password } = req.body;
@@ -19,8 +19,8 @@ router.post("/login", async (req, res) => {
             }
         });
 
-        if (!admin) return res.status(404).json({ message: "Admin not found" });
-        if (admin.status !== "active") return res.status(403).json({ message: "Admin is inactive" });
+        if (!admin) return res.status(404).json({ message: "admin not found" });
+        if (admin.status !== "active") return res.status(403).json({ message: "admin is inactive" });
 
         const ok = await bcrypt.compare(password, admin.password);
         if (!ok) return res.status(401).json({ message: "Invalid credentials" });
@@ -29,7 +29,7 @@ router.post("/login", async (req, res) => {
 
         res.json({ token, admin: { id: admin.id, username: admin.username, email: admin.email, name: admin.name } });
     } catch (err) {
-        console.error("Admin login error:", err);
+        console.error("admin login error:", err);
         res.status(500).json({ message: "Server error" });
     }
 });

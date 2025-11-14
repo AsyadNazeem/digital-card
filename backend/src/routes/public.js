@@ -5,26 +5,45 @@ import Contact from "../models/Contact.js";
 
 const router = express.Router();
 
-// ✅ Get public card by phone number
-router.get("/:phone", async (req, res) => {
+// 🟢 Get public card by contact mobile number
+router.get("/:mobile", async (req, res) => {
     try {
-        const { phone } = req.params;
+        let { mobile } = req.params;
 
-        const user = await User.findOne({ where: { phone } });
-        if (!user) return res.status(404).json({ message: "User not found" });
+        mobile = `+${mobile}`
 
-        const company = await Company.findOne({ where: { userId: user.id } });
-        const contacts = await Contact.findAll({ where: { userId: user.id, status: "active" } });
+        console.log(mobile)
+
+        // 1️⃣ Find contact by mobile number
+        const contact = await Contact.findOne({
+            where: { mobile, status: "active" }
+        });
+
+        if (!contact) {
+            return res.status(404).json({ message: "Contact not found" });
+        }
+
+        // 2️⃣ Find the company using contact.companyId
+        const company = await Company.findByPk(contact.companyId);
+
+        if (!company) {
+            return res.status(404).json({ message: "Company not found for this contact" });
+        }
+
+        // 3️⃣ Find the user who owns the company (optional, if needed)
+        const user = await User.findByPk(company.userId);
 
         res.json({
-            user: {
+            user: user ? {
                 name: user.name,
                 email: user.email,
-                phone: user.phone,
-            },
+                phone: user.phone
+            } : null,
+
             company,
-            contacts,
+            contact
         });
+
     } catch (err) {
         console.error("❌ Public card error:", err);
         res.status(500).json({ message: "Failed to load public card" });

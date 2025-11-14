@@ -19,6 +19,26 @@
       </div>
     </header>
 
+    <!-- Request Limit Increase Banner -->
+    <div v-if="companyCount >= userLimits.companyLimit || contactCount >= userLimits.contactLimit" class="limit-banner">
+      <div class="limit-banner-content">
+        <div class="limit-banner-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="limit-banner-text">
+          <h3>You've reached your limit!</h3>
+          <p>Request more companies or contacts from the admin to continue adding.</p>
+        </div>
+        <button @click="showRequestModal = true" class="btn-request">
+          Request More
+        </button>
+      </div>
+    </div>
+
     <div class="dashboard-container">
       <!-- Tabs -->
       <div class="tabs-container">
@@ -51,12 +71,6 @@
           </button>
         </div>
 
-        <button @click="showLinkPopup = true" class="btn-secondary link-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10 13a5 5 0 0 1 7 7l-3 3a5 5 0 0 1-7-7l3-3zm4-4a5 5 0 0 0-7-7L4 5a5 5 0 0 0 7 7l3-3z"/>
-          </svg>
-          Contact Card Link
-        </button>
       </div>
 
 
@@ -65,41 +79,138 @@
         <div v-if="!showCompanyForm">
           <div class="card-header">
             <h2 class="card-title">Company Information</h2>
-            <button @click="showCompanyForm = true" class="btn-primary">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              {{ company ? 'Edit Company' : 'Add Company' }}
+            <button
+                class="btn-primary"
+                @click="showCompanyForm = true"
+                :disabled="companyCount >= userLimits.companyLimit"
+                v-if="companyCount < userLimits.companyLimit"
+            >
+              + Add Company
             </button>
+
           </div>
 
-          <div v-if="company" class="table-container">
+          <div v-if="userCompanies.length > 0" class="table-container">
+            <div class="table-controls">
+              <input
+                  type="text"
+                  v-model="searchQuery"
+                  placeholder="Search companies..."
+                  class="search-input"
+              />
+            </div>
+
             <table class="data-table">
               <thead>
               <tr>
-                <th>Heading</th>
+                <th>ID</th>
                 <th>Company Name</th>
+                <th>Logo</th>
                 <th>Website</th>
                 <th>Email</th>
+                <th>360° View</th>
+                <th>Location</th>
+                <th>Reviews</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
               </thead>
+
               <tbody>
-              <tr>
-                <td>{{ company.heading }}</td>
-                <td>{{ company.companyName }}</td>
+              <tr v-for="c in paginatedCompanies" :key="c.id">
+                <td>{{ c.id }}</td>
+
+                <td>{{ c.companyName }}</td>
+
+                <!-- Logo Preview -->
                 <td>
-                  <a :href="company.website" target="_blank" class="link">{{ company.website }}</a>
+                  <img
+                      v-if="c.logo"
+                      :src="`http://localhost:4000${c.logo}`"
+                      alt="Logo"
+                      class="logo-thumb"
+                  />
+                  <span v-else>No logo</span>
                 </td>
-                <td>{{ company.email }}</td>
+
+                <!-- Website link -->
                 <td>
-                  <span :class="['status-badge', company.status]">{{ company.status }}</span>
+                  <a :href="c.website" target="_blank" class="link">{{ c.website }}</a>
+                </td>
+
+                <td>{{ c.email }}</td>
+
+                <!-- 360 View -->
+                <td>
+                  <a
+                      v-if="c.view360"
+                      :href="c.view360"
+                      target="_blank"
+                      class="link"
+                  >View</a>
+                  <span v-else>-</span>
+                </td>
+
+                <!-- Google Location -->
+                <td>
+                  <a
+                      v-if="c.googleLocation"
+                      :href="c.googleLocation"
+                      target="_blank"
+                      class="link"
+                  >Location</a>
+                  <span v-else>-</span>
+                </td>
+
+                <!-- Google Reviews -->
+                <td>
+                  <a
+                      v-if="c.googleReviews"
+                      :href="c.googleReviews"
+                      target="_blank"
+                      class="link"
+                  >Reviews</a>
+                  <span v-else>-</span>
+                </td>
+
+                <td>
+                  <span :class="['status-badge', c.status]">{{ c.status }}</span>
+                </td>
+
+                <td>
+                  <button class="btn-action edit" @click="editCompany(c)">✏️ Edit</button>
+                  <button class="btn-action delete" @click="deleteCompany(c.id)">🗑️ Delete</button>
                 </td>
               </tr>
               </tbody>
             </table>
+            <div class="pagination">
+              <button
+                  @click="currentPage--"
+                  :disabled="currentPage === 1"
+              >
+                Prev
+              </button>
+
+              <button
+                  v-for="page in totalPages"
+                  :key="page"
+                  @click="currentPage = page"
+                  :class="['page-btn', { active: currentPage === page }]"
+              >
+                {{ page }}
+              </button>
+
+              <button
+                  @click="currentPage++"
+                  :disabled="currentPage === totalPages"
+              >
+                Next
+              </button>
+            </div>
+
           </div>
+
 
           <div v-else class="empty-state">
             <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -303,40 +414,119 @@
         <div v-if="!showContactForm">
           <div class="card-header">
             <h2 class="card-title">Contact Information</h2>
-            <button @click="showContactForm = true" class="btn-primary">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Add Contact
+            <button
+                class="btn-primary"
+                @click="showContactForm = true"
+                :disabled="contactCount >= userLimits.contactLimit"
+                v-if="contactCount < userLimits.contactLimit"
+            >
+              + Add Contact
             </button>
           </div>
 
           <div v-if="contacts.length > 0" class="table-container">
+            <div class="table-controls">
+              <input
+                  type="text"
+                  v-model="contactSearch"
+                  placeholder="Search contacts..."
+                  class="search-input"
+              />
+            </div>
+
             <table class="data-table">
               <thead>
               <tr>
                 <th>Name</th>
-                <th>Telephone</th>
                 <th>Mobile</th>
                 <th>Email</th>
                 <th>Designation</th>
+                <th>Company</th>
                 <th>Status</th>
+                <th>Photo</th>
+                <th>Actions</th>
               </tr>
               </thead>
+
               <tbody>
-              <tr v-for="c in contacts" :key="c.id">
+              <tr v-for="c in paginatedContacts" :key="c.id">
+
+                <!-- Full Name -->
                 <td><strong>{{ c.firstName }} {{ c.lastName }}</strong></td>
-                <td>{{ c.telephone }}</td>
-                <td>{{ c.mobile }}</td>
+
+                <!-- Mobile as clickable link to contact card -->
+                <td>
+                  <a
+                      :href="`/card/${c.mobile.replace(/\D/g, '')}`"
+                      target="_blank"
+                      class="link"
+                  >
+                    {{ c.mobile }}
+                  </a>
+                </td>
+
                 <td>{{ c.email }}</td>
                 <td>{{ c.designation }}</td>
+
+                <!-- Company (show name from relationship or store companyName in table) -->
+                <td>{{ c.Company?.companyName || '-' }}</td>
+
                 <td>
                   <span :class="['status-badge', c.status]">{{ c.status }}</span>
                 </td>
+
+                <!-- Photo Preview -->
+                <td>
+                  <img
+                      v-if="c.photo"
+                      :src="`http://localhost:4000${c.photo}`"
+                      class="photo-thumb"
+                      alt="Contact Photo"
+                  />
+                  <span v-else>-</span>
+                </td>
+
+                <!-- Actions -->
+                <td class="action-buttons">
+                  <button class="btn-action view" @click="viewContact(c)">
+                    👁 View
+                  </button>
+                  <button class="btn-action edit" @click="editContact(c)">
+                    ✏️ Edit
+                  </button>
+                  <button class="btn-action delete" @click="deleteContact(c.id)">
+                    🗑️ Delete
+                  </button>
+                </td>
+
               </tr>
               </tbody>
             </table>
+            <div class="pagination">
+              <button
+                  @click="contactPage--"
+                  :disabled="contactPage === 1"
+              >
+                Prev
+              </button>
+
+              <button
+                  v-for="page in contactTotalPages"
+                  :key="page"
+                  @click="contactPage = page"
+                  :class="['page-btn', { active: contactPage === page }]"
+              >
+                {{ page }}
+              </button>
+
+              <button
+                  @click="contactPage++"
+                  :disabled="contactPage === contactTotalPages"
+              >
+                Next
+              </button>
+            </div>
+
           </div>
 
           <div v-else class="empty-state">
@@ -405,39 +595,136 @@
                 <label class="form-label">Last Name <span class="required">*</span></label>
                 <input v-model="contactForm.lastName" type="text" class="form-input" required/>
               </div>
+
+              <!-- CONTACT FORM - TELEPHONE -->
               <div class="form-group">
                 <label>Telephone</label>
                 <div class="phone-input-group">
                   <CountryCodeDropdown v-model="telephoneCountryCode"/>
-                  <input v-model="contactForm.telephone" type="tel" class="form-input"/>
+                  <input
+                      v-model="contactForm.telephone"
+                      type="tel"
+                      class="form-input"
+                      placeholder="Enter phone number"
+                      @input="handleContactTelephone"
+                  />
                 </div>
+                <p
+                    v-if="phoneValidation.telephone.message"
+                    :style="{
+      color: phoneValidation.telephone.isValid ? '#27ae60' : '#e74c3c',
+      fontSize: '0.85rem',
+      marginTop: '0.5rem'
+    }"
+                >
+                  {{ phoneValidation.telephone.message }}
+                </p>
               </div>
 
+
+              <!-- CONTACT FORM - MOBILE -->
               <div class="form-group">
-                <label>Mobile</label>
+                <label>Mobile <span style="color: red;">*</span></label>
                 <div class="phone-input-group">
                   <CountryCodeDropdown v-model="mobileCountryCode"/>
-                  <input v-model="contactForm.mobile" type="tel" class="form-input"/>
+                  <input
+                      v-model="contactForm.mobile"
+                      type="tel"
+                      class="form-input"
+                      placeholder="Enter mobile number"
+                      @input="handleContactMobile"
+                      required
+                  />
                 </div>
+                <!-- Show validation message OR duplicate check message -->
+                <p
+                    v-if="phoneValidation.mobile.message && !checkingMobile"
+                    :style="{
+      color: phoneValidation.mobile.isValid ? '#27ae60' : '#e74c3c',
+      fontSize: '0.85rem',
+      marginTop: '0.5rem'
+    }"
+                >
+                  {{ phoneValidation.mobile.message }}
+                </p>
+                <p
+                    v-if="mobileExistsMessage"
+                    :style="{
+      color: mobileExists ? '#e74c3c' : (checkingMobile ? '#3498db' : '#27ae60'),
+      fontSize: '0.85rem',
+      marginTop: '0.5rem'
+    }"
+                >
+                  {{ mobileExistsMessage }}
+                </p>
               </div>
 
               <div class="form-group">
                 <label class="form-label">Email <span class="required">*</span></label>
-                <input v-model="contactForm.email" type="email" class="form-input" readonly/>
+                <input v-model="contactForm.email" type="email" class="form-input" required/>
               </div>
               <div class="form-group">
                 <label class="form-label">Designation <span class="required">*</span></label>
                 <input v-model="contactForm.designation" type="text" class="form-input" required/>
               </div>
 
+              <!-- Address Section -->
+              <div class="form-group full-width">
+                <h3 class="section-heading">Address Information</h3>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Label</label>
+                <select v-model="contactForm.label" class="form-input">
+                  <option value="">Select Label</option>
+                  <option value="Home">🏠 Home</option>
+                  <option value="Work">💼 Work</option>
+                  <option value="Office">🏢 Office</option>
+                  <option value="Other">📍 Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Country/Region</label>
+                <CountrySelector v-model="contactForm.country"/>
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label">Street Address</label>
+                <input v-model="contactForm.streetAddress" type="text" class="form-input"
+                       placeholder="123 Main Street"/>
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label">Street Address Line 2</label>
+                <input v-model="contactForm.streetAddressLine2" type="text" class="form-input"
+                       placeholder="Apartment, suite, etc. (optional)"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">City</label>
+                <input v-model="contactForm.city" type="text" class="form-input" placeholder="Colombo"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Postal Code</label>
+                <input v-model="contactForm.postalCode" type="text" class="form-input" placeholder="10100"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">PO Box</label>
+                <input v-model="contactForm.poBox" type="text" class="form-input" placeholder="PO Box (optional)"/>
+              </div>
+
+
               <div class="form-group">
                 <label class="form-label">Company</label>
-                <select v-model="contactForm.company" class="form-input">
+                <select v-model="contactForm.companyId" class="form-input">
                   <option disabled value="">Select a company</option>
                   <option
                       v-for="company in userCompanies"
                       :key="company.id"
-                      :value="company.companyName"
+                      :value="company.id"
                   >
                     {{ company.companyName }}
                   </option>
@@ -525,6 +812,27 @@
                       <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                     </svg>
                     Password
+                  </button>
+
+                  <!-- NEW: Request Limits -->
+                  <button
+                      @click="activeSetting = 'limits'"
+                      :class="['settings-nav-item', { active: activeSetting === 'limits' }]"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+                    </svg>
+                    Request Limits
+                  </button>
+
+                  <button
+                      @click="activeSetting = 'history'"
+                      :class="['settings-nav-item', { active: activeSetting === 'history' }]"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18"></path>
+                    </svg>
+                    Request History
                   </button>
                 </nav>
               </aside>
@@ -631,7 +939,17 @@
                   <p class="settings-panel-desc">Enter your new phone number to receive an OTP for verification.</p>
                   <div class="form-group">
                     <label class="form-label">New Phone Number</label>
-                    <input type="tel" v-model="settingsForm.phone" class="form-input" placeholder="+1 123-456-7890"/>
+                    <div class="phone-input-group">
+                      <CountryCodeDropdown v-model="countryCode"/>
+                      <input
+                          type="tel"
+                          v-model="settingsForm.phone"
+                          class="form-input"
+                          maxlength="15"
+                          placeholder="Enter 9-15 digits"
+                          @input="handleSettingsPhone"
+                      />
+                    </div>
                   </div>
                   <button class="btn-primary" @click="updatePhone">Send OTP</button>
                 </div>
@@ -666,6 +984,321 @@
                   </p>
                 </div>
 
+                <!-- Request Limits Panel -->
+                <div v-if="activeSetting === 'limits'" class="settings-panel">
+                  <h2 class="settings-panel-title">Request More Limits</h2>
+                  <p class="settings-panel-desc">
+                    Need more companies or contacts? Request an increase and our admin will review your request.
+                  </p>
+
+                  <!-- Current Limits Display -->
+                  <div class="settings-limits-display">
+                    <div class="settings-limit-card">
+                      <div class="settings-limit-icon company">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                          <path
+                              d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"></path>
+                        </svg>
+                      </div>
+                      <div class="settings-limit-details">
+                        <span class="settings-limit-label">Companies</span>
+                        <div class="settings-limit-progress">
+                          <div class="settings-progress-bar">
+                            <div
+                                class="settings-progress-fill company"
+                                :style="{ width: `${(companyCount / userLimits.companyLimit) * 100}%` }"
+                            ></div>
+                          </div>
+                          <span class="settings-limit-text">{{ companyCount }} / {{ userLimits.companyLimit }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="settings-limit-card">
+                      <div class="settings-limit-icon contact">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="9" cy="7" r="4"></circle>
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                      </div>
+                      <div class="settings-limit-details">
+                        <span class="settings-limit-label">Contacts</span>
+                        <div class="settings-limit-progress">
+                          <div class="settings-progress-bar">
+                            <div
+                                class="settings-progress-fill contact"
+                                :style="{ width: `${(contactCount / userLimits.contactLimit) * 100}%` }"
+                            ></div>
+                          </div>
+                          <span class="settings-limit-text">{{ contactCount }} / {{ userLimits.contactLimit }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Request Form -->
+                  <form @submit.prevent="submitSettingsRequest" class="settings-request-form">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                        </svg>
+                        Additional Companies Needed
+                      </label>
+                      <div class="settings-quantity-selector">
+                        <button type="button" @click="decrementSettingsCompanies" class="settings-qty-btn">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                          </svg>
+                        </button>
+                        <input
+                            type="number"
+                            v-model.number="settingsRequestForm.companies"
+                            min="0"
+                            max="100"
+                            class="settings-qty-input"
+                        />
+                        <button type="button" @click="incrementSettingsCompanies" class="settings-qty-btn">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="9" cy="7" r="4"></circle>
+                        </svg>
+                        Additional Contacts Needed
+                      </label>
+                      <div class="settings-quantity-selector">
+                        <button type="button" @click="decrementSettingsContacts" class="settings-qty-btn">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                          </svg>
+                        </button>
+                        <input
+                            type="number"
+                            v-model.number="settingsRequestForm.contacts"
+                            min="0"
+                            max="500"
+                            class="settings-qty-input"
+                        />
+                        <button type="button" @click="incrementSettingsContacts" class="settings-qty-btn">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Reason for Request (Optional)
+                      </label>
+                      <textarea
+                          v-model="settingsRequestForm.reason"
+                          rows="3"
+                          class="form-input"
+                          placeholder="Tell us why you need more limits..."
+                      ></textarea>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn-primary"
+                        :disabled="settingsRequestLoading || (settingsRequestForm.companies === 0 && settingsRequestForm.contacts === 0)"
+                    >
+                      <svg v-if="!settingsRequestLoading" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+                      </svg>
+                      <span v-if="!settingsRequestLoading">Submit Request</span>
+                      <span v-else>⏳ Submitting...</span>
+                    </button>
+
+                    <p v-if="settingsRequestMessage"
+                       :class="['otp-message', settingsRequestSuccess ? 'success' : 'error']">
+                      {{ settingsRequestMessage }}
+                    </p>
+                  </form>
+                </div>
+
+                <!-- Request History Panel -->
+                <div v-if="activeSetting === 'history'" class="settings-panel">
+                  <h2 class="settings-panel-title">Request History</h2>
+                  <p class="settings-panel-desc">
+                    View all your limit increase requests and their current status.
+                  </p>
+
+                  <!-- Loading State -->
+                  <div v-if="historyLoading" class="history-loading">
+                    <div class="spinner"></div>
+                    <p>Loading your requests...</p>
+                  </div>
+
+                  <!-- Error State -->
+                  <div v-else-if="historyError" class="history-error">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <p>{{ historyError }}</p>
+                    <button @click="loadRequestHistory" class="btn-retry">Try Again</button>
+                  </div>
+
+                  <!-- Empty State -->
+                  <div v-else-if="!requestHistory || requestHistory.length === 0" class="history-empty">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18"></path>
+                    </svg>
+                    <h3>No Requests Yet</h3>
+                    <p>You haven't submitted any limit increase requests.</p>
+                    <button @click="activeSetting = 'limits'" class="btn-make-request">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+                      </svg>
+                      Make Your First Request
+                    </button>
+                  </div>
+
+                  <!-- Request List -->
+                  <div v-else class="history-list">
+                    <!-- Filter Tabs -->
+                    <div class="history-filters">
+                      <button
+                          @click="historyFilter = 'all'"
+                          :class="['filter-btn', { active: historyFilter === 'all' }]"
+                      >
+                        All ({{ requestHistory.length }})
+                      </button>
+                      <button
+                          @click="historyFilter = 'pending'"
+                          :class="['filter-btn', { active: historyFilter === 'pending' }]"
+                      >
+                        Pending ({{ filteredHistory('pending').length }})
+                      </button>
+                      <button
+                          @click="historyFilter = 'approved'"
+                          :class="['filter-btn', { active: historyFilter === 'approved' }]"
+                      >
+                        Approved ({{ filteredHistory('approved').length }})
+                      </button>
+                      <button
+                          @click="historyFilter = 'rejected'"
+                          :class="['filter-btn', { active: historyFilter === 'rejected' }]"
+                      >
+                        Rejected ({{ filteredHistory('rejected').length }})
+                      </button>
+                    </div>
+
+                    <!-- Request Cards -->
+                    <div class="history-cards">
+                      <div
+                          v-for="request in displayedHistory"
+                          :key="request.id"
+                          class="history-card"
+                      >
+                        <!-- Card Header -->
+                        <div class="history-card-header">
+                          <div class="history-card-title">
+                            <span class="request-id">#{{ request.id }}</span>
+                            <span :class="['status-pill', request.status]">
+              <svg v-if="request.status === 'pending'" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+              </svg>
+              <svg v-else-if="request.status === 'approved'" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+              {{ request.status.charAt(0).toUpperCase() + request.status.slice(1) }}
+            </span>
+                          </div>
+                          <div class="request-date">
+                            {{ formatDate(request.createdAt) }}
+                          </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="history-card-body">
+                          <div class="request-details">
+                            <div class="detail-item" v-if="request.requestedCompanies > 0">
+                              <div class="detail-icon company">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2">
+                                  <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                                </svg>
+                              </div>
+                              <div class="detail-content">
+                                <span class="detail-label">Companies Requested</span>
+                                <span class="detail-value">{{ request.requestedCompanies }}</span>
+                              </div>
+                            </div>
+
+                            <div class="detail-item" v-if="request.requestedContacts > 0">
+                              <div class="detail-icon contact">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2">
+                                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                  <circle cx="9" cy="7" r="4"></circle>
+                                </svg>
+                              </div>
+                              <div class="detail-content">
+                                <span class="detail-label">Contacts Requested</span>
+                                <span class="detail-value">{{ request.requestedContacts }}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div v-if="request.reason" class="request-reason">
+                            <div class="reason-header">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                              </svg>
+                              <span>Reason</span>
+                            </div>
+                            <p class="reason-text">{{ request.reason }}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Pagination (if needed) -->
+                    <div v-if="displayedHistory.length === 0 && historyFilter !== 'all'" class="no-filtered-results">
+                      <p>No {{ historyFilter }} requests found.</p>
+                    </div>
+                  </div>
+                </div>
+
               </section>
             </div>
           </div>
@@ -685,25 +1318,24 @@
 
             <form class="phone-popup-form" @submit.prevent="submitPhone">
               <div class="phone-form-group">
-
                 <label class="phone-form-label">Phone Number</label>
                 <div class="phone-input-group">
-                  <CountryCodeDropdown v-model="CountryCode"/>
+                  <CountryCodeDropdown v-model="countryCode"/>
                   <input
                       v-model="phoneNumber"
-                      maxlength="10"
+                      maxlength="15"
                       type="tel"
-                      placeholder="Enter 10-digit number"
+                      placeholder="Enter 9-15 digits"
                       class="phone-form-input"
+                      @input="handlePopupPhone"
                   />
                 </div>
               </div>
 
-
               <button
                   type="submit"
                   class="phone-submit-btn"
-                  :disabled="loading"
+                  :disabled="loading || phoneNumber.length !== 9"
               >
                 {{ loading ? "Saving..." : "Save & Continue" }}
               </button>
@@ -714,47 +1346,169 @@
         </div>
       </transition>
 
-      <!-- Contact Card Link Popup -->
+
+      <!-- Request Limit Increase Modal -->
       <transition name="modal">
-        <div v-if="showLinkPopup" class="link-popup-overlay" @click.self="showLinkPopup = false">
-          <div class="link-popup-container">
-            <!-- Header -->
-            <div class="link-popup-header">
-              <h2 class="link-popup-title">Your Contact Card Link</h2>
-              <button class="close-btn" @click="showLinkPopup = false">
+        <div v-if="showRequestModal" class="modal-overlay" @click="showRequestModal = false">
+          <div class="request-modal-container" @click.stop>
+            <div class="request-modal-header">
+              <h2 class="request-modal-title">Request Additional Limits</h2>
+              <button @click="showRequestModal = false" class="btn-close">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
               </button>
             </div>
 
-            <!-- Link and Copy -->
-            <div class="link-popup-body">
-              <input type="text" :value="cardLink" readonly class="link-display" />
-              <button @click="copyLink" class="copy-btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-              </button>
-            </div>
+            <div class="request-modal-body">
+              <!-- Current Limits Display -->
+              <div class="current-limits">
+                <h3>Your Current Limits</h3>
+                <div class="limits-grid">
+                  <div class="limit-card">
+                    <div class="limit-icon company">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                      </svg>
+                    </div>
+                    <div class="limit-info">
+                      <span class="limit-label">Companies</span>
+                      <span class="limit-value">{{ companyCount }} / {{ userLimits.companyLimit }}</span>
+                    </div>
+                  </div>
+                  <div class="limit-card">
+                    <div class="limit-icon contact">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                      </svg>
+                    </div>
+                    <div class="limit-info">
+                      <span class="limit-label">Contacts</span>
+                      <span class="limit-value">{{ contactCount }} / {{ userLimits.contactLimit }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <p v-if="copyMessage" class="copy-message">{{ copyMessage }}</p>
+              <!-- Request Form -->
+              <form @submit.prevent="submitRequest" class="request-form">
+                <div class="request-form-group">
+                  <label class="request-label">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                    </svg>
+                    How many companies do you need?
+                  </label>
+                  <div class="quantity-selector">
+                    <button type="button" @click="decrementCompanies" class="qty-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <input
+                        type="number"
+                        v-model.number="requestForm.companies"
+                        min="0"
+                        max="100"
+                        class="qty-input"
+                    />
+                    <button type="button" @click="incrementCompanies" class="qty-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="request-form-group">
+                  <label class="request-label">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                    </svg>
+                    How many contacts do you need?
+                  </label>
+                  <div class="quantity-selector">
+                    <button type="button" @click="decrementContacts" class="qty-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <input
+                        type="number"
+                        v-model.number="requestForm.contacts"
+                        min="0"
+                        max="500"
+                        class="qty-input"
+                    />
+                    <button type="button" @click="incrementContacts" class="qty-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="request-form-group">
+                  <label class="request-label">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Reason for request (optional)
+                  </label>
+                  <textarea
+                      v-model="requestForm.reason"
+                      rows="3"
+                      class="request-textarea"
+                      placeholder="Tell us why you need more limits..."
+                  ></textarea>
+                </div>
+
+                <div class="request-actions">
+                  <button type="submit" class="btn-submit-request"
+                          :disabled="requestLoading || (requestForm.companies === 0 && requestForm.contacts === 0)">
+                    <svg v-if="!requestLoading" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+                    </svg>
+                    <span v-if="!requestLoading">Submit Request</span>
+                    <span v-else>Submitting...</span>
+                  </button>
+                  <button type="button" @click="showRequestModal = false" class="btn-cancel-request">
+                    Cancel
+                  </button>
+                </div>
+
+                <p v-if="requestMessage" :class="['request-message', requestSuccess ? 'success' : 'error']">
+                  {{ requestMessage }}
+                </p>
+              </form>
+            </div>
           </div>
         </div>
       </transition>
-
 
     </div>
   </div>
 </template>
 
 <script setup>
-import {computed, nextTick, onMounted, onUnmounted, ref} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import api from "../services/api";
 import {useRouter} from 'vue-router';
 import CountryCodeDropdown from '../components/CountryCodeDropdown.vue'
+import {isValidPhoneNumber, parsePhoneNumber} from 'libphonenumber-js'
+import CountrySelector from '../components/CountrySelector.vue'
 
 const passwordForm = ref({
   current: '',
@@ -815,9 +1569,17 @@ const contactForm = ref({
   mobile: "",
   email: "",
   designation: "",
-  company: "",
+  companyId: "",
   photo: null,
   status: "active",
+  // NEW ADDRESS FIELDS
+  country: "",
+  streetAddress: "",
+  streetAddressLine2: "",
+  city: "",
+  postalCode: "",
+  poBox: "",
+  label: ""
 });
 
 const user = ref({
@@ -833,6 +1595,15 @@ const settingsForm = ref({
   email: '',
   phone: ''
 });
+
+const searchQuery = ref("");
+const currentPage = ref(1);
+const itemsPerPage = ref(5);
+
+const contactSearch = ref("");
+const contactPage = ref(1);
+const contactPerPage = ref(5);
+
 
 // Social Media
 const mainSocialMedia = ref([
@@ -861,7 +1632,486 @@ const showLinkPopup = ref(false);
 const copyMessage = ref("");
 
 const userPhone = ref(""); // store the logged user's phone
-const cardLink = computed(() => `http://localhost:5173/card/${userPhone.value}`);
+
+const userLimits = ref({
+  companyLimit: 1,
+  contactLimit: 1,
+  role: "user",
+});
+
+const companyCount = ref(0);
+const contactCount = ref(0);
+
+
+// Request Modal State
+const showRequestModal = ref(false);
+const requestForm = ref({
+  companies: 0,
+  contacts: 0,
+  reason: ''
+});
+const requestLoading = ref(false);
+const requestMessage = ref('');
+const requestSuccess = ref(false);
+
+// Settings Request Form State
+const settingsRequestForm = ref({
+  companies: 0,
+  contacts: 0,
+  reason: ''
+});
+const settingsRequestLoading = ref(false);
+const settingsRequestMessage = ref('');
+const settingsRequestSuccess = ref(false);
+
+// Request History State
+const requestHistory = ref([]);
+const historyLoading = ref(false);
+const historyError = ref('');
+const historyFilter = ref('all'); // 'all', 'pending', 'approved', 'rejected'
+
+const mobileExistsMessage = ref("");
+const mobileExists = ref(false);
+const checkingMobile = ref(false);
+
+let mobileCheckTimeout = null;
+
+// Validate and format phone number
+function validatePhone(value, countryCode) {
+  try {
+    // Remove all non-digits first
+    const digitsOnly = value.replace(/\D/g, '');
+
+    // Combine country code + number
+    const fullNumber = `${countryCode}${digitsOnly}`;
+
+    // Check if valid
+    if (isValidPhoneNumber(fullNumber)) {
+      const phoneNumber = parsePhoneNumber(fullNumber);
+      return {
+        isValid: true,
+        formatted: phoneNumber.formatInternational(), // e.g., "+94 77 123 4567"
+        national: phoneNumber.formatNational(), // e.g., "077 123 4567"
+        e164: phoneNumber.format('E.164'), // e.g., "+94771234567"
+        countryCode: phoneNumber.country,
+        type: phoneNumber.getType() // 'MOBILE', 'FIXED_LINE', etc.
+      };
+    }
+
+    return {
+      isValid: false,
+      error: 'Invalid phone number'
+    };
+  } catch (error) {
+    return {
+      isValid: false,
+      error: error.message
+    };
+  }
+}
+
+// Real-time validation messages
+const phoneValidation = ref({
+  telephone: {isValid: false, message: ''},
+  mobile: {isValid: false, message: ''},
+  settingsPhone: {isValid: false, message: ''},
+  popupPhone: {isValid: false, message: ''}
+});
+
+async function checkMobileDuplicate() {
+  // Clear previous timeout
+  clearTimeout(mobileCheckTimeout);
+
+  // First validate the phone number format
+  const validation = validatePhone(contactForm.value.mobile, mobileCountryCode.value);
+
+  if (!validation.isValid) {
+    mobileExistsMessage.value = "";
+    mobileExists.value = false;
+    phoneValidation.value.mobile = {
+      isValid: false,
+      message: validation.error
+    };
+    return;
+  }
+
+  // Update validation state
+  phoneValidation.value.mobile = {
+    isValid: true,
+    message: `✅ Valid ${validation.type || 'phone'} number`
+  };
+
+  // Debounce the API call
+  mobileCheckTimeout = setTimeout(async () => {
+    try {
+      checkingMobile.value = true;
+      mobileExistsMessage.value = "🔍 Checking availability...";
+
+      // Use E.164 format for database check
+      const res = await api.post("/dashboard/check-contact-mobile", {
+        mobile: validation.e164,
+        contactId: contactForm.value.id || null
+      });
+
+      if (res.data.exists) {
+        mobileExists.value = true;
+        mobileExistsMessage.value = "❌ This mobile number is already registered!";
+      } else {
+        mobileExists.value = false;
+        mobileExistsMessage.value = "✅ Number available";
+      }
+    } catch (err) {
+      mobileExists.value = false;
+      mobileExistsMessage.value = "⚠️ Error validating number.";
+      console.error("Mobile check error:", err);
+    } finally {
+      checkingMobile.value = false;
+    }
+  }, 500);
+}
+
+
+// Load Request History
+async function loadRequestHistory() {
+  try {
+    historyLoading.value = true;
+    historyError.value = '';
+
+    const res = await api.get("/dashboard/request-history", {
+      headers: {Authorization: `Bearer ${token}`}
+    });
+
+    requestHistory.value = res.data.requests || [];
+  } catch (err) {
+    console.error("❌ Error loading request history:", err);
+    historyError.value = err.response?.data?.message || "Failed to load request history.";
+  } finally {
+    historyLoading.value = false;
+  }
+}
+
+// Filter history by status
+function filteredHistory(status) {
+  if (status === 'all') return requestHistory.value;
+  return requestHistory.value.filter(req => req.status === status);
+}
+
+
+const displayedHistory = computed(() => {
+  if (historyFilter.value === 'all') {
+    return requestHistory.value;
+  }
+  return requestHistory.value.filter(req => req.status === historyFilter.value);
+});
+
+function validateNineDigitNumber(value) {
+  // Remove everything except digits
+  let cleaned = value.replace(/\D/g, "");
+
+  // Limit to 9 digits max
+  if (cleaned.length > 9) {
+    cleaned = cleaned.slice(0, 15);
+  }
+
+  return cleaned;
+}
+
+// Format date
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now - date);
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    return 'Today';
+  } else if (diffDays === 1) {
+    return 'Yesterday';
+  } else if (diffDays < 7) {
+    return `${diffDays} days ago`;
+  } else {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+}
+
+// Watch for settings modal opening and load history when switching to history tab
+watch(activeSetting, (newVal) => {
+  if (newVal === 'history' && requestHistory.value.length === 0) {
+    loadRequestHistory();
+  }
+});
+
+// Settings Quantity Control Functions
+function incrementSettingsCompanies() {
+  if (settingsRequestForm.value.companies < 100) {
+    settingsRequestForm.value.companies++;
+  }
+}
+
+function decrementSettingsCompanies() {
+  if (settingsRequestForm.value.companies > 0) {
+    settingsRequestForm.value.companies--;
+  }
+}
+
+function incrementSettingsContacts() {
+  if (settingsRequestForm.value.contacts < 500) {
+    settingsRequestForm.value.contacts++;
+  }
+}
+
+function decrementSettingsContacts() {
+  if (settingsRequestForm.value.contacts > 0) {
+    settingsRequestForm.value.contacts--;
+  }
+}
+
+// Submit Settings Request Function
+async function submitSettingsRequest() {
+  if (settingsRequestForm.value.companies === 0 && settingsRequestForm.value.contacts === 0) {
+    settingsRequestMessage.value = "Please request at least one company or contact.";
+    settingsRequestSuccess.value = false;
+    return;
+  }
+
+  try {
+    settingsRequestLoading.value = true;
+    settingsRequestMessage.value = '';
+
+    const res = await api.post(
+        "/dashboard/request-limits",
+        {
+          companies: settingsRequestForm.value.companies,
+          contacts: settingsRequestForm.value.contacts,
+          reason: settingsRequestForm.value.reason
+        },
+        {
+          headers: {Authorization: `Bearer ${token}`}
+        }
+    );
+
+    settingsRequestSuccess.value = true;
+    settingsRequestMessage.value = res.data.message || "Request submitted successfully! admin will review your request.";
+
+    // Reset form after 3 seconds
+    setTimeout(() => {
+      settingsRequestForm.value = {companies: 0, contacts: 0, reason: ''};
+      settingsRequestMessage.value = '';
+    }, 3000);
+
+  } catch (err) {
+    settingsRequestSuccess.value = false;
+    settingsRequestMessage.value = err.response?.data?.message || "Error submitting request.";
+  } finally {
+    settingsRequestLoading.value = false;
+  }
+}
+
+const filteredCompanies = computed(() => {
+  if (!searchQuery.value.trim()) return userCompanies.value;
+
+  const q = searchQuery.value.toLowerCase();
+
+  return userCompanies.value.filter(c =>
+      (c.companyName?.toLowerCase().includes(q)) ||
+      (c.email?.toLowerCase().includes(q)) ||
+      (c.website?.toLowerCase().includes(q)) ||
+      (c.view360?.toLowerCase().includes(q)) ||
+      (c.googleLocation?.toLowerCase().includes(q)) ||
+      (c.googleReviews?.toLowerCase().includes(q)) ||
+      (c.status?.toLowerCase().includes(q)) ||
+      String(c.id).includes(q)
+  );
+});
+
+// Quantity Control Functions
+function incrementCompanies() {
+  if (requestForm.value.companies < 100) {
+    requestForm.value.companies++;
+  }
+}
+
+function decrementCompanies() {
+  if (requestForm.value.companies > 0) {
+    requestForm.value.companies--;
+  }
+}
+
+function incrementContacts() {
+  if (requestForm.value.contacts < 500) {
+    requestForm.value.contacts++;
+  }
+}
+
+function decrementContacts() {
+  if (requestForm.value.contacts > 0) {
+    requestForm.value.contacts--;
+  }
+}
+
+// Submit Request Function
+async function submitRequest() {
+  if (requestForm.value.companies === 0 && requestForm.value.contacts === 0) {
+    requestMessage.value = "Please request at least one company or contact.";
+    requestSuccess.value = false;
+    return;
+  }
+
+  try {
+    requestLoading.value = true;
+    requestMessage.value = '';
+
+    const res = await api.post(
+        "/dashboard/request-limits",
+        {
+          companies: requestForm.value.companies,
+          contacts: requestForm.value.contacts,
+          reason: requestForm.value.reason
+        },
+        {
+          headers: {Authorization: `Bearer ${token}`}
+        }
+    );
+
+    requestSuccess.value = true;
+    requestMessage.value = res.data.message || "Request submitted successfully! admin will review your request.";
+
+    // Reset form after 2 seconds
+    setTimeout(() => {
+      showRequestModal.value = false;
+      requestForm.value = {companies: 0, contacts: 0, reason: ''};
+      requestMessage.value = '';
+    }, 2000);
+
+  } catch (err) {
+    requestSuccess.value = false;
+    requestMessage.value = err.response?.data?.message || "Error submitting request.";
+  } finally {
+    requestLoading.value = false;
+  }
+}
+
+const paginatedCompanies = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  return filteredCompanies.value.slice(start, start + itemsPerPage.value);
+});
+
+const totalPages = computed(() =>
+    Math.ceil(filteredCompanies.value.length / itemsPerPage.value)
+);
+
+const filteredContacts = computed(() => {
+  if (!contactSearch.value.trim()) return contacts.value;
+
+  const q = contactSearch.value.toLowerCase();
+
+  return contacts.value.filter(c =>
+      `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+      c.mobile?.toLowerCase().includes(q) ||
+      c.email?.toLowerCase().includes(q) ||
+      c.designation?.toLowerCase().includes(q) ||
+      c.status?.toLowerCase().includes(q) ||
+      c.Company?.companyName?.toLowerCase().includes(q)
+  );
+});
+
+const paginatedContacts = computed(() => {
+  const start = (contactPage.value - 1) * contactPerPage.value;
+  return filteredContacts.value.slice(start, start + contactPerPage.value);
+});
+
+const contactTotalPages = computed(() =>
+    Math.ceil(filteredContacts.value.length / contactPerPage.value)
+);
+
+
+// 🟢 Edit company
+function editCompany(selectedCompany) {
+  companyForm.value = {
+    ...selectedCompany,
+    logo: null, // don’t overwrite file uploads
+    socialLinks: selectedCompany.socialLinks || {},
+  };
+  showCompanyForm.value = true;
+}
+
+// 🟢 Delete company
+async function deleteCompany(companyId) {
+  if (!confirm("Are you sure you want to delete this company?")) return;
+
+  try {
+    await api.delete(`/dashboard/company/${companyId}`, {
+      headers: {Authorization: `Bearer ${token}`},
+    });
+    alert("✅ Company deleted successfully!");
+    loadData();
+  } catch (err) {
+    alert("❌ Failed to delete company: " + (err.response?.data?.message || err.message));
+  }
+}
+
+// 🟢 Edit contact
+function editContact(contact) {
+  // Extract just the number part (remove country code) for display
+  const extractNumber = (fullNumber) => {
+    if (!fullNumber) return '';
+    try {
+      const phoneNumber = parsePhoneNumber(fullNumber);
+      return phoneNumber.nationalNumber; // Gets number without country code
+    } catch {
+      return fullNumber.replace(/\D/g, '');
+    }
+  };
+
+  contactForm.value = {
+    id: contact.id,
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+    telephone: extractNumber(contact.telephone),
+    mobile: extractNumber(contact.mobile),
+    email: contact.email,
+    designation: contact.designation,
+    companyId: contact.companyId,
+    status: contact.status,
+    photo: null,
+  };
+
+  // Extract country codes
+  try {
+    if (contact.mobile) {
+      const mobilePhone = parsePhoneNumber(contact.mobile);
+      mobileCountryCode.value = `+${mobilePhone.countryCallingCode}`;
+    }
+    if (contact.telephone) {
+      const telPhone = parsePhoneNumber(contact.telephone);
+      telephoneCountryCode.value = `+${telPhone.countryCallingCode}`;
+    }
+  } catch (err) {
+    console.error("Error parsing phone numbers:", err);
+  }
+
+  showContactForm.value = true;
+}
+
+// 🟢 Delete contact
+async function deleteContact(contactId) {
+  if (!confirm("Are you sure you want to delete this contact?")) return;
+
+  try {
+    await api.delete(`/dashboard/contact/${contactId}`, {
+      headers: {Authorization: `Bearer ${token}`},
+    });
+    alert("✅ Contact deleted successfully!");
+    loadData();
+  } catch (err) {
+    alert("❌ Failed to delete contact: " + (err.response?.data?.message || err.message));
+  }
+}
+
 
 // ✅ Fetch user's phone (from API or localStorage)
 onMounted(() => {
@@ -871,22 +2121,10 @@ onMounted(() => {
   }
 });
 
-// ✅ Copy function
-const copyLink = async () => {
-  try {
-    await navigator.clipboard.writeText(cardLink.value);
-    copyMessage.value = "✅ Link copied!";
-    setTimeout(() => (copyMessage.value = ""), 2000);
-  } catch (err) {
-    copyMessage.value = "❌ Failed to copy!";
-  }
-};
-
-
 async function loadUserCompanies() {
   try {
     const res = await api.get('/dashboard/companies', {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {Authorization: `Bearer ${token}`},
     });
 
     userCompanies.value = res.data || [];
@@ -902,8 +2140,11 @@ onMounted(() => {
 
 
 function logout() {
-  localStorage.removeItem('token');
-  router.push('/login');
+  if (confirm("Are you sure you want to log out?")) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user"); // optional: clear stored user
+    router.push("/login");
+  }
 }
 
 function openSettings() {
@@ -925,18 +2166,21 @@ onMounted(async () => {
 });
 
 async function submitPhone() {
-  if (!/^\d{10}$/.test(phoneNumber.value)) {
-    errorMsg.value = "Please enter a valid 10-digit phone number.";
+  const validation = validatePhone(phoneNumber.value, countryCode.value);
+
+  if (!validation.isValid) {
+    errorMsg.value = validation.error || "Please enter a valid phone number.";
     return;
   }
 
   try {
     loading.value = true;
+    errorMsg.value = "";
+
     const res = await api.post(
         "/settings/add-phone",
         {
-          countryCode: countryCode.value,
-          phone: phoneNumber.value,
+          phone: validation.e164 // Send in E.164 format
         },
         {
           headers: {Authorization: `Bearer ${token}`},
@@ -945,6 +2189,7 @@ async function submitPhone() {
 
     alert(res.data.message || "Phone number saved!");
     showPhonePopup.value = false;
+    loadData();
   } catch (err) {
     errorMsg.value = err.response?.data?.message || "Failed to save phone number.";
   } finally {
@@ -1127,13 +2372,28 @@ async function updatePassword() {
 }
 
 async function updatePhone() {
-  if (!settingsForm.value.phone.trim()) return alert("Please enter a valid phone number.");
+  const validation = validatePhone(settingsForm.value.phone, countryCode.value);
+
+  if (!validation.isValid) {
+    alert(validation.error || "Please enter a valid phone number.");
+    return;
+  }
+
   try {
-    const res = await api.post("/settings/update-phone", {phone: settingsForm.value.phone}, {
-      headers: {Authorization: `Bearer ${token}`}
-    });
+    const res = await api.post(
+        "/settings/update-phone",
+        {
+          phone: validation.e164 // Send in E.164 format
+        },
+        {
+          headers: {Authorization: `Bearer ${token}`}
+        }
+    );
+
     alert(res.data.message || "OTP sent to your new phone number!");
     showSettings.value = false;
+    settingsForm.value.phone = "";
+    phoneValidation.value.settingsPhone = {isValid: false, message: ''};
   } catch (err) {
     alert("Error updating phone: " + (err.response?.data?.message || err.message));
   }
@@ -1195,48 +2455,98 @@ function removeCustomSocial(index) {
 
 async function loadData() {
   try {
-    // 1️⃣ Fetch dashboard data (company + contacts)
     const res = await api.get("/dashboard/data", {
       headers: {Authorization: `Bearer ${token}`},
     });
 
-    company.value = res.data.company || null;
+    // ✅ Handle single company from backend
+    userCompanies.value = res.data.companies || [];
     contacts.value = res.data.contacts || [];
 
-    // 2️⃣ Fetch logged-in user info
+    // ✅ Update counts
+    companyCount.value = userCompanies.value.length;
+    contactCount.value = contacts.value.length;
+
+    // ✅ Fetch user info
     const userRes = await api.get("/auth/me", {
       headers: {Authorization: `Bearer ${token}`},
     });
 
-    user.value.email = userRes.data.email || "";
-    user.value.phone = userRes.data.phone || "";
+    const userData = userRes.data;
+    user.value.email = userData.email || "";
+    user.value.phone = userData.phone || "";
+    userLimits.value.companyLimit = userData.companyLimit;
+    userLimits.value.contactLimit = userData.contactLimit;
+    userLimits.value.role = userData.role;
 
-    // 3️⃣ Pre-fill contact form (if empty)
-    if (!contactForm.value.email) contactForm.value.email = user.value.email;
-    if (!contactForm.value.mobile) contactForm.value.mobile = user.value.phone;
-
-    console.log("✅ Dashboard and user data loaded successfully.");
+    console.log("✅ Dashboard data loaded successfully.");
   } catch (err) {
     console.error("❌ Load dashboard error:", err);
     alert("Error loading dashboard data. Please refresh or log in again.");
   }
 }
 
+// Contact Form Mobile (with duplicate check)
+function handleContactMobile(event) {
+  const value = event.target.value.replace(/\D/g, '');
+  contactForm.value.mobile = value;
+
+  if (value.length > 0) {
+    checkMobileDuplicate();
+  } else {
+    phoneValidation.value.mobile = {isValid: false, message: ''};
+    mobileExistsMessage.value = '';
+    mobileExists.value = false;
+  }
+}
+
+// Settings Phone Change
+function handleSettingsPhone(event) {
+  const value = event.target.value.replace(/\D/g, '');
+  settingsForm.value.phone = value;
+
+  if (value.length > 0) {
+    const validation = validatePhone(value, countryCode.value);
+    phoneValidation.value.settingsPhone = {
+      isValid: validation.isValid,
+      message: validation.isValid
+          ? `✅ Valid ${validation.type || 'phone'}`
+          : `⚠️ ${validation.error}`
+    };
+  } else {
+    phoneValidation.value.settingsPhone = {isValid: false, message: ''};
+  }
+}
+
+// Phone Popup (mandatory phone)
+function handlePopupPhone(event) {
+  const value = event.target.value.replace(/\D/g, '');
+  phoneNumber.value = value;
+
+  if (value.length > 0) {
+    const validation = validatePhone(value, countryCode.value);
+    phoneValidation.value.popupPhone = {
+      isValid: validation.isValid,
+      message: validation.isValid
+          ? `✅ Valid ${validation.type || 'phone'}`
+          : `⚠️ ${validation.error}`
+    };
+  } else {
+    phoneValidation.value.popupPhone = {isValid: false, message: ''};
+  }
+}
 
 async function saveCompany() {
   try {
     const formData = new FormData();
-
-    // Add all form fields
     Object.keys(companyForm.value).forEach(key => {
-      if (key === 'logo' && companyForm.value[key]) {
-        formData.append('logo', companyForm.value[key]);
-      } else if (key !== 'logo') {
+      if (key === "logo" && companyForm.value[key]) {
+        formData.append("logo", companyForm.value[key]);
+      } else if (key !== "logo") {
         formData.append(key, companyForm.value[key]);
       }
     });
 
-    // Add social media links
     const socialLinks = {};
     mainSocialMedia.value.forEach(social => {
       if (social.enabled && social.url) {
@@ -1248,14 +2558,20 @@ async function saveCompany() {
         socialLinks[social.name] = social.url;
       }
     });
-    formData.append('socialLinks', JSON.stringify(socialLinks));
+    formData.append("socialLinks", JSON.stringify(socialLinks));
 
-    const res = await api.post("/dashboard/company", formData, {
+    const endpoint = companyForm.value.id
+        ? `/dashboard/company/${companyForm.value.id}`
+        : "/dashboard/company";
+    const method = companyForm.value.id ? "put" : "post";
+
+    const res = await api[method](endpoint, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data'
+        "Content-Type": "multipart/form-data",
       },
     });
+
     alert(res.data.message);
     showCompanyForm.value = false;
     loadData();
@@ -1264,47 +2580,173 @@ async function saveCompany() {
   }
 }
 
+
 async function saveContact() {
   try {
+    // Validate mobile (required)
+    const mobileValidation = validatePhone(contactForm.value.mobile, mobileCountryCode.value);
+    if (!mobileValidation.isValid) {
+      alert(`Mobile number error: ${mobileValidation.error}`);
+      return;
+    }
+
+    // Check if mobile exists
+    if (mobileExists.value) {
+      alert("❌ This mobile number is already registered.");
+      return;
+    }
+
+    // Validate telephone (optional, but if provided must be valid)
+    let telephoneE164 = null;
+    if (contactForm.value.telephone) {
+      const telValidation = validatePhone(contactForm.value.telephone, telephoneCountryCode.value);
+      if (!telValidation.isValid) {
+        alert(`Telephone number error: ${telValidation.error}`);
+        return;
+      }
+      telephoneE164 = telValidation.e164;
+    }
+
     const formData = new FormData();
 
     // Add all form fields
     Object.keys(contactForm.value).forEach(key => {
-      if (key === 'photo' && contactForm.value[key]) {
-        formData.append('photo', contactForm.value[key]);
-      } else if (key !== 'photo') {
+      if (key === "photo" && contactForm.value[key]) {
+        formData.append("photo", contactForm.value[key]);
+      } else if (key === "mobile") {
+        formData.append("mobile", mobileValidation.e164); // E.164 format
+      } else if (key === "telephone" && telephoneE164) {
+        formData.append("telephone", telephoneE164); // E.164 format
+      } else if (key !== "photo" && key !== "telephone" && key !== "mobile") {
         formData.append(key, contactForm.value[key]);
       }
     });
 
-    formData.append('telephoneCountryCode', telephoneCountryCode.value);
-    formData.append('mobileCountryCode', mobileCountryCode.value);
+    const endpoint = contactForm.value.id
+        ? `/dashboard/contact/${contactForm.value.id}`
+        : "/dashboard/contact";
+    const method = contactForm.value.id ? "put" : "post";
 
-
-    const res = await api.post("/dashboard/contact", formData, {
+    const res = await api[method](endpoint, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data'
+        "Content-Type": "multipart/form-data",
       },
     });
 
     alert(res.data.message);
     showContactForm.value = false;
     loadData();
+
+    // Reset form and validation states
+    contactForm.value = {
+      firstName: "",
+      lastName: "",
+      telephone: "",
+      mobile: "",
+      email: "",
+      designation: "",
+      companyId: "",
+      photo: null,
+      status: "active",
+    };
+    mobileExistsMessage.value = "";
+    mobileExists.value = false;
+    phoneValidation.value.telephone = {isValid: false, message: ''};
+    phoneValidation.value.mobile = {isValid: false, message: ''};
+
   } catch (err) {
     alert("Error saving contact: " + (err.response?.data?.message || err.message));
   }
 }
-
 
 onMounted(loadData);
 </script>
 
 
 <style scoped>
+
 * {
   box-sizing: border-box;
 }
+
+.section-heading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 1rem 0 0.5rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #3498db;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.table-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.search-input {
+  width: 240px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.pagination {
+  margin-top: 15px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.page-btn {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.page-btn.active {
+  background: #1a472a;
+  color: white;
+  border-color: #1a472a;
+}
+
+.pagination button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+.logo-thumb {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f3f3f3;
+  padding: 4px;
+  border: 1px solid #ddd;
+}
+
+.photo-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
 
 .dashboard-wrapper {
   min-height: 98vh;
@@ -1389,6 +2831,24 @@ onMounted(loadData);
   z-index: 2000;
 }
 
+.btn-action {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin: 0 4px;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.btn-action.edit:hover {
+  color: #007bff;
+}
+
+.btn-action.delete:hover {
+  color: #dc3545;
+}
+
+
 /* Popup Box */
 .link-popup-container {
   background: #fff;
@@ -1467,8 +2927,14 @@ onMounted(loadData);
 }
 
 @keyframes fadeIn {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .tabs-container {
@@ -2681,6 +4147,933 @@ onMounted(loadData);
 
   .social-links-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Limit Banner */
+.limit-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-bottom: 2px solid #f59e0b;
+  padding: 1rem 2rem;
+}
+
+.limit-banner-content {
+  max-width: 1337px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.limit-banner-icon {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b;
+}
+
+.limit-banner-text {
+  flex: 1;
+}
+
+.limit-banner-text h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.limit-banner-text p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #78350f;
+}
+
+.btn-request {
+  padding: 0.625rem 1.5rem;
+  background: white;
+  color: #f59e0b;
+  border: 2px solid #f59e0b;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-request:hover {
+  background: #f59e0b;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Request Modal */
+.request-modal-container {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+.request-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.request-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.request-modal-body {
+  padding: 2rem;
+}
+
+/* Current Limits */
+.current-limits {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.current-limits h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.limits-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.limit-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.limit-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.limit-icon.company {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.limit-icon.contact {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.limit-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.limit-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.limit-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Request Form */
+.request-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.request-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.request-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Quantity Selector */
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+}
+
+.qty-btn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.qty-btn:hover {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: white;
+  transform: scale(1.05);
+}
+
+.qty-btn:active {
+  transform: scale(0.95);
+}
+
+.qty-input {
+  flex: 1;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0.25rem;
+}
+
+.qty-input::-webkit-inner-spin-button,
+.qty-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.request-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.2s;
+}
+
+.request-textarea:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Request Actions */
+.request-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-submit-request {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-submit-request:hover:not(:disabled) {
+  background: #4338ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.btn-submit-request:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-cancel-request {
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-cancel-request:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.request-message {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.request-message.success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.request-message.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .limit-banner {
+    padding: 1rem;
+  }
+
+  .limit-banner-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .btn-request {
+    width: 100%;
+  }
+
+  .limits-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .request-modal-body {
+    padding: 1.5rem;
+  }
+
+  .request-actions {
+    flex-direction: column;
+  }
+
+  .btn-submit-request,
+  .btn-cancel-request {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .request-modal-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .request-modal-title {
+    font-size: 1.25rem;
+  }
+
+  .quantity-selector {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .qty-input {
+    font-size: 1rem;
+  }
+}
+
+/* Settings Limits Display */
+.settings-limits-display {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.settings-limit-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.settings-limit-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.settings-limit-icon.company {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.settings-limit-icon.contact {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.settings-limit-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings-limit-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.settings-limit-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.settings-progress-bar {
+  flex: 1;
+  height: 0.5rem;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.settings-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+.settings-progress-fill.company {
+  background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
+}
+
+.settings-progress-fill.contact {
+  background: linear-gradient(90deg, #22c55e 0%, #166534 100%);
+}
+
+.settings-limit-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+/* Settings Request Form */
+.settings-request-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.settings-quantity-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  gap: 1rem;
+}
+
+.settings-qty-btn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.settings-qty-btn:hover {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: white;
+  transform: scale(1.05);
+}
+
+.settings-qty-btn:active {
+  transform: scale(0.95);
+}
+
+.settings-qty-input {
+  flex: 1;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0.25rem;
+}
+
+.settings-qty-input::-webkit-inner-spin-button,
+.settings-qty-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Responsive adjustments for settings limits */
+@media (max-width: 768px) {
+  .settings-limit-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .settings-limit-progress {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .settings-progress-bar {
+    width: 100%;
+  }
+}
+
+/* History Loading State */
+.history-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid #e2e8f0;
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.history-loading p {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+/* History Error State */
+.history-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+  text-align: center;
+}
+
+.history-error svg {
+  color: #ef4444;
+}
+
+.history-error p {
+  color: #64748b;
+  font-size: 0.875rem;
+  max-width: 300px;
+}
+
+.btn-retry {
+  padding: 0.5rem 1.25rem;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+}
+
+.btn-retry:hover {
+  background: #4338ca;
+}
+
+/* History Empty State */
+.history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+  text-align: center;
+}
+
+.history-empty svg {
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+}
+
+.history-empty h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.history-empty p {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.btn-make-request {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 1rem;
+}
+
+.btn-make-request:hover {
+  background: #4338ca;
+  transform: translateY(-1px);
+}
+
+/* History List */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Filter Tabs */
+.history-filters {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  flex: 1;
+  min-width: fit-content;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: #64748b;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.filter-btn:hover {
+  background: white;
+  color: #0f172a;
+}
+
+.filter-btn.active {
+  background: white;
+  color: #4f46e5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* History Cards */
+.history-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.history-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.history-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+/* Card Header */
+.history-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.history-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.request-id {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-pill.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.request-date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Card Body */
+.history-card-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.request-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.detail-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.detail-icon.company {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.detail-icon.contact {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Request Reason */
+.request-reason {
+  padding: 1rem;
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: 0.5rem;
+}
+
+.reason-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: #854d0e;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.reason-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #713f12;
+  line-height: 1.6;
+}
+
+/* No Filtered Results */
+.no-filtered-results {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.875rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px dashed #cbd5e1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .history-filters {
+    flex-direction: column;
+  }
+
+  .filter-btn {
+    flex: auto;
+  }
+
+  .history-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .request-details {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-item {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .history-card-body {
+    padding: 1rem;
+  }
+
+  .detail-value {
+    font-size: 1rem;
   }
 }
 </style>

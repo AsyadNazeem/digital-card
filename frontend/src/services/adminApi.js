@@ -25,7 +25,7 @@ adminApi.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            console.warn("⛔ Admin unauthorized, logging out...");
+            console.warn("⛔ admin unauthorized, logging out...");
             localStorage.removeItem("adminToken");
             localStorage.removeItem("adminUser");
             router.push("/admin/login");

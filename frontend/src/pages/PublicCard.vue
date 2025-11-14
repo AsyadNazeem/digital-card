@@ -172,14 +172,18 @@ onMounted(async () => {
   try {
     const phone = route.params.phone;
     const res = await api.get(`/public/${phone}`);
+
     company.value = res.data.company || {};
-    contacts.value = res.data.contacts || [];
+
+    // Backend returns: contact (object)
+    contacts.value = res.data.contact ? [res.data.contact] : [];
   } catch (err) {
     console.error("❌ Error loading public card:", err);
   } finally {
     loaded.value = true;
   }
 });
+
 
 const formatUrl = (url) => {
   if (!url) return "";

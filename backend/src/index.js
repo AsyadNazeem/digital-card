@@ -5,6 +5,7 @@ import sequelize from "./config/database.js"; // ✅ must exist
 import User from "./models/User.js"; // ✅ import your models here
 import Company from "./models/Company.js";
 import Contact from "./models/Contact.js";
+import Request from "./models/Request.js";
 import authRoutes from "./routes/auth.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import path from "path";

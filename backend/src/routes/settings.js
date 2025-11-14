@@ -162,7 +162,7 @@ router.post("/add-phone", authenticateToken, async (req, res) => {
     try {
         const { phone, countryCode } = req.body;
 
-        if (!phone || !/^\d{10}$/.test(phone)) {
+        if (!phone || !/^\d{7,15}$/.test(phone)) {
             return res.status(400).json({ message: "Invalid phone number format." });
         }
 

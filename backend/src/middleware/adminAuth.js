@@ -14,12 +14,12 @@ export const authenticateAdmin = async (req, res, next) => {
 
         const admin = await Admin.findByPk(decoded.id);
         if (!admin) return res.status(401).json({ message: "Invalid token" });
-        if (admin.status !== "active") return res.status(403).json({ message: "Admin inactive" });
+        if (admin.status !== "active") return res.status(403).json({ message: "admin inactive" });
 
         req.admin = admin;
         next();
     } catch (err) {
-        console.error("❌ Admin auth error:", err);
+        console.error("❌ admin auth error:", err);
         if (err.name === "TokenExpiredError") {
             return res.status(401).json({ message: "Session expired. Please log in again." });
         }

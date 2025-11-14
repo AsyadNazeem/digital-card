@@ -1,23 +1,51 @@
+// models/Company.js
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import User from "./User.js";
 
-const Company = sequelize.define("Company", {
-    heading: { type: DataTypes.STRING },
-    companyName: { type: DataTypes.STRING },
-    website: { type: DataTypes.STRING },
-    displayUrl: { type: DataTypes.STRING },
-    email: { type: DataTypes.STRING },
-    bio: { type: DataTypes.TEXT },
-    logo: { type: DataTypes.STRING }, // image path
-    view360: { type: DataTypes.STRING },
-    googleLocation: { type: DataTypes.STRING },
-    googleReviews: { type: DataTypes.STRING },
-    socialLinks: { type: DataTypes.JSON }, // stores as JSON object
-    status: { type: DataTypes.ENUM("active", "inactive"), defaultValue: "active" },
-});
+const Company = sequelize.define(
+    "Company",
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: User,
+                key: "id",
+            },
+            onDelete: "CASCADE",
+        },
+        heading: DataTypes.STRING,
+        companyName: DataTypes.STRING,
+        website: DataTypes.STRING,
+        displayUrl: DataTypes.STRING,
+        email: DataTypes.STRING,
+        bio: DataTypes.TEXT,
+        logo: DataTypes.STRING,
+        view360: DataTypes.STRING,
+        googleLocation: DataTypes.STRING,
+        googleReviews: DataTypes.STRING,
+        status: {
+            type: DataTypes.STRING,
+            defaultValue: "active",
+        },
+        socialLinks: {
+            type: DataTypes.JSON,
+            allowNull: true,
+        },
+    },
+    {
+        timestamps: true,
+    }
+);
 
-User.hasOne(Company, { foreignKey: "userId" });
+// ✅ FIXED: One user can have MANY companies
+User.hasMany(Company, { foreignKey: "userId", onDelete: "CASCADE" });
 Company.belongsTo(User, { foreignKey: "userId" });
 
 export default Company;

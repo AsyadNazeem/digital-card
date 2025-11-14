@@ -77,7 +77,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import adminApi from "../services/adminApi";
+import adminApi from "../../services/adminApi.js";
 
 const router = useRouter();
 const usernameOrEmail = ref("");
