@@ -1327,7 +1327,7 @@
                       type="tel"
                       placeholder="Enter 9-15 digits"
                       class="phone-form-input"
-                      @input="handlePopupPhone"
+                      @input="handleContactMobile"
                   />
                 </div>
               </div>

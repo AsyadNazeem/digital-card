@@ -25,20 +25,35 @@
       <div class="auth-card">
         <div class="form-container">
           <div class="form-group">
-            <label class="form-label">Phone Number</label>
+            <div class="label-row">
+              <label class="form-label">Phone Number</label>
+
+              <div class="info-icon-wrapper">
+                <span class="info-icon">ℹ</span>
+                <div class="tooltip">
+                  You can log in using:<br>
+                  • Email address<br>
+                  • Phone number in this format:<br>
+                  <b>+94771234567</b>
+                </div>
+              </div>
+            </div>
+
             <div class="input-wrapper">
               <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
               </svg>
+
               <input
-                  v-model="phone"
-                  type="tel"
+                  v-model="identifier"
+                  type="text"
                   class="form-input"
-                  placeholder="Enter your phone number"
+                  placeholder="Enter email or phone"
                   required
               />
             </div>
           </div>
+
 
           <div class="form-group">
             <label class="form-label">Password</label>
@@ -147,7 +162,7 @@ import { useRouter } from 'vue-router'
 import api from '../services/api'
 
 const router = useRouter()
-const phone = ref('')
+const identifier = ref('')
 const password = ref('')
 const message = ref('')
 const messageType = ref('error')
@@ -162,7 +177,7 @@ async function login() {
     message.value = '';
 
     const res = await api.post('/auth/login', {
-      phone: phone.value.trim(),
+      identifier: identifier.value.trim(),
       password: password.value.trim(),
     });
 
@@ -282,6 +297,89 @@ async function handleGoogleLogin() {
 * {
   box-sizing: border-box;
 }
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-icon-wrapper {
+  position: relative;
+}
+
+.info-icon {
+  width: 16px;
+  height: 16px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.tooltip {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 20px;
+  background: #1f2937;
+  color: white;
+  padding: 10px;
+  width: 230px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  z-index: 999;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.info-icon:hover + .tooltip {
+  display: block;
+}
+
+.login-info {
+  position: relative;
+  margin-top: -10px;
+  font-size: 0.85rem;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info-icon {
+  width: 16px;
+  height: 16px;
+  background: orange;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.tooltip {
+  display: none;
+  position: absolute;
+  left: 25px;
+  top: -10px;
+  background: #1f2937;
+  color: white;
+  padding: 8px;
+  border-radius: 6px;
+  width: 220px;
+  font-size: 0.8rem;
+  z-index: 100;
+}
+
+.info-icon:hover + .tooltip {
+  display: block;
+}
+
 
 .auth-wrapper {
   min-height: 98vh;

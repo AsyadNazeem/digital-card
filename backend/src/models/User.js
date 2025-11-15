@@ -22,10 +22,6 @@ const User = sequelize.define(
                 isEmail: true,
             },
         },
-        countryCode: {
-            type: DataTypes.STRING(5),
-            allowNull: true,
-        },
         phone: {
             type: DataTypes.STRING,
             allowNull: true,

@@ -4,8 +4,7 @@ import dotenv from "dotenv";
 import User from "../models/User.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import bcrypt from "bcryptjs";
-
-
+import { validatePhoneNumberGoogle } from "../utils/phoneValidator.js";
 
 dotenv.config();
 const router = express.Router();
@@ -158,27 +157,34 @@ router.post("/change-username", authenticateToken, async (req, res) => {
     }
 });
 
+
 router.post("/add-phone", authenticateToken, async (req, res) => {
     try {
-        const { phone, countryCode } = req.body;
+        const { phone } = req.body;
 
-        if (!phone || !/^\d{7,15}$/.test(phone)) {
-            return res.status(400).json({ message: "Invalid phone number format." });
+        // Validate using Google/libphonenumber-js
+        const validated = validatePhoneNumberGoogle(phone);
+
+        if (!validated.isValid) {
+            return res.status(400).json({ message: validated.error });
         }
 
         const user = await User.findByPk(req.user.id);
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
-        user.phone = phone;
-        user.countryCode = countryCode || "+94";
+        user.phone = validated.e164; // always store in E.164 format
         await user.save();
 
-        res.json({ message: "Phone number added successfully!" });
+        res.json({ message: "Phone number added successfully!", phone: validated.e164 });
+
     } catch (err) {
         console.error("❌ Add phone error:", err);
         res.status(500).json({ message: "Failed to save phone number." });
     }
 });
+
 
 
 

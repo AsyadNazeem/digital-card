@@ -6,6 +6,9 @@ import { authenticateToken } from "../middleware/authMiddleware.js";
 import axios from "axios";
 import dotenv from "dotenv";
 import { OAuth2Client } from "google-auth-library";
+import { validatePhoneNumberGoogle } from "../utils/phoneValidator.js";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+
 
 dotenv.config();
 const router = express.Router();
@@ -22,7 +25,8 @@ console.log("🔍 ENV TEST:", {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET ? "✅ Loaded" : "❌ Missing",
 });
 
-// ✅ REGISTER ROUTE
+
+
 router.post("/register", async (req, res) => {
     try {
         const { name, email, phone, password, countryCode } = req.body;
@@ -30,42 +34,79 @@ router.post("/register", async (req, res) => {
         if (!name || !email || !phone || !password || !countryCode)
             return res.status(400).json({ message: "All fields are required" });
 
-        const existing = await User.findOne({ where: { phone } });
-        if (existing) return res.status(409).json({ message: "Phone already registered" });
+        // Combine country code + phone
+        const fullPhone = `${countryCode}${phone}`.replace(/\s+/g, "");
+
+        // Validate with Google/libphonenumber-js
+        const validated = validatePhoneNumberGoogle(fullPhone);
+        if (!validated.isValid) {
+            return res.status(400).json({ message: validated.error });
+        }
+
+        const phoneE164 = validated.e164;
+
+        const existing = await User.findOne({ where: { phone: phoneE164 } });
+        if (existing) {
+            return res.status(409).json({ message: "Phone already registered" });
+        }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({
             name,
             email,
-            phone,
-            countryCode,
+            phone: phoneE164,
             password: hashedPassword,
             provider: "local",
             registrationType: "self"
         });
 
-        return res.status(201).json({ message: "Registered successfully", user });
+        return res.status(201).json({
+            message: "Registered successfully",
+            user
+        });
+
     } catch (err) {
         console.error("❌ Register error:", err);
-        return res.status(500).json({ message: err.message || "Registration failed" });
+        return res.status(500).json({ message: "Registration failed" });
     }
 });
 
-// ✅ LOGIN ROUTE
+
 router.post("/login", async (req, res) => {
     try {
-        const { phone, password } = req.body;
+        const { identifier, password } = req.body;
+        // identifier = email OR phone
 
-        if (!phone || !password)
-            return res.status(400).json({ message: "Phone and password are required" });
+        if (!identifier || !password)
+            return res.status(400).json({ message: "Email/Phone and password are required" });
 
-        const user = await User.findOne({ where: { phone } });
+        let user = null;
+
+        // If identifier contains @ → treat as email login
+        if (identifier.includes("@")) {
+            user = await User.findOne({ where: { email: identifier.trim() } });
+        }
+        else {
+            // Try to parse phone as E.164
+            let parsed = parsePhoneNumberFromString(identifier);
+
+            if (!parsed || !parsed.isValid()) {
+                return res.status(400).json({
+                    message: "Invalid phone number format. Example: +94771234567"
+                });
+            }
+
+            const phoneE164 = parsed.format("E.164");
+
+            user = await User.findOne({ where: { phone: phoneE164 } });
+        }
+
         if (!user) return res.status(404).json({ message: "User not found" });
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch)
-            return res.status(401).json({ message: "Invalid phone or password" });
+            return res.status(401).json({ message: "Invalid credentials" });
 
         const token = jwt.sign(
             { id: user.id, phone: user.phone },
@@ -81,13 +122,15 @@ router.post("/login", async (req, res) => {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-            },
+            }
         });
+
     } catch (err) {
         console.error("❌ Login error:", err);
         res.status(500).json({ message: "Server error during login" });
     }
 });
+
 
 // ✅ GET CURRENT USER INFO
 router.get("/me", authenticateToken, async (req, res) => {
