@@ -35,6 +35,11 @@ const routes = [
                 component: () => import("../pages/admin/AdminUsers.vue"),
             },
             {
+                path: "users/create",
+                name: "AdminRegisterUser",
+                component: () => import("../pages/admin/AdminRegisterUser.vue"),
+            },
+            {
                 path: "requests",
                 name: "AdminRequests",
                 component: () => import("../pages/admin/AdminRequests.vue"),
@@ -53,17 +58,12 @@ const router = createRouter({
     routes,
 });
 
-
-// =============================================
-// 🚀 FIXED & SECURE NAVIGATION GUARD
-// =============================================
+// Navigation Guard
 router.beforeEach((to, from, next) => {
     const userToken = localStorage.getItem("token");
     const adminToken = localStorage.getItem("adminToken");
 
-    // -----------------------------
     // USER-PROTECTED ROUTES
-    // -----------------------------
     if (to.meta.requiresAuth && !userToken) {
         return next("/login");
     }
@@ -72,9 +72,7 @@ router.beforeEach((to, from, next) => {
         return next("/dashboard");
     }
 
-    // -----------------------------
     // ADMIN-PROTECTED ROUTES
-    // -----------------------------
     if (to.meta.requiresAdminAuth && !adminToken) {
         return next("/admin/login");
     }
@@ -82,6 +80,5 @@ router.beforeEach((to, from, next) => {
     // Always allow navigation if no conditions block it
     return next();
 });
-
 
 export default router;

@@ -1,8 +1,9 @@
 import axios from "axios";
 import router from "../router";
+import { API_BASE_URL } from "../config.js";
 
 const adminApi = axios.create({
-    baseURL: "http://localhost:4000/api/admin",
+    baseURL: `${API_BASE_URL}/api/admin`,
 });
 
 // ✅ Always attach the admin token

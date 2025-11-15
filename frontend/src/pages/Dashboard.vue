@@ -126,7 +126,7 @@
                 <td>
                   <img
                       v-if="c.logo"
-                      :src="`http://localhost:4000${c.logo}`"
+                      :src="`${API_BASE_URL}${c.logo}`"
                       alt="Logo"
                       class="logo-thumb"
                   />
@@ -479,7 +479,7 @@
                 <td>
                   <img
                       v-if="c.photo"
-                      :src="`http://localhost:4000${c.photo}`"
+                      :src="`${API_BASE_URL}${c.photo}`"
                       class="photo-thumb"
                       alt="Contact Photo"
                   />
@@ -1498,6 +1498,26 @@
         </div>
       </transition>
 
+      <!-- Logo Cropper Modal -->
+      <ImageCropperModal
+          :show="showLogoCropper"
+          :imageSrc="tempLogoSrc"
+          type="logo"
+          title="Crop Company Logo"
+          @close="showLogoCropper = false"
+          @cropped="handleLogoCropped"
+      />
+
+      <!-- Photo Cropper Modal -->
+      <ImageCropperModal
+          :show="showPhotoCropper"
+          :imageSrc="tempPhotoSrc"
+          type="photo"
+          title="Crop Contact Photo"
+          @close="showPhotoCropper = false"
+          @cropped="handlePhotoCropped"
+      />
+
     </div>
   </div>
 </template>
@@ -1509,6 +1529,13 @@ import {useRouter} from 'vue-router';
 import CountryCodeDropdown from '../components/CountryCodeDropdown.vue'
 import {isValidPhoneNumber, parsePhoneNumber} from 'libphonenumber-js'
 import CountrySelector from '../components/CountrySelector.vue'
+import ImageCropperModal from '../components/ImageCropper.vue'
+import { API_BASE_URL } from "../config.js";
+
+const showLogoCropper = ref(false);
+const showPhotoCropper = ref(false);
+const tempLogoSrc = ref('');
+const tempPhotoSrc = ref('');
 
 const passwordForm = ref({
   current: '',
@@ -2402,15 +2429,31 @@ async function updatePhone() {
 function handleLogoUpload(event) {
   const file = event.target.files[0];
   if (file) {
-    companyForm.value.logo = file;
     logoFileName.value = file.name;
 
+    // Create temporary URL for cropper
     const reader = new FileReader();
     reader.onload = (e) => {
-      logoPreview.value = e.target.result;
+      tempLogoSrc.value = e.target.result;
+      showLogoCropper.value = true;
     };
     reader.readAsDataURL(file);
   }
+}
+
+function handleLogoCropped(blob) {
+  // Convert blob to file
+  const file = new File([blob], logoFileName.value || 'logo.jpg', { type: 'image/jpeg' });
+  companyForm.value.logo = file;
+
+  // Create preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    logoPreview.value = e.target.result;
+  };
+  reader.readAsDataURL(blob);
+
+  showLogoCropper.value = false;
 }
 
 function removeLogo() {
@@ -2423,15 +2466,31 @@ function removeLogo() {
 function handlePhotoUpload(event) {
   const file = event.target.files[0];
   if (file) {
-    contactForm.value.photo = file;
     photoFileName.value = file.name;
 
+    // Create temporary URL for cropper
     const reader = new FileReader();
     reader.onload = (e) => {
-      photoPreview.value = e.target.result;
+      tempPhotoSrc.value = e.target.result;
+      showPhotoCropper.value = true;
     };
     reader.readAsDataURL(file);
   }
+}
+
+function handlePhotoCropped(blob) {
+  // Convert blob to file
+  const file = new File([blob], photoFileName.value || 'photo.jpg', { type: 'image/jpeg' });
+  contactForm.value.photo = file;
+
+  // Create preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    photoPreview.value = e.target.result;
+  };
+  reader.readAsDataURL(blob);
+
+  showPhotoCropper.value = false;
 }
 
 function removePhoto() {

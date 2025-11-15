@@ -10,23 +10,29 @@
       <!-- Header Section -->
       <div class="header-section">
         <!-- Contact Photo (Half-screen background) -->
-        <div class="contact-photo-container" v-if="contacts.length">
-          <img
-              :src="`http://localhost:4000${contacts[0].photo}`"
-              alt="Contact Photo"
-              class="contact-photo-bg"
-          />
-          <div class="photo-overlay"></div>
+        <!-- Header Section -->
+        <div class="header-section">
+          <!-- Company Logo as background (SWAPPED) -->
+          <div class="company-logo-container" v-if="company.logo">
+            <img
+                :src="`${API_BASE_URL}${company.logo}`"
+                alt="Company Logo"
+                class="company-logo-bg"
+            />
+            <div class="logo-overlay"></div>
+          </div>
+
+          <!-- Centered Contact Photo (Overlapping Boundary) (SWAPPED) -->
+          <div class="contact-photo-center" v-if="contacts.length && contacts[0].photo">
+            <img
+                :src="`${API_BASE_URL}${contacts[0].photo}`"
+                alt="Contact Photo"
+                class="contact-photo-circle"
+            />
+          </div>
         </div>
 
-        <!-- Centered Company Logo (Overlapping Boundary) -->
-        <div class="company-logo-center" v-if="company.logo">
-          <img
-              :src="`http://localhost:4000${company.logo}`"
-              alt="Company Logo"
-              class="company-logo-circle"
-          />
-        </div>
+
       </div>
 
       <!-- Company Info Section (White Background) -->
@@ -162,6 +168,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import api from "../services/api";
+import { API_BASE_URL } from "../config.js";
 
 const route = useRoute();
 const company = ref({});
@@ -193,7 +200,7 @@ const formatUrl = (url) => {
   return url;
 };
 
-const saveContact = () => {
+const saveContact = async () => {
   if (!contacts.value.length) {
     console.error("No contact information available to save.");
     return;
@@ -201,32 +208,124 @@ const saveContact = () => {
 
   const contact = contacts.value[0];
 
-  const vcard = `BEGIN:VCARD
+  try {
+    // Fetch and convert photo to base64 if available
+    let photoBase64 = '';
+    if (contact.photo) {
+      try {
+        const photoUrl = `${API_BASE_URL}${contact.photo}`;
+        const response = await fetch(photoUrl);
+        const blob = await response.blob();
+
+        // Convert blob to base64
+        photoBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            // Remove the data:image/xxx;base64, prefix
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (error) {
+        console.warn("Failed to fetch photo:", error);
+      }
+    }
+
+    // Build address components
+    const addressParts = [];
+
+    // VCF ADR format: ;;street;city;region;postal-code;country
+    addressParts.push(''); // PO Box
+    addressParts.push(''); // Extended address
+    addressParts.push(contact.streetAddress || ''); // Street address
+    addressParts.push(contact.city || ''); // City
+    addressParts.push(''); // State/Province (if you add this field later)
+    addressParts.push(contact.postalCode || ''); // Postal code
+    addressParts.push(contact.country || ''); // Country
+
+    const addressString = addressParts.join(';');
+    const hasAddress = contact.streetAddress || contact.city || contact.postalCode || contact.country;
+
+    // Build VCF content
+    let vcard = `BEGIN:VCARD
 VERSION:3.0
 FN:${contact.firstName} ${contact.lastName}
 N:${contact.lastName};${contact.firstName};;;
-ORG:${company.value.companyName}
-TITLE:${contact.designation}
-TEL;TYPE=CELL:${contact.mobile}
-TEL;TYPE=WORK:${company.value.phone}
-EMAIL;TYPE=PREF,INTERNET:${contact.email}
-URL;TYPE=WORK:${company.value.website}
-ADR;TYPE=WORK:;;;${company.value.address};;;
-END:VCARD`;
+ORG:${company.value.companyName || ''}
+TITLE:${contact.designation || ''}`;
 
-  const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
+    // Add telephone if available
+    if (contact.telephone) {
+      vcard += `\nTEL;TYPE=VOICE:${contact.telephone}`;
+    }
 
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${contact.firstName}_${contact.lastName}.vcf`;
+    // Add mobile
+    if (contact.mobile) {
+      vcard += `\nTEL;TYPE=CELL:${contact.mobile}`;
+    }
 
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+    // Add company phone
+    if (company.value.phone) {
+      vcard += `\nTEL;TYPE=WORK:${company.value.phone}`;
+    }
 
-  URL.revokeObjectURL(url);
-  console.log("Contact VCF download triggered.");
+    // Add email
+    if (contact.email) {
+      vcard += `\nEMAIL;TYPE=PREF,INTERNET:${contact.email}`;
+    }
+
+    // Add website
+    if (company.value.website) {
+      vcard += `\nURL;TYPE=WORK:${company.value.website}`;
+    }
+
+    // Add address with proper label
+    if (hasAddress) {
+      const label = contact.label || 'WORK';
+      vcard += `\nADR;TYPE=${label}:${addressString}`;
+
+      // Add formatted address label for better display
+      const formattedAddress = [
+        contact.streetAddress,
+        contact.streetAddressLine2,
+        contact.city,
+        contact.postalCode,
+        contact.country
+      ].filter(Boolean).join(', ');
+
+      if (formattedAddress) {
+        vcard += `\nLABEL;TYPE=${label}:${formattedAddress}`;
+      }
+    }
+
+    // Add photo if available
+    if (photoBase64) {
+      // Split base64 into 76-character lines as per VCF spec
+      const photoLines = photoBase64.match(/.{1,76}/g);
+      vcard += `\nPHOTO;ENCODING=b;TYPE=JPEG:${photoLines.join('\n ')}`;
+    }
+
+    vcard += `\nEND:VCARD`;
+
+    // Create and download VCF file
+    const vcfBlob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+    const url = URL.createObjectURL(vcfBlob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${contact.firstName}_${contact.lastName}.vcf`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+    console.log("✅ Contact VCF with photo and address downloaded successfully.");
+  } catch (error) {
+    console.error("❌ Error generating VCF:", error);
+  }
 };
 
 const getIcon = (name) => {
@@ -267,6 +366,57 @@ const getSocialIcon = (name) => {
   background: #1a472a;
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
+}
+
+/* Company Logo background (SWAPPED) */
+.company-logo-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.company-logo-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transform: scale(1.05);
+  transition: transform 0.8s ease;
+}
+
+.company-logo-container:hover .company-logo-bg {
+  transform: scale(1.08);
+}
+
+/* Smooth fade into bottom */
+.logo-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(26, 71, 42, 0) 0%, #ffffff 100%);
+}
+
+/* Centered Contact Photo (Overlapping) (SWAPPED) */
+.contact-photo-center {
+  position: absolute;
+  bottom: -75px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  background: white;
+  border-radius: 50%;
+  padding: 8px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+}
+
+.contact-photo-circle {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid white;
 }
 
 /* Contact photo background */

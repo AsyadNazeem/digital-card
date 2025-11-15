@@ -1,8 +1,11 @@
 import express from "express";
 import { authenticateAdmin } from "../middleware/adminAuth.js";
 import User from "../models/User.js";
-import Request from "../models/Request.js";  // ✅ Add this import
+import Request from "../models/Request.js";
 import { Op } from "sequelize";
+import bcrypt from "bcryptjs";
+import Company from "../models/Company.js";
+import Contact from "../models/Contact.js";
 
 const router = express.Router();
 
@@ -28,7 +31,6 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
             where: { createdAt: { [Op.gte]: monthStart } },
         });
 
-        // 🟢 Count Google users using `provider`
         const google = await User.count({ where: { provider: "google" } });
         const local = await User.count({ where: { provider: "local" } });
 
@@ -43,7 +45,17 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
 router.get("/users", authenticateAdmin, async (req, res) => {
     try {
         const users = await User.findAll({
-            attributes: ["id", "name", "phone", "email", "provider", "createdAt"],
+            attributes: [
+                "id",
+                "name",
+                "phone",
+                "email",
+                "provider",
+                "registrationType",
+                "companyLimit",
+                "contactLimit",
+                "createdAt"
+            ],
             order: [["createdAt", "DESC"]],
         });
         res.json({ users });
@@ -53,7 +65,102 @@ router.get("/users", authenticateAdmin, async (req, res) => {
     }
 });
 
-// ✅ PATCH: (Disabled toggle, since no status column)
+// ✅ GET: User's companies
+router.get("/user/:userId/companies", authenticateAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const companies = await Company.findAll({
+            where: { userId },
+            attributes: [
+                'id',
+                'companyName',
+                'website',
+                'displayUrl',
+                'email',
+                'status',
+                'createdAt'
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        console.log(`📊 Found ${companies.length} companies for user ${userId}`);
+        res.json({ success: true, companies });
+    } catch (err) {
+        console.error("❌ Error fetching user companies:", err);
+        res.status(500).json({
+            message: "Error fetching companies",
+            error: err.message
+        });
+    }
+});
+
+// ✅ GET: User's contacts
+router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const contacts = await Contact.findAll({
+            where: { userId },
+            attributes: [
+                'id',
+                'firstName',
+                'lastName',
+                'email',
+                'mobile',
+                'telephone',
+                'designation',
+                'status',
+                'createdAt'
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        console.log(`📞 Found ${contacts.length} contacts for user ${userId}`);
+        res.json({ success: true, contacts });
+    } catch (err) {
+        console.error("❌ Error fetching user contacts:", err);
+        res.status(500).json({
+            message: "Error fetching contacts",
+            error: err.message
+        });
+    }
+});
+
+// ✅ PATCH: Update user limits
+router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { companyLimit, contactLimit } = req.body;
+
+        if (!companyLimit || companyLimit < 1 || !contactLimit || contactLimit < 1) {
+            return res.status(400).json({ message: "Limits must be at least 1" });
+        }
+
+        const user = await User.findByPk(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        await user.update({
+            companyLimit: parseInt(companyLimit),
+            contactLimit: parseInt(contactLimit)
+        });
+
+        res.json({
+            success: true,
+            message: "Limits updated successfully",
+            user: {
+                id: user.id,
+                companyLimit: user.companyLimit,
+                contactLimit: user.contactLimit
+            }
+        });
+    } catch (err) {
+        console.error("Error updating limits:", err);
+        res.status(500).json({ message: "Error updating limits" });
+    }
+});
+
+// ✅ PATCH: User status toggle
 router.patch("/user/:id/status", authenticateAdmin, async (req, res) => {
     return res
         .status(400)
@@ -110,13 +217,11 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
 
         const user = request.User;
 
-        // Update user limits
         await user.update({
             companyLimit: user.companyLimit + request.requestedCompanies,
             contactLimit: user.contactLimit + request.requestedContacts,
         });
 
-        // Update request status
         await request.update({ status: "approved" });
 
         res.json({
@@ -146,7 +251,6 @@ router.post("/request/:id/reject", authenticateAdmin, async (req, res) => {
             return res.status(400).json({ message: "Request already processed" });
         }
 
-        // Update request status and optionally store rejection reason
         await request.update({
             status: "rejected",
             reason: req.body.reason || request.reason,
@@ -156,6 +260,86 @@ router.post("/request/:id/reject", authenticateAdmin, async (req, res) => {
     } catch (err) {
         console.error("Error rejecting request:", err);
         res.status(500).json({ message: "Error rejecting request" });
+    }
+});
+
+// ✅ POST: Admin creates a new user
+router.post("/create-user", authenticateAdmin, async (req, res) => {
+    try {
+        const {
+            name,
+            email,
+            countryCode,
+            phone,
+            password,
+            companyLimit,
+            contactLimit,
+            registrationType
+        } = req.body;
+
+        console.log("🟢 Admin creating user:", { name, email, registrationType });
+
+        if (!name || !email || !phone || !password) {
+            return res.status(400).json({
+                message: "Name, email, phone, and password are required"
+            });
+        }
+
+        if (!companyLimit || companyLimit < 1) {
+            return res.status(400).json({
+                message: "Company limit must be at least 1"
+            });
+        }
+
+        if (!contactLimit || contactLimit < 1) {
+            return res.status(400).json({
+                message: "Contact limit must be at least 1"
+            });
+        }
+
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({
+                message: "User with this email already exists"
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUser = await User.create({
+            name,
+            email,
+            countryCode: countryCode || "+94",
+            phone,
+            password: hashedPassword,
+            provider: "local",
+            companyLimit: parseInt(companyLimit),
+            contactLimit: parseInt(contactLimit),
+            registrationType: registrationType || "admin",
+            status: "active"
+        });
+
+        console.log("✅ User created by admin:", newUser.email);
+
+        res.status(201).json({
+            success: true,
+            message: "User created successfully",
+            user: {
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email,
+                phone: newUser.phone,
+                companyLimit: newUser.companyLimit,
+                contactLimit: newUser.contactLimit,
+                registrationType: newUser.registrationType
+            }
+        });
+    } catch (err) {
+        console.error("❌ Error creating user:", err);
+        res.status(500).json({
+            message: "Error creating user",
+            error: err.message
+        });
     }
 });
 

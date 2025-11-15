@@ -28,9 +28,8 @@ const User = sequelize.define(
         },
         phone: {
             type: DataTypes.STRING,
-            allowNull: true,  // ✅ Allow null
+            allowNull: true,
             validate: {
-                // ✅ FIXED: Only validate if phone is provided and not empty
                 isValidPhone(value) {
                     if (value && value.trim() !== '') {
                         if (!/^[0-9+]+$/.test(value)) {
@@ -42,7 +41,7 @@ const User = sequelize.define(
         },
         password: {
             type: DataTypes.STRING,
-            allowNull: true,  // ✅ Allow null for Google users
+            allowNull: true,
             defaultValue: null,
         },
         googleId: {
@@ -59,13 +58,31 @@ const User = sequelize.define(
             type: DataTypes.STRING,
             defaultValue: "active",
         },
-        companyLimit: { type: DataTypes.INTEGER, defaultValue: 1 },
-        contactLimit: { type: DataTypes.INTEGER, defaultValue: 1 },
-        role: { type: DataTypes.STRING, defaultValue: "user" },
+        companyLimit: {
+            type: DataTypes.INTEGER,
+            defaultValue: 1
+        },
+        contactLimit: {
+            type: DataTypes.INTEGER,
+            defaultValue: 1
+        },
+        role: {
+            type: DataTypes.STRING,
+            defaultValue: "user"
+        },
+        // ✅ NEW COLUMN: Registration Type
+        registrationType: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: "self", // 'self', 'admin', 'google'
+            comment: "How the user was registered: self (normal registration), admin (created by admin), google (Google OAuth)"
+        },
     },
     {
         timestamps: true,
     }
+
 );
+
 
 export default User;

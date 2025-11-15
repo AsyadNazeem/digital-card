@@ -10,16 +10,16 @@ import { OAuth2Client } from "google-auth-library";
 dotenv.config();
 const router = express.Router();
 
+// ✅ FIXED: Remove "postmessage" - let it use default
 const oauthClient = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    "postmessage"
+    process.env.GOOGLE_CLIENT_SECRET
+    // ❌ Don't set redirect_uri here - it comes from the frontend
 );
 
 console.log("🔍 ENV TEST:", {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET ? "✅ Loaded" : "❌ Missing",
-    redirectUri: process.env.GOOGLE_REDIRECT_URI
 });
 
 // ✅ REGISTER ROUTE
@@ -41,7 +41,8 @@ router.post("/register", async (req, res) => {
             phone,
             countryCode,
             password: hashedPassword,
-            provider: "local",  // ✅ Set provider
+            provider: "local",
+            registrationType: "self"
         });
 
         return res.status(201).json({ message: "Registered successfully", user });
@@ -178,7 +179,7 @@ router.post("/google", async (req, res) => {
     }
 });
 
-// ✅ Google Register (using authorization code)
+// ✅ FIXED Google Register (using authorization code)
 router.post("/google-register", async (req, res) => {
     try {
         console.log("🔵 Google register request received");
@@ -196,7 +197,12 @@ router.post("/google-register", async (req, res) => {
 
         console.log("🔵 Exchanging code for tokens...");
 
-        const tokenResponse = await oauthClient.getToken(code);
+        // ✅ FIXED: Specify redirect_uri explicitly
+        const tokenResponse = await oauthClient.getToken({
+            code: code,
+            redirect_uri: 'postmessage' // This tells Google it's from the popup
+        });
+
         const { id_token } = tokenResponse.tokens;
 
         if (!id_token) {
@@ -243,6 +249,7 @@ router.post("/google-register", async (req, res) => {
                 password: null,
                 googleId: googleId,
                 provider: 'google',
+                registrationType: 'google',
             });
 
             console.log("✅ User created:", user.id);

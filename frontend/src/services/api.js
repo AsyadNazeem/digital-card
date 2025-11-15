@@ -1,8 +1,9 @@
 import axios from 'axios';
 import router from '../router';
+import { API_BASE_URL } from "../config.js";
 
 const api = axios.create({
-    baseURL: 'http://localhost:4000/api', // no trailing slash
+    baseURL: `${API_BASE_URL}/api`, // no trailing slash
 });
 
 api.interceptors.request.use((config) => {

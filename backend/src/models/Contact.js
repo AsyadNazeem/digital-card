@@ -118,6 +118,8 @@ const Contact = sequelize.define("Contact", {
             key: "id",
         },
     },
+
+
 });
 
 // RELATIONSHIPS
