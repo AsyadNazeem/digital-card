@@ -6,7 +6,6 @@ A modern full-stack platform to create & share digital business cards — with c
 🚀 Live Demo
 
 🔗 https://tapmy.name/
- (Replace later)
 
 🛠 Built With
 <img src="https://skillicons.dev/icons?i=vue,nodejs,mysql,js,express,html,css" /> </div>
@@ -242,4 +241,5 @@ Feel free to:
 📜 License
 
 MIT License — free for personal & commercial use.
+
 
