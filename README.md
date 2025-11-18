@@ -5,7 +5,7 @@ A modern full-stack platform to create & share digital business cards — with c
 <div align="center">
 🚀 Live Demo
 
-🔗 https://yourdomain.com
+🔗 https://tapmy.name/
  (Replace later)
 
 🛠 Built With
@@ -27,7 +27,7 @@ Google Reviews
 Custom themes
 
 Shareable public URL:
-👉 https://yourdomain.com/card/94761234567
+👉 https://tapmy.name/94761234567
 
 It also includes a powerful Admin Panel for managing users & their limit-increase requests.
 
@@ -242,3 +242,4 @@ Feel free to:
 📜 License
 
 MIT License — free for personal & commercial use.
+
