@@ -6,6 +6,7 @@ import { Op } from "sequelize";
 import bcrypt from "bcryptjs";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
+import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 
 const router = express.Router();
 
@@ -263,7 +264,8 @@ router.post("/request/:id/reject", authenticateAdmin, async (req, res) => {
     }
 });
 
-// ✅ POST: Admin creates a new user
+
+// ✅ POST: Admin creates a new user (with validation)
 router.post("/create-user", authenticateAdmin, async (req, res) => {
     try {
         const {
@@ -297,6 +299,7 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
             });
         }
 
+        // Check if user exists
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({
@@ -304,36 +307,64 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
             });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // ✅ Combine and validate phone number
+        const fullPhoneNumber = `${countryCode}${phone}`;
 
-        const newUser = await User.create({
-            name,
-            email,
-            countryCode: countryCode || "+94",
-            phone,
-            password: hashedPassword,
-            provider: "local",
-            companyLimit: parseInt(companyLimit),
-            contactLimit: parseInt(contactLimit),
-            registrationType: registrationType || "admin",
-            status: "active"
-        });
-
-        console.log("✅ User created by admin:", newUser.email);
-
-        res.status(201).json({
-            success: true,
-            message: "User created successfully",
-            user: {
-                id: newUser.id,
-                name: newUser.name,
-                email: newUser.email,
-                phone: newUser.phone,
-                companyLimit: newUser.companyLimit,
-                contactLimit: newUser.contactLimit,
-                registrationType: newUser.registrationType
+        // Validate phone number format
+        try {
+            if (!isValidPhoneNumber(fullPhoneNumber)) {
+                return res.status(400).json({
+                    message: "Invalid phone number format"
+                });
             }
-        });
+
+            const parsedPhone = parsePhoneNumber(fullPhoneNumber);
+            const formattedPhone = parsedPhone.format('E.164'); // e.g., +94712334567
+
+            // Check if phone already exists
+            const existingPhone = await User.findOne({ where: { phone: formattedPhone } });
+            if (existingPhone) {
+                return res.status(400).json({
+                    message: "User with this phone number already exists"
+                });
+            }
+
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            const newUser = await User.create({
+                name,
+                email,
+                phone: formattedPhone, // ✅ Store in E.164 format (+94712334567)
+                password: hashedPassword,
+                provider: "local",
+                companyLimit: parseInt(companyLimit),
+                contactLimit: parseInt(contactLimit),
+                registrationType: registrationType || "admin",
+                selectedThemeId: 1,
+                status: "active"
+            });
+
+            console.log("✅ User created by admin:", newUser.email, "Phone:", formattedPhone);
+
+            res.status(201).json({
+                success: true,
+                message: "User created successfully",
+                user: {
+                    id: newUser.id,
+                    name: newUser.name,
+                    email: newUser.email,
+                    phone: newUser.phone,
+                    companyLimit: newUser.companyLimit,
+                    contactLimit: newUser.contactLimit,
+                    registrationType: newUser.registrationType,
+                    selectedThemeId: 1,
+                }
+            });
+        } catch (phoneError) {
+            return res.status(400).json({
+                message: "Invalid phone number format: " + phoneError.message
+            });
+        }
     } catch (err) {
         console.error("❌ Error creating user:", err);
         res.status(500).json({
@@ -342,5 +373,4 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
         });
     }
 });
-
 export default router;

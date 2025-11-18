@@ -102,7 +102,7 @@ onUnmounted(() => {
 
 <style scoped>
 .notification-wrapper {
-  position: relative; /* Critical for dropdown positioning */
+  position: relative;
 }
 
 .icon-btn {
@@ -127,8 +127,8 @@ onUnmounted(() => {
   position: absolute;
   top: -4px;
   right: -4px;
-  background: #ef4444;
-  color: white;
+  background: #d4af37; /* Changed to gold */
+  color: #2d1f1a; /* Dark text */
   font-size: 0.7rem;
   font-weight: 700;
   padding: 2px 6px;
@@ -137,7 +137,6 @@ onUnmounted(() => {
   text-align: center;
 }
 
-/* Notifications Dropdown */
 .notifications-dropdown {
   position: absolute;
   top: calc(100% + 12px);
@@ -156,13 +155,13 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e5e1dc; /* Changed */
 }
 
 .notifications-header h3 {
   font-size: 1rem;
   font-weight: 700;
-  color: #1a202c;
+  color: #2d1f1a; /* Changed */
   margin: 0;
 }
 
@@ -170,14 +169,14 @@ onUnmounted(() => {
   background: none;
   border: none;
   font-size: 1.25rem;
-  color: #718096;
+  color: #9b8b7e; /* Changed */
   cursor: pointer;
   padding: 4px;
   line-height: 1;
 }
 
 .close-dropdown:hover {
-  color: #1a202c;
+  color: #2d1f1a; /* Changed */
 }
 
 .notifications-empty {
@@ -192,7 +191,7 @@ onUnmounted(() => {
 }
 
 .notifications-empty p {
-  color: #718096;
+  color: #6b5d57; /* Changed */
   font-size: 0.875rem;
   margin: 0;
 }
@@ -206,13 +205,13 @@ onUnmounted(() => {
   display: flex;
   gap: 12px;
   padding: 16px 20px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f5f5f0; /* Changed */
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .notification-item:hover {
-  background: #f8fafc;
+  background: #fafaf8; /* Changed */
 }
 
 .notification-item:last-child {
@@ -223,7 +222,7 @@ onUnmounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); /* Changed */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -239,39 +238,39 @@ onUnmounted(() => {
 .notification-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1a202c;
+  color: #2d1f1a; /* Changed */
   margin: 0 0 4px 0;
 }
 
 .notification-desc {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: #6b5d57; /* Changed */
   margin: 0 0 4px 0;
   line-height: 1.4;
 }
 
 .notification-desc strong {
-  color: #4f46e5;
+  color: #5c4033; /* Changed */
   font-weight: 600;
 }
 
 .notification-time {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #9b8b7e; /* Changed */
 }
 
 .notifications-footer {
   padding: 12px 20px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #e5e1dc; /* Changed */
 }
 
 .view-all-btn {
   width: 100%;
   padding: 8px;
-  background: #f8fafc;
+  background: #fafaf8; /* Changed */
   border: none;
   border-radius: 8px;
-  color: #4f46e5;
+  color: #5c4033; /* Changed */
   font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
@@ -279,10 +278,9 @@ onUnmounted(() => {
 }
 
 .view-all-btn:hover {
-  background: #eef2ff;
+  background: #f5e6d3; /* Changed */
 }
 
-/* Dropdown Animation */
 .dropdown-enter-active,
 .dropdown-leave-active {
   transition: all 0.3s ease;

@@ -58,7 +58,9 @@ router.post("/register", async (req, res) => {
             phone: phoneE164,
             password: hashedPassword,
             provider: "local",
-            registrationType: "self"
+            registrationType: "self",
+            selectedThemeId: 1, // default theme
+            plan: "free",
         });
 
         return res.status(201).json({
@@ -132,7 +134,6 @@ router.post("/login", async (req, res) => {
 });
 
 
-// ✅ GET CURRENT USER INFO
 router.get("/me", authenticateToken, async (req, res) => {
     try {
         console.log("🟢 /auth/me called");
@@ -149,6 +150,8 @@ router.get("/me", authenticateToken, async (req, res) => {
                 "companyLimit",
                 "contactLimit",
                 "role",
+                "plan",
+                "selectedThemeId"
             ],
         });
 
@@ -159,17 +162,7 @@ router.get("/me", authenticateToken, async (req, res) => {
 
         console.log("✅ User found:", user.email);
 
-        res.json({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone || "",
-            provider: user.provider || "local",
-            status: user.status,
-            companyLimit: user.companyLimit || 1,
-            contactLimit: user.contactLimit || 1,
-            role: user.role || "user",
-        });
+        res.json(user);  // send all selected fields
     } catch (err) {
         console.error("❌ /auth/me error:", err);
         res.status(500).json({
@@ -293,6 +286,7 @@ router.post("/google-register", async (req, res) => {
                 googleId: googleId,
                 provider: 'google',
                 registrationType: 'google',
+                selectedThemeId: '1'
             });
 
             console.log("✅ User created:", user.id);

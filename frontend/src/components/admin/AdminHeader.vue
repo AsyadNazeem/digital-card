@@ -7,7 +7,6 @@
 
     <div class="header-actions">
       <NotificationBell />
-      <div class="admin-avatar">👤</div>
     </div>
   </header>
 </template>
@@ -42,7 +41,7 @@ const title = computed(() => {
   align-items: center;
   padding: 32px;
   background: white;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e5e1dc; /* Changed */
   position: sticky;
   top: 0;
   z-index: 50;
@@ -51,13 +50,13 @@ const title = computed(() => {
 .page-title {
   font-size: 2rem;
   font-weight: 700;
-  color: #1a202c;
+  color: #2d1f1a; /* Changed from #1a202c */
   margin-bottom: 4px;
 }
 
 .page-subtitle {
   font-size: 0.95rem;
-  color: #718096;
+  color: #6b5d57; /* Changed from #718096 */
 }
 
 .header-actions {
@@ -70,13 +69,13 @@ const title = computed(() => {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); /* Changed */
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px rgba(92, 64, 51, 0.3); /* Changed */
 }
 
 @media (max-width: 768px) {

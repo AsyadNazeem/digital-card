@@ -242,7 +242,7 @@ const router = useRouter()
 const form = ref({
   name: '',
   email: '',
-  countryCode: '+94',
+  countryCode: '+971',
   phone: '',
   password: '',
   companyLimit: 1,
@@ -632,6 +632,19 @@ onUnmounted(() => {
   overflow-y: auto;
 }
 
+/* Scrollbar for dropdowns */
+.country-list::-webkit-scrollbar-track {
+  background: #fafaf8; /* Changed */
+}
+
+.country-list::-webkit-scrollbar-thumb {
+  background: #e5e1dc; /* Changed */
+}
+
+.country-list::-webkit-scrollbar-thumb:hover {
+  background: #9b8b7e; /* Changed */
+}
+
 .country-item {
   display: flex;
   align-items: center;
@@ -886,5 +899,183 @@ onUnmounted(() => {
   .country-trigger {
     width: 100%;
   }
+}
+
+.page-title {
+  color: #2d1f1a; /* Changed */
+}
+
+.page-subtitle {
+  color: #6b5d57; /* Changed */
+}
+
+.register-card {
+  background: white;
+  border: 1px solid #e5e1dc; /* Changed */
+}
+
+.form-label {
+  color: #2d1f1a; /* Changed */
+}
+
+.input-icon {
+  color: #9b8b7e; /* Changed */
+}
+
+.form-input {
+  border: 1px solid #e5e1dc; /* Changed */
+  background: #fafaf8; /* Changed */
+}
+
+.form-input:focus {
+  border-color: #5c4033; /* Changed */
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1); /* Changed */
+}
+
+.password-toggle:hover {
+  color: #5c4033; /* Changed */
+}
+
+.generate-btn {
+  background: #fafaf8; /* Changed */
+}
+
+.generate-btn:hover {
+  background: #f5f5f0; /* Changed */
+  color: #5c4033; /* Changed */
+}
+
+.country-trigger {
+  border: 1px solid #e5e1dc; /* Changed */
+  background: #fafaf8; /* Changed */
+}
+
+.country-trigger:hover {
+  border-color: #5c4033; /* Changed */
+  background: white;
+}
+
+.selected-country {
+  color: #2d1f1a; /* Changed */
+}
+
+.dropdown-arrow {
+  color: #6b5d57; /* Changed */
+}
+
+.country-dropdown-menu {
+  border: 1px solid #e5e1dc; /* Changed */
+}
+
+.search-box {
+  border-bottom: 1px solid #e5e1dc; /* Changed */
+  background: #fafaf8; /* Changed */
+}
+
+.search-icon {
+  color: #9b8b7e; /* Changed */
+}
+
+.search-input {
+  border: 1px solid #e5e1dc; /* Changed */
+}
+
+.search-input:focus {
+  border-color: #5c4033; /* Changed */
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1); /* Changed */
+}
+
+.country-item {
+  border-bottom: 1px solid #f5f5f0; /* Changed */
+}
+
+.country-item:hover {
+  background: #fafaf8; /* Changed */
+}
+
+.country-item.active {
+  background: #f5e6d3; /* Changed */
+  border-left: 3px solid #5c4033; /* Changed */
+}
+
+.country-name {
+  color: #2d1f1a; /* Changed */
+}
+
+.country-code {
+  color: #6b5d57; /* Changed */
+}
+
+.no-results {
+  color: #9b8b7e; /* Changed */
+}
+
+.password-strength {
+  background: #e5e1dc; /* Changed */
+}
+
+.strength-bar.weak {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.strength-bar.medium {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.strength-bar.strong {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.password-hint {
+  color: #6b5d57; /* Changed */
+}
+
+.field-hint {
+  color: #6b5d57; /* Changed */
+}
+
+.limits-section {
+  background: linear-gradient(135deg, #fafaf8 0%, #f5f5f0 100%); /* Changed */
+  border: 1px solid #e5e1dc; /* Changed */
+}
+
+.section-title {
+  color: #2d1f1a; /* Changed */
+}
+
+.section-subtitle {
+  color: #6b5d57; /* Changed */
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); /* Changed */
+  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.3); /* Changed */
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 8px 24px rgba(92, 64, 51, 0.4); /* Changed */
+}
+
+.btn-secondary {
+  background: white;
+  color: #6b5d57; /* Changed */
+  border: 1px solid #e5e1dc; /* Changed */
+}
+
+.btn-secondary:hover {
+  background: #fafaf8; /* Changed */
+  border-color: #e5e1dc; /* Changed */
+}
+
+.message-box.error {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.message-box.success {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  border: 1px solid #86efac;
 }
 </style>

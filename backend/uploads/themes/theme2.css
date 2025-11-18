@@ -1,0 +1,551 @@
+.header-section {
+    position: relative;
+    width: 100%;
+    height: 45vh;
+    background: #1a472a; /* kept as you requested */
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+}
+
+/* Company Logo background (kept) */
+.company-logo-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.company-logo-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.05);
+    transition: transform 0.8s ease;
+}
+
+.company-logo-container:hover .company-logo-bg {
+    transform: scale(1.08);
+}
+
+/* Smooth fade into bottom */
+.logo-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(to bottom, rgba(26, 71, 42, 0) 0%, #ffffff 100%);
+}
+
+/* Centered Contact Photo (kept) */
+.contact-photo-center {
+    position: absolute;
+    bottom: -75px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.70));
+    border-radius: 50%;
+    padding: 8px;
+    box-shadow: 0 12px 36px rgba(2,14,8,0.45);
+    transition: transform 0.25s ease;
+}
+
+.contact-photo-center:hover {
+    transform: translateX(-50%) scale(1.03);
+}
+
+.contact-photo-circle {
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid white;
+}
+
+/* Older contact-photo-container kept in case used */
+.contact-photo-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.contact-photo-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% center;
+    transform: scale(1.05);
+    transition: transform 0.8s ease;
+}
+
+.contact-photo-container:hover .contact-photo-bg {
+    transform: scale(1.08);
+}
+
+.photo-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(to bottom, rgba(26, 71, 42, 0) 0%, #ffffff 100%);
+}
+
+/* company-logo-center (kept if used) */
+.company-logo-center {
+    position: absolute;
+    bottom: -75px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    background: white;
+    border-radius: 50%;
+    padding: 18px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+}
+
+.company-logo-circle {
+    width: 160px;
+    height: 160px;
+    object-fit: contain;
+    border-radius: 30%;
+}
+
+/* ---------------------------
+   GLOBAL / CARD SHELL
+   --------------------------- */
+.public-card-container {
+    min-height: 100vh;
+    background: radial-gradient(1200px 600px at 10% 10%, rgba(6,22,16,0.10), transparent 6%),
+    linear-gradient(180deg, #0b0f12 0%, #07110a 18%, #0b1410 100%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 36px 18px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* card shell */
+.public-card {
+    width: 100%;
+    max-width: 560px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border-radius: 26px;
+    box-shadow:
+            0 10px 40px rgba(2,12,8,0.6),
+            0 2px 10px rgba(0,0,0,0.35),
+            inset 0 1px 0 rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    overflow: visible;
+    transition: transform 0.35s cubic-bezier(.2,.9,.2,1), box-shadow 0.35s;
+    transform-origin: center top;
+}
+
+/* slight hover lift on larger screens */
+@media (min-width: 720px) {
+    .public-card:hover {
+        transform: translateY(-6px);
+        box-shadow:
+                0 20px 60px rgba(2,12,8,0.7),
+                0 6px 18px rgba(0,0,0,0.5);
+    }
+}
+
+/* ---------------------------
+   COMPANY INFO (upgraded)
+   --------------------------- */
+.company-info {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    text-align: center;
+    padding: 110px 28px 36px; /* keep space for overlapping photo */
+    margin-top: -18px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+/* name - futuristic weight/gradient */
+.company-name {
+    font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #ecfdf5; /* light */
+    letter-spacing: -0.4px;
+    margin: 0;
+    text-shadow: 0 3px 18px rgba(0,255,220,0.06);
+}
+
+/* designation - accent color */
+.company-designation {
+    margin-top: 8px;
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: #9bead1;
+    letter-spacing: 0.15px;
+}
+
+/* bio */
+.company-bio {
+    margin-top: 12px;
+    font-size: 0.95rem;
+    color: rgba(235,243,236,0.92);
+    line-height: 1.6;
+    max-width: 86%;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 0.95;
+}
+
+/* Styling of the company details block below */
+.company-details {
+    background: transparent;
+    text-align: center;
+    padding: 26px 24px;
+    margin: 0 auto;
+    max-width: 640px;
+}
+
+.company-details h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #cbeee0;
+    margin: 8px 0;
+    line-height: 1.35;
+}
+
+/* emphasised company name */
+.company-details h2:first-child {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #e6fff6;
+}
+
+/* website */
+.company-details h2:last-child {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #9bead1;
+    cursor: pointer;
+    text-decoration: none;
+}
+.company-details h2:last-child:hover {
+    text-decoration: underline;
+    color: #7be9cc;
+}
+
+/* ---------------------------
+   ACTION BUTTONS (3x2 grid) - fancy buttons
+   --------------------------- */
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    padding: 22px;
+    background: transparent;
+}
+
+/* Generic action button style */
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 92px;
+    border-radius: 14px;
+    padding: 14px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #041916;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.04);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    box-shadow: 0 6px 20px rgba(2,8,6,0.45);
+}
+
+/* icon color and size inside button */
+.action-icon svg {
+    width: 26px;
+    height: 26px;
+    display: block;
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35));
+}
+
+/* hover effect - neon glow */
+.action-btn:hover {
+    transform: translateY(-6px);
+    box-shadow:
+            0 16px 40px rgba(0,0,0,0.6),
+            0 0 28px rgba(0,255,200,0.06);
+}
+
+/* per-button color accents (class based) */
+.action-btn.call {
+    background: linear-gradient(180deg, rgba(12,54,42,0.9), rgba(10,40,32,0.82));
+    color: #e9fff7;
+    border: 1px solid rgba(0,255,180,0.09);
+}
+.action-btn.whatsapp {
+    background: linear-gradient(180deg, rgba(2,66,50,0.9), rgba(0,50,35,0.82));
+    color: #e9fff7;
+    border: 1px solid rgba(37,211,102,0.10);
+}
+.action-btn.email {
+    background: linear-gradient(180deg, rgba(22,36,48,0.9), rgba(6,14,22,0.82));
+    color: #e8f9ff;
+    border: 1px solid rgba(0,150,255,0.06);
+}
+.action-btn.office-phone {
+    background: linear-gradient(180deg, rgba(14,30,36,0.9), rgba(6,14,22,0.82));
+    color: #f0fff8;
+    border: 1px solid rgba(255,255,255,0.03);
+}
+.action-btn.website {
+    background: linear-gradient(180deg, rgba(20,28,54,0.9), rgba(8,12,30,0.82));
+    color: #eaf3ff;
+    border: 1px solid rgba(120,90,255,0.06);
+}
+.action-btn.maps {
+    background: linear-gradient(180deg, rgba(22,34,40,0.9), rgba(10,18,20,0.82));
+    color: #e9fff7;
+    border: 1px solid rgba(255,255,255,0.03);
+}
+
+/* subtle icon tint for white-on-dark buttons */
+.action-btn.call .action-icon svg,
+.action-btn.whatsapp .action-icon svg,
+.action-btn.email .action-icon svg,
+.action-btn.office-phone .action-icon svg,
+.action-btn.website .action-icon svg,
+.action-btn.maps .action-icon svg {
+    color: #ffffff;
+    stroke: rgba(255,255,255,0.9);
+    fill: rgba(255,255,255,0.02); /* icons already include fills */
+}
+
+/* ripple highlight */
+.action-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+    opacity: 0;
+    transition: opacity 0.28s;
+}
+.action-btn:hover::after { opacity: 1; }
+
+/* ================================================
+   PRIMARY SAVE BUTTON — FULL WIDTH (DIFFERENT STYLE)
+   ================================================ */
+
+.action-btn.save {
+    grid-column: 1 / -1;
+    width: calc(100% - 40px);      /* full width but with nice side padding */
+    margin: 14px auto 20px;
+    padding: 12px 20px;            /* smaller height */
+    min-height: 54px;              /* shorter than grid buttons */
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    border-radius: 14px;
+
+    /* Premium smooth gradient */
+    background: linear-gradient(135deg, #00ffcc 0%, #0088ff 100%);
+
+    color: #04292a;
+    font-size: 1rem;
+    font-weight: 800;
+
+    box-shadow:
+            0 6px 16px rgba(0, 255, 210, 0.18),
+            0 2px 8px rgba(0,0,0,0.45);
+
+    border: none;
+    cursor: pointer;
+    transition: all 0.22s ease;
+}
+
+.action-btn.save svg {
+    stroke: rgba(3, 6, 6, 0.9);
+    fill: none;
+}
+
+.action-btn.save:hover {
+    transform: translateY(-4px);
+    box-shadow:
+            0 12px 26px rgba(0, 255, 210, 0.25),
+            0 6px 20px rgba(0,0,0,0.55);
+}
+
+.action-btn.save:active {
+    transform: translateY(-1px);
+    box-shadow:
+            0 4px 10px rgba(0,0,0,0.35);
+}
+
+/* Mobile */
+@media (max-width: 400px) {
+    .action-btn.save {
+        width: calc(100% - 30px);
+        min-height: 48px;
+        font-size: 0.95rem;
+    }
+}
+
+
+/* ---------------------------
+   ADDITIONAL ACTIONS (360 & Reviews)
+   --------------------------- */
+.additional-actions {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    padding: 18px;
+    background: transparent;
+}
+
+.action-link-secondary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 120px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.03);
+    color: #e7fff6;
+    text-decoration: none;
+    font-weight: 700;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.action-link-secondary:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+}
+
+/* ---------------------------
+   SOCIAL SECTION
+   --------------------------- */
+.social-section {
+    padding: 20px 16px 28px;
+    background: transparent;
+}
+
+.social-divider {
+    height: 1px;
+    margin: 8px auto 18px;
+    width: 76%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
+}
+
+.social-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+/* social button */
+.social-icon-link {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.6);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.03);
+}
+
+.social-icon-link:hover {
+    transform: translateY(-6px) scale(1.06);
+    box-shadow: 0 20px 46px rgba(0,0,0,0.6), 0 0 28px rgba(0,255,210,0.04);
+}
+
+/* icon inside social */
+.social-icon-link svg { width: 22px; height: 22px; }
+
+/* ---------------------------
+   FOOTER
+   --------------------------- */
+.footer {
+    text-align: center;
+    padding: 22px;
+    color: rgba(200,255,235,0.7);
+    font-size: 0.85rem;
+    background: transparent;
+    border-top: 1px solid rgba(255,255,255,0.02);
+}
+
+/* footer brand emphasis */
+.footer span {
+    font-weight: 700;
+    color: #ffffff;
+    background: linear-gradient(90deg,#00ffd2,#00c0ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ---------------------------
+   LOADING
+   --------------------------- */
+.loading {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+}
+
+.spinner {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 6px solid rgba(255,255,255,0.06);
+    border-top-color: #00ffd2;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------------------------
+   RESPONSIVE
+   --------------------------- */
+@media (max-width: 720px) {
+    .public-card { max-width: 420px; border-radius: 20px; }
+    .company-info { padding: 100px 18px 28px; }
+    .contact-photo-circle { width: 140px; height: 140px; border-width: 3px; }
+    .action-btn { min-height: 84px; padding: 12px; border-radius: 12px; font-size: 0.9rem; }
+    .action-buttons { gap: 10px; padding: 18px; }
+    .action-btn.save { margin: 10px 16px 16px; width: calc(100% - 32px); }
+    .social-icon-link { width: 48px; height: 48px; border-radius: 12px; }
+}
+
+@media (max-width: 400px) {
+    .company-info { padding-top: 90px; }
+    .contact-photo-center { bottom: -65px; }
+    .company-name { font-size: 1.4rem; }
+    .company-details h2:first-child { font-size: 1.2rem; }
+    .action-buttons { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .action-btn { min-height: 76px; font-size: 0.86rem; }
+    .action-btn.save { width: calc(100% - 36px); margin: 10px 18px 16px; }
+}
+
+/* ---------------------------
+   SMALL UTILITIES
+   --------------------------- */
+a { color: inherit; }
+img { display: block; max-width: 100%; }

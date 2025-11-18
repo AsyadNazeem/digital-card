@@ -246,12 +246,12 @@ onMounted(() => {
 .section-title {
   font-size: 1.6rem;
   font-weight: 700;
-  color: #1a202c;
+  color: #2d1f1a;
 }
 
 .section-subtitle {
   font-size: 0.9rem;
-  color: #718096;
+  color: #6b5d57;
 }
 
 /* Filter Tabs */
@@ -265,21 +265,21 @@ onMounted(() => {
   padding: 10px 18px;
   font-size: 0.9rem;
   background: white;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #e5e1dc;
   border-radius: 10px;
-  color: #64748b;
+  color: #6b5d57;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
 .filter-tab:hover {
-  border-color: #cbd5e1;
-  color: #1a202c;
+  border-color: #5c4033;
+  color: #2d1f1a;
 }
 
 .filter-tab.active {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #5c4033, #3e2a23);
   color: white;
   border-color: transparent;
 }
@@ -296,23 +296,23 @@ onMounted(() => {
 .request-card {
   background: white;
   border-radius: 16px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #e5e1dc;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 2px 8px rgba(45, 31, 26, 0.07);
   transition: all 0.25s ease;
 }
 
 .request-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.1);
+  border-color: #5c4033;
+  box-shadow: 0 8px 22px rgba(45, 31, 26, 0.12);
   transform: translateY(-3px);
 }
 
 /* Card Header */
 .request-card-header {
-  background: #f8fafc;
+  background: #f8f6f4;
   padding: 18px 20px;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid #e5e1dc;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -329,7 +329,7 @@ onMounted(() => {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #5c4033, #3e2a23);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -342,13 +342,13 @@ onMounted(() => {
   font-size: 1rem;
   font-weight: 700;
   margin: 0;
-  color: #1a202c;
+  color: #2d1f1a;
 }
 
 .request-user-email {
   margin: 0;
   font-size: 0.85rem;
-  color: #718096;
+  color: #6b5d57;
 }
 
 /* Status Badge */
@@ -389,7 +389,7 @@ onMounted(() => {
 .info-title {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #64748b;
+  color: #6b5d57;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 6px;
@@ -404,20 +404,20 @@ onMounted(() => {
 .limit-item {
   flex: 1;
   padding: 12px;
-  background: #f8fafc;
+  background: #f8f6f4;
   border-radius: 10px;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #475569;
+  color: #4a3f3a;
   font-size: 0.9rem;
 }
 
 .limit-item.highlight {
-  background: #eef2ff;
-  border: 2px solid #c7d2fe;
+  background: #fef3e2;
+  border: 2px solid #d4af37;
   font-weight: 600;
-  color: #4338ca;
+  color: #5c4033;
 }
 
 .limit-icon {
@@ -427,14 +427,14 @@ onMounted(() => {
 /* Reason Box */
 .request-reason-box {
   padding: 14px;
-  background: #fffbeb;
-  border: 1px solid #fef08a;
+  background: #fffbf0;
+  border: 1px solid #d4af37;
   border-radius: 10px;
 }
 
 .reason-text {
   font-size: 0.9rem;
-  color: #713f12;
+  color: #5c4033;
   margin: 0;
   line-height: 1.4;
 }
@@ -444,14 +444,14 @@ onMounted(() => {
   border-top: 1px solid #f1f5f9;
   padding-top: 10px;
   font-size: 0.85rem;
-  color: #475569;
+  color: #6b5d57;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .meta-label {
-  color: #94a3b8;
+  color: #8a7b75;
   font-weight: 600;
 }
 
@@ -464,8 +464,8 @@ onMounted(() => {
   display: flex;
   gap: 12px;
   padding: 16px 20px;
-  background: #f8fafc;
-  border-top: 2px solid #e2e8f0;
+  background: #f8f6f4;
+  border-top: 2px solid #e5e1dc;
 }
 
 .action-btn {
@@ -511,13 +511,13 @@ onMounted(() => {
 /* Approved/Rejected Info */
 .request-processed-info {
   padding: 18px;
-  background: #f8fafc;
-  border-top: 2px solid #e2e8f0;
+  background: #f8f6f4;
+  border-top: 2px solid #e5e1dc;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
-  color: #64748b;
+  color: #6b5d57;
   font-weight: 600;
 }
 
@@ -540,11 +540,11 @@ onMounted(() => {
 .requests-empty-state h3 {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #1a202c;
+  color: #2d1f1a;
 }
 
 .requests-empty-state p {
-  color: #718096;
+  color: #6b5d57;
   font-size: 0.95rem;
 }
 

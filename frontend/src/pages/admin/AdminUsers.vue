@@ -52,7 +52,6 @@
         <table v-else class="users-table">
           <thead>
           <tr>
-            <th>ID</th>
             <th>Name</th>
             <th>Email</th>
             <th>Phone</th>
@@ -66,7 +65,6 @@
           </thead>
           <tbody>
           <tr v-for="user in filteredUsers" :key="user.id" @click="openUserDetails(user)" class="clickable-row">
-            <td class="text-muted">#{{ user.id }}</td>
             <td class="user-name">{{ user.name }}</td>
             <td class="user-email">{{ user.email }}</td>
             <td class="text-muted">{{ user.phone || 'N/A' }}</td>
@@ -406,7 +404,6 @@ function formatDate(dateString) {
 
 function getContactCardUrl(mobile) {
   if (!mobile) return '#'
-  // Remove the + symbol and any spaces/dashes
   const cleanNumber = mobile.replace(/[\s\-+]/g, '')
   return `http://localhost:5173/card/${cleanNumber}`
 }
@@ -416,7 +413,6 @@ async function openUserDetails(user) {
   showModal.value = true
   activeTab.value = 'companies'
 
-  // Initialize limits
   updatedLimits.value = {
     companyLimit: user.companyLimit || 1,
     contactLimit: user.contactLimit || 1
@@ -429,16 +425,11 @@ async function openUserDetails(user) {
 async function fetchUserData(userId) {
   loadingData.value = true
   try {
-    // Fetch companies - get all columns
     const companiesRes = await adminApi.get(`/user/${userId}/companies`)
     companies.value = companiesRes.data.companies || []
 
-    // Fetch contacts - get all columns
     const contactsRes = await adminApi.get(`/user/${userId}/contacts`)
     contacts.value = contactsRes.data.contacts || []
-
-    console.log('📊 Companies:', companies.value)
-    console.log('📞 Contacts:', contacts.value)
   } catch (err) {
     console.error('Error fetching user data:', err)
     companies.value = []
@@ -472,12 +463,8 @@ async function saveLimits() {
       contactLimit: updatedLimits.value.contactLimit
     })
 
-    // Update original limits
     originalLimits.value = { ...updatedLimits.value }
-
-    // Refresh users list
     await adminStore.fetchUsers()
-
     alert('Limits updated successfully!')
   } catch (err) {
     console.error('Error updating limits:', err)
@@ -531,7 +518,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -539,32 +526,33 @@ onMounted(() => {
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.3);
 }
 
 .btn-create:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 24px rgba(92, 64, 51, 0.4);
 }
 
 .users-table-card {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(45, 31, 26, 0.08);
   overflow: hidden;
   transition: all 0.2s;
+  border: 2px solid #e5e1dc;
 }
 
 .users-table-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(45, 31, 26, 0.12);
 }
 
 .table-controls {
   display: flex;
   gap: 16px;
   padding: 24px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f8f9fa;
+  border-bottom: 1px solid #e5e1dc;
+  background: #f8f6f4;
 }
 
 .search-box {
@@ -577,29 +565,30 @@ onMounted(() => {
   left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: #8a7b75;
   pointer-events: none;
 }
 
 .search-input {
   width: 95%;
   padding: 12px 16px 12px 48px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5e1dc;
   border-radius: 12px;
   font-size: 0.95rem;
   background: white;
   transition: all 0.2s;
+  color: #2d1f1a;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #5c4033;
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
 }
 
 .filter-select {
   padding: 12px 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5e1dc;
   border-radius: 12px;
   font-size: 0.95rem;
   background: white;
@@ -607,12 +596,13 @@ onMounted(() => {
   transition: all 0.2s;
   min-width: 160px;
   font-weight: 500;
+  color: #2d1f1a;
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #5c4033;
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
 }
 
 .table-wrapper {
@@ -625,25 +615,25 @@ onMounted(() => {
 }
 
 .users-table thead {
-  background: #f8f9fa;
+  background: #f8f6f4;
 }
 
 .users-table th {
   padding: 16px;
   text-align: left;
   font-weight: 600;
-  color: #4a5568;
+  color: #4a3f3a;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e1dc;
 }
 
 .users-table td {
   padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e1dc;
   font-size: 0.95rem;
-  color: #2d3748;
+  color: #2d1f1a;
 }
 
 .users-table tbody tr {
@@ -655,17 +645,17 @@ onMounted(() => {
 }
 
 .clickable-row:hover {
-  background: #f8fafc;
+  background: #f8f6f4;
   transform: scale(1.002);
 }
 
 .user-name {
   font-weight: 600;
-  color: #0f172a;
+  color: #2d1f1a;
 }
 
 .user-email {
-  color: #64748b;
+  color: #6b5d57;
   font-size: 0.9rem;
 }
 
@@ -675,7 +665,7 @@ onMounted(() => {
 }
 
 .text-muted {
-  color: #64748b;
+  color: #8a7b75;
   font-size: 0.9rem;
 }
 
@@ -690,23 +680,23 @@ onMounted(() => {
 }
 
 .badge.google {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #92400e;
+  background: linear-gradient(135deg, #fef3e2 0%, #fde8c5 100%);
+  color: #5c4033;
 }
 
 .badge.local {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1e40af;
+  background: linear-gradient(135deg, #f0ede8 0%, #e5e1dc 100%);
+  color: #3e2a23;
 }
 
 .badge.self {
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-  color: #3730a3;
+  background: linear-gradient(135deg, #e8e3dd 0%, #d4cfc8 100%);
+  color: #2d1f1a;
 }
 
 .badge.admin {
-  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
-  color: #9f1239;
+  background: linear-gradient(135deg, #fef3e2 0%, #f5e6c8 100%);
+  color: #5c4033;
 }
 
 .actions {
@@ -739,7 +729,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 64px 32px;
-  color: #94a3b8;
+  color: #8a7b75;
 }
 
 .no-data svg {
@@ -759,7 +749,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 64px 32px;
-  color: #667eea;
+  color: #5c4033;
 }
 
 .loading-state svg.spinner {
@@ -780,7 +770,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(45, 31, 26, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -798,7 +788,8 @@ onMounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(45, 31, 26, 0.3);
+  border: 2px solid #e5e1dc;
 }
 
 .modal-header {
@@ -806,8 +797,8 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 24px 32px;
-  border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e5e1dc;
+  background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
 }
 
 .user-info {
@@ -820,7 +811,7 @@ onMounted(() => {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -833,12 +824,12 @@ onMounted(() => {
   margin: 0 0 4px 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #2d1f1a;
 }
 
 .modal-subtitle {
   margin: 0;
-  color: #64748b;
+  color: #6b5d57;
   font-size: 0.95rem;
 }
 
@@ -848,7 +839,7 @@ onMounted(() => {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  color: #64748b;
+  color: #6b5d57;
   transition: all 0.2s;
 }
 
@@ -862,7 +853,7 @@ onMounted(() => {
 .limits-section {
   padding: 24px 32px;
   background: white;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e1dc;
   display: flex;
   gap: 16px;
   align-items: center;
@@ -871,9 +862,9 @@ onMounted(() => {
 .limit-card {
   flex: 1;
   padding: 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5e1dc;
 }
 
 .limit-header {
@@ -890,7 +881,7 @@ onMounted(() => {
 .limit-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #64748b;
+  color: #6b5d57;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -904,7 +895,7 @@ onMounted(() => {
 .limit-value {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #2d1f1a;
 }
 
 .limit-buttons {
@@ -918,17 +909,17 @@ onMounted(() => {
   border-radius: 8px;
   border: none;
   background: white;
-  color: #667eea;
+  color: #5c4033;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(45, 31, 26, 0.1);
 }
 
 .btn-limit:hover:not(:disabled) {
-  background: #667eea;
+  background: #5c4033;
   color: white;
   transform: scale(1.1);
 }
@@ -970,7 +961,7 @@ onMounted(() => {
   gap: 8px;
   padding: 0 32px;
   background: white;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #e5e1dc;
 }
 
 .tab-button {
@@ -981,7 +972,7 @@ onMounted(() => {
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  color: #64748b;
+  color: #6b5d57;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -990,13 +981,13 @@ onMounted(() => {
 }
 
 .tab-button:hover {
-  color: #667eea;
-  background: #f8fafc;
+  color: #5c4033;
+  background: #f8f6f4;
 }
 
 .tab-button.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: #5c4033;
+  border-bottom-color: #5c4033;
 }
 
 /* Tab Content */
@@ -1013,7 +1004,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 48px 24px;
-  color: #667eea;
+  color: #5c4033;
 }
 
 .loading-state-small svg {
@@ -1032,7 +1023,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 48px 24px;
-  color: #94a3b8;
+  color: #8a7b75;
 }
 
 .empty-state svg {
@@ -1046,18 +1037,11 @@ onMounted(() => {
   font-weight: 500;
 }
 
-/* List Items */
-.list-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 /* Data Tables */
 .table-container {
   overflow-x: auto;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5e1dc;
 }
 
 .data-table {
@@ -1067,45 +1051,45 @@ onMounted(() => {
 }
 
 .data-table thead {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
 }
 
 .data-table th {
   padding: 12px 16px;
   text-align: left;
   font-weight: 600;
-  color: #475569;
+  color: #4a3f3a;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #e5e1dc;
   white-space: nowrap;
 }
 
 .data-table tbody tr {
   transition: all 0.15s;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1ede8;
 }
 
 .data-table tbody tr:hover {
-  background: #f8fafc;
+  background: #f8f6f4;
 }
 
 .data-table td {
   padding: 12px 16px;
-  color: #334155;
+  color: #2d1f1a;
   vertical-align: middle;
 }
 
 .td-id {
-  color: #94a3b8;
+  color: #8a7b75;
   font-weight: 600;
   font-size: 0.85rem;
 }
 
 .td-name {
   font-weight: 600;
-  color: #0f172a;
+  color: #2d1f1a;
 }
 
 .name-cell {
@@ -1121,18 +1105,18 @@ onMounted(() => {
 .td-email,
 .td-phone,
 .td-website {
-  color: #64748b;
+  color: #6b5d57;
   font-size: 0.85rem;
 }
 
 .td-designation {
-  color: #64748b;
+  color: #6b5d57;
   font-size: 0.85rem;
   font-style: italic;
 }
 
 .td-date {
-  color: #94a3b8;
+  color: #8a7b75;
   font-size: 0.8rem;
   white-space: nowrap;
 }
@@ -1164,13 +1148,13 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #3b82f6;
+  color: #5c4033;
   text-decoration: none;
   transition: all 0.2s;
 }
 
 .link-external:hover {
-  color: #1d4ed8;
+  color: #3e2a23;
   text-decoration: underline;
 }
 
@@ -1183,111 +1167,22 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1e40af;
+  background: linear-gradient(135deg, #f8f6f4 0%, #f0ede8 100%);
+  color: #5c4033;
   border-radius: 6px;
   text-decoration: none;
   font-size: 0.8rem;
   font-weight: 600;
   transition: all 0.2s;
   white-space: nowrap;
+  border: 1px solid #e5e1dc;
 }
 
 .btn-view-card:hover {
-  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
   color: white;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
-}
-
-.list-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  transition: all 0.2s;
-}
-
-.list-item:hover {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
-  transform: translateX(4px);
-}
-
-.item-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  flex-shrink: 0;
-}
-
-.item-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.item-title {
-  margin: 0 0 4px 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #0f172a;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.item-subtitle {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #64748b;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.item-meta {
-  flex-shrink: 0;
-}
-
-.meta-badge {
-  display: inline-block;
-  padding: 6px 12px;
-  background: #e0e7ff;
-  color: #3730a3;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.item-actions {
-  flex-shrink: 0;
-}
-
-.btn-view {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: #dbeafe;
-  color: #1e40af;
-  border-radius: 8px;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-
-.btn-view:hover {
-  background: #1e40af;
-  color: white;
-  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(92, 64, 51, 0.3);
 }
 
 /* Animations */
@@ -1377,17 +1272,6 @@ onMounted(() => {
 
   .tab-content {
     padding: 20px;
-  }
-
-  .list-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .item-actions {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
   }
 }
 </style>

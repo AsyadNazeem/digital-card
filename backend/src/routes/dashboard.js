@@ -31,12 +31,10 @@ function validatePhoneNumber(phoneNumber) {
             return { isValid: false, error: "Phone number is required" };
         }
 
-        // Check if it's a valid phone number
         if (!isValidPhoneNumber(phoneNumber)) {
             return { isValid: false, error: "Invalid phone number format" };
         }
 
-        // Parse and get details
         const parsed = parsePhoneNumber(phoneNumber);
 
         return {
@@ -76,51 +74,64 @@ const upload = multer({ storage });
 // ✅ Create a new company
 router.post("/company", authenticate, upload.single("logo"), async (req, res) => {
     try {
-        let {
-            heading,
-            companyName,
-            website,
-            displayUrl,
-            email,
-            bio,
-            view360,
-            googleLocation,
-            googleReviews,
-            socialLinks,
-            status,
-        } = req.body;
+        // Validate required fields
+        if (!req.body.companyName || !req.body.email || !req.body.website) {
+            return res.status(400).json({
+                message: "Missing required fields: companyName, email, website"
+            });
+        }
 
-        const logo = req.file ? `/uploads/logos/${req.file.filename}` : null;
+        if (!req.file) {
+            return res.status(400).json({
+                message: "Company logo is required"
+            });
+        }
 
-        // Parse social links JSON
-        if (socialLinks) {
+        // Parse social links
+        let socialLinks = {};
+        if (req.body.socialLinks) {
             try {
-                socialLinks = JSON.parse(socialLinks);
-            } catch {
+                socialLinks = JSON.parse(req.body.socialLinks);
+            } catch (e) {
+                console.error("Error parsing socialLinks:", e);
                 socialLinks = {};
             }
         }
 
         const company = await Company.create({
-            heading,
-            companyName,
-            website,
-            displayUrl,
-            email,
-            bio,
-            logo,
-            view360,
-            googleLocation,
-            googleReviews,
-            socialLinks,
-            status,
+            heading: req.body.heading,
+            companyName: req.body.companyName,
+            website: req.body.website,
+            displayUrl: req.body.displayUrl,
+            email: req.body.email,
+            bio: req.body.bio,
+            logo: `/uploads/logos/${req.file.filename}`,
+            view360: req.body.view360,
+            googleLocation: req.body.googleLocation,
+            googleReviews: req.body.googleReviews,
+            socialLinks: socialLinks,
+            // ADDRESS FIELDS
+            label: req.body.label || null,
+            country: req.body.country || null,
+            streetAddress: req.body.streetAddress || null,
+            streetAddressLine2: req.body.streetAddressLine2 || null,
+            city: req.body.city || null,
+            postalCode: req.body.postalCode || null,
+            poBox: req.body.poBox || null,
+            status: req.body.status || 'active',
             userId: req.userId,
         });
 
-        res.status(201).json({ message: "Company created successfully", company });
+        res.status(201).json({
+            message: "Company created successfully",
+            company
+        });
     } catch (err) {
         console.error("❌ Company save error:", err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({
+            message: "Error creating company",
+            error: err.message
+        });
     }
 });
 
@@ -128,17 +139,72 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
 router.put("/company/:id", authenticate, upload.single("logo"), async (req, res) => {
     try {
         const company = await Company.findByPk(req.params.id);
-        if (!company) return res.status(404).json({ message: "Company not found" });
+        if (!company) {
+            return res.status(404).json({ message: "Company not found" });
+        }
 
-        await company.update({
-            ...req.body,
-            socialLinks: JSON.parse(req.body.socialLinks || "{}"),
-            logo: req.file ? `/uploads/logos/${req.file.filename}` : company.logo,
+        // Check ownership
+        if (company.userId !== req.userId) {
+            return res.status(403).json({ message: "Unauthorized" });
+        }
+
+        // Parse social links
+        let socialLinks = {};
+        if (req.body.socialLinks) {
+            try {
+                socialLinks = JSON.parse(req.body.socialLinks);
+            } catch (e) {
+                console.error("Error parsing socialLinks:", e);
+                socialLinks = {};
+            }
+        }
+
+        const updateData = {
+            heading: req.body.heading,
+            companyName: req.body.companyName,
+            website: req.body.website,
+            displayUrl: req.body.displayUrl,
+            email: req.body.email,
+            bio: req.body.bio,
+            view360: req.body.view360,
+            googleLocation: req.body.googleLocation,
+            googleReviews: req.body.googleReviews,
+            status: req.body.status,
+            socialLinks: socialLinks,
+            // ADDRESS FIELDS
+            label: req.body.label || null,
+            country: req.body.country || null,
+            streetAddress: req.body.streetAddress || null,
+            streetAddressLine2: req.body.streetAddressLine2 || null,
+            city: req.body.city || null,
+            postalCode: req.body.postalCode || null,
+            poBox: req.body.poBox || null,
+        };
+
+        // Handle logo update
+        if (req.file) {
+            // New file uploaded
+            updateData.logo = `/uploads/logos/${req.file.filename}`;
+        } else if (req.body.existingLogo) {
+            // Keep existing logo
+            updateData.logo = req.body.existingLogo;
+        }
+
+        await company.update(updateData);
+
+        // Fetch updated company to return
+        const updatedCompany = await Company.findByPk(req.params.id);
+
+        res.json({
+            message: "Company updated successfully",
+            company: updatedCompany
         });
-
-        res.json({ message: "Company updated successfully" });
     } catch (err) {
-        res.status(500).json({ message: "Error updating company", error: err.message });
+        console.error("❌ Update error:", err);
+        res.status(500).json({
+            message: "Error updating company",
+            error: err.message
+        });
     }
 });
 
@@ -177,7 +243,7 @@ router.get("/companies", authenticate, async (req, res) => {
 // CONTACT ROUTES
 // ============================================
 
-// ✅ Create a new contact
+// ✅ Create a new contact (ADDRESS FIELDS REMOVED)
 router.post(
     "/contact",
     authenticate,
@@ -192,14 +258,7 @@ router.post(
                 email,
                 designation,
                 companyId,
-                status,
-                country,
-                streetAddress,
-                streetAddressLine2,
-                city,
-                postalCode,
-                poBox,
-                label
+                status
             } = req.body;
 
             // Validate required fields
@@ -253,14 +312,6 @@ router.post(
                 companyId: companyId || null,
                 photo,
                 status,
-                // Address fields
-                country: country || null,
-                streetAddress: streetAddress || null,
-                streetAddressLine2: streetAddressLine2 || null,
-                city: city || null,
-                postalCode: postalCode || null,
-                poBox: poBox || null,
-                label: label || null,
                 userId: req.userId,
             });
 
@@ -275,9 +326,7 @@ router.post(
     }
 );
 
-
-// ✅ Update contact
-// Update the update contact route
+// ✅ Update contact (ADDRESS FIELDS REMOVED)
 router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res) => {
     try {
         const contact = await Contact.findByPk(req.params.id);
@@ -291,14 +340,7 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             email,
             designation,
             companyId,
-            status,
-            country,
-            streetAddress,
-            streetAddressLine2,
-            city,
-            postalCode,
-            poBox,
-            label
+            status
         } = req.body;
 
         // Validate mobile number if provided
@@ -349,14 +391,6 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             designation,
             companyId: companyId || null,
             status,
-            // Address fields
-            country: country || null,
-            streetAddress: streetAddress || null,
-            streetAddressLine2: streetAddressLine2 || null,
-            city: city || null,
-            postalCode: postalCode || null,
-            poBox: poBox || null,
-            label: label || null,
             photo: req.file ? `/uploads/photos/${req.file.filename}` : contact.photo,
         });
 
@@ -392,7 +426,6 @@ router.post("/check-contact-mobile", authenticate, async (req, res) => {
             return res.status(400).json({ message: "Mobile number is required" });
         }
 
-        // Validate the phone number format
         const validation = validatePhoneNumber(mobile);
         if (!validation.isValid) {
             return res.status(400).json({
@@ -400,7 +433,6 @@ router.post("/check-contact-mobile", authenticate, async (req, res) => {
             });
         }
 
-        // Build query - exclude current contact if editing
         const whereClause = {
             mobile: validation.e164,
             userId: req.userId
@@ -410,7 +442,6 @@ router.post("/check-contact-mobile", authenticate, async (req, res) => {
             whereClause.id = { [Op.ne]: contactId };
         }
 
-        // Check if exists
         const existing = await Contact.findOne({
             where: whereClause
         });
@@ -445,6 +476,7 @@ router.get("/data", authenticate, async (req, res) => {
             include: [
                 {
                     model: Company,
+                    as: "Company",
                     attributes: ["companyName"]
                 }
             ]
@@ -528,17 +560,3 @@ router.get("/request-history", authenticateToken, async (req, res) => {
 });
 
 export default router;
-
-// ============================================
-// FRONTEND: Installation & Import
-// ============================================
-
-/*
-// Install in frontend
-npm install libphonenumber-js
-
-// Import in your Vue component
-import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js'
-
-// Use the validation functions provided in the artifact above
-*/

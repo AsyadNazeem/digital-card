@@ -2,19 +2,15 @@ import express from "express";
 import User from "../models/User.js";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
+import Theme from "../models/Theme.js";
 
 const router = express.Router();
 
-// 🟢 Get public card by contact mobile number
+
 router.get("/:mobile", async (req, res) => {
     try {
-        let { mobile } = req.params;
+        let mobile = "+" + req.params.mobile;
 
-        mobile = `+${mobile}`
-
-        console.log(mobile)
-
-        // 1️⃣ Find contact by mobile number
         const contact = await Contact.findOne({
             where: { mobile, status: "active" }
         });
@@ -23,31 +19,39 @@ router.get("/:mobile", async (req, res) => {
             return res.status(404).json({ message: "Contact not found" });
         }
 
-        // 2️⃣ Find the company using contact.companyId
         const company = await Company.findByPk(contact.companyId);
 
         if (!company) {
-            return res.status(404).json({ message: "Company not found for this contact" });
+            return res.status(404).json({ message: "Company not found" });
         }
 
-        // 3️⃣ Find the user who owns the company (optional, if needed)
-        const user = await User.findByPk(company.userId);
+        const user = await User.findByPk(company.userId, {
+            include: [{
+                model: Theme,
+                as: "theme",
+                attributes: ['id', 'name', 'cssFile', 'isPremium']
+            }]
+        });
 
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Return the data
         res.json({
-            user: user ? {
-                name: user.name,
-                email: user.email,
-                phone: user.phone
-            } : null,
-
             company,
-            contact
+            contact,
+            theme: user.theme || null
         });
 
     } catch (err) {
-        console.error("❌ Public card error:", err);
-        res.status(500).json({ message: "Failed to load public card" });
+        res.status(500).json({
+            message: "Failed to load public card",
+            error: err.message
+        });
     }
 });
 
+
 export default router;
+

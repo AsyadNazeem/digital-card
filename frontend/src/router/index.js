@@ -6,6 +6,7 @@ import Dashboard from "../pages/Dashboard.vue";
 import PublicCard from "../pages/PublicCard.vue";
 
 import AdminLogin from "../pages/admin/AdminLogin.vue";
+import { startIdleTimer, stopIdleTimer } from "../utils/idleLogout";
 
 const routes = [
     // USER ROUTES
@@ -13,7 +14,7 @@ const routes = [
     { path: "/login", component: Login },
     { path: "/register", component: Register },
     { path: "/dashboard", component: Dashboard, meta: { requiresAuth: true } },
-    { path: "/card/:phone", component: PublicCard },
+    { path: "/:phone", component: PublicCard },
 
     // ADMIN LOGIN
     { path: "/admin/login", name: "AdminLogin", component: AdminLogin },
@@ -45,6 +46,11 @@ const routes = [
                 component: () => import("../pages/admin/AdminRequests.vue"),
             },
             {
+                path: "themes",
+                name: "AdminThemes",
+                component: () => import("../pages/admin/AdminAddTheme.vue"),
+            },
+            {
                 path: "settings",
                 name: "AdminSettings",
                 component: () => import("../pages/admin/AdminSettings.vue"),
@@ -63,21 +69,33 @@ router.beforeEach((to, from, next) => {
     const userToken = localStorage.getItem("token");
     const adminToken = localStorage.getItem("adminToken");
 
-    // USER-PROTECTED ROUTES
-    if (to.meta.requiresAuth && !userToken) {
-        return next("/login");
+    // USER PROTECTED ROUTE
+    if (to.meta.requiresAuth) {
+        if (!userToken) return next("/login");
+
+        // Start inactivity timer only when user is logged in
+        startIdleTimer(() => {
+            localStorage.removeItem("token");
+            stopIdleTimer();
+            alert("You were logged out due to inactivity.");
+            next("/login");
+            window.location.reload();
+        }, 10); // 5 = minutes timeout
     }
 
-    if ((to.path === "/login" || to.path === "/register") && userToken) {
-        return next("/dashboard");
+    // ADMIN PROTECTED ROUTE
+    if (to.meta.requiresAdminAuth) {
+        if (!adminToken) return next("/admin/login");
+
+        startIdleTimer(() => {
+            localStorage.removeItem("adminToken");
+            stopIdleTimer();
+            alert("Admin session ended due to inactivity.");
+            next("/admin/login");
+            window.location.reload();
+        }, 10); // Example: Admin 10 minute timeout
     }
 
-    // ADMIN-PROTECTED ROUTES
-    if (to.meta.requiresAdminAuth && !adminToken) {
-        return next("/admin/login");
-    }
-
-    // Always allow navigation if no conditions block it
     return next();
 });
 

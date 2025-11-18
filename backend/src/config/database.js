@@ -15,3 +15,12 @@ const sequelize = new Sequelize(
 );
 
 export default sequelize;
+
+
+
+// #PORT=3306
+// #DB_HOST=199.83.211.22
+// #DB_USER=tapmyname_asyad
+// #DB_PASS=]ZvkAE1v]{&-{k6M
+//     #DB_NAME=tapmyname_tapmyname2
+// #]ZvkAE1v]{&-{k6M

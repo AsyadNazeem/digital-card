@@ -145,12 +145,14 @@ onMounted(() => {
   color: white;
 }
 
-.purple { background: linear-gradient(135deg,#667eea,#764ba2); }
-.blue { background: linear-gradient(135deg,#3b82f6,#2563eb); }
-.green { background: linear-gradient(135deg,#10b981,#059669); }
-.orange { background: linear-gradient(135deg,#f59e0b,#d97706); }
-.red { background: linear-gradient(135deg,#ef4444,#dc2626); }
-.gray { background: linear-gradient(135deg,#6b7280,#4b5563); }
+/* Stat Card Colors */
+.purple { background: linear-gradient(135deg, #5c4033, #3e2a23); } /* Changed from purple */
+.blue { background: linear-gradient(135deg, #6b5d57, #5c4033); } /* Changed to brown tones */
+.green { background: linear-gradient(135deg, #10b981, #059669); } /* Keep green for success */
+.orange { background: linear-gradient(135deg, #d4af37, #b8941f); } /* Changed to gold */
+.red { background: linear-gradient(135deg, #ef4444, #dc2626); } /* Keep red for emphasis */
+.gray { background: linear-gradient(135deg, #9b8b7e, #6b5d57); } /* Changed to brown tones */
+
 
 .stat-value {
   font-size: 2rem;
@@ -209,4 +211,20 @@ onMounted(() => {
   padding: 20px;
   color: #718096;
 }
+
+.recent-table th {
+  background: #fafaf8; /* Changed from #f8f9fa */
+  color: #2d1f1a; /* Changed */
+}
+
+.recent-table td {
+  border-bottom: 1px solid #e5e1dc; /* Changed */
+  color: #2d1f1a; /* Changed */
+}
+
+.empty-row {
+  color: #6b5d57; /* Changed */
+}
+
+
 </style>

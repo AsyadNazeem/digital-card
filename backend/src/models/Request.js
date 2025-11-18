@@ -1,4 +1,3 @@
-// models/Request.js
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import User from "./User.js";
@@ -15,7 +14,7 @@ const Request = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: User,
+                model: "users",  // ✅ Changed from User to "users"
                 key: "id",
             },
             onDelete: "CASCADE",
@@ -41,9 +40,11 @@ const Request = sequelize.define(
     },
     {
         timestamps: true,
-        tableName: "Requests", // explicitly define the table name
+        tableName: "requests", // ✅ Changed from "Requests" to "requests"
     }
 );
+
+
 
 // ✅ Define association
 User.hasMany(Request, { foreignKey: "userId", onDelete: "CASCADE" });

@@ -2,8 +2,7 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="logo">
-        <span class="logo-icon">⚡</span>
-        <span class="logo-text">Admin Portal</span>
+        <img src="../../assets/images/logo.jpeg" alt="Dashboard Logo" class="header-logo" />
       </div>
     </div>
 
@@ -24,10 +23,16 @@
         <span v-if="pendingRequests > 0" class="badge">{{ pendingRequests }}</span>
       </router-link>
 
-      <router-link to="/admin/settings" class="nav-item" active-class="active">
-        <span class="nav-icon">⚙️</span>
-        <span>Settings</span>
+      <router-link to="/admin/themes" class="nav-item" active-class="active">
+        <span class="nav-icon">🎨</span>
+        <span>Themes</span>
       </router-link>
+
+<!--      <router-link to="/admin/settings" class="nav-item" active-class="active">-->
+<!--        <span class="nav-icon">⚙️</span>-->
+<!--        <span>Settings</span>-->
+<!--      </router-link>-->
+
     </nav>
 
     <div class="sidebar-footer">
@@ -62,15 +67,19 @@ function logout() {
 </script>
 
 <style scoped>
+.header-logo {
+  width: 220px;
+}
+
 .sidebar {
   width: 260px;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(180deg, #2d1f1a 0%, #1a1310 100%); /* Changed from blue gradient */
   color: white;
   display: flex;
   flex-direction: column;
   position: fixed;
-  height: 100vh;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+  height: 98vh;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
   z-index: 100;
 }
 
@@ -88,7 +97,7 @@ function logout() {
 .logo-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); /* Changed */
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -128,8 +137,9 @@ function logout() {
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); /* Changed */
   color: white;
+  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.3); /* Changed */
 }
 
 .nav-icon {
@@ -144,8 +154,8 @@ function logout() {
   position: absolute;
   top: 8px;
   right: 12px;
-  background: #ef4444;
-  color: white;
+  background: #d4af37; /* Changed to gold */
+  color: #2d1f1a; /* Dark text for contrast */
   font-size: 0.7rem;
   font-weight: 700;
   padding: 2px 6px;

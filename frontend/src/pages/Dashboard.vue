@@ -3,7 +3,8 @@
     <!-- Header -->
     <header class="dashboard-header">
       <div class="header-content">
-        <h1 class="header-title">Dashboard</h1>
+        <img src="../assets/images/logo.jpeg" alt="Dashboard Logo" class="header-logo"/>
+
         <div class="user-info">
           <span class="welcome-text">Welcome back</span>
           <div class="user-avatar">A</div>
@@ -69,6 +70,19 @@
             </svg>
             Contact Details
           </button>
+
+          <button
+              @click="activeTab = 'Theme'"
+              :class="['tab-button', { active: activeTab === 'Theme' }]"
+          >
+            <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Contact Card Theme
+          </button>
         </div>
 
       </div>
@@ -87,7 +101,6 @@
             >
               + Add Company
             </button>
-
           </div>
 
           <div v-if="userCompanies.length > 0" class="table-container">
@@ -103,7 +116,6 @@
             <table class="data-table">
               <thead>
               <tr>
-                <th>ID</th>
                 <th>Company Name</th>
                 <th>Logo</th>
                 <th>Website</th>
@@ -118,8 +130,6 @@
 
               <tbody>
               <tr v-for="c in paginatedCompanies" :key="c.id">
-                <td>{{ c.id }}</td>
-
                 <td>{{ c.companyName }}</td>
 
                 <!-- Logo Preview -->
@@ -208,9 +218,7 @@
                 Next
               </button>
             </div>
-
           </div>
-
 
           <div v-else class="empty-state">
             <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -314,10 +322,66 @@
               </div>
             </div>
 
+            <!-- Address Section -->
+            <div class="form-section">
+              <h3 class="section-title">Company Address</h3>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Label</label>
+                  <select v-model="companyForm.label" class="form-input">
+                    <option value="">Select Label</option>
+                    <option value="Home">🏠 Home</option>
+                    <option value="Work">💼 Work</option>
+                    <option value="Office">🏢 Office</option>
+                    <option value="Other">📍 Other</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Country/Region</label>
+                  <CountrySelector v-model="companyForm.country"/>
+                </div>
+
+                <div class="form-group full-width">
+                  <label class="form-label">Street Address</label>
+                  <input v-model="companyForm.streetAddress" type="text" class="form-input"
+                         placeholder="123 Main Street"/>
+                </div>
+
+                <div class="form-group full-width">
+                  <label class="form-label">Street Address Line 2</label>
+                  <input v-model="companyForm.streetAddressLine2" type="text" class="form-input"
+                         placeholder="Apartment, suite, etc. (optional)"/>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">City</label>
+                  <input v-model="companyForm.city" type="text" class="form-input" placeholder="Colombo"/>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Postal Code</label>
+                  <input v-model="companyForm.postalCode" type="text" class="form-input" placeholder="10100"/>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">PO Box</label>
+                  <input v-model="companyForm.poBox" type="text" class="form-input" placeholder="PO Box (optional)"/>
+                </div>
+              </div>
+            </div>
+
             <!-- Company Bio -->
             <div class="form-group full-width">
               <label class="form-label">Company Bio</label>
-              <textarea v-model="companyForm.bio" rows="4" class="form-input"></textarea>
+              <textarea
+                  v-model="companyForm.bio"
+                  rows="8"
+                  class="form-input bio-textarea"
+                  placeholder="Enter company bio... (Press Enter for new paragraphs)"
+              ></textarea>
+              <p class="field-hint">Press Enter to create new paragraphs</p>
             </div>
 
             <!-- Social Media Links -->
@@ -450,14 +514,13 @@
 
               <tbody>
               <tr v-for="c in paginatedContacts" :key="c.id">
-
                 <!-- Full Name -->
                 <td><strong>{{ c.firstName }} {{ c.lastName }}</strong></td>
 
                 <!-- Mobile as clickable link to contact card -->
                 <td>
                   <a
-                      :href="`/card/${c.mobile.replace(/\D/g, '')}`"
+                      :href="`/${c.mobile.replace(/\D/g, '')}`"
                       target="_blank"
                       class="link"
                   >
@@ -488,9 +551,11 @@
 
                 <!-- Actions -->
                 <td class="action-buttons">
-                  <button class="btn-action view" @click="viewContact(c)">
-                    👁 View
-                  </button>
+                  <a
+                      :href="`/${c.mobile.replace(/\D/g, '')}`"
+                      target="_blank"
+                      class="btn-action view"
+                  > 👁 View </a>
                   <button class="btn-action edit" @click="editContact(c)">
                     ✏️ Edit
                   </button>
@@ -498,7 +563,6 @@
                     🗑️ Delete
                   </button>
                 </td>
-
               </tr>
               </tbody>
             </table>
@@ -526,7 +590,6 @@
                 Next
               </button>
             </div>
-
           </div>
 
           <div v-else class="empty-state">
@@ -621,7 +684,6 @@
                 </p>
               </div>
 
-
               <!-- CONTACT FORM - MOBILE -->
               <div class="form-group">
                 <label>Mobile <span style="color: red;">*</span></label>
@@ -668,55 +730,6 @@
                 <input v-model="contactForm.designation" type="text" class="form-input" required/>
               </div>
 
-              <!-- Address Section -->
-              <div class="form-group full-width">
-                <h3 class="section-heading">Address Information</h3>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Label</label>
-                <select v-model="contactForm.label" class="form-input">
-                  <option value="">Select Label</option>
-                  <option value="Home">🏠 Home</option>
-                  <option value="Work">💼 Work</option>
-                  <option value="Office">🏢 Office</option>
-                  <option value="Other">📍 Other</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Country/Region</label>
-                <CountrySelector v-model="contactForm.country"/>
-              </div>
-
-              <div class="form-group full-width">
-                <label class="form-label">Street Address</label>
-                <input v-model="contactForm.streetAddress" type="text" class="form-input"
-                       placeholder="123 Main Street"/>
-              </div>
-
-              <div class="form-group full-width">
-                <label class="form-label">Street Address Line 2</label>
-                <input v-model="contactForm.streetAddressLine2" type="text" class="form-input"
-                       placeholder="Apartment, suite, etc. (optional)"/>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">City</label>
-                <input v-model="contactForm.city" type="text" class="form-input" placeholder="Colombo"/>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Postal Code</label>
-                <input v-model="contactForm.postalCode" type="text" class="form-input" placeholder="10100"/>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">PO Box</label>
-                <input v-model="contactForm.poBox" type="text" class="form-input" placeholder="PO Box (optional)"/>
-              </div>
-
-
               <div class="form-group">
                 <label class="form-label">Company</label>
                 <select v-model="contactForm.companyId" class="form-input">
@@ -732,10 +745,9 @@
 
                 <!-- Optional: Add note if no active companies -->
                 <p v-if="userCompanies.length === 0" class="no-companies-note">
-                  ⚠️ You don’t have any active companies. Please activate or create one first.
+                  ⚠️ You don't have any active companies. Please activate or create one first.
                 </p>
               </div>
-
 
               <div class="form-group">
                 <label class="form-label">Status <span class="required">*</span></label>
@@ -761,6 +773,86 @@
           </div>
         </div>
       </div>
+
+      <!-- Theme Selection Section -->
+      <div v-if="activeTab === 'Theme'" class="content-card theme-section">
+        <div class="theme-header">
+          <div class="theme-header-content">
+            <h2 class="theme-title">Choose Your Contact Card Theme</h2>
+            <p class="theme-subtitle">
+              Personalize your digital business card with beautiful themes
+              <span v-if="userPlan === 'free'" class="plan-badge free">Free Plan</span>
+              <span v-else class="plan-badge premium">Premium Plan</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="themesLoading" class="themes-loading">
+          <div class="spinner"></div>
+          <p>Loading themes...</p>
+        </div>
+
+        <!-- Theme Grid -->
+        <div v-else class="theme-grid">
+          <div
+              v-for="theme in themes"
+              :key="theme.id"
+              class="theme-card"
+              :class="{
+            active: theme.id === selectedTheme,
+            disabled: theme.isPremium && userPlan === 'free'
+          }"
+              @click="handleThemeClick(theme)"
+          >
+            <!-- Premium Lock Overlay -->
+            <div v-if="theme.isPremium && userPlan === 'free'" class="premium-overlay">
+              <div class="premium-lock-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+              <span class="upgrade-text">Upgrade to Premium</span>
+            </div>
+
+            <!-- Real Theme Preview -->
+            <div class="theme-preview-wrapper">
+              <RealThemePreview
+                  :theme="theme"
+                  :contact="previewContact"
+                  :company="previewCompany"
+              />
+
+              <!-- Active Badge -->
+              <div v-if="theme.id === selectedTheme" class="active-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Active</span>
+              </div>
+
+              <!-- Premium Badge -->
+              <div v-if="theme.isPremium" class="premium-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span>Premium</span>
+              </div>
+            </div>
+
+            <!-- Theme Info -->
+            <div class="theme-info">
+              <h3 class="theme-name">{{ theme.name }}</h3>
+              <p v-if="theme.description" class="theme-description">
+                {{ theme.description }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       <!-- SETTINGS MODAL -->
       <transition name="modal">
@@ -793,16 +885,16 @@
                     </svg>
                     Email
                   </button>
-                  <button
-                      @click="activeSetting = 'phone'"
-                      :class="['settings-nav-item', { active: activeSetting === 'phone' }]"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path
-                          d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
-                    Phone
-                  </button>
+                  <!--                  <button-->
+                  <!--                      @click="activeSetting = 'phone'"-->
+                  <!--                      :class="['settings-nav-item', { active: activeSetting === 'phone' }]"-->
+                  <!--                  >-->
+                  <!--                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">-->
+                  <!--                      <path-->
+                  <!--                          d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>-->
+                  <!--                    </svg>-->
+                  <!--                    Phone-->
+                  <!--                  </button>-->
                   <button
                       @click="activeSetting = 'password'"
                       :class="['settings-nav-item', { active: activeSetting === 'password' }]"
@@ -934,25 +1026,25 @@
 
 
                 <!-- Phone Panel -->
-                <div v-if="activeSetting === 'phone'" class="settings-panel">
-                  <h2 class="settings-panel-title">Change Phone Number</h2>
-                  <p class="settings-panel-desc">Enter your new phone number to receive an OTP for verification.</p>
-                  <div class="form-group">
-                    <label class="form-label">New Phone Number</label>
-                    <div class="phone-input-group">
-                      <CountryCodeDropdown v-model="countryCode"/>
-                      <input
-                          type="tel"
-                          v-model="settingsForm.phone"
-                          class="form-input"
-                          maxlength="15"
-                          placeholder="Enter 9-15 digits"
-                          @input="handleSettingsPhone"
-                      />
-                    </div>
-                  </div>
-                  <button class="btn-primary" @click="updatePhone">Send OTP</button>
-                </div>
+                <!--                <div v-if="activeSetting === 'phone'" class="settings-panel">-->
+                <!--                  <h2 class="settings-panel-title">Change Phone Number</h2>-->
+                <!--                  <p class="settings-panel-desc">Enter your new phone number to receive an OTP for verification.</p>-->
+                <!--                  <div class="form-group">-->
+                <!--                    <label class="form-label">New Phone Number</label>-->
+                <!--                    <div class="phone-input-group">-->
+                <!--                      <CountryCodeDropdown v-model="countryCode"/>-->
+                <!--                      <input-->
+                <!--                          type="tel"-->
+                <!--                          v-model="settingsForm.phone"-->
+                <!--                          class="form-input"-->
+                <!--                          maxlength="15"-->
+                <!--                          placeholder="Enter 9-15 digits"-->
+                <!--                          @input="handleSettingsPhone"-->
+                <!--                      />-->
+                <!--                    </div>-->
+                <!--                  </div>-->
+                <!--                  <button class="btn-primary" @click="updatePhone">Send OTP</button>-->
+                <!--                </div>-->
 
                 <!-- Password Panel -->
                 <div v-if="activeSetting === 'password'" class="settings-panel">
@@ -1498,6 +1590,64 @@
         </div>
       </transition>
 
+      <!-- Theme Confirmation Modal with Large Preview -->
+      <transition name="modal">
+        <div v-if="showThemeConfirm" class="modal-overlay" @click="showThemeConfirm = false">
+          <div class="theme-confirm-modal" @click.stop>
+            <div class="confirm-header">
+              <h3>Confirm Theme Change</h3>
+              <button @click="showThemeConfirm = false" class="btn-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div class="confirm-body">
+              <!-- Large Real Preview -->
+              <div class="confirm-preview-large">
+                <RealThemePreview
+                    v-if="pendingTheme"
+                    :theme="pendingTheme"
+                    :contact="previewContact"
+                    :company="previewCompany"
+                    :scale="0.8"
+                />
+              </div>
+
+              <div class="confirm-content">
+                <h4>{{ pendingTheme?.name }}</h4>
+                <p>{{ pendingTheme?.description || 'Apply this theme to your contact card?' }}</p>
+
+                <div v-if="pendingTheme?.isPremium" class="premium-notice">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  <span>Premium Theme</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="confirm-actions">
+              <button @click="showThemeConfirm = false" class="btn-cancel">
+                Cancel
+              </button>
+              <button @click="applySelectedTheme" class="btn-confirm" :disabled="themeLoading">
+                <svg v-if="!themeLoading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <div v-if="themeLoading" class="spinner-small"></div>
+                <span>{{ themeLoading ? 'Applying...' : 'Apply Theme' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+
       <!-- Logo Cropper Modal -->
       <ImageCropperModal
           :show="showLogoCropper"
@@ -1530,7 +1680,17 @@ import CountryCodeDropdown from '../components/CountryCodeDropdown.vue'
 import {isValidPhoneNumber, parsePhoneNumber} from 'libphonenumber-js'
 import CountrySelector from '../components/CountrySelector.vue'
 import ImageCropperModal from '../components/ImageCropper.vue'
-import { API_BASE_URL } from "../config.js";
+import {API_BASE_URL} from "../config.js";
+import RealThemePreview from "../components/RealThemePreview.vue";
+
+const themes = ref([]);
+const selectedTheme = ref(null);
+const userId = localStorage.getItem("userId");
+const userPlan = ref('free'); // Will be loaded from user data
+const showThemeConfirm = ref(false);
+const pendingTheme = ref(null);
+const themeLoading = ref(false);
+const themesLoading = ref(true);
 
 const showLogoCropper = ref(false);
 const showPhotoCropper = ref(false);
@@ -1587,6 +1747,14 @@ const companyForm = ref({
   googleLocation: "",
   googleReviews: "",
   status: "active",
+  // NEW ADDRESS FIELDS
+  country: "",
+  streetAddress: "",
+  streetAddressLine2: "",
+  city: "",
+  postalCode: "",
+  poBox: "",
+  label: ""
 });
 
 const contactForm = ref({
@@ -1599,14 +1767,6 @@ const contactForm = ref({
   companyId: "",
   photo: null,
   status: "active",
-  // NEW ADDRESS FIELDS
-  country: "",
-  streetAddress: "",
-  streetAddressLine2: "",
-  city: "",
-  postalCode: "",
-  poBox: "",
-  label: ""
 });
 
 const user = ref({
@@ -1642,8 +1802,8 @@ const mainSocialMedia = ref([
   {name: 'tiktok', label: 'TikTok', enabled: false, url: ''}
 ]);
 
-const telephoneCountryCode = ref('+94')
-const mobileCountryCode = ref('+94')
+const telephoneCountryCode = ref('+971')
+const mobileCountryCode = ref('+971')
 
 const customSocialMedia = ref([]);
 
@@ -1703,6 +1863,16 @@ const checkingMobile = ref(false);
 
 let mobileCheckTimeout = null;
 
+// Preview data - user's actual data
+const previewContact = ref({
+  firstName: 'John',
+  lastName: 'Doe',
+  designation: 'CEO & Founder',
+  mobile: '+1234567890',
+  email: 'john@company.com',
+  photo: null
+});
+
 // Validate and format phone number
 function validatePhone(value, countryCode) {
   try {
@@ -1736,6 +1906,108 @@ function validatePhone(value, countryCode) {
     };
   }
 }
+
+const previewCompany = ref({
+  companyName: 'Tech Solutions Inc.',
+  bio: 'Leading the future of digital innovation',
+  website: 'www.company.com',
+  phone: '+1234567890',
+  logo: null,
+  googleLocation: 'https://maps.google.com',
+  view360: null,
+  googleReviews: null,
+  socialLinks: {
+    facebook: 'https://facebook.com',
+    linkedin: 'https://linkedin.com',
+    twitter: 'https://twitter.com'
+  }
+});
+
+
+onMounted(async () => {
+  await loadThemesAndData();
+});
+
+async function loadThemesAndData() {
+  try {
+    themesLoading.value = true;
+
+    // Load themes
+    const themesRes = await api.get("/themes");
+    themes.value = themesRes.data;
+
+    // Load user data
+    const userRes = await api.get("/auth/me");
+    selectedTheme.value = userRes.data.selectedThemeId;
+    userPlan.value = userRes.data.plan || 'free';
+
+    // Try to load user's actual data for preview
+    try {
+      const dashData = await api.get("/dashboard/data");
+
+      if (dashData.data.contacts?.[0]) {
+        previewContact.value = dashData.data.contacts[0];
+      }
+
+      if (dashData.data.companies?.[0]) {
+        previewCompany.value = dashData.data.companies[0];
+      }
+    } catch (err) {
+      console.log("Using sample data for preview");
+    }
+
+  } catch (err) {
+    console.error("Failed to load themes:", err);
+    alert("Failed to load themes. Please refresh the page.");
+  } finally {
+    themesLoading.value = false;
+  }
+}
+
+function handleThemeClick(theme) {
+  // Check if theme is premium and user is on free plan
+  if (theme.isPremium && userPlan.value === 'free') {
+    alert('⭐ This is a premium theme. Upgrade your plan to unlock premium themes!');
+    return;
+  }
+
+  // Show confirmation modal
+  pendingTheme.value = theme;
+  showThemeConfirm.value = true;
+}
+
+async function applySelectedTheme() {
+  if (!pendingTheme.value) return;
+
+  try {
+    themeLoading.value = true;
+
+    const response = await api.post("/themes/select", {
+      themeId: pendingTheme.value.id
+    });
+
+    // Update selected theme
+    selectedTheme.value = pendingTheme.value.id;
+
+    // Close modal
+    showThemeConfirm.value = false;
+
+    // Show success message
+    alert('✅ Theme applied successfully! Your contact card has been updated.');
+
+  } catch (err) {
+    console.error("Failed to apply theme:", err);
+
+    if (err.response?.data?.isPremium) {
+      alert('⭐ ' + err.response.data.message);
+    } else {
+      alert('❌ Failed to apply theme. Please try again.');
+    }
+  } finally {
+    themeLoading.value = false;
+  }
+}
+
 
 // Real-time validation messages
 const phoneValidation = ref({
@@ -2057,14 +2329,75 @@ const contactTotalPages = computed(() =>
 
 
 // 🟢 Edit company
+// Update the editCompany function to include address fields:
 function editCompany(selectedCompany) {
+  // Reset form with company data
   companyForm.value = {
-    ...selectedCompany,
-    logo: null, // don’t overwrite file uploads
-    socialLinks: selectedCompany.socialLinks || {},
+    id: selectedCompany.id,
+    heading: selectedCompany.heading,
+    companyName: selectedCompany.companyName,
+    website: selectedCompany.website,
+    displayUrl: selectedCompany.displayUrl,
+    email: selectedCompany.email,
+    bio: selectedCompany.bio,
+    view360: selectedCompany.view360,
+    googleLocation: selectedCompany.googleLocation,
+    googleReviews: selectedCompany.googleReviews,
+    status: selectedCompany.status,
+    logo: null,
+    // NEW ADDRESS FIELDS
+    country: selectedCompany.country || "",
+    streetAddress: selectedCompany.streetAddress || "",
+    streetAddressLine2: selectedCompany.streetAddressLine2 || "",
+    city: selectedCompany.city || "",
+    postalCode: selectedCompany.postalCode || "",
+    poBox: selectedCompany.poBox || "",
+    label: selectedCompany.label || ""
   };
+
+  // Set logo preview if exists
+  if (selectedCompany.logo) {
+    logoPreview.value = `${API_BASE_URL}${selectedCompany.logo}`;
+    logoFileName.value = selectedCompany.logo.split('/').pop();
+    companyForm.value.existingLogoPath = selectedCompany.logo;
+  } else {
+    logoPreview.value = null;
+    logoFileName.value = '';
+    companyForm.value.existingLogoPath = null;
+  }
+
+  // Load social links into checkboxes
+  const socialLinks = selectedCompany.socialLinks || {};
+
+  // Reset and populate main social media
+  mainSocialMedia.value.forEach(social => {
+    if (socialLinks[social.name]) {
+      social.enabled = true;
+      social.url = socialLinks[social.name];
+    } else {
+      social.enabled = false;
+      social.url = '';
+    }
+  });
+
+  // Reset custom social media
+  customSocialMedia.value = [];
+
+  // Add custom social links (those not in mainSocialMedia)
+  const mainSocialNames = mainSocialMedia.value.map(s => s.name);
+  Object.entries(socialLinks).forEach(([name, url]) => {
+    if (!mainSocialNames.includes(name)) {
+      customSocialMedia.value.push({
+        name: name,
+        url: url,
+        enabled: true
+      });
+    }
+  });
+
   showCompanyForm.value = true;
 }
+
 
 // 🟢 Delete company
 async function deleteCompany(companyId) {
@@ -2082,17 +2415,28 @@ async function deleteCompany(companyId) {
 }
 
 // 🟢 Edit contact
+// Update editContact function to remove address fields handling:
 function editContact(contact) {
   // Extract just the number part (remove country code) for display
   const extractNumber = (fullNumber) => {
     if (!fullNumber) return '';
     try {
       const phoneNumber = parsePhoneNumber(fullNumber);
-      return phoneNumber.nationalNumber; // Gets number without country code
+      return phoneNumber.nationalNumber;
     } catch {
       return fullNumber.replace(/\D/g, '');
     }
   };
+
+  if (contact.photo) {
+    photoPreview.value = `${API_BASE_URL}${contact.photo}`;
+    photoFileName.value = contact.photo.split('/').pop();
+    contactForm.value.existingPhotoPath = contact.photo;
+  } else {
+    photoPreview.value = null;
+    photoFileName.value = '';
+    contactForm.value.existingPhotoPath = null;
+  }
 
   contactForm.value = {
     id: contact.id,
@@ -2105,6 +2449,7 @@ function editContact(contact) {
     companyId: contact.companyId,
     status: contact.status,
     photo: null,
+    // ADDRESS FIELDS REMOVED
   };
 
   // Extract country codes
@@ -2435,7 +2780,7 @@ function handleLogoUpload(event) {
     const reader = new FileReader();
     reader.onload = (e) => {
       tempLogoSrc.value = e.target.result;
-      showLogoCropper.value = true;
+      showLogoCropper.value = true; // ← THIS WAS MISSING
     };
     reader.readAsDataURL(file);
   }
@@ -2443,7 +2788,7 @@ function handleLogoUpload(event) {
 
 function handleLogoCropped(blob) {
   // Convert blob to file
-  const file = new File([blob], logoFileName.value || 'logo.jpg', { type: 'image/jpeg' });
+  const file = new File([blob], logoFileName.value || 'logo.jpg', {type: 'image/jpeg'});
   companyForm.value.logo = file;
 
   // Create preview
@@ -2458,9 +2803,15 @@ function handleLogoCropped(blob) {
 
 function removeLogo() {
   companyForm.value.logo = null;
-  logoFileName.value = '';
+  companyForm.value.existingLogoPath = null;
   logoPreview.value = null;
-  document.getElementById('logo-upload').value = '';
+  logoFileName.value = '';
+
+  // Clear file input
+  const fileInput = document.getElementById('logo-upload');
+  if (fileInput) {
+    fileInput.value = '';
+  }
 }
 
 function handlePhotoUpload(event) {
@@ -2480,7 +2831,7 @@ function handlePhotoUpload(event) {
 
 function handlePhotoCropped(blob) {
   // Convert blob to file
-  const file = new File([blob], photoFileName.value || 'photo.jpg', { type: 'image/jpeg' });
+  const file = new File([blob], photoFileName.value || 'photo.jpg', {type: 'image/jpeg'});
   contactForm.value.photo = file;
 
   // Create preview
@@ -2595,50 +2946,145 @@ function handlePopupPhone(event) {
   }
 }
 
+// Update the saveCompany function to include address fields:
 async function saveCompany() {
   try {
+    // Validate required fields
+    if (!companyForm.value.companyName || !companyForm.value.email || !companyForm.value.website) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    // For new company, logo is required
+    if (!companyForm.value.id && !companyForm.value.logo) {
+      alert('Please upload a company logo');
+      return;
+    }
+
     const formData = new FormData();
-    Object.keys(companyForm.value).forEach(key => {
-      if (key === "logo" && companyForm.value[key]) {
-        formData.append("logo", companyForm.value[key]);
-      } else if (key !== "logo") {
-        formData.append(key, companyForm.value[key]);
-      }
-    });
 
+    // Add all text fields
+    formData.append('heading', companyForm.value.heading || '');
+    formData.append('companyName', companyForm.value.companyName);
+    formData.append('website', companyForm.value.website);
+    formData.append('displayUrl', companyForm.value.displayUrl || '');
+    formData.append('email', companyForm.value.email);
+    formData.append('bio', companyForm.value.bio || '');
+    formData.append('view360', companyForm.value.view360 || '');
+    formData.append('googleLocation', companyForm.value.googleLocation || '');
+    formData.append('googleReviews', companyForm.value.googleReviews || '');
+    formData.append('status', companyForm.value.status || 'active');
+
+    // ADD ADDRESS FIELDS
+    formData.append('country', companyForm.value.country || '');
+    formData.append('streetAddress', companyForm.value.streetAddress || '');
+    formData.append('streetAddressLine2', companyForm.value.streetAddressLine2 || '');
+    formData.append('city', companyForm.value.city || '');
+    formData.append('postalCode', companyForm.value.postalCode || '');
+    formData.append('poBox', companyForm.value.poBox || '');
+    formData.append('label', companyForm.value.label || '');
+
+    // Build socialLinks object from enabled items
     const socialLinks = {};
+
+    // Add main social media links
     mainSocialMedia.value.forEach(social => {
-      if (social.enabled && social.url) {
-        socialLinks[social.name] = social.url;
+      if (social.enabled && social.url && social.url.trim()) {
+        socialLinks[social.name] = social.url.trim();
       }
     });
-    customSocialMedia.value.forEach(social => {
-      if (social.enabled && social.name && social.url) {
-        socialLinks[social.name] = social.url;
+
+    // Add custom social media links
+    customSocialMedia.value.forEach(custom => {
+      if (custom.enabled && custom.name && custom.url && custom.name.trim() && custom.url.trim()) {
+        socialLinks[custom.name.trim()] = custom.url.trim();
       }
     });
-    formData.append("socialLinks", JSON.stringify(socialLinks));
 
-    const endpoint = companyForm.value.id
-        ? `/dashboard/company/${companyForm.value.id}`
-        : "/dashboard/company";
-    const method = companyForm.value.id ? "put" : "post";
+    // Stringify socialLinks for multipart form
+    formData.append('socialLinks', JSON.stringify(socialLinks));
 
-    const res = await api[method](endpoint, formData, {
+    // Handle logo file
+    if (companyForm.value.logo instanceof File) {
+      // New logo file selected
+      formData.append('logo', companyForm.value.logo);
+    } else if (companyForm.value.existingLogoPath) {
+      // No new file, but has existing logo - send the path
+      formData.append('existingLogo', companyForm.value.existingLogoPath);
+    }
+
+    // Determine URL and method
+    const isUpdate = !!companyForm.value.id;
+    const url = isUpdate
+        ? `${API_BASE_URL}/api/dashboard/company/${companyForm.value.id}`
+        : `${API_BASE_URL}/api/dashboard/company`;
+    const method = isUpdate ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method,
       headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
+      body: formData
     });
 
-    alert(res.data.message);
-    showCompanyForm.value = false;
-    loadData();
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      console.error('Server returned non-JSON response:', textResponse);
+      alert('Server error: Expected JSON response but got HTML. Check the console for details.');
+      return;
+    }
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert(isUpdate ? 'Company updated successfully!' : 'Company created successfully!');
+
+      // Reset form
+      showCompanyForm.value = false;
+      companyForm.value = {
+        heading: '',
+        companyName: '',
+        website: '',
+        displayUrl: '',
+        email: '',
+        bio: '',
+        logo: null,
+        view360: '',
+        googleLocation: '',
+        googleReviews: '',
+        status: 'active',
+        existingLogoPath: null,
+        // RESET ADDRESS FIELDS
+        country: '',
+        streetAddress: '',
+        streetAddressLine2: '',
+        city: '',
+        postalCode: '',
+        poBox: '',
+        label: ''
+      };
+      logoPreview.value = null;
+      logoFileName.value = '';
+
+      // Reset social media
+      mainSocialMedia.value.forEach(social => {
+        social.enabled = false;
+        social.url = '';
+      });
+      customSocialMedia.value = [];
+
+      await loadData();
+    } else {
+      console.error('Server error:', data);
+      alert('Error: ' + (data.message || 'Failed to save company'));
+    }
   } catch (err) {
-    alert("Error saving company: " + (err.response?.data?.message || err.message));
+    console.error('Error saving company:', err);
+    alert('Failed to save company: ' + err.message);
   }
 }
-
 
 async function saveContact() {
   try {
@@ -2668,14 +3114,14 @@ async function saveContact() {
 
     const formData = new FormData();
 
-    // Add all form fields
+    // Add all form fields (address fields removed)
     Object.keys(contactForm.value).forEach(key => {
       if (key === "photo" && contactForm.value[key]) {
         formData.append("photo", contactForm.value[key]);
       } else if (key === "mobile") {
-        formData.append("mobile", mobileValidation.e164); // E.164 format
+        formData.append("mobile", mobileValidation.e164);
       } else if (key === "telephone" && telephoneE164) {
-        formData.append("telephone", telephoneE164); // E.164 format
+        formData.append("telephone", telephoneE164);
       } else if (key !== "photo" && key !== "telephone" && key !== "mobile") {
         formData.append(key, contactForm.value[key]);
       }
@@ -2708,6 +3154,7 @@ async function saveContact() {
       companyId: "",
       photo: null,
       status: "active",
+      // ADDRESS FIELDS REMOVED
     };
     mobileExistsMessage.value = "";
     mobileExists.value = false;
@@ -2720,10 +3167,409 @@ async function saveContact() {
 }
 
 onMounted(loadData);
+
+
 </script>
 
 
 <style scoped>
+.header-logo {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* In your <style> section */
+.bio-textarea {
+  white-space: pre-wrap; /* Preserves line breaks and spaces */
+  font-family: inherit;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.field-hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* For displaying bio in read mode (if you show it anywhere) */
+.company-bio-display {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+/* Theme Section */
+.theme-section {
+  padding: 0;
+}
+
+.theme-header {
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+}
+
+.theme-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.theme-subtitle {
+  font-size: 1rem;
+  opacity: 0.95;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.plan-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.plan-badge.free {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.plan-badge.premium {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #333;
+}
+
+/* Themes Loading */
+.themes-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+}
+
+.themes-loading p {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* Theme Grid */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+/* Theme Card */
+.theme-card {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.theme-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.theme-card.active {
+  border: 3px solid #667eea;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.theme-card.disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.theme-card.disabled:hover {
+  transform: none;
+}
+
+/* Premium Overlay */
+.premium-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  z-index: 10;
+  color: white;
+}
+
+.premium-lock-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upgrade-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Theme Preview Wrapper */
+.theme-preview-wrapper {
+  position: relative;
+  height: 420px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+/* Badges */
+.active-badge,
+.premium-badge {
+  position: absolute;
+  top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 5;
+}
+
+.active-badge {
+  right: 12px;
+  background: #10b981;
+  color: white;
+}
+
+.premium-badge {
+  left: 12px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #333;
+}
+
+/* Theme Info */
+.theme-info {
+  padding: 1.25rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.theme-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.theme-description {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.theme-confirm-modal {
+  background: white;
+  border-radius: 20px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.confirm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.confirm-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.btn-close:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.confirm-body {
+  padding: 1.5rem;
+}
+
+.confirm-preview-large {
+  height: 600px;
+  background: #f8fafc;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.confirm-content h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.confirm-content p {
+  color: #64748b;
+  margin: 0 0 1rem 0;
+}
+
+.premium-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  border-radius: 8px;
+  color: #333;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-cancel,
+.btn-confirm {
+  flex: 1;
+  padding: 0.875rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-cancel {
+  background: #f1f5f9;
+  color: #64748b;
+  border: none;
+}
+
+.btn-cancel:hover {
+  background: #e2e8f0;
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.btn-confirm:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+}
+
+.btn-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Modal Transitions */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .theme-confirm-modal,
+.modal-leave-active .theme-confirm-modal {
+  transition: transform 0.3s ease;
+}
+
+.modal-enter-from .theme-confirm-modal,
+.modal-leave-to .theme-confirm-modal {
+  transform: scale(0.9);
+}
 
 * {
   box-sizing: border-box;
@@ -5134,5 +5980,386 @@ onMounted(loadData);
   .detail-value {
     font-size: 1rem;
   }
+}
+
+.dashboard-wrapper {
+  background: linear-gradient(135deg, #fafaf8 0%, #f5f5f0 100%); /* Changed from purple gradient */
+}
+
+.user-avatar {
+  background: #5c4033; /* Changed from #4f46e5 */
+}
+
+.link-btn {
+  color: #5c4033; /* Changed */
+}
+
+.link-btn:hover {
+  background: #5c4033; /* Changed */
+}
+
+.link-popup-title {
+  color: #2d1f1a; /* Changed */
+}
+
+.copy-btn {
+  background: #5c4033; /* Changed */
+}
+
+.copy-btn:hover {
+  background: #3e2a23; /* Changed */
+}
+
+.copy-message {
+  color: #5c4033; /* Changed */
+}
+
+.phone-submit-btn {
+  background: #5c4033; /* Changed from #4f46e5 */
+}
+
+.phone-submit-btn:hover:not(:disabled) {
+  background: #3e2a23; /* Changed from #4338ca */
+  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.3); /* Changed */
+}
+
+.country-trigger:hover {
+  border-color: #9b8b7e; /* Changed */
+}
+
+.search-input:focus {
+  border-color: #5c4033; /* Changed */
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1); /* Changed */
+}
+
+.country-item.active {
+  background: #f5e6d3; /* Changed */
+  border-left: 3px solid #5c4033; /* Changed */
+}
+
+.btn-settings {
+  color: #5c4033; /* Changed */
+}
+
+.btn-settings:hover {
+  border-color: #5c4033; /* Changed */
+}
+
+.form-input:focus {
+  border-color: #5c4033; /* Changed */
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1); /* Changed */
+}
+
+.settings-nav-item.active {
+  background: #5c4033; /* Changed */
+}
+
+.tab-button.active {
+  color: #5c4033; /* Changed */
+  background: #f5e6d3; /* Changed */
+  border-bottom-color: #5c4033; /* Changed */
+}
+
+.btn-primary {
+  background: #5c4033; /* Changed */
+}
+
+.btn-primary:hover {
+  background: #3e2a23; /* Changed */
+}
+
+.link-button {
+  color: #5c4033; /* Changed */
+}
+
+.link-button:hover {
+  color: #3e2a23; /* Changed */
+}
+
+.btn-add-more {
+  color: #5c4033; /* Changed */
+  border: 1px solid #5c4033; /* Changed */
+}
+
+.btn-add-more:hover {
+  background: #f5e6d3; /* Changed */
+}
+
+.link {
+  color: #5c4033; /* Changed */
+}
+
+.upload-label:hover {
+  border-color: #5c4033; /* Changed */
+}
+
+.checkbox-input {
+  accent-color: #5c4033; /* Changed */
+}
+
+/* Theme Section Updates */
+.theme-header {
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); /* Changed */
+}
+
+.theme-card.active {
+  border: 3px solid #5c4033; /* Changed */
+  box-shadow: 0 8px 20px rgba(92, 64, 51, 0.3); /* Changed */
+}
+
+.spinner {
+  border-top-color: #5c4033; /* Changed */
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); /* Changed */
+}
+
+.btn-confirm:hover:not(:disabled) {
+  box-shadow: 0 8px 16px rgba(92, 64, 51, 0.3); /* Changed */
+}
+
+/* Limit Banner */
+.limit-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-bottom: 2px solid #d4af37; /* Changed to gold */
+}
+
+.limit-banner-icon {
+  color: #d4af37; /* Gold accent */
+}
+
+.btn-request {
+  color: #d4af37; /* Gold */
+  border: 2px solid #d4af37;
+}
+
+.btn-request:hover {
+  background: #d4af37;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+/* Quantity Selector */
+.qty-btn:hover {
+  background: #5c4033; /* Changed */
+  border-color: #5c4033;
+}
+
+.settings-qty-btn:hover {
+  background: #5c4033; /* Changed */
+  border-color: #5c4033;
+}
+
+.btn-submit-request {
+  background: #5c4033; /* Changed */
+}
+
+.btn-submit-request:hover:not(:disabled) {
+  background: #3e2a23; /* Changed */
+  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.3);
+}
+
+/* Settings Progress Bars */
+.settings-progress-fill.company {
+  background: linear-gradient(90deg, #5c4033 0%, #3e2a23 100%); /* Changed */
+}
+
+.settings-progress-fill.contact {
+  background: linear-gradient(90deg, #6b5d57 0%, #5c4033 100%); /* Changed */
+}
+
+/* History Filters */
+.filter-btn.active {
+  color: #5c4033; /* Changed */
+}
+
+.btn-retry,
+.btn-make-request {
+  background: #5c4033; /* Changed */
+}
+
+.btn-retry:hover,
+.btn-make-request:hover {
+  background: #3e2a23; /* Changed */
+}
+
+/* Status Pills - Keep existing colors for clarity */
+.status-pill.approved,
+.status-badge.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.rejected,
+.status-badge.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-pill.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Detail Icons */
+.detail-icon.company,
+.limit-icon.company,
+.settings-limit-icon.company {
+  background: #f5e6d3; /* Beige */
+  color: #5c4033; /* Brown */
+}
+
+.detail-icon.contact,
+.limit-icon.contact,
+.settings-limit-icon.contact {
+  background: #fafaf8; /* Light beige */
+  color: #6b5d57; /* Medium brown */
+}
+
+/* Request Reason */
+.request-reason {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+}
+
+.reason-header {
+  color: #92400e;
+}
+
+.reason-text {
+  color: #78350f;
+}
+
+/* Premium Badge */
+.premium-badge,
+.plan-badge.premium {
+  background: linear-gradient(135deg, #d4af37 0%, #f5e6d3 100%); /* Gold gradient */
+  color: #2d1f1a;
+}
+
+/* Additional accent colors */
+.limit-banner-text h3,
+.limit-banner-text p {
+  color: #78350f;
+}
+
+/* Header background stays white for contrast */
+.dashboard-header {
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e5e1dc; /* Updated border */
+}
+
+/* Modal backgrounds stay white */
+.modal-container,
+.request-modal-container,
+.phone-popup-container,
+.link-popup-container {
+  background: white;
+}
+
+/* Borders update to beige tones */
+.content-card,
+.tabs-container,
+.theme-card {
+  border: 1px solid #e5e1dc; /* Updated border color */
+}
+
+.form-input {
+  border: 1px solid #e5e1dc; /* Updated */
+  background: #fafaf8; /* Light beige background */
+}
+
+.form-input:focus {
+  background: white;
+}
+
+/* Table hover */
+.data-table tbody tr:hover {
+  background: #fafaf8; /* Light beige hover */
+}
+
+/* Settings sidebar */
+.settings-sidebar {
+  background: #fafaf8; /* Light beige */
+  border-right: 1px solid #e5e1dc;
+}
+
+.settings-nav-item:hover {
+  background: #f5f5f0; /* Lighter beige */
+}
+
+/* Upload area */
+.upload-label {
+  border: 2px dashed #e5e1dc;
+  background: #fafaf8;
+}
+
+.upload-label:hover {
+  background: white;
+}
+
+/* Custom social media items */
+.custom-social-item {
+  background: #fafaf8;
+  border: 1px solid #e5e1dc;
+}
+
+/* Detail items */
+.detail-item {
+  background: #fafaf8;
+  border: 1px solid #e5e1dc;
+}
+
+/* Current limits */
+.current-limits {
+  background: #fafaf8;
+  border: 1px solid #e5e1dc;
+}
+
+/* History card backgrounds */
+.history-card-header {
+  background: #fafaf8;
+  border-bottom: 1px solid #e5e1dc;
+}
+
+/* Quantity selectors */
+.quantity-selector,
+.settings-quantity-selector {
+  background: #fafaf8;
+  border: 2px solid #e5e1dc;
+}
+
+/* No results states */
+.no-filtered-results,
+.empty-state {
+  background: #fafaf8;
+  border: 1px dashed #e5e1dc;
+}
+
+/* Settings limits display */
+.settings-limits-display {
+  background: #fafaf8;
+  border: 1px solid #e5e1dc;
+}
+
+/* Progress bar backgrounds */
+.settings-progress-bar {
+  background: #e5e1dc;
+}
+
+/* Filter tabs */
+.history-filters {
+  background: #fafaf8;
+  border: 1px solid #e5e1dc;
+}
+
+.filter-btn:hover {
+  background: white;
+}
+
+.filter-btn.active {
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 </style>

@@ -1,0 +1,697 @@
+/* ============================================
+   THEME 4 - DARK ELEGANT THEME
+   Premium colors: Black, Silver, Teal, Cyan
+   Modern dark mode with neon accents
+   ============================================ */
+
+/* Container & Card Base */
+.public-card-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: #0a0a0a;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animated mesh gradient background */
+.public-card-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+            radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 40% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+    animation: meshMove 15s ease infinite;
+    pointer-events: none;
+}
+
+@keyframes meshMove {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.1);
+    }
+}
+
+.public-card {
+    width: 100%;
+    max-width: 480px;
+    background: linear-gradient(145deg, #1a1a1a 0%, #0f0f0f 100%);
+    border-radius: 28px;
+    box-shadow:
+            0 25px 80px rgba(6, 182, 212, 0.3),
+            0 10px 40px rgba(0, 0, 0, 0.6),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.public-card:hover {
+    transform: translateY(-8px);
+    box-shadow:
+            0 35px 100px rgba(6, 182, 212, 0.4),
+            0 15px 50px rgba(0, 0, 0, 0.8);
+    border-color: rgba(6, 182, 212, 0.4);
+}
+
+/* Neon glow effect */
+.public-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 28px;
+    padding: 2px;
+    background: linear-gradient(135deg,
+    rgba(6, 182, 212, 0.5) 0%,
+    rgba(139, 92, 246, 0.5) 50%,
+    rgba(236, 72, 153, 0.5) 100%
+    );
+    -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.public-card:hover::before {
+    opacity: 1;
+}
+
+/* Header Section with Cyberpunk Feel */
+.header-section {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #ec4899 100%);
+}
+
+/* Scanline effect */
+.header-section::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.15) 0px,
+            transparent 1px,
+            transparent 2px,
+            rgba(0, 0, 0, 0.15) 3px
+    );
+    pointer-events: none;
+    animation: scanlines 8s linear infinite;
+}
+
+@keyframes scanlines {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(10px); }
+}
+
+/* Animated gradient overlay */
+.header-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg,
+    rgba(6, 182, 212, 0.9) 0%,
+    rgba(139, 92, 246, 0.9) 50%,
+    rgba(236, 72, 153, 0.9) 100%
+    );
+    animation: colorShift 10s ease infinite;
+}
+
+@keyframes colorShift {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Company Logo Background */
+.company-logo-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.company-logo-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.7) contrast(1.2) saturate(1.3);
+    transition: all 0.5s ease;
+    mix-blend-mode: overlay;
+}
+
+.public-card:hover .company-logo-bg {
+    transform: scale(1.08);
+    filter: brightness(0.75) contrast(1.25) saturate(1.4);
+}
+
+.logo-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65%;
+    background: linear-gradient(to bottom,
+    rgba(26, 26, 26, 0) 0%,
+    rgba(26, 26, 26, 0.9) 60%,
+    #1a1a1a 100%
+    );
+}
+
+/* Neon Contact Photo with Cyan Glow */
+.contact-photo-center {
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border-radius: 50%;
+    padding: 4px;
+    box-shadow:
+            0 0 30px rgba(6, 182, 212, 0.8),
+            0 0 60px rgba(6, 182, 212, 0.4),
+            0 8px 32px rgba(0, 0, 0, 0.6),
+            inset 0 2px 4px rgba(255, 255, 255, 0.2);
+    animation: neonPulse 2s ease-in-out infinite;
+}
+
+/* Neon ring animation */
+.contact-photo-center::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+    opacity: 0;
+    animation: ringPulse 2s ease-in-out infinite;
+    z-index: -1;
+}
+
+@keyframes neonPulse {
+    0%, 100% {
+        box-shadow:
+                0 0 30px rgba(6, 182, 212, 0.8),
+                0 0 60px rgba(6, 182, 212, 0.4),
+                0 8px 32px rgba(0, 0, 0, 0.6);
+    }
+    50% {
+        box-shadow:
+                0 0 40px rgba(6, 182, 212, 1),
+                0 0 80px rgba(6, 182, 212, 0.6),
+                0 8px 32px rgba(0, 0, 0, 0.6);
+    }
+}
+
+@keyframes ringPulse {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+.contact-photo-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid #0a0a0a;
+    object-fit: cover;
+    box-shadow:
+            0 4px 16px rgba(0, 0, 0, 0.4),
+            inset 0 2px 4px rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.public-card:hover .contact-photo-circle {
+    transform: scale(1.05);
+}
+
+/* Company Info with Neon Text */
+.company-info {
+    background: linear-gradient(to bottom, #1a1a1a 0%, #141414 100%);
+    text-align: center;
+    padding: 65px 24px 20px;
+    position: relative;
+}
+
+.company-name {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.5px;
+    text-shadow:
+            0 0 20px rgba(6, 182, 212, 0.6),
+            0 0 40px rgba(6, 182, 212, 0.3),
+            0 2px 4px rgba(0, 0, 0, 0.8);
+    position: relative;
+}
+
+.company-designation {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #06b6d4;
+    margin: 0 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow:
+            0 0 10px rgba(6, 182, 212, 0.8),
+            0 0 20px rgba(6, 182, 212, 0.4);
+}
+
+.company-bio {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    line-height: 1.7;
+    margin: 0;
+    padding: 0 12px;
+    font-weight: 400;
+}
+
+/* Dark Elegant Action Buttons */
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 20px;
+    background: #141414;
+}
+
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 18px 12px;
+    border-radius: 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.action-btn:hover::before {
+    opacity: 1;
+}
+
+.action-btn:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+            0 0 20px currentColor,
+            0 8px 24px rgba(0, 0, 0, 0.5);
+    border-color: currentColor;
+}
+
+.action-btn:active {
+    transform: translateY(-2px) scale(1.01);
+}
+
+/* Individual button colors with neon effect */
+.action-btn.call {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%);
+    color: #06b6d4;
+}
+
+.action-btn.whatsapp {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%);
+    color: #22c55e;
+}
+
+.action-btn.email {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(236, 72, 153, 0.05) 100%);
+    color: #ec4899;
+}
+
+.action-btn.office-phone {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+    color: #3b82f6;
+}
+
+.action-btn.website {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.05) 100%);
+    color: #8b5cf6;
+}
+
+.action-btn.maps {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+    color: #f59e0b;
+}
+
+.action-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    filter: drop-shadow(0 0 8px currentColor);
+}
+
+/* Neon Save Contact Button */
+.action-btn.save {
+    width: calc(100% - 40px);
+    margin: 0 20px;
+    flex-direction: row;
+    justify-content: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: #0a0a0a;
+    font-size: 1rem;
+    padding: 20px;
+    border: 2px solid #06b6d4;
+    cursor: pointer;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    box-shadow:
+            0 0 30px rgba(6, 182, 212, 0.5),
+            0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.action-btn.save:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+    box-shadow:
+            0 0 40px rgba(6, 182, 212, 0.8),
+            0 0 80px rgba(6, 182, 212, 0.4),
+            0 12px 48px rgba(0, 0, 0, 0.6);
+    border-color: #0891b2;
+}
+
+/* Additional Actions */
+.additional-actions {
+    display: flex;
+    gap: 12px;
+    padding: 0 20px 20px;
+    background: #141414;
+    margin-top: 50px;
+}
+
+.action-link-secondary {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #06b6d4;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.action-link-secondary:hover {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(6, 182, 212, 0.1) 100%);
+    border-color: #06b6d4;
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+}
+
+/* Company Details */
+.company-details {
+    padding: 20px 24px;
+    background: linear-gradient(to bottom, #141414 0%, #0f0f0f 100%);
+    text-align: center;
+}
+
+.company-details h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #06b6d4;
+    margin: 0 0 6px 0;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+.company-details h2:last-child {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #8b5cf6;
+    margin: 0;
+    text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+/* Neon Social Section */
+.social-section {
+    padding: 24px;
+    background: linear-gradient(to bottom, #0f0f0f 0%, #0a0a0a 100%);
+}
+
+.social-divider {
+    height: 2px;
+    background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(6, 182, 212, 0.5) 20%,
+    rgba(139, 92, 246, 0.7) 50%,
+    rgba(236, 72, 153, 0.5) 80%,
+    transparent 100%
+    );
+    margin: 0 auto 20px;
+    width: 80%;
+    position: relative;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+.social-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: #06b6d4;
+    border-radius: 50%;
+    box-shadow:
+            0 0 15px rgba(6, 182, 212, 0.8),
+            0 0 30px rgba(6, 182, 212, 0.4);
+    animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+    0%, 100% {
+        box-shadow:
+                0 0 15px rgba(6, 182, 212, 0.8),
+                0 0 30px rgba(6, 182, 212, 0.4);
+    }
+    50% {
+        box-shadow:
+                0 0 25px rgba(6, 182, 212, 1),
+                0 0 50px rgba(6, 182, 212, 0.6);
+    }
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.social-icon-link {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+            0 4px 12px rgba(0, 0, 0, 0.5),
+            inset 0 1px 2px rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    position: relative;
+    overflow: visible;
+}
+
+.social-icon-link::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+    opacity: 0;
+    border-radius: 50%;
+    filter: blur(8px);
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.social-icon-link:hover::before {
+    opacity: 0.6;
+}
+
+.social-icon-link:hover {
+    transform: translateY(-8px) scale(1.15);
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+    border-color: #06b6d4;
+    box-shadow:
+            0 0 20px rgba(6, 182, 212, 0.6),
+            0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.social-icon-link svg {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s ease;
+    filter: drop-shadow(0 0 4px currentColor);
+}
+
+.social-icon-link:hover svg {
+    transform: scale(1.1);
+}
+
+/* Dark Elegant Footer */
+.footer {
+    background: #0a0a0a;
+    color: #64748b;
+    text-align: center;
+    padding: 24px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    border-top: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+.footer span {
+    color: #06b6d4;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+/* Loading State */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #0a0a0a;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(6, 182, 212, 0.2);
+    border-top: 4px solid #06b6d4;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow:
+            0 0 20px rgba(6, 182, 212, 0.5),
+            0 0 40px rgba(6, 182, 212, 0.3);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+    .public-card {
+        max-width: 100%;
+        border-radius: 24px;
+    }
+
+    .header-section {
+        height: 180px;
+    }
+
+    .contact-photo-center {
+        bottom: -45px;
+    }
+
+    .contact-photo-circle {
+        width: 90px;
+        height: 90px;
+    }
+
+    .company-name {
+        font-size: 1.5rem;
+    }
+
+    .company-designation {
+        font-size: 0.85rem;
+    }
+
+    .action-buttons {
+        gap: 10px;
+        padding: 16px;
+    }
+
+    .action-btn {
+        padding: 16px 10px;
+        font-size: 0.8rem;
+    }
+
+    .social-icon-link {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+/* Entrance Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.public-card > * {
+    animation: fadeInUp 0.8s ease-out backwards;
+}
+
+.company-info {
+    animation-delay: 0.1s;
+}
+
+.action-buttons {
+    animation-delay: 0.2s;
+}
+
+.social-section {
+    animation-delay: 0.3s;
+}
+
+.footer {
+    animation-delay: 0.4s;
+}

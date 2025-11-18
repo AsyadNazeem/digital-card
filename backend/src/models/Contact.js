@@ -1,132 +1,184 @@
-// ============================================
-// 1. UPDATED CONTACT MODEL (models/Contact.js)
-// ============================================
-
+// models/Contact.js
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import User from "./User.js";
 import Company from "./Company.js";
 
-const Contact = sequelize.define("Contact", {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
-    },
-
-    // Personal Information
-    firstName: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    lastName: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-
-    // Phone Numbers (stored in E.164 format, e.g., +94771234567)
-    telephone: {
-        type: DataTypes.STRING(20),
-        allowNull: true,
-        validate: {
-            isValid(value) {
-                if (!value) return;
-                if (!/^\+\d{10,15}$/.test(value)) {
-                    throw new Error("Invalid telephone format. Must be in E.164 format.");
-                }
-            }
-        }
-    },
-
-    mobile: {
-        type: DataTypes.STRING(20),
-        allowNull: false,
-        validate: {
-            isValid(value) {
-                if (!value) {
-                    throw new Error("Mobile number is required.");
-                }
-                if (!/^\+\d{10,15}$/.test(value)) {
-                    throw new Error("Invalid mobile format. Must be in E.164 format.");
-                }
-            }
-        }
-    },
-
-    // Contact Information
-    email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            isEmail: true
-        }
-    },
-    designation: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-
-    // Address Fields
-    country: {
-        type: DataTypes.STRING(2), // ISO 3166-1 alpha-2 country code (e.g., "LK", "US")
-        allowNull: true,
-    },
-    streetAddress: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-    },
-    streetAddressLine2: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-    },
-    city: {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-    },
-    postalCode: {
-        type: DataTypes.STRING(20),
-        allowNull: true,
-    },
-    poBox: {
-        type: DataTypes.STRING(50),
-        allowNull: true,
-    },
-    label: {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-        comment: "Address label like 'Home', 'Work', 'Office', etc."
-    },
-
-    // Media
-    photo: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-
-    // Status
-    status: {
-        type: DataTypes.ENUM("active", "inactive"),
-        defaultValue: "active",
-    },
-
-    // Foreign Keys
-    companyId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        references: {
-            model: "Companies",
-            key: "id",
+const Contact = sequelize.define(
+    "Contact",
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
         },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: "users",
+                key: "id",
+            },
+            onDelete: "CASCADE",
+            onUpdate: "CASCADE"
+        },
+        companyId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: "companies",
+                key: "id",
+            },
+            onDelete: "SET NULL",
+            onUpdate: "CASCADE",
+            comment: "Associated company (optional)"
+        },
+        firstName: {
+            type: DataTypes.STRING(100),
+            allowNull: false,
+            validate: {
+                notEmpty: {
+                    msg: "First name is required"
+                },
+                len: {
+                    args: [1, 100],
+                    msg: "First name must be between 1 and 100 characters"
+                }
+            }
+        },
+        lastName: {
+            type: DataTypes.STRING(100),
+            allowNull: false,
+            validate: {
+                notEmpty: {
+                    msg: "Last name is required"
+                },
+                len: {
+                    args: [1, 100],
+                    msg: "Last name must be between 1 and 100 characters"
+                }
+            }
+        },
+        telephone: {
+            type: DataTypes.STRING(20),
+            allowNull: true,
+            validate: {
+                isValid(value) {
+                    if (value && value.trim()) {
+                        if (!/^\+\d{10,15}$/.test(value)) {
+                            throw new Error("Telephone must be in E.164 format (e.g., +94771234567)");
+                        }
+                    }
+                }
+            },
+            comment: "Optional phone number in E.164 format"
+        },
+        mobile: {
+            type: DataTypes.STRING(20),
+            allowNull: false,
+            unique: {
+                args: true,
+                msg: "This mobile number is already registered"
+            },
+            validate: {
+                notEmpty: {
+                    msg: "Mobile number is required"
+                },
+                isValid(value) {
+                    if (!value || !value.trim()) {
+                        throw new Error("Mobile number is required");
+                    }
+                    if (!/^\+\d{10,15}$/.test(value)) {
+                        throw new Error("Mobile must be in E.164 format (e.g., +94771234567)");
+                    }
+                }
+            },
+            comment: "Required mobile number in E.164 format"
+        },
+        email: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+            validate: {
+                isEmail: {
+                    msg: "Please provide a valid email address"
+                },
+                notEmpty: {
+                    msg: "Email is required"
+                }
+            }
+        },
+        designation: {
+            type: DataTypes.STRING(200),
+            allowNull: false,
+            validate: {
+                notEmpty: {
+                    msg: "Designation is required"
+                }
+            },
+            comment: "Job title or position"
+        },
+        photo: {
+            type: DataTypes.STRING(500),
+            allowNull: true,
+            comment: "Path to contact photo (e.g., /uploads/photos/filename.jpg)"
+        },
+        // ADDRESS FIELDS REMOVED - NOW IN COMPANY MODEL
+        status: {
+            type: DataTypes.ENUM("active", "inactive"),
+            defaultValue: "active",
+            allowNull: false
+        }
     },
+    {
+        tableName: "contacts",
+        timestamps: true,
+        indexes: [
+            {
+                fields: ["userId"]
+            },
+            {
+                fields: ["companyId"]
+            },
+            {
+                fields: ["mobile"],
+                unique: true
+            },
+            {
+                fields: ["status"]
+            },
+            {
+                fields: ["firstName", "lastName"]
+            },
+            {
+                name: "user_mobile_unique",
+                unique: true,
+                fields: ["userId", "mobile"]
+            }
+        ]
+    }
+);
 
-
+// Relationships
+User.hasMany(Contact, {
+    foreignKey: "userId",
+    onDelete: "CASCADE",
+    as: "contacts"
 });
 
-// RELATIONSHIPS
-User.hasMany(Contact, { foreignKey: "userId" });
-Contact.belongsTo(User, { foreignKey: "userId" });
+Contact.belongsTo(User, {
+    foreignKey: "userId",
+    as: "owner"
+});
 
-Company.hasMany(Contact, { foreignKey: "companyId" });
-Contact.belongsTo(Company, { foreignKey: "companyId" });
+Company.hasMany(Contact, {
+    foreignKey: "companyId",
+    onDelete: "SET NULL",
+    as: "contacts"
+});
+
+Contact.belongsTo(Company, {
+    foreignKey: "companyId",
+    as: "Company"
+});
 
 export default Contact;

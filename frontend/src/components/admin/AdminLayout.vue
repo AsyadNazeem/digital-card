@@ -14,7 +14,7 @@
 import { onMounted } from 'vue'
 import AdminSidebar from "./AdminSidebar.vue"
 import AdminHeader from "./AdminHeader.vue"
-import { useAdminStore } from '../../store/adminStore'
+import { useAdminStore } from '../../store/adminStore.js'
 
 const admin = useAdminStore()
 
@@ -29,11 +29,13 @@ onMounted(() => {
 })
 </script>
 
+
+<!-- AdminLayout.vue - Updated styles -->
 <style scoped>
 .admin-layout {
   display: flex;
   min-height: 100vh;
-  background: #f8f9fa;
+  background: #fafaf8; /* Changed from #f8f9fa */
 }
 
 .admin-main {
