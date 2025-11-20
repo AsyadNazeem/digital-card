@@ -345,6 +345,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAdminStore } from '../../store/adminStore'
 import adminApi from '../../services/adminApi'
+import {API_BASE_URL} from "@/config.js";
 
 const adminStore = useAdminStore()
 const searchQuery = ref('')
@@ -405,7 +406,7 @@ function formatDate(dateString) {
 function getContactCardUrl(mobile) {
   if (!mobile) return '#'
   const cleanNumber = mobile.replace(/[\s\-+]/g, '')
-  return `http://localhost:5173/card/${cleanNumber}`
+  return `/${cleanNumber}`
 }
 
 async function openUserDetails(user) {

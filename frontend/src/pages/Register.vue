@@ -831,7 +831,7 @@ async function handleGoogleRegister() {
 }
 
 .auth-wrapper {
-  min-height: 98vh;
+  min-height: 100vh;
   display: flex;
   background: #f5f5f0;
 }
@@ -845,7 +845,7 @@ async function handleGoogleRegister() {
   padding: 4rem 3rem;
   position: relative;
   overflow: hidden;
-  max-height: 98vh;
+  max-height: 100vh;
 }
 
 .branding-section::before {

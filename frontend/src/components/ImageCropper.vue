@@ -34,33 +34,26 @@
           </div>
 
           <!-- Zoom Controls -->
+          <!-- Zoom Controls (Buttons Only) -->
           <div class="zoom-controls">
             <button @click="zoomOut" class="zoom-btn" title="Zoom Out">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="8" y1="11" x2="14" y2="11"></line>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
+              Zoom Out
             </button>
-
-            <input
-                type="range"
-                v-model="zoomLevel"
-                @input="handleZoom"
-                min="0"
-                max="100"
-                class="zoom-slider"
-            />
 
             <button @click="zoomIn" class="zoom-btn" title="Zoom In">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="11" y1="8" x2="11" y2="14"></line>
                 <line x1="8" y1="11" x2="14" y2="11"></line>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
+              Zoom In
             </button>
           </div>
+
 
           <!-- Rotation Controls -->
           <div class="rotation-controls">
@@ -169,35 +162,33 @@ const props = defineProps({
 const emit = defineEmits(['close', 'cropped']);
 
 const cropper = ref(null);
-const zoomLevel = ref(50);
 const croppedImage = ref('');
 const previewMode = ref(false);
 const flipped = ref(false);
 
-// Aspect ratio based on type
+/*  FIXED COMPANY LOGO RATIO
+    — 561.6 / 425.25 = 1.32
+*/
+
 const aspectRatio = computed(() => {
-  return props.type === 'photo' ? 1 : 1; // Square for both, but you can customize
+  if (props.type === "logo") {
+    return 1.32; // FINAL FIXED CROP BOX
+  }
+  return 1; // Square for contact photos
 });
 
-// Zoom functions
+
+/// Zoom buttons - increment/decrement by fixed amount
+// Zoom buttons only — no slider, no zoomLevel
 const zoomIn = () => {
-  if (zoomLevel.value < 100) {
-    zoomLevel.value = Math.min(100, zoomLevel.value + 10);
-    handleZoom();
+  if (cropper.value) {
+    cropper.value.zoom(1.1); // Zoom in
   }
 };
 
 const zoomOut = () => {
-  if (zoomLevel.value > 0) {
-    zoomLevel.value = Math.max(0, zoomLevel.value - 10);
-    handleZoom();
-  }
-};
-
-const handleZoom = () => {
   if (cropper.value) {
-    const zoomFactor = 1 + (zoomLevel.value / 50);
-    cropper.value.zoom(zoomFactor);
+    cropper.value.zoom(0.9); // Zoom out
   }
 };
 
@@ -224,10 +215,10 @@ const flipHorizontal = () => {
 const resetCrop = () => {
   if (cropper.value) {
     cropper.value.reset();
-    zoomLevel.value = 50;
     flipped.value = false;
   }
 };
+
 
 // Handle crop change
 const onChange = ({ canvas }) => {
@@ -262,10 +253,10 @@ const cropImage = () => {
 
 // Watch for image source changes
 watch(() => props.imageSrc, () => {
-  zoomLevel.value = 50;
   previewMode.value = false;
   flipped.value = false;
 });
+
 </script>
 
 <style scoped>
@@ -365,8 +356,8 @@ watch(() => props.imageSrc, () => {
 /* Zoom Controls */
 .zoom-controls {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  justify-content: center;
+  gap: 1.25rem;
   padding: 1rem;
   background: #f8fafc;
   border-radius: 0.75rem;
@@ -374,18 +365,18 @@ watch(() => props.imageSrc, () => {
 }
 
 .zoom-btn {
-  width: 2.5rem;
-  height: 2.5rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.2rem;
   background: white;
   border: 1px solid #cbd5e1;
   border-radius: 0.5rem;
   color: #475569;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  flex-shrink: 0;
 }
 
 .zoom-btn:hover {
@@ -395,39 +386,8 @@ watch(() => props.imageSrc, () => {
   transform: scale(1.05);
 }
 
-.zoom-slider {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: #e2e8f0;
-  outline: none;
-  -webkit-appearance: none;
-}
-
-.zoom-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #4f46e5;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.zoom-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
-}
-
-.zoom-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #4f46e5;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
+.zoom-btn svg {
+  stroke: currentColor;
 }
 
 /* Rotation Controls */

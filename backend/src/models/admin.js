@@ -9,7 +9,7 @@ const Admin = sequelize.define("Admin", {
     name: { type: DataTypes.STRING },
     status: { type: DataTypes.ENUM("active","inactive"), defaultValue: "active" }
 }, {
-    tableName: "admin",  // ✅ Changed from "Admins" to "admins"
+    tableName: "admins",  // ✅ Changed from "Admins" to "admins"
     timestamps: true
 });
 

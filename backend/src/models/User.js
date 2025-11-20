@@ -96,6 +96,17 @@ const User = sequelize.define(
             type: DataTypes.ENUM("free", "premium", "enterprise"),
             defaultValue: "free",
         },
+
+        // Add these fields to your User model definition
+        resetPasswordToken: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+
+        resetPasswordExpires: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
     },
     {
         tableName: "users",  // Add this line

@@ -9,8 +9,10 @@ import { authenticateToken } from "../middleware/authMiddleware.js";
 import { ensurePhoneNumber } from "../middleware/checkPhone.js";
 import { Op } from 'sequelize';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
+import sanitizeHtml from 'sanitize-html';
 
 const router = express.Router();
+
 
 // ✅ Middleware to authenticate JWT
 function authenticate(req, res, next) {
@@ -23,6 +25,7 @@ function authenticate(req, res, next) {
         next();
     });
 }
+
 
 // ✅ Phone validation helper function
 function validatePhoneNumber(phoneNumber) {
@@ -74,10 +77,15 @@ const upload = multer({ storage });
 // ✅ Create a new company
 router.post("/company", authenticate, upload.single("logo"), async (req, res) => {
     try {
-        // Validate required fields
-        if (!req.body.companyName || !req.body.email || !req.body.website) {
+        // Required fields
+        if (
+            !req.body.companyName ||
+            !req.body.website ||
+            !req.body.displayUrl ||
+            !req.body.email
+        ) {
             return res.status(400).json({
-                message: "Missing required fields: companyName, email, website"
+                message: "Missing required fields: companyName, website, displayUrl, email"
             });
         }
 
@@ -93,24 +101,30 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
             try {
                 socialLinks = JSON.parse(req.body.socialLinks);
             } catch (e) {
-                console.error("Error parsing socialLinks:", e);
                 socialLinks = {};
             }
         }
 
+        // Sanitize bio
+        const cleanBio = sanitizeHtml(req.body.bio || "", {
+            allowedTags: ['p','br','strong','em','u','h1','h2','h3','ul','ol','li','a','blockquote'],
+            allowedAttributes: { 'a': ['href','target','rel'] }
+        });
+
+        // Create company
         const company = await Company.create({
-            heading: req.body.heading,
+            heading: null,   // <-- ALWAYS NULL
             companyName: req.body.companyName,
             website: req.body.website,
             displayUrl: req.body.displayUrl,
             email: req.body.email,
-            bio: req.body.bio,
+            bio: cleanBio || null,
             logo: `/uploads/logos/${req.file.filename}`,
-            view360: req.body.view360,
-            googleLocation: req.body.googleLocation,
-            googleReviews: req.body.googleReviews,
-            socialLinks: socialLinks,
-            // ADDRESS FIELDS
+            view360: req.body.view360 || null,
+            googleLocation: req.body.googleLocation || null,
+            googleReviews: req.body.googleReviews || null,
+            socialLinks: socialLinks || null,
+            // Address fields (optional)
             label: req.body.label || null,
             country: req.body.country || null,
             streetAddress: req.body.streetAddress || null,
@@ -119,7 +133,7 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
             postalCode: req.body.postalCode || null,
             poBox: req.body.poBox || null,
             status: req.body.status || 'active',
-            userId: req.userId,
+            userId: req.userId
         });
 
         res.status(201).json({
@@ -134,6 +148,7 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
         });
     }
 });
+
 
 // ✅ Update company
 router.put("/company/:id", authenticate, upload.single("logo"), async (req, res) => {
@@ -159,18 +174,26 @@ router.put("/company/:id", authenticate, upload.single("logo"), async (req, res)
             }
         }
 
+        // ✅ ADDED: Sanitize bio HTML
+        const cleanBio = sanitizeHtml(req.body.bio || '', {
+            allowedTags: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'blockquote'],
+            allowedAttributes: {
+                'a': ['href', 'target', 'rel']
+            }
+        });
+
         const updateData = {
             heading: req.body.heading,
             companyName: req.body.companyName,
             website: req.body.website,
             displayUrl: req.body.displayUrl,
             email: req.body.email,
-            bio: req.body.bio,
-            view360: req.body.view360,
-            googleLocation: req.body.googleLocation,
-            googleReviews: req.body.googleReviews,
-            status: req.body.status,
-            socialLinks: socialLinks,
+            bio: cleanBio || null, // ✅ FIXED: Use cleanBio instead of req.body.bio
+            view360: req.body.view360 || null,
+            googleLocation: req.body.googleLocation || null,
+            googleReviews: req.body.googleReviews || null,
+            status: req.body.status || null,
+            socialLinks: socialLinks || null,
             // ADDRESS FIELDS
             label: req.body.label || null,
             country: req.body.country || null,

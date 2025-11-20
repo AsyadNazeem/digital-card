@@ -4,6 +4,7 @@ import Login from "../pages/Login.vue";
 import Register from "../pages/Register.vue";
 import Dashboard from "../pages/Dashboard.vue";
 import PublicCard from "../pages/PublicCard.vue";
+import ResetPassword from "../pages/ResetPassword.vue"; // Add this import
 
 import AdminLogin from "../pages/admin/AdminLogin.vue";
 import { startIdleTimer, stopIdleTimer } from "../utils/idleLogout";
@@ -13,6 +14,7 @@ const routes = [
     { path: "/", redirect: "/login" },
     { path: "/login", component: Login },
     { path: "/register", component: Register },
+    { path: "/reset-password", component: ResetPassword }, // Add this route
     { path: "/dashboard", component: Dashboard, meta: { requiresAuth: true } },
     { path: "/:phone", component: PublicCard },
 
@@ -80,7 +82,7 @@ router.beforeEach((to, from, next) => {
             alert("You were logged out due to inactivity.");
             next("/login");
             window.location.reload();
-        }, 10); // 5 = minutes timeout
+        }, 10); // 10 minutes timeout
     }
 
     // ADMIN PROTECTED ROUTE
@@ -93,7 +95,7 @@ router.beforeEach((to, from, next) => {
             alert("Admin session ended due to inactivity.");
             next("/admin/login");
             window.location.reload();
-        }, 10); // Example: Admin 10 minute timeout
+        }, 10); // Admin 10 minute timeout
     }
 
     return next();

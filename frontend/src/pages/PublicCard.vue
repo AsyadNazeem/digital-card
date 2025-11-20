@@ -1,98 +1,95 @@
 <template>
+  <div v-if="!loaded" class="loading-screen">
+    <div class="spinner"></div>
+  </div>
+
   <div
       class="public-card-container"
       v-if="loaded"
   >
+
     <!-- Inner Card -->
     <div class="public-card">
-      <!-- Header Section -->
 
       <!-- Header Section -->
       <div class="header-section">
-        <!-- Contact Photo (Half-screen background) -->
-        <!-- Header Section -->
-        <div class="header-section">
-          <!-- Company Logo as background (SWAPPED) -->
-          <div class="company-logo-container" v-if="company.logo">
-            <img
-                :src="`${API_BASE_URL}${company.logo}`"
-                alt="Company Logo"
-                class="company-logo-bg"
-            />
-            <div class="logo-overlay"></div>
-          </div>
-
-          <!-- Centered Contact Photo (Overlapping Boundary) (SWAPPED) -->
-          <div class="contact-photo-center" v-if="contacts.length && contacts[0].photo">
-            <img
-                :src="`${API_BASE_URL}${contacts[0].photo}`"
-                alt="Contact Photo"
-                class="contact-photo-circle"
-            />
-          </div>
+        <!-- Share Button (Top Right) -->
+        <button @click="shareCard" class="share-button" title="Share this card">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+        </button>
+        <!-- Company Logo as background -->
+        <div class="company-logo-container" v-if="company.logo">
+          <img
+              :src="`${VITE_IMAGE_UPLOAD_URL}${company.logo}`"
+              alt="Company Logo"
+              class="company-logo-bg"
+          />
+          <div class="logo-overlay"></div>
         </div>
 
-
+        <!-- Centered Contact Photo -->
+        <div class="contact-photo-center" v-if="contacts.length && contacts[0].photo">
+          <img
+              :src="`${VITE_IMAGE_UPLOAD_URL}${contacts[0].photo}`"
+              alt="Contact Photo"
+              class="contact-photo-circle"
+          />
+        </div>
       </div>
 
-      <!-- Company Info Section (White Background) -->
+      <!-- Company Info Section -->
       <div class="company-info">
-        <h1 class="company-name" v-if="contacts.length">{{`${contacts[0].firstName} ${contacts[0].lastName}`}}</h1>
+        <h1 class="company-name" v-if="contacts.length">{{ `${contacts[0].firstName} ${contacts[0].lastName}` }}</h1>
 
         <p class="company-designation" v-if="contacts.length">
           {{ contacts[0].designation }}
         </p>
 
-        <p class="company-bio" v-if="company.bio">
-          {{ company.bio }}
-        </p>
+        <div class="company-bio" v-if="company.bio" v-html="company.bio"></div>
       </div>
-
 
       <!-- Action Buttons (3x2 Grid) -->
       <div class="action-buttons">
         <!-- Row 1: Personal Contact Actions -->
-
-        <!-- 1. Contact Mobile/Call (contacts[0].mobile) -->
-        <a :href="`tel:${contacts[0].mobile}`" class="action-btn call" v-if="contacts.length && contacts[0].mobile">
-          <span v-html="getIcon('phone')" class="action-icon"></span>
+        <a :href="`tel:${contacts[0].mobile}`" class="action-btn call">
+          <span v-html="getIcon('phone_mobile')" class="action-icon"></span>
           <span>Mobile</span>
         </a>
-
-        <!-- 2. Contact WhatsApp (contacts[0].mobile) -->
-        <a :href="`https://wa.me/${contacts[0].mobile?.replace(/[^0-9]/g, '')}`" target="_blank" class="action-btn whatsapp" v-if="contacts.length && contacts[0].mobile">
+        <a :href="`https://wa.me/${contacts[0].mobile?.replace(/[^0-9]/g, '')}`" target="_blank"
+           class="action-btn whatsapp" v-if="contacts.length && contacts[0].mobile">
           <span v-html="getIcon('whatsapp')" class="action-icon"></span>
           <span>WhatsApp</span>
         </a>
 
-        <!-- 3. Contact Email (contacts[0].email) -->
         <a :href="`mailto:${contacts[0].email}`" class="action-btn email" v-if="contacts.length && contacts[0].email">
           <span v-html="getIcon('mail')" class="action-icon"></span>
           <span>Email</span>
         </a>
 
         <!-- Row 2: Company/General Actions -->
-
-        <!-- 4. Company Phone/Office (company.phone) -->
         <a :href="`tel:${company.phone}`" class="action-btn office-phone">
           <span v-html="getIcon('phone-office')" class="action-icon"></span>
           <span>Office</span>
         </a>
 
-        <!-- 5. Company Website (company.website) -->
         <a :href="formatUrl(company.website)" target="_blank" class="action-btn website">
           <span v-html="getIcon('globe')" class="action-icon"></span>
           <span>Website</span>
         </a>
 
-        <!-- 6. Google Maps (company.address) -->
         <a :href="company.googleLocation" target="_blank" class="action-btn maps">
           <span v-html="getIcon('map')" class="action-icon"></span>
           <span>Location</span>
         </a>
       </div>
 
-      <!-- Save Contact Button (Full Width) -->
+      <!-- Save Contact Button -->
       <button @click="saveContact" class="action-btn save">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -102,9 +99,8 @@
         Save Contact
       </button>
 
-      <!-- Additional Action Buttons (360 & Reviews) -->
+      <!-- Additional Action Buttons -->
       <div class="additional-actions" v-if="company.view360 || company.googleReviews">
-        <!-- 360° View -->
         <a
             v-if="company.view360"
             :href="company.view360"
@@ -115,7 +111,6 @@
           <span>360° View</span>
         </a>
 
-        <!-- Google Reviews -->
         <a
             v-if="company.googleReviews"
             :href="company.googleReviews"
@@ -128,10 +123,9 @@
       </div>
 
       <div class="company-details">
-        <h2 v-if="company.companyName">{{company.companyName}}</h2>
-        <h2 v-if="company.website">{{company.website}}</h2>
+        <h2 v-if="company.companyName">{{ company.companyName }}</h2>
+        <h2 v-if="company.website">{{ company.website }}</h2>
       </div>
-
 
       <!-- Social Links -->
       <div class="social-section" v-if="company.socialLinks && Object.keys(company.socialLinks).length > 0">
@@ -153,22 +147,20 @@
 
       <!-- Footer -->
       <footer class="footer">
-        Powered by <span>Digital Business Card</span>
+        Powered by <span>TapMyName</span>
       </footer>
     </div>
 
   </div>
 
-  <div v-else class="loading">
-    <div class="spinner"></div>
-  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
+import {onMounted, ref} from "vue";
+import {useRoute} from "vue-router";
 import api from "../services/api";
-import { API_BASE_URL } from "../config.js";
+import {API_BASE_URL} from "../config.js";
+import {VITE_IMAGE_UPLOAD_URL} from "../config.js";
 
 const route = useRoute();
 const company = ref({});
@@ -176,109 +168,173 @@ const contacts = ref([]);
 const loaded = ref(false);
 const theme = ref(null);
 
-// Theme confirmation modal
-const showThemeConfirm = ref(false);
-const selectedThemeForConfirm = ref(null);
+// Share function using native Web Share API
+const shareCard = async () => {
+  if (!contacts.value.length) return;
 
-// onMounted(() => {
-//   // Force load theme1 for testing
-//   const link = document.createElement("link");
-//   link.rel = "stylesheet";
-//   link.href = "http://localhost:4000/uploads/themes/theme1.css"; // Use your backend URL
-//   document.head.appendChild(link);
-//   console.log("Test theme loaded");
-// });
+  const contact = contacts.value[0];
+  const fullName = `${contact.firstName} ${contact.lastName}`;
+  const shareUrl = window.location.href;
+  const shareText = `Check out ${fullName}'s Digital Business Card`;
+
+  // Check if Web Share API is supported
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${fullName} - Digital Business Card`,
+        text: shareText,
+        url: shareUrl,
+      });
+      console.log('✅ Shared successfully');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('❌ Error sharing:', err);
+        fallbackShare(shareUrl, shareText);
+      }
+    }
+  } else {
+    // Fallback for browsers that don't support Web Share API
+    fallbackShare(shareUrl, shareText);
+  }
+};
+
+// Fallback share method - copy to clipboard
+const fallbackShare = (url, text) => {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      alert('✅ Link copied to clipboard! You can now paste it anywhere.');
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      promptManualCopy(url);
+    });
+  } else {
+    promptManualCopy(url);
+  }
+};
+
+const promptManualCopy = (url) => {
+  const tempInput = document.createElement('input');
+  tempInput.value = url;
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  document.execCommand('copy');
+  document.body.removeChild(tempInput);
+  alert('✅ Link copied to clipboard!');
+};
+
+// Function to update meta tags
+function updateMetaTags(contact, company) {
+  const fullName = `${contact.firstName} ${contact.lastName}`;
+  const designation = contact.designation || '';
+
+  // ✅ Use company name in the title if available
+  const title = company.companyName
+      ? `${fullName} - ${company.companyName}`
+      : `${fullName} - Digital Business Card`;
+
+  const description = `Connect with ${fullName}${designation ? ' - ' + designation : ''}`;
+
+  // Set page title
+  document.title = company.companyName || title;
+
+  const existingMeta = document.querySelectorAll('meta[property^="og:"], meta[name="description"], meta[name="twitter:"]');
+  existingMeta.forEach(tag => tag.remove());
+
+  const metaTags = [
+    {property: 'og:title', content: title},
+    {property: 'og:description', content: description},
+    {property: 'og:type', content: 'profile'},
+    {property: 'og:url', content: window.location.href},
+    {
+      property: 'og:image',
+      content: contact.photo ? `${VITE_IMAGE_UPLOAD_URL}${contact.photo}` : `${VITE_IMAGE_UPLOAD_URL}${company.logo}`
+    },
+    {property: 'og:site_name', content: company.companyName || 'TapMyName'},
+    {name: 'description', content: description},
+    {name: 'twitter:card', content: 'summary_large_image'},
+    {name: 'twitter:title', content: title},
+    {name: 'twitter:description', content: description},
+    {
+      name: 'twitter:image',
+      content: contact.photo ? `${VITE_IMAGE_UPLOAD_URL}${contact.photo}` : `${VITE_IMAGE_UPLOAD_URL}${company.logo}`
+    },
+  ];
+
+  metaTags.forEach(tag => {
+    const meta = document.createElement('meta');
+    if (tag.property) {
+      meta.setAttribute('property', tag.property);
+    } else {
+      meta.setAttribute('name', tag.name);
+    }
+    meta.setAttribute('content', tag.content);
+    document.head.appendChild(meta);
+  });
+}
 
 onMounted(async () => {
   try {
     const phone = route.params.phone;
-
-    console.log("📞 Fetching contact card for:", phone);
     const res = await api.get(`/public/${phone}`);
 
-    company.value = res.data.company || {};
-    contacts.value = res.data.contact ? [res.data.contact] : [];
+    company.value = res.data.company;
+    contacts.value = [res.data.contact];
     theme.value = res.data.theme;
 
-    // Debug logging
-    console.log("📦 Response data:", res.data);
-    console.log("🎨 Theme data received:", theme.value);
+    // ✅ Update page title with company name
+    updatePageTitle();
 
-    if (theme.value && theme.value.cssFile) {
-      console.log("✅ Applying theme CSS:", theme.value.cssFile);
-      applyTheme(theme.value.cssFile);
-    } else {
-      console.warn("⚠️ No theme CSS file found!");
-      console.log("Theme object:", theme.value);
+    // ✅ Update meta tags for social sharing
+    updateMetaTags(res.data.contact, res.data.company);
+
+    let themeLoaded = true;
+
+    if (theme.value?.cssFile) {
+      themeLoaded = await applyTheme(theme.value.cssFile);
     }
 
-    loaded.value = true;
-  } catch (error) {
-    console.error("❌ Error loading public card:", error);
-    console.error("Error details:", error.response?.data);
+    loaded.value = themeLoaded;
+
+  } catch (err) {
+    console.error(err);
     loaded.value = true;
   }
 });
 
+function updatePageTitle() {
+  if (company.value && company.value.companyName) {
+    // Set browser tab title to company name
+    document.title = company.value.companyName;
+  } else if (contacts.value.length > 0) {
+    // Fallback to contact name if no company name
+    const contact = contacts.value[0];
+    document.title = `${contact.firstName} ${contact.lastName}`;
+  }
+}
+
 function applyTheme(cssFile) {
-  // Remove any existing theme stylesheets
-  const existingTheme = document.querySelector('link[data-theme-css]');
-  if (existingTheme) {
-    console.log("🗑️ Removing existing theme");
-    existingTheme.remove();
-  }
+  return new Promise((resolve) => {
+    const existingTheme = document.querySelector('link[data-theme-css]');
+    if (existingTheme) existingTheme.remove();
 
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.setAttribute('data-theme-css', 'true');
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.setAttribute('data-theme-css', 'true');
+    link.href = `${API_BASE_URL}${cssFile}`;
 
-  // Build the full URL
-  const fullUrl = `${API_BASE_URL}${cssFile}`;
-  link.href = fullUrl;
+    link.onload = () => {
+      console.log("Theme fully loaded!");
+      resolve(true);
+    };
 
-  console.log("🔗 Loading CSS from:", fullUrl);
+    link.onerror = () => {
+      console.error("Failed to load theme");
+      resolve(true);
+    };
 
-  // Add error handling
-  link.onerror = () => {
-    console.error("❌ Failed to load theme CSS:", fullUrl);
-  };
-
-  link.onload = () => {
-    console.log("✅ Theme CSS loaded successfully!");
-  };
-
-  document.head.appendChild(link);
-  console.log("📎 CSS link added to <head>");
+    document.head.appendChild(link);
+  });
 }
-
-// For dashboard theme selection (if this is in dashboard)
-function confirmThemeSelection(theme) {
-  selectedThemeForConfirm.value = theme;
-  showThemeConfirm.value = true;
-}
-
-async function applySelectedTheme() {
-  try {
-    await api.post("/themes/select", {
-      themeId: selectedThemeForConfirm.value.id
-    });
-
-    // Apply theme immediately
-    if (selectedThemeForConfirm.value.cssFile) {
-      applyTheme(selectedThemeForConfirm.value.cssFile);
-    }
-
-    alert("✅ Theme updated successfully!");
-    showThemeConfirm.value = false;
-  } catch (err) {
-    if (err.response?.data?.isPremium) {
-      alert("⭐ " + err.response.data.message);
-    } else {
-      alert("❌ Failed to update theme");
-    }
-  }
-}
-
 
 const formatUrl = (url) => {
   if (!url) return "";
@@ -297,19 +353,16 @@ const saveContact = async () => {
   const contact = contacts.value[0];
 
   try {
-    // Fetch and convert photo to base64 if available
     let photoBase64 = '';
     if (contact.photo) {
       try {
-        const photoUrl = `${API_BASE_URL}${contact.photo}`;
+        const photoUrl = `${VITE_IMAGE_UPLOAD_URL}${contact.photo}`;
         const response = await fetch(photoUrl);
         const blob = await response.blob();
 
-        // Convert blob to base64
         photoBase64 = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onloadend = () => {
-            // Remove the data:image/xxx;base64, prefix
             const base64 = reader.result.split(',')[1];
             resolve(base64);
           };
@@ -321,22 +374,18 @@ const saveContact = async () => {
       }
     }
 
-    // Build address components
     const addressParts = [];
-
-    // VCF ADR format: ;;street;city;region;postal-code;country
-    addressParts.push(''); // PO Box
-    addressParts.push(''); // Extended address
-    addressParts.push(contact.streetAddress || ''); // Street address
-    addressParts.push(contact.city || ''); // City
-    addressParts.push(''); // State/Province (if you add this field later)
-    addressParts.push(contact.postalCode || ''); // Postal code
-    addressParts.push(contact.country || ''); // Country
+    addressParts.push('');
+    addressParts.push('');
+    addressParts.push(contact.streetAddress || '');
+    addressParts.push(contact.city || '');
+    addressParts.push('');
+    addressParts.push(contact.postalCode || '');
+    addressParts.push(contact.country || '');
 
     const addressString = addressParts.join(';');
     const hasAddress = contact.streetAddress || contact.city || contact.postalCode || contact.country;
 
-    // Build VCF content
     let vcard = `BEGIN:VCARD
 VERSION:3.0
 FN:${contact.firstName} ${contact.lastName}
@@ -344,37 +393,30 @@ N:${contact.lastName};${contact.firstName};;;
 ORG:${company.value.companyName || ''}
 TITLE:${contact.designation || ''}`;
 
-    // Add telephone if available
     if (contact.telephone) {
       vcard += `\nTEL;TYPE=VOICE:${contact.telephone}`;
     }
 
-    // Add mobile
     if (contact.mobile) {
       vcard += `\nTEL;TYPE=CELL:${contact.mobile}`;
     }
 
-    // Add company phone
     if (company.value.phone) {
       vcard += `\nTEL;TYPE=WORK:${company.value.phone}`;
     }
 
-    // Add email
     if (contact.email) {
       vcard += `\nEMAIL;TYPE=PREF,INTERNET:${contact.email}`;
     }
 
-    // Add website
     if (company.value.website) {
       vcard += `\nURL;TYPE=WORK:${company.value.website}`;
     }
 
-    // Add address with proper label
     if (hasAddress) {
       const label = contact.label || 'WORK';
       vcard += `\nADR;TYPE=${label}:${addressString}`;
 
-      // Add formatted address label for better display
       const formattedAddress = [
         contact.streetAddress,
         contact.streetAddressLine2,
@@ -388,17 +430,14 @@ TITLE:${contact.designation || ''}`;
       }
     }
 
-    // Add photo if available
     if (photoBase64) {
-      // Split base64 into 76-character lines as per VCF spec
       const photoLines = photoBase64.match(/.{1,76}/g);
       vcard += `\nPHOTO;ENCODING=b;TYPE=JPEG:${photoLines.join('\n ')}`;
     }
 
     vcard += `\nEND:VCARD`;
 
-    // Create and download VCF file
-    const vcfBlob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+    const vcfBlob = new Blob([vcard], {type: 'text/vcard;charset=utf-8'});
     const url = URL.createObjectURL(vcfBlob);
 
     const link = document.createElement('a');
@@ -410,15 +449,15 @@ TITLE:${contact.designation || ''}`;
     document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
-    console.log("✅ Contact VCF with photo and address downloaded successfully.");
+    console.log("✅ Contact VCF downloaded successfully.");
   } catch (error) {
     console.error("❌ Error generating VCF:", error);
   }
 };
-
 const getIcon = (name) => {
   const icons = {
-    phone: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`,
+    phone_mobile: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>`,
     whatsapp: `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>`,
     mail: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`,
     'phone-office': `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><path d="M14.05 2a9 9 0 0 1 8 7.94"/><path d="M14.05 6A5 5 0 0 1 18 10"/></svg>`,
@@ -446,6 +485,134 @@ const getSocialIcon = (name) => {
 </script>
 
 <style>
+
+.public-card-container {
+  width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;  /* no left-right scroll */
+  overflow-y: visible; /* allow main page to scroll normally */
+}
+
+.public-card {
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: #fff;
+}
+
+
+.company-bio {
+  line-height: 1.6;
+}
+
+.company-bio p {
+  margin-bottom: 0.8em;
+}
+
+.company-bio strong {
+  font-weight: 600;
+}
+
+.company-bio em {
+  font-style: italic;
+}
+
+.company-bio ul, .company-bio ol {
+  margin-left: 1.5em;
+  margin-bottom: 0.8em;
+}
+
+.company-bio h1, .company-bio h2, .company-bio h3 {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.share-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none; /* no box */
+  border: none; /* no border */
+  padding: 6px;
+  cursor: pointer;
+  color: white; /* icon color */
+  z-index: 10;
+  border-radius: 50%; /* optional small rounding */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-button:hover {
+  opacity: 0.8;
+}
+
+.header-section {
+  position: relative;
+}
+
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.spinner {
+  width: 55px;
+  height: 55px;
+  border: 5px solid #ddd;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 📱 Mobile Fullscreen Layout */
+@media (max-width: 768px) {
+  .public-card-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    border-radius: 0 !important;
+  }
+
+  .public-card {
+    width: 100vw !important;
+    min-height: 100vh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .company-logo-container{
+    border-radius: 0 !important;
+  }
+
+  .header-section{
+    border-radius: 0 !important;
+  }
+
+}
 
 
 </style>

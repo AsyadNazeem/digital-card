@@ -37,112 +37,192 @@
       </div>
     </div>
 
-    <!-- Right Side - Login Form -->
+    <!-- Right Side - Login/Forgot Password Form -->
     <div class="form-section">
       <div class="form-container">
-        <div class="form-header">
-          <h2 class="form-title">Welcome Back</h2>
-          <p class="form-subtitle">Sign in to continue to your account</p>
-        </div>
-
-        <!-- Google Login -->
-        <button class="google-btn" @click="handleGoogleLogin" :disabled="loading">
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="google-icon" />
-          <span>Continue with Google</span>
-        </button>
-
-        <div class="divider">
-          <span>or sign in with email</span>
-        </div>
-
         <!-- Login Form -->
-        <form @submit.prevent="login" class="login-form">
-          <div class="form-group">
-            <label class="form-label">Email or Phone Number</label>
-            <div class="input-group">
-              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
-              <input
-                  v-model="identifier"
-                  type="text"
-                  class="form-input"
-                  placeholder="Enter your email or phone"
-                  required
-              />
+        <div v-if="!showForgotPassword" class="form-wrapper">
+          <div class="form-header">
+            <h2 class="form-title">Welcome Back</h2>
+            <p class="form-subtitle">Sign in to continue to your account</p>
+          </div>
+
+          <!-- Google Login -->
+          <button class="google-btn" @click="handleGoogleLogin" :disabled="loading">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="google-icon" />
+            <span>Continue with Google</span>
+          </button>
+
+          <div class="divider">
+            <span>or sign in with email</span>
+          </div>
+
+          <!-- Login Form -->
+          <form @submit.prevent="login" class="login-form">
+            <div class="form-group">
+              <label class="form-label">Email or Phone Number</label>
+              <div class="input-group">
+                <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <input
+                    v-model="identifier"
+                    type="text"
+                    class="form-input"
+                    placeholder="Enter your email or phone"
+                    required
+                />
+              </div>
+              <div class="input-hint">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span>Use format: +12154567890 for phone</span>
+              </div>
             </div>
-            <div class="input-hint">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <div class="input-group">
+                <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <input
+                    v-model="password"
+                    :type="showPassword ? 'text' : 'password'"
+                    class="form-input"
+                    placeholder="Enter your password"
+                    required
+                />
+                <button type="button" @click="showPassword = !showPassword" class="password-toggle">
+                  <svg v-if="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-options">
+              <label class="checkbox-label">
+                <input type="checkbox" class="checkbox-input" />
+                <span>Remember me</span>
+              </label>
+              <a href="#" @click.prevent="showForgotPassword = true" class="forgot-link">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="submit-btn" :disabled="loading">
+              <svg v-if="loading" class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+              </svg>
+              <span v-else>Sign In</span>
+            </button>
+
+            <div v-if="message" class="alert" :class="messageType">
+              <svg v-if="messageType === 'error'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>{{ message }}</span>
+            </div>
+          </form>
+
+          <div class="signup-prompt">
+            <p>Don't have an account? <router-link to="/register" class="signup-link">Create one</router-link></p>
+          </div>
+        </div>
+
+        <!-- Forgot Password Form -->
+        <div v-else class="form-wrapper forgot-password-wrapper">
+          <button @click="showForgotPassword = false" class="back-button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Back to Login</span>
+          </button>
+
+          <div class="form-header">
+            <div class="icon-wrapper">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
               </svg>
-              <span>Use format: +12154567890 for phone</span>
             </div>
+            <h2 class="form-title">Forgot Password?</h2>
+            <p class="form-subtitle">No worries! Enter your email and we'll send you a reset link.</p>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <div class="input-group">
-              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          <form @submit.prevent="handleForgotPassword" class="login-form">
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <div class="input-group">
+                <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <input
+                    v-model="resetEmail"
+                    type="email"
+                    class="form-input"
+                    placeholder="Enter your email address"
+                    required
+                />
+              </div>
+            </div>
+
+            <button type="submit" class="submit-btn" :disabled="loading">
+              <svg v-if="loading" class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
               </svg>
-              <input
-                  v-model="password"
-                  :type="showPassword ? 'text' : 'password'"
-                  class="form-input"
-                  placeholder="Enter your password"
-                  required
-              />
-              <button type="button" @click="showPassword = !showPassword" class="password-toggle">
-                <svg v-if="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                </svg>
-              </button>
+              <span v-else>Send Reset Link</span>
+            </button>
+
+            <div v-if="message" class="alert" :class="messageType">
+              <svg v-if="messageType === 'error'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>{{ message }}</span>
+            </div>
+          </form>
+
+          <div class="help-text">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <div>
+              <p><strong>Note:</strong> If you signed up with Google, please use the "Continue with Google" button to login.</p>
+              <p style="margin-top: 0.5rem;">Check your spam folder if you don't receive the email within 5 minutes.</p>
             </div>
           </div>
-
-          <div class="form-options">
-            <label class="checkbox-label">
-              <input type="checkbox" class="checkbox-input" />
-              <span>Remember me</span>
-            </label>
-            <a href="#" class="forgot-link">Forgot password?</a>
-          </div>
-
-          <button type="submit" class="submit-btn" :disabled="loading">
-            <svg v-if="loading" class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="2" x2="12" y2="6"></line>
-              <line x1="12" y1="18" x2="12" y2="22"></line>
-              <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
-              <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
-            </svg>
-            <span v-else>Sign In</span>
-          </button>
-
-          <div v-if="message" class="alert" :class="messageType">
-            <svg v-if="messageType === 'error'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="15" y1="9" x2="9" y2="15"></line>
-              <line x1="9" y1="9" x2="15" y2="15"></line>
-            </svg>
-            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            <span>{{ message }}</span>
-          </div>
-        </form>
-
-        <div class="signup-prompt">
-          <p>Don't have an account? <router-link to="/register" class="signup-link">Create one</router-link></p>
         </div>
       </div>
     </div>
@@ -157,9 +237,11 @@ import api from '../services/api'
 const router = useRouter()
 const identifier = ref('')
 const password = ref('')
+const resetEmail = ref('')
 const message = ref('')
 const messageType = ref('error')
 const showPassword = ref(false)
+const showForgotPassword = ref(false)
 const loading = ref(false)
 
 async function login() {
@@ -193,6 +275,37 @@ async function login() {
         err.response?.data?.message ||
         err.message ||
         'Login failed. Please check your credentials.'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleForgotPassword() {
+  if (loading.value) return
+
+  try {
+    loading.value = true
+    message.value = ''
+
+    const res = await api.post('/auth/forgot-password', {
+      email: resetEmail.value.trim()
+    })
+
+    messageType.value = 'success'
+    message.value = res.data.message || 'Password reset link sent! Check your email.'
+
+    setTimeout(() => {
+      showForgotPassword.value = false
+      resetEmail.value = ''
+      message.value = ''
+    }, 3000)
+  } catch (err) {
+    console.error("❌ Forgot password error:", err)
+    messageType.value = 'error'
+    message.value =
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to send reset link. Please try again.'
   } finally {
     loading.value = false
   }
@@ -283,7 +396,7 @@ async function handleGoogleLogin() {
 }
 
 .auth-wrapper {
-  min-height: 98vh;
+  min-height: 100vh;
   display: flex;
   background: #f5f5f0;
 }
@@ -386,6 +499,10 @@ async function handleGoogleLogin() {
   max-width: 460px;
 }
 
+.form-wrapper {
+  position: relative;
+}
+
 .form-header {
   text-align: center;
   margin-bottom: 2.5rem;
@@ -401,6 +518,52 @@ async function handleGoogleLogin() {
 .form-subtitle {
   font-size: 1rem;
   color: #6b5d57;
+}
+
+/* Icon Wrapper for Forgot Password */
+.icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
+  border-radius: 20px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 24px rgba(92, 64, 51, 0.25);
+}
+
+.icon-wrapper svg {
+  color: #f5e6d3;
+}
+
+/* Back Button */
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  color: #5c4033;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  color: #3e2a23;
+  transform: translateX(-4px);
+}
+
+.back-button svg {
+  transition: transform 0.2s;
+}
+
+.back-button:hover svg {
+  transform: translateX(-2px);
 }
 
 /* Google Button */
@@ -664,6 +827,31 @@ async function handleGoogleLogin() {
   border: 1px solid #b7eb8f;
 }
 
+/* Help Text */
+.help-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fafaf8;
+  border-radius: 12px;
+  margin-top: 1.5rem;
+  border: 1px solid #e5e1dc;
+}
+
+.help-text svg {
+  flex-shrink: 0;
+  color: #9b8b7e;
+  margin-top: 0.1rem;
+}
+
+.help-text p {
+  font-size: 0.875rem;
+  color: #6b5d57;
+  line-height: 1.5;
+  margin: 0;
+}
+
 /* Signup Prompt */
 .signup-prompt {
   text-align: center;
@@ -689,6 +877,15 @@ async function handleGoogleLogin() {
   text-decoration: underline;
 }
 
+/* Forgot Password Specific Styles */
+.forgot-password-wrapper .form-header {
+  margin-bottom: 2rem;
+}
+
+.forgot-password-wrapper .login-form {
+  gap: 1.5rem;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .branding-section {
@@ -711,6 +908,16 @@ async function handleGoogleLogin() {
 
   .main-logo {
     width: 220px;
+  }
+
+  .icon-wrapper {
+    width: 70px;
+    height: 70px;
+  }
+
+  .icon-wrapper svg {
+    width: 40px;
+    height: 40px;
   }
 }
 </style>

@@ -136,7 +136,7 @@
                 <td>
                   <img
                       v-if="c.logo"
-                      :src="`${API_BASE_URL}${c.logo}`"
+                      :src="`${VITE_IMAGE_UPLOAD_URL}${c.logo}`"
                       alt="Logo"
                       class="logo-thumb"
                   />
@@ -246,10 +246,10 @@
           <div class="form-container">
             <!-- Basic Information -->
             <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">Heading <span class="required">*</span></label>
-                <input v-model="companyForm.heading" type="text" class="form-input" required/>
-              </div>
+<!--              <div class="form-group">-->
+<!--                <label class="form-label">Heading <span class="required">*</span></label>-->
+<!--                <input v-model="companyForm.heading" type="text" class="form-input" required/>-->
+<!--              </div>-->
               <div class="form-group">
                 <label class="form-label">Company Name <span class="required">*</span></label>
                 <input v-model="companyForm.companyName" type="text" class="form-input" required/>
@@ -373,15 +373,24 @@
             </div>
 
             <!-- Company Bio -->
+            <!-- Company Bio -->
             <div class="form-group full-width">
               <label class="form-label">Company Bio</label>
-              <textarea
-                  v-model="companyForm.bio"
-                  rows="8"
-                  class="form-input bio-textarea"
-                  placeholder="Enter company bio... (Press Enter for new paragraphs)"
-              ></textarea>
-              <p class="field-hint">Press Enter to create new paragraphs</p>
+              <QuillEditor
+                  v-model:content="companyForm.bio"
+                  contentType="html"
+                  theme="snow"
+                  :toolbar="[
+        ['bold', 'italic', 'underline'],
+        [{ 'header': [1, 2, 3, false] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['link'],
+        ['clean']
+      ]"
+                  class="quill-editor"
+                  placeholder="Enter company bio..."
+              />
+              <p class="field-hint">Use the toolbar to format your text</p>
             </div>
 
             <!-- Social Media Links -->
@@ -542,7 +551,7 @@
                 <td>
                   <img
                       v-if="c.photo"
-                      :src="`${API_BASE_URL}${c.photo}`"
+                      :src="`${VITE_IMAGE_UPLOAD_URL}${c.photo}`"
                       class="photo-thumb"
                       alt="Contact Photo"
                   />
@@ -556,6 +565,10 @@
                       target="_blank"
                       class="btn-action view"
                   > 👁 View </a>
+                  <button class="btn-action qr" @click="openQrPopup(c)">
+                    🔳 QR
+                  </button>
+
                   <button class="btn-action edit" @click="editContact(c)">
                     ✏️ Edit
                   </button>
@@ -1590,6 +1603,28 @@
         </div>
       </transition>
 
+
+      <!-- QR CODE POPUP -->
+      <transition name="modal">
+        <div v-if="showQrPopup" class="qr-popup-overlay">
+          <div class="qr-popup">
+            <button class="close-btn" @click="showQrPopup = false">×</button>
+
+            <h3>QR Code – {{ qrName }}</h3>
+
+            <div class="qr-container">
+              <canvas ref="qrCanvas"></canvas>
+            </div>
+
+            <div class="qr-actions">
+              <button class="btn-download" @click="downloadQr">⬇️ Download</button>
+              <button class="btn-share" @click="sharePoster">📤 Share Poster</button>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+
       <!-- Theme Confirmation Modal with Large Preview -->
       <transition name="modal">
         <div v-if="showThemeConfirm" class="modal-overlay" @click="showThemeConfirm = false">
@@ -1673,7 +1708,7 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref, watch} from 'vue'
+import {computed, onMounted, ref, watch, nextTick} from 'vue'
 import api from "../services/api";
 import {useRouter} from 'vue-router';
 import CountryCodeDropdown from '../components/CountryCodeDropdown.vue'
@@ -1681,7 +1716,18 @@ import {isValidPhoneNumber, parsePhoneNumber} from 'libphonenumber-js'
 import CountrySelector from '../components/CountrySelector.vue'
 import ImageCropperModal from '../components/ImageCropper.vue'
 import {API_BASE_URL} from "../config.js";
+import {VITE_FRONTEND_URL} from "../config.js";
+import {VITE_IMAGE_UPLOAD_URL} from "../config.js";
 import RealThemePreview from "../components/RealThemePreview.vue";
+import {QuillEditor} from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import QRCode from "qrcode";
+
+const showQrPopup = ref(false);
+const qrCanvas = ref(null);
+const qrUrl = ref("");
+const qrName = ref("");
+
 
 const themes = ref([]);
 const selectedTheme = ref(null);
@@ -1736,7 +1782,6 @@ const usernameLoading = ref(false);
 
 
 const companyForm = ref({
-  heading: "",
   companyName: "",
   website: "",
   displayUrl: "",
@@ -1872,6 +1917,130 @@ const previewContact = ref({
   email: 'john@company.com',
   photo: null
 });
+
+async function openQrPopup(contact) {
+  const phone = contact.mobile.replace(/\D/g, "");
+
+  qrUrl.value = `${VITE_FRONTEND_URL}/${phone}`;
+  qrName.value = `${contact.firstName} ${contact.lastName}`;
+
+  showQrPopup.value = true;
+
+  // Wait until DOM renders the <canvas>
+  await nextTick();
+
+  await generatePlainQr();
+}
+
+
+
+async function generatePlainQr() {
+  const canvas = qrCanvas.value;
+  if (!canvas) return;
+
+  await QRCode.toCanvas(canvas, qrUrl.value, {
+    width: 280,
+    margin: 2,
+    color: {
+      dark: "#000000",
+      light: "#ffffff"
+    }
+  });
+}
+
+
+async function downloadQr() {
+  const qr = qrCanvas.value;
+  if (!qr) return;
+
+  const poster = document.createElement("canvas");
+  poster.width = 600;
+  poster.height = 900;
+
+  const ctx = poster.getContext("2d");
+
+  // Background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, poster.width, poster.height);
+
+  // Draw QR
+  const qrSize = 350;
+  const qrY = 120;
+
+  ctx.drawImage(
+      qr,
+      poster.width / 2 - qrSize / 2,
+      qrY,
+      qrSize,
+      qrSize
+  );
+
+  // Bottom Text
+  ctx.fillStyle = "#000";
+  ctx.font = "bold 32px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Scan to view my", poster.width / 2, 540);
+  ctx.fillText("Digital Business Card", poster.width / 2, 590);
+
+  // Download
+  const link = document.createElement("a");
+  link.download = `${qrName.value}-QR.png`;
+  link.href = poster.toDataURL("image/png");
+  link.click();
+}
+
+
+
+async function sharePoster() {
+  const qr = qrCanvas.value;
+  if (!qr) return;
+
+  const poster = document.createElement("canvas");
+  poster.width = 600;
+  poster.height = 900;
+  const ctx = poster.getContext("2d");
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, poster.width, poster.height);
+
+  // Draw QR
+  const qrSize = 350;
+  const qrY = 120;
+
+  ctx.drawImage(
+      qr,
+      poster.width / 2 - qrSize / 2,
+      qrY,
+      qrSize,
+      qrSize
+  );
+
+  // Text
+  ctx.fillStyle = "#000";
+  ctx.font = "bold 32px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Scan to view my", poster.width / 2, 540);
+  ctx.fillText("Digital Business Card", poster.width / 2, 590);
+
+  // Convert to Blob
+  poster.toBlob(async (blob) => {
+    const file = new File([blob], `${qrName.value}-digital-card.png`, { type: "image/png" });
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "My Digital Business Card",
+          text: "Scan this QR to view my Digital Card!",
+          files: [file],
+        });
+      } catch (err) {
+        console.log("Share canceled or failed:", err);
+      }
+    } else {
+      alert("Sharing not supported on this device.");
+    }
+  });
+}
 
 // Validate and format phone number
 function validatePhone(value, countryCode) {
@@ -2334,7 +2503,6 @@ function editCompany(selectedCompany) {
   // Reset form with company data
   companyForm.value = {
     id: selectedCompany.id,
-    heading: selectedCompany.heading,
     companyName: selectedCompany.companyName,
     website: selectedCompany.website,
     displayUrl: selectedCompany.displayUrl,
@@ -2357,7 +2525,7 @@ function editCompany(selectedCompany) {
 
   // Set logo preview if exists
   if (selectedCompany.logo) {
-    logoPreview.value = `${API_BASE_URL}${selectedCompany.logo}`;
+    logoPreview.value = `${VITE_IMAGE_UPLOAD_URL}${selectedCompany.logo}`;
     logoFileName.value = selectedCompany.logo.split('/').pop();
     companyForm.value.existingLogoPath = selectedCompany.logo;
   } else {
@@ -2429,7 +2597,7 @@ function editContact(contact) {
   };
 
   if (contact.photo) {
-    photoPreview.value = `${API_BASE_URL}${contact.photo}`;
+    photoPreview.value = `${VITE_IMAGE_UPLOAD_URL}${contact.photo}`;
     photoFileName.value = contact.photo.split('/').pop();
     contactForm.value.existingPhotoPath = contact.photo;
   } else {
@@ -2964,7 +3132,6 @@ async function saveCompany() {
     const formData = new FormData();
 
     // Add all text fields
-    formData.append('heading', companyForm.value.heading || '');
     formData.append('companyName', companyForm.value.companyName);
     formData.append('website', companyForm.value.website);
     formData.append('displayUrl', companyForm.value.displayUrl || '');
@@ -3044,7 +3211,6 @@ async function saveCompany() {
       // Reset form
       showCompanyForm.value = false;
       companyForm.value = {
-        heading: '',
         companyName: '',
         website: '',
         displayUrl: '',
@@ -6362,4 +6528,83 @@ onMounted(loadData);
   background: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
+
+/* Quill Editor Styling */
+.quill-editor {
+  background: white;
+  border-radius: 8px;
+}
+
+:deep(.ql-container) {
+  min-height: 200px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+:deep(.ql-editor) {
+  min-height: 200px;
+}
+
+:deep(.ql-toolbar) {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+:deep(.ql-container) {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.qr-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.qr-popup {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  width: 330px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.qr-container {
+  margin: 20px 0;
+}
+
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.qr-actions button {
+  padding: 10px 15px;
+  margin: 5px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-download {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-share {
+  background: #10b981;
+  color: white;
+}
+
 </style>

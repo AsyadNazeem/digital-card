@@ -199,7 +199,7 @@ async function login() {
 }
 
 .admin-wrapper {
-  min-height: 98vh;
+  min-height: 100vh;
   display: flex;
   background: #f5f5f0;
 }

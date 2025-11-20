@@ -6,7 +6,7 @@ import Theme from "../models/Theme.js";
 
 const router = express.Router();
 
-
+// API endpoint for Vue app to fetch contact data
 router.get("/:mobile", async (req, res) => {
     try {
         let mobile = "+" + req.params.mobile;
@@ -37,7 +37,7 @@ router.get("/:mobile", async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Return the data
+        // Return the data as JSON for Vue app
         res.json({
             company,
             contact,
@@ -52,6 +52,4 @@ router.get("/:mobile", async (req, res) => {
     }
 });
 
-
 export default router;
-
