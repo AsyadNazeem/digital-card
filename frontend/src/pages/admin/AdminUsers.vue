@@ -13,7 +13,8 @@
     <div class="users-table-card">
       <div class="table-controls">
         <div class="search-box">
-          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
           </svg>
@@ -35,7 +36,8 @@
       <div class="table-wrapper">
         <!-- Loading State -->
         <div v-if="adminStore.loading" class="loading-state">
-          <svg class="spinner" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="spinner" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2">
             <line x1="12" y1="2" x2="12" y2="6"></line>
             <line x1="12" y1="18" x2="12" y2="22"></line>
             <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
@@ -75,7 +77,7 @@
             </td>
             <td>
                 <span class="badge" :class="user.registrationType">
-                  {{ getRegistrationTypeLabel(user.registrationType)}}
+                  {{ getRegistrationTypeLabel(user.registrationType) }}
                 </span>
             </td>
             <td class="text-center">{{ user.companyLimit }}</td>
@@ -136,7 +138,8 @@
               <div class="limit-controls">
                 <span class="limit-value">{{ updatedLimits.companyLimit }}</span>
                 <div class="limit-buttons">
-                  <button @click="updateLimit('company', -1)" class="btn-limit" :disabled="updatedLimits.companyLimit <= 1">
+                  <button @click="updateLimit('company', -1)" class="btn-limit"
+                          :disabled="updatedLimits.companyLimit <= 1">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
@@ -159,7 +162,8 @@
               <div class="limit-controls">
                 <span class="limit-value">{{ updatedLimits.contactLimit }}</span>
                 <div class="limit-buttons">
-                  <button @click="updateLimit('contact', -1)" class="btn-limit" :disabled="updatedLimits.contactLimit <= 1">
+                  <button @click="updateLimit('contact', -1)" class="btn-limit"
+                          :disabled="updatedLimits.contactLimit <= 1">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
@@ -180,7 +184,8 @@
                 class="btn-save-limits"
                 :disabled="savingLimits"
             >
-              <svg v-if="savingLimits" class="spinner-small" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg v-if="savingLimits" class="spinner-small" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="2" x2="12" y2="6"></line>
                 <line x1="12" y1="18" x2="12" y2="22"></line>
               </svg>
@@ -220,7 +225,8 @@
           <div class="tab-content">
             <!-- Loading State -->
             <div v-if="loadingData" class="loading-state-small">
-              <svg class="spinner" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg class="spinner" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2">
                 <line x1="12" y1="2" x2="12" y2="6"></line>
                 <line x1="12" y1="18" x2="12" y2="22"></line>
               </svg>
@@ -245,6 +251,7 @@
                     <th>Email</th>
                     <th>Created Date</th>
                     <th>Status</th>
+                    <th>Actions</th> <!-- ADD THIS -->
                   </tr>
                   </thead>
                   <tbody>
@@ -259,7 +266,8 @@
                     <td class="td-website">
                       <a v-if="company.website" :href="company.website" target="_blank" class="link-external">
                         {{ company.displayUrl || company.website }}
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
                           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                           <polyline points="15 3 21 3 21 9"></polyline>
                           <line x1="10" y1="14" x2="21" y2="3"></line>
@@ -274,6 +282,19 @@
                           {{ (company.status || 'active').toUpperCase() }}
                         </span>
                     </td>
+                    <td class="td-actions">
+                      <button
+                          @click="editCompany(company)"
+                          class="btn-view-card"
+                          title="Edit Company"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Edit
+                      </button>
+                    </td>
                   </tr>
                   </tbody>
                 </table>
@@ -282,6 +303,24 @@
 
             <!-- Contacts Tab -->
             <div v-else-if="activeTab === 'contacts'">
+              <!-- Company Filter Dropdown (only show if 2+ companies) -->
+              <div v-if="companies.length >= 2" class="company-filter-section">
+                <label for="company-filter" class="filter-label">Filter by Company:</label>
+                <select
+                    id="company-filter"
+                    v-model="selectedCompanyFilter"
+                    class="company-filter-select"
+                >
+                  <option value="all">All Companies</option>
+                  <option
+                      v-for="company in companies"
+                      :key="company.id"
+                      :value="company.id"
+                  >
+                    {{ company.companyName || 'Unnamed Company' }}
+                  </option>
+                </select>
+              </div>
               <div v-if="contacts.length === 0" class="empty-state">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -297,13 +336,14 @@
                     <th>Name</th>
                     <th>Email</th>
                     <th>Mobile</th>
+                    <th>Company</th>
                     <th>Designation</th>
                     <th>Created Date</th>
                     <th>Actions</th>
                   </tr>
                   </thead>
                   <tbody>
-                  <tr v-for="contact in contacts" :key="contact.id">
+                  <tr v-for="contact in filteredContacts" :key="contact.id">
                     <td class="td-id">#{{ contact.id }}</td>
                     <td class="td-name">
                       <div class="name-cell">
@@ -314,20 +354,49 @@
                     <td class="td-email">{{ contact.email || '-' }}</td>
                     <td class="td-phone">{{ contact.mobile || contact.telephone || '-' }}</td>
                     <td class="td-designation">{{ contact.designation || '-' }}</td>
+                    <td class="td-company">{{ getCompanyName(contact.companyId) }}</td>
                     <td class="td-date">{{ formatDate(contact.createdAt) }}</td>
                     <td class="td-actions">
-                      <a
-                          :href="getContactCardUrl(contact.mobile)"
-                          target="_blank"
-                          class="btn-view-card"
-                          title="View Contact Card"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
-                          <polyline points="22 7 13 13 2 7"></polyline>
-                        </svg>
-                        View Card
-                      </a>
+                      <div style="display: flex; align-items: center; justify-content: center; gap: 5px">
+                        <button
+                            @click="editContact(contact)"
+                            class="btn-view-card"
+                            title="Edit Contact"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                          Edit
+                        </button>
+                        <a
+                            :href="getContactCardUrl(contact.mobile)"
+                            target="_blank"
+                            class="btn-view-card"
+                            title="View Contact Card"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                            <polyline points="22 7 13 13 2 7"></polyline>
+                          </svg>
+                          View Card
+                        </a>
+                        <button
+                            @click="openQrPopup1(contact)"
+                            class="btn-view-card"
+                            title="View Contact QR Code"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                          </svg>
+                          View QR
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   </tbody>
@@ -338,14 +407,66 @@
         </div>
       </div>
     </transition>
+
+    <!-- QR CODE POPUP -->
+    <transition name="modal">
+      <div v-if="showQrPopup" class="qr-popup-overlay">
+        <div class="qr-popup">
+          <button class="close-btn" @click="showQrPopup = false">×</button>
+
+          <h3>QR Code – {{ qrName }}</h3>
+
+          <div class="qr-container">
+            <canvas ref="qrCanvas"></canvas>
+          </div>
+
+          <div class="qr-actions">
+            <button class="btn-download" @click="downloadQr">⬇️ Download</button>
+            <button class="btn-share" @click="sharePoster">📤 Share Poster</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Edit Company Modal -->
+    <DashboardEditCompany
+        :show="showEditCompanyModal"
+        :company="selectedCompany"
+        @close="showEditCompanyModal = false"
+        @saved="handleCompanySaved"
+    />
+
+    <!-- Edit Contact Modal -->
+    <DashboardEditContact
+        :show="showEditContactModal"
+        :contact="selectedContact"
+        :userId="selectedUser?.id"
+        @close="showEditContactModal = false"
+        @saved="handleContactSaved"
+    />
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useAdminStore } from '../../store/adminStore'
+import {computed, nextTick, onMounted, ref} from 'vue'
+import {useAdminStore} from '../../store/adminStore'
 import adminApi from '../../services/adminApi'
-import {API_BASE_URL} from "@/config.js";
+import {VITE_FRONTEND_URL} from "@/config.js";
+import QRCode from "qrcode";
+import DashboardEditCompany from '../../components/admin/DashboardEditCompany.vue'
+import DashboardEditContact from '../../components/admin/DashboardEditContact.vue'
+
+const showQrPopup = ref(false);
+const qrCanvas = ref(null);
+const qrUrl = ref("");
+const qrName = ref("");
+
+// ADD THESE NEW REFS
+const showEditCompanyModal = ref(false)
+const showEditContactModal = ref(false)
+const selectedCompany = ref(null)
+const selectedContact = ref(null)
 
 const adminStore = useAdminStore()
 const searchQuery = ref('')
@@ -356,9 +477,176 @@ const activeTab = ref('companies')
 const companies = ref([])
 const contacts = ref([])
 const loadingData = ref(false)
-const updatedLimits = ref({ companyLimit: 0, contactLimit: 0 })
-const originalLimits = ref({ companyLimit: 0, contactLimit: 0 })
+const updatedLimits = ref({companyLimit: 0, contactLimit: 0})
+const originalLimits = ref({companyLimit: 0, contactLimit: 0})
 const savingLimits = ref(false)
+
+const selectedCompanyFilter = ref('all')
+
+
+// Replace the existing filteredContacts computed property with:
+const filteredContacts = computed(() => {
+  if (selectedCompanyFilter.value === 'all') {
+    return contacts.value
+  }
+  return contacts.value.filter(contact => contact.companyId === Number(selectedCompanyFilter.value))
+})
+
+// Add this new computed property to get company name for each contact:
+const getCompanyName = (companyId) => {
+  const company = companies.value.find(c => c.id === companyId)
+  return company?.companyName || '-'
+}
+
+
+// Update editCompany function
+function editCompany(company) {
+  selectedCompany.value = {
+    ...company,
+    userId: selectedUser.value.id
+  }
+  showEditCompanyModal.value = true
+}
+
+function editContact(contact) {
+  selectedContact.value = contact
+  showEditContactModal.value = true
+}
+
+async function handleCompanySaved() {
+  showEditCompanyModal.value = false
+  selectedCompany.value = null
+  if (selectedUser.value) {
+    await fetchUserData(selectedUser.value.id)
+  }
+}
+
+async function handleContactSaved() {
+  showEditContactModal.value = false
+  selectedContact.value = null
+  if (selectedUser.value) {
+    await fetchUserData(selectedUser.value.id)
+  }
+}
+
+async function openQrPopup1(contact) {
+  const phone = contact.mobile.replace(/\D/g, "");
+  qrUrl.value = `${VITE_FRONTEND_URL}/${phone}`;
+  qrName.value = `${contact.firstName} ${contact.lastName}`;
+  showQrPopup.value = true;
+  await nextTick();
+  await generatePlainQr();
+}
+
+
+
+async function generatePlainQr() {
+  const canvas = qrCanvas.value;
+  if (!canvas) return;
+
+  await QRCode.toCanvas(canvas, qrUrl.value, {
+    width: 280,
+    margin: 2,
+    color: {
+      dark: "#000000",
+      light: "#ffffff"
+    }
+  });
+}
+
+
+async function downloadQr() {
+  const qr = qrCanvas.value;
+  if (!qr) return;
+
+  const poster = document.createElement("canvas");
+  poster.width = 600;
+  poster.height = 900;
+
+  const ctx = poster.getContext("2d");
+
+  // Background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, poster.width, poster.height);
+
+  // Draw QR
+  const qrSize = 350;
+  const qrY = 120;
+
+  ctx.drawImage(
+      qr,
+      poster.width / 2 - qrSize / 2,
+      qrY,
+      qrSize,
+      qrSize
+  );
+
+  // Bottom Text
+  ctx.fillStyle = "#000";
+  ctx.font = "bold 32px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Scan to view my", poster.width / 2, 540);
+  ctx.fillText("Digital Business Card", poster.width / 2, 590);
+
+  // Download
+  const link = document.createElement("a");
+  link.download = `${qrName.value}-QR.png`;
+  link.href = poster.toDataURL("image/png");
+  link.click();
+}
+
+
+async function sharePoster() {
+  const qr = qrCanvas.value;
+  if (!qr) return;
+
+  const poster = document.createElement("canvas");
+  poster.width = 600;
+  poster.height = 900;
+  const ctx = poster.getContext("2d");
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, poster.width, poster.height);
+
+  // Draw QR
+  const qrSize = 350;
+  const qrY = 120;
+
+  ctx.drawImage(
+      qr,
+      poster.width / 2 - qrSize / 2,
+      qrY,
+      qrSize,
+      qrSize
+  );
+
+  // Text
+  ctx.fillStyle = "#000";
+  ctx.font = "bold 32px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Scan to view my", poster.width / 2, 540);
+  ctx.fillText("Digital Business Card", poster.width / 2, 590);
+
+  // Convert to Blob
+  poster.toBlob(async (blob) => {
+    const file = new File([blob], `${qrName.value}-digital-card.png`, {type: "image/png"});
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "My Digital Business Card",
+          text: "Scan this QR to view my Digital Card!",
+          files: [file],
+        });
+      } catch (err) {
+        console.log("Share canceled or failed:", err);
+      }
+    } else {
+      alert("Sharing not supported on this device.");
+    }
+  });
+}
+
 
 const filteredUsers = computed(() => {
   let users = adminStore.users || []
@@ -413,12 +701,13 @@ async function openUserDetails(user) {
   selectedUser.value = user
   showModal.value = true
   activeTab.value = 'companies'
+  selectedCompanyFilter.value = 'all' // ADD THIS LINE
 
   updatedLimits.value = {
     companyLimit: user.companyLimit || 1,
     contactLimit: user.contactLimit || 1
   }
-  originalLimits.value = { ...updatedLimits.value }
+  originalLimits.value = {...updatedLimits.value}
 
   await fetchUserData(user.id)
 }
@@ -464,7 +753,7 @@ async function saveLimits() {
       contactLimit: updatedLimits.value.contactLimit
     })
 
-    originalLimits.value = { ...updatedLimits.value }
+    originalLimits.value = {...updatedLimits.value}
     await adminStore.fetchUsers()
     alert('Limits updated successfully!')
   } catch (err) {
@@ -501,6 +790,43 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.company-filter-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
+  border-radius: 12px;
+  border: 1px solid #e5e1dc;
+}
+
+.filter-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a3f3a;
+  white-space: nowrap;
+}
+
+.company-filter-select {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #e5e1dc;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #2d1f1a;
+  font-weight: 500;
+}
+
+.company-filter-select:focus {
+  outline: none;
+  border-color: #5c4033;
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
+}
+
 .admin-users-page {
   display: flex;
   flex-direction: column;
@@ -512,6 +838,29 @@ onMounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   gap: 24px;
+}
+
+.btn-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border-radius: 6px;
+  border: 1px solid #93c5fd;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-edit:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .btn-create {
@@ -1209,6 +1558,58 @@ onMounted(() => {
 
 .spinner-small {
   animation: spin 1s linear infinite;
+}
+
+.qr-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.qr-popup {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  width: 330px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.qr-container {
+  margin: 20px 0;
+}
+
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.qr-actions button {
+  padding: 10px 15px;
+  margin: 5px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-download {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-share {
+  background: #10b981;
+  color: white;
 }
 
 @keyframes spin {

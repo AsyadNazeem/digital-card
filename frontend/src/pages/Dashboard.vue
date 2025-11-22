@@ -316,9 +316,16 @@
                 <label class="form-label">Google Location</label>
                 <input v-model="companyForm.googleLocation" type="text" class="form-input"/>
               </div>
-              <div class="form-group full-width">
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
                 <label class="form-label">Google Reviews</label>
                 <input v-model="companyForm.googleReviews" type="text" class="form-input"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Trip Advisor</label>
+                <input v-model="companyForm.tripAdvisor" type="text" class="form-input"/>
               </div>
             </div>
 
@@ -346,33 +353,32 @@
                 <div class="form-group full-width">
                   <label class="form-label">Street Address</label>
                   <input v-model="companyForm.streetAddress" type="text" class="form-input"
-                         placeholder="123 Main Street"/>
+                         placeholder=""/>
                 </div>
 
                 <div class="form-group full-width">
                   <label class="form-label">Street Address Line 2</label>
                   <input v-model="companyForm.streetAddressLine2" type="text" class="form-input"
-                         placeholder="Apartment, suite, etc. (optional)"/>
+                         placeholder=""/>
                 </div>
 
                 <div class="form-group">
                   <label class="form-label">City</label>
-                  <input v-model="companyForm.city" type="text" class="form-input" placeholder="Colombo"/>
+                  <input v-model="companyForm.city" type="text" class="form-input" placeholder=""/>
                 </div>
 
                 <div class="form-group">
                   <label class="form-label">Postal Code</label>
-                  <input v-model="companyForm.postalCode" type="text" class="form-input" placeholder="10100"/>
+                  <input v-model="companyForm.postalCode" type="text" class="form-input" placeholder=""/>
                 </div>
 
                 <div class="form-group">
                   <label class="form-label">PO Box</label>
-                  <input v-model="companyForm.poBox" type="text" class="form-input" placeholder="PO Box (optional)"/>
+                  <input v-model="companyForm.poBox" type="text" class="form-input" placeholder=""/>
                 </div>
               </div>
             </div>
 
-            <!-- Company Bio -->
             <!-- Company Bio -->
             <div class="form-group full-width">
               <label class="form-label">Company Bio</label>
@@ -1723,6 +1729,12 @@ import {QuillEditor} from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import QRCode from "qrcode";
 
+import Quill from 'quill';
+
+const Block = Quill.import('blots/block');
+Block.tagName = 'p';   // Force Quill to use <p> instead of <br>
+Quill.register(Block, true);
+
 const showQrPopup = ref(false);
 const qrCanvas = ref(null);
 const qrUrl = ref("");
@@ -1799,7 +1811,8 @@ const companyForm = ref({
   city: "",
   postalCode: "",
   poBox: "",
-  label: ""
+  label: "",
+  tripAdvisor: ""
 });
 
 const contactForm = ref({
@@ -1917,6 +1930,8 @@ const previewContact = ref({
   email: 'john@company.com',
   photo: null
 });
+
+
 
 async function openQrPopup(contact) {
   const phone = contact.mobile.replace(/\D/g, "");
@@ -2085,6 +2100,7 @@ const previewCompany = ref({
   googleLocation: 'https://maps.google.com',
   view360: null,
   googleReviews: null,
+  tripAdvisor: null,
   socialLinks: {
     facebook: 'https://facebook.com',
     linkedin: 'https://linkedin.com',
@@ -2272,18 +2288,6 @@ const displayedHistory = computed(() => {
   return requestHistory.value.filter(req => req.status === historyFilter.value);
 });
 
-function validateNineDigitNumber(value) {
-  // Remove everything except digits
-  let cleaned = value.replace(/\D/g, "");
-
-  // Limit to 9 digits max
-  if (cleaned.length > 9) {
-    cleaned = cleaned.slice(0, 15);
-  }
-
-  return cleaned;
-}
-
 // Format date
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -2391,6 +2395,7 @@ const filteredCompanies = computed(() => {
       (c.view360?.toLowerCase().includes(q)) ||
       (c.googleLocation?.toLowerCase().includes(q)) ||
       (c.googleReviews?.toLowerCase().includes(q)) ||
+      (c.tripAdvisor?.toLowerCase().includes(q)) ||
       (c.status?.toLowerCase().includes(q)) ||
       String(c.id).includes(q)
   );
@@ -2520,7 +2525,8 @@ function editCompany(selectedCompany) {
     city: selectedCompany.city || "",
     postalCode: selectedCompany.postalCode || "",
     poBox: selectedCompany.poBox || "",
-    label: selectedCompany.label || ""
+    label: selectedCompany.label || "",
+    tripAdvisor: selectedCompany.tripAdvisor || ""
   };
 
   // Set logo preview if exists
@@ -3140,6 +3146,7 @@ async function saveCompany() {
     formData.append('view360', companyForm.value.view360 || '');
     formData.append('googleLocation', companyForm.value.googleLocation || '');
     formData.append('googleReviews', companyForm.value.googleReviews || '');
+    formData.append('tripAdvisor', companyForm.value.tripAdvisor || '');
     formData.append('status', companyForm.value.status || 'active');
 
     // ADD ADDRESS FIELDS
@@ -3220,6 +3227,7 @@ async function saveCompany() {
         view360: '',
         googleLocation: '',
         googleReviews: '',
+        tripAdvisor: '',
         status: 'active',
         existingLogoPath: null,
         // RESET ADDRESS FIELDS

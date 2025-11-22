@@ -78,7 +78,7 @@ function logout() {
   display: flex;
   flex-direction: column;
   position: fixed;
-  height: 98vh;
+  height: 100vh;
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
   z-index: 100;
 }

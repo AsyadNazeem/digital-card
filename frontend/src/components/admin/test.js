@@ -5,10 +5,9 @@ import jwt from "jsonwebtoken";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
 import Request from "../models/Request.js";
-import { authenticateToken } from "../middleware/authMiddleware.js";
-import { ensurePhoneNumber } from "../middleware/checkPhone.js";
-import { Op } from 'sequelize';
-import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
+import {authenticateToken} from "../middleware/authMiddleware.js";
+import {Op} from 'sequelize';
+import {isValidPhoneNumber, parsePhoneNumber} from 'libphonenumber-js';
 import sanitizeHtml from 'sanitize-html';
 
 const router = express.Router();
@@ -17,10 +16,10 @@ const router = express.Router();
 // ✅ Middleware to authenticate JWT
 function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ message: "No token provided" });
+    if (!authHeader) return res.status(401).json({message: "No token provided"});
     const token = authHeader.split(" ")[1];
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) return res.status(403).json({ message: "Invalid token" });
+        if (err) return res.status(403).json({message: "Invalid token"});
         req.userId = decoded.id;
         next();
     });
@@ -31,11 +30,11 @@ function authenticate(req, res, next) {
 function validatePhoneNumber(phoneNumber) {
     try {
         if (!phoneNumber) {
-            return { isValid: false, error: "Phone number is required" };
+            return {isValid: false, error: "Phone number is required"};
         }
 
         if (!isValidPhoneNumber(phoneNumber)) {
-            return { isValid: false, error: "Invalid phone number format" };
+            return {isValid: false, error: "Invalid phone number format"};
         }
 
         const parsed = parsePhoneNumber(phoneNumber);
@@ -55,12 +54,19 @@ function validatePhoneNumber(phoneNumber) {
     }
 }
 
+// ✔ FRONTEND uploads folder (WhatsApp will read from here)
+const FRONTEND_UPLOAD_PATH = "/home/tapmyname/public_html/uploads";
+
 // ✅ Multer configuration for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        if (file.fieldname === "logo") cb(null, "uploads/logos");
-        else if (file.fieldname === "photo") cb(null, "uploads/photos");
-        else cb(null, "uploads");
+        if (file.fieldname === "logo") {
+            cb(null, `${FRONTEND_UPLOAD_PATH}/logos`);
+        } else if (file.fieldname === "photo") {
+            cb(null, `${FRONTEND_UPLOAD_PATH}/photos`);
+        } else {
+            cb(null, FRONTEND_UPLOAD_PATH);
+        }
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -68,7 +74,7 @@ const storage = multer.diskStorage({
     },
 });
 
-const upload = multer({ storage });
+const upload = multer({storage});
 
 // ============================================
 // COMPANY ROUTES
@@ -77,7 +83,7 @@ const upload = multer({ storage });
 // ✅ Create a new company
 router.post("/company", authenticate, upload.single("logo"), async (req, res) => {
     try {
-        // Required fields
+// Required fields
         if (
             !req.body.companyName ||
             !req.body.website ||
@@ -95,7 +101,7 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
             });
         }
 
-        // Parse social links
+// Parse social links
         let socialLinks = {};
         if (req.body.socialLinks) {
             try {
@@ -105,13 +111,13 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
             }
         }
 
-        // Sanitize bio
+// Sanitize bio
         const cleanBio = sanitizeHtml(req.body.bio || "", {
-            allowedTags: ['p','br','strong','em','u','h1','h2','h3','ul','ol','li','a','blockquote'],
-            allowedAttributes: { 'a': ['href','target','rel'] }
+            allowedTags: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'blockquote'],
+            allowedAttributes: {'a': ['href', 'target', 'rel']}
         });
 
-        // Create company
+// Create company
         const company = await Company.create({
             heading: null,   // <-- ALWAYS NULL
             companyName: req.body.companyName,
@@ -125,7 +131,7 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
             googleReviews: req.body.googleReviews || null,
             tripAdvisor: req.body.tripAdvisor || null,
             socialLinks: socialLinks || null,
-            // Address fields (optional)
+// Address fields (optional)
             label: req.body.label || null,
             country: req.body.country || null,
             streetAddress: req.body.streetAddress || null,
@@ -156,15 +162,15 @@ router.put("/company/:id", authenticate, upload.single("logo"), async (req, res)
     try {
         const company = await Company.findByPk(req.params.id);
         if (!company) {
-            return res.status(404).json({ message: "Company not found" });
+            return res.status(404).json({message: "Company not found"});
         }
 
-        // Check ownership
+// Check ownership
         if (company.userId !== req.userId) {
-            return res.status(403).json({ message: "Unauthorized" });
+            return res.status(403).json({message: "Unauthorized"});
         }
 
-        // Parse social links
+// Parse social links
         let socialLinks = {};
         if (req.body.socialLinks) {
             try {
@@ -175,7 +181,7 @@ router.put("/company/:id", authenticate, upload.single("logo"), async (req, res)
             }
         }
 
-        // ✅ ADDED: Sanitize bio HTML
+// ✅ ADDED: Sanitize bio HTML
         const cleanBio = sanitizeHtml(req.body.bio || '', {
             allowedTags: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'blockquote'],
             allowedAttributes: {
@@ -196,7 +202,7 @@ router.put("/company/:id", authenticate, upload.single("logo"), async (req, res)
             tripAdvisor: req.body.tripAdvisor || null,
             status: req.body.status || null,
             socialLinks: socialLinks || null,
-            // ADDRESS FIELDS
+// ADDRESS FIELDS
             label: req.body.label || null,
             country: req.body.country || null,
             streetAddress: req.body.streetAddress || null,
@@ -206,18 +212,18 @@ router.put("/company/:id", authenticate, upload.single("logo"), async (req, res)
             poBox: req.body.poBox || null,
         };
 
-        // Handle logo update
+// Handle logo update
         if (req.file) {
-            // New file uploaded
+// New file uploaded
             updateData.logo = `/uploads/logos/${req.file.filename}`;
         } else if (req.body.existingLogo) {
-            // Keep existing logo
+// Keep existing logo
             updateData.logo = req.body.existingLogo;
         }
 
         await company.update(updateData);
 
-        // Fetch updated company to return
+// Fetch updated company to return
         const updatedCompany = await Company.findByPk(req.params.id);
 
         res.json({
@@ -237,11 +243,11 @@ router.put("/company/:id", authenticate, upload.single("logo"), async (req, res)
 router.delete("/company/:id", authenticate, async (req, res) => {
     try {
         const company = await Company.findByPk(req.params.id);
-        if (!company) return res.status(404).json({ message: "Company not found" });
+        if (!company) return res.status(404).json({message: "Company not found"});
         await company.destroy();
-        res.json({ message: "Company deleted successfully" });
+        res.json({message: "Company deleted successfully"});
     } catch (err) {
-        res.status(500).json({ message: "Error deleting company", error: err.message });
+        res.status(500).json({message: "Error deleting company", error: err.message});
     }
 });
 
@@ -260,7 +266,7 @@ router.get("/companies", authenticate, async (req, res) => {
         res.json(companies);
     } catch (err) {
         console.error("❌ Error fetching companies:", err);
-        res.status(500).json({ message: "Failed to load companies" });
+        res.status(500).json({message: "Failed to load companies"});
     }
 });
 
@@ -286,12 +292,12 @@ router.post(
                 status
             } = req.body;
 
-            // Validate required fields
+// Validate required fields
             if (!mobile) {
-                return res.status(400).json({ message: "Mobile number is required" });
+                return res.status(400).json({message: "Mobile number is required"});
             }
 
-            // Validate mobile number
+// Validate mobile number
             const mobileValidation = validatePhoneNumber(mobile);
             if (!mobileValidation.isValid) {
                 return res.status(400).json({
@@ -299,7 +305,7 @@ router.post(
                 });
             }
 
-            // Validate telephone if provided
+// Validate telephone if provided
             let validatedTelephone = null;
             if (telephone) {
                 const telValidation = validatePhoneNumber(telephone);
@@ -311,7 +317,7 @@ router.post(
                 validatedTelephone = telValidation.e164;
             }
 
-            // Check for duplicate mobile number
+// Check for duplicate mobile number
             const existingContact = await Contact.findOne({
                 where: {
                     mobile: mobileValidation.e164,
@@ -346,7 +352,7 @@ router.post(
             });
         } catch (err) {
             console.error("❌ Contact save error:", err);
-            res.status(500).json({ message: err.message });
+            res.status(500).json({message: err.message});
         }
     }
 );
@@ -355,7 +361,7 @@ router.post(
 router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res) => {
     try {
         const contact = await Contact.findByPk(req.params.id);
-        if (!contact) return res.status(404).json({ message: "Contact not found" });
+        if (!contact) return res.status(404).json({message: "Contact not found"});
 
         const {
             firstName,
@@ -368,7 +374,7 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             status
         } = req.body;
 
-        // Validate mobile number if provided
+// Validate mobile number if provided
         let validatedMobile = contact.mobile;
         if (mobile) {
             const mobileValidation = validatePhoneNumber(mobile);
@@ -379,12 +385,12 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             }
             validatedMobile = mobileValidation.e164;
 
-            // Check for duplicate mobile (exclude current contact)
+// Check for duplicate mobile (exclude current contact)
             const existingContact = await Contact.findOne({
                 where: {
                     mobile: validatedMobile,
                     userId: req.userId,
-                    id: { [Op.ne]: req.params.id }
+                    id: {[Op.ne]: req.params.id}
                 }
             });
 
@@ -395,7 +401,7 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             }
         }
 
-        // Validate telephone if provided
+// Validate telephone if provided
         let validatedTelephone = contact.telephone;
         if (telephone) {
             const telValidation = validatePhoneNumber(telephone);
@@ -419,10 +425,10 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             photo: req.file ? `/uploads/photos/${req.file.filename}` : contact.photo,
         });
 
-        res.json({ message: "Contact updated successfully" });
+        res.json({message: "Contact updated successfully"});
     } catch (err) {
         console.error("❌ Contact update error:", err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({message: err.message});
     }
 });
 
@@ -430,11 +436,11 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
 router.delete("/contact/:id", authenticate, async (req, res) => {
     try {
         const contact = await Contact.findByPk(req.params.id);
-        if (!contact) return res.status(404).json({ message: "Contact not found" });
+        if (!contact) return res.status(404).json({message: "Contact not found"});
         await contact.destroy();
-        res.json({ message: "Contact deleted successfully" });
+        res.json({message: "Contact deleted successfully"});
     } catch (err) {
-        res.status(500).json({ message: "Error deleting contact", error: err.message });
+        res.status(500).json({message: "Error deleting contact", error: err.message});
     }
 });
 
@@ -445,10 +451,10 @@ router.delete("/contact/:id", authenticate, async (req, res) => {
 // ✅ Check if mobile number already exists
 router.post("/check-contact-mobile", authenticate, async (req, res) => {
     try {
-        const { mobile, contactId } = req.body;
+        const {mobile, contactId} = req.body;
 
         if (!mobile) {
-            return res.status(400).json({ message: "Mobile number is required" });
+            return res.status(400).json({message: "Mobile number is required"});
         }
 
         const validation = validatePhoneNumber(mobile);
@@ -464,7 +470,7 @@ router.post("/check-contact-mobile", authenticate, async (req, res) => {
         };
 
         if (contactId) {
-            whereClause.id = { [Op.ne]: contactId };
+            whereClause.id = {[Op.ne]: contactId};
         }
 
         const existing = await Contact.findOne({
@@ -493,11 +499,11 @@ router.post("/check-contact-mobile", authenticate, async (req, res) => {
 router.get("/data", authenticate, async (req, res) => {
     try {
         const companies = await Company.findAll({
-            where: { userId: req.userId }
+            where: {userId: req.userId}
         });
 
         const contacts = await Contact.findAll({
-            where: { userId: req.userId },
+            where: {userId: req.userId},
             include: [
                 {
                     model: Company,
@@ -507,10 +513,10 @@ router.get("/data", authenticate, async (req, res) => {
             ]
         });
 
-        res.json({ companies, contacts });
+        res.json({companies, contacts});
     } catch (err) {
         console.error("❌ Dashboard data error:", err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({message: err.message});
     }
 });
 
@@ -522,7 +528,7 @@ router.get("/data", authenticate, async (req, res) => {
 router.post("/request-limits", authenticateToken, async (req, res) => {
     try {
         const userId = req.userId;
-        const { companies, contacts, reason } = req.body;
+        const {companies, contacts, reason} = req.body;
 
         if (!companies && !contacts) {
             return res.status(400).json({
@@ -558,7 +564,7 @@ router.get("/request-history", authenticateToken, async (req, res) => {
         const userId = req.userId;
 
         const requests = await Request.findAll({
-            where: { userId },
+            where: {userId},
             order: [["createdAt", "DESC"]],
             attributes: [
                 "id",
@@ -585,3 +591,4 @@ router.get("/request-history", authenticateToken, async (req, res) => {
 });
 
 export default router;
+

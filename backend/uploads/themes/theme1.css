@@ -1,3 +1,8 @@
+*{
+    font-family: 'Gotham', sans-serif; /* Fallback to a generic sans-serif font */
+    /*font-family: 'Montserrat', sans-serif;*/
+}
+
 /* HEADER SECTION */
 .header-section {
     position: relative;
@@ -135,7 +140,7 @@
     font-size: 0.95rem;
     color: #333;
     line-height: 1.6;
-    max-width: 90%;
+    max-width: 100%;
     margin: 0 auto;
 }
 
@@ -160,7 +165,7 @@
 }
 
 .company-details h2:first-child {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: #2d5a3d;
     margin-bottom: 8px;
@@ -179,6 +184,47 @@
     text-decoration: underline;
 }
 
+.company-bio {
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.company-bio p {
+    margin: 0 0 0.5em;
+    padding: 0 0 0.5em;
+}
+
+
+.company-bio p:last-child {
+    border-bottom: none;
+}
+
+.company-bio br + br {
+    display: block;
+    content: "";
+    margin: 0.8em 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.company-bio strong {
+    font-weight: 600;
+}
+
+.company-bio em {
+    font-style: italic;
+}
+
+.company-bio ul, .company-bio ol {
+    margin-left: 1.5em;
+    margin-bottom: 0.8em;
+}
+
+.company-bio h1, .company-bio h2, .company-bio h3 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+}
 
 /* GENERAL STYLES */
 .public-card-container {
@@ -199,7 +245,25 @@
     margin: 0 auto;
 }
 
+.share-button {
+    position: absolute;
+    top: 10px;
+    right: 11px;
+    background: 14px whitesmoke; /* no box */
+    border: none; /* no border */
+    padding: 8px;
+    cursor: pointer;
+    color: black; /* icon color */
+    z-index: 10;
+    border-radius: 10%; /* optional small rounding */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
+.share-button:hover {
+    opacity: 0.8;
+}
 
 .company-name {
     margin-top: 24px;
@@ -311,7 +375,7 @@
     font-weight: 600;
     color: #1a472a;
     gap: 8px;
-    padding: 14px 20px;
+    padding: 14px 0;
     border-radius: 14px;
     transition: all 0.3s ease;
     background: white;
@@ -443,6 +507,117 @@
     }
 }
 
+/* Review Modal Styles */
+.review-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+
+.review-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.review-modal h3 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+}
+
+.review-options {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    justify-content: center;
+    align-items: center;
+}
+
+.review-icon-btn {
+    background: #ffffff;
+    border: 2px solid #e0e0e0;
+    cursor: pointer;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    border-radius: 12px;
+    width: 90px;        /* slightly larger for button feel */
+    height: 90px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* subtle shadow */
+}
+
+.review-icon-btn:hover {
+    transform: translateY(-3px);
+    background: #f7f7f7;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    border-color: #ccc;
+}
+
+.review-icon-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.review-icon-btn svg {
+    width: 50px;    /* slightly smaller so it fits like a button icon */
+    height: 50px;
+}
+
+
+
 /* Responsive Design */
 @media (max-width: 400px) {
     .action-buttons {
@@ -477,4 +652,10 @@
     .company-details h2 {
         font-size: 1.1rem;
     }
+
+    .review-modal {
+        width: 85%;
+        max-width: 350px;
+    }
+
 }

@@ -166,7 +166,12 @@ const Company = sequelize.define(
             type: DataTypes.ENUM("active", "inactive"),
             defaultValue: "active",
             allowNull: false
-        }
+        },
+        tripAdvisor: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            comment: "Trip Advisor URL"
+        },
     },
     {
         tableName: "companies",
