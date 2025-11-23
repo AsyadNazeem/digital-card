@@ -1,11 +1,12 @@
 import express from "express";
 import { authenticateAdmin } from "../middleware/adminAuth.js";
+import { logAdminAction, getClientIp, ADMIN_ACTIONS } from "../middleware/adminLogger.js";
 import User from "../models/User.js";
 import Request from "../models/Request.js";
-import { Op } from "sequelize";
-import bcrypt from "bcryptjs";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
+import { Op } from "sequelize";
+import bcrypt from "bcryptjs";
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import multer from "multer";
 import path from "path";
@@ -14,10 +15,9 @@ import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const router = express.Router();
 
-// Ensure upload directories exist
+// [Keep all your existing multer and directory setup code here]
 const uploadsDir = path.join(__dirname, "..", "uploads");
 const logosDir = path.join(uploadsDir, "logos");
 const photosDir = path.join(uploadsDir, "photos");
@@ -28,34 +28,26 @@ const photosDir = path.join(uploadsDir, "photos");
     }
 });
 
-// Logo storage configuration
 const logoStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, logosDir);
-    },
+    destination: (req, file, cb) => cb(null, logosDir),
     filename: (req, file, cb) => {
         const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
         cb(null, uniqueName);
     }
 });
 
-// Photo storage configuration
 const photoStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, photosDir);
-    },
+    destination: (req, file, cb) => cb(null, photosDir),
     filename: (req, file, cb) => {
         const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
         cb(null, uniqueName);
     }
 });
 
-// File filter for images
 const imageFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
-
     if (extname && mimetype) {
         cb(null, true);
     } else {
@@ -63,27 +55,22 @@ const imageFilter = (req, file, cb) => {
     }
 };
 
-// Multer upload instances
 const uploadLogo = multer({
     storage: logoStorage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: imageFilter
 }).single("logo");
 
 const uploadPhoto = multer({
     storage: photoStorage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: imageFilter
 }).single("photo");
 
 // ✅ GET: Overview stats
 router.get("/stats/overview", authenticateAdmin, async (req, res) => {
-    console.log("🟢 Stats route hit by admin:", req.admin?.username);
-
     try {
-        console.log("Fetching total users...");
         const total = await User.count();
-
         const today = await User.count({
             where: {
                 createdAt: { [Op.gte]: new Date().setHours(0, 0, 0, 0) },
@@ -101,6 +88,16 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
         const google = await User.count({ where: { provider: "google" } });
         const local = await User.count({ where: { provider: "local" } });
 
+        // Log the action
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.VIEW_STATS,
+            targetType: 'system',
+            description: 'Viewed overview statistics',
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
         res.json({ total, today, month, google, local });
     } catch (err) {
         console.error("❌ Error in stats route:", err);
@@ -113,18 +110,21 @@ router.get("/users", authenticateAdmin, async (req, res) => {
     try {
         const users = await User.findAll({
             attributes: [
-                "id",
-                "name",
-                "phone",
-                "email",
-                "provider",
-                "registrationType",
-                "companyLimit",
-                "contactLimit",
-                "createdAt"
+                "id", "name", "phone", "email", "provider",
+                "registrationType", "companyLimit", "contactLimit", "createdAt"
             ],
             order: [["createdAt", "DESC"]],
         });
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.VIEW_USERS,
+            targetType: 'user',
+            description: `Viewed list of ${users.length} users`,
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
         res.json({ users });
     } catch (err) {
         console.error("Error fetching users:", err);
@@ -136,36 +136,31 @@ router.get("/users", authenticateAdmin, async (req, res) => {
 router.get("/user/:userId/companies", authenticateAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
-
         const companies = await Company.findAll({
             where: { userId },
             attributes: [
-                'id',
-                'companyName',
-                'website',
-                'displayUrl',
-                'email',
-                'logo',
-                'bio',
-                'view360',
-                'googleLocation',
-                'googleReviews',
-                'tripAdvisor',
-                'socialLinks',
-                'status',
-                'label',
-                'country',
-                'streetAddress',
-                'streetAddressLine2',
-                'city',
-                'postalCode',
-                'poBox',
-                'createdAt'
+                'id', 'companyName', 'website', 'displayUrl', 'email',
+                'logo', 'bio', 'view360', 'googleLocation', 'googleReviews',
+                'tripAdvisor', 'socialLinks', 'status', 'label', 'country',
+                'streetAddress', 'streetAddressLine2', 'city', 'postalCode',
+                'poBox', 'createdAt'
             ],
             order: [['createdAt', 'DESC']]
         });
 
-        console.log(`📊 Found ${companies.length} companies for user ${userId}`);
+        const user = await User.findByPk(userId);
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.VIEW_COMPANIES,
+            targetType: 'user',
+            targetId: userId,
+            targetName: user?.name || user?.email,
+            description: `Viewed ${companies.length} companies for user ${userId}`,
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
         res.json({ success: true, companies });
     } catch (err) {
         console.error("❌ Error fetching user companies:", err);
@@ -180,33 +175,34 @@ router.get("/user/:userId/companies", authenticateAdmin, async (req, res) => {
 router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
-
         const contacts = await Contact.findAll({
             where: { userId },
-            include: [
-                {
-                    model: Company,
-                    as: "Company",
-                    attributes: ["id", "companyName"]
-                }
-            ],
+            include: [{
+                model: Company,
+                as: "Company",
+                attributes: ["id", "companyName"]
+            }],
             attributes: [
-                'id',
-                'firstName',
-                'lastName',
-                'email',
-                'mobile',
-                'telephone',
-                'designation',
-                'photo',
-                'companyId',
-                'status',
-                'createdAt'
+                'id', 'firstName', 'lastName', 'email', 'mobile',
+                'telephone', 'designation', 'photo', 'companyId',
+                'status', 'createdAt'
             ],
             order: [['createdAt', 'DESC']]
         });
 
-        console.log(`📞 Found ${contacts.length} contacts for user ${userId}`);
+        const user = await User.findByPk(userId);
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.VIEW_CONTACTS,
+            targetType: 'user',
+            targetId: userId,
+            targetName: user?.name || user?.email,
+            description: `Viewed ${contacts.length} contacts for user ${userId}`,
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
         res.json({ success: true, contacts });
     } catch (err) {
         console.error("❌ Error fetching user contacts:", err);
@@ -230,9 +226,32 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
         const user = await User.findByPk(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
 
+        const oldLimits = {
+            companyLimit: user.companyLimit,
+            contactLimit: user.contactLimit
+        };
+
         await user.update({
             companyLimit: parseInt(companyLimit),
             contactLimit: parseInt(contactLimit)
+        });
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.UPDATE_USER_LIMITS,
+            targetType: 'user',
+            targetId: userId,
+            targetName: user.name || user.email,
+            description: `Updated limits for ${user.email}`,
+            changes: {
+                before: oldLimits,
+                after: {
+                    companyLimit: parseInt(companyLimit),
+                    contactLimit: parseInt(contactLimit)
+                }
+            },
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
         });
 
         res.json({
@@ -256,7 +275,20 @@ router.delete("/user/:id", authenticateAdmin, async (req, res) => {
         const user = await User.findByPk(req.params.id);
         if (!user) return res.status(404).json({ message: "User not found" });
 
+        const userName = user.name || user.email;
         await user.destroy();
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.DELETE_USER,
+            targetType: 'user',
+            targetId: req.params.id,
+            targetName: userName,
+            description: `Deleted user: ${userName}`,
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
         res.json({ message: "User deleted successfully" });
     } catch (err) {
         console.error("Error deleting user:", err);
@@ -264,18 +296,26 @@ router.delete("/user/:id", authenticateAdmin, async (req, res) => {
     }
 });
 
-// ✅ GET: All requests with user details
+// ✅ GET: All requests
 router.get("/requests", authenticateAdmin, async (req, res) => {
     try {
         const requests = await Request.findAll({
-            include: [
-                {
-                    model: User,
-                    attributes: ["id", "name", "email", "companyLimit", "contactLimit"],
-                },
-            ],
+            include: [{
+                model: User,
+                attributes: ["id", "name", "email", "companyLimit", "contactLimit"],
+            }],
             order: [["createdAt", "DESC"]],
         });
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.VIEW_REQUESTS,
+            targetType: 'request',
+            description: `Viewed ${requests.length} requests`,
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
         res.json({ requests });
     } catch (err) {
         console.error("Error fetching requests:", err);
@@ -299,6 +339,10 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
         }
 
         const user = request.User;
+        const oldLimits = {
+            companyLimit: user.companyLimit,
+            contactLimit: user.contactLimit
+        };
 
         await user.update({
             companyLimit: user.companyLimit + request.requestedCompanies,
@@ -306,6 +350,28 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
         });
 
         await request.update({ status: "approved" });
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.APPROVE_REQUEST,
+            targetType: 'request',
+            targetId: req.params.id,
+            targetName: user.name || user.email,
+            description: `Approved request for ${user.email}`,
+            changes: {
+                before: oldLimits,
+                after: {
+                    companyLimit: user.companyLimit,
+                    contactLimit: user.contactLimit
+                },
+                requested: {
+                    companies: request.requestedCompanies,
+                    contacts: request.requestedContacts
+                }
+            },
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
 
         res.json({
             message: "Request approved successfully",
@@ -324,7 +390,9 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
 // ✅ POST: Reject request
 router.post("/request/:id/reject", authenticateAdmin, async (req, res) => {
     try {
-        const request = await Request.findByPk(req.params.id);
+        const request = await Request.findByPk(req.params.id, {
+            include: [User]
+        });
 
         if (!request) {
             return res.status(404).json({ message: "Request not found" });
@@ -339,6 +407,20 @@ router.post("/request/:id/reject", authenticateAdmin, async (req, res) => {
             reason: req.body.reason || request.reason,
         });
 
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.REJECT_REQUEST,
+            targetType: 'request',
+            targetId: req.params.id,
+            targetName: request.User?.name || request.User?.email,
+            description: `Rejected request for ${request.User?.email}`,
+            changes: {
+                reason: req.body.reason
+            },
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
         res.json({ message: "Request rejected", request });
     } catch (err) {
         console.error("Error rejecting request:", err);
@@ -346,21 +428,13 @@ router.post("/request/:id/reject", authenticateAdmin, async (req, res) => {
     }
 });
 
-// ✅ POST: Admin creates a new user (with validation)
+// ✅ POST: Create user
 router.post("/create-user", authenticateAdmin, async (req, res) => {
     try {
         const {
-            name,
-            email,
-            countryCode,
-            phone,
-            password,
-            companyLimit,
-            contactLimit,
-            registrationType
+            name, email, countryCode, phone, password,
+            companyLimit, contactLimit, registrationType
         } = req.body;
-
-        console.log("🟢 Admin creating user:", { name, email, registrationType });
 
         if (!name || !email || !phone || !password) {
             return res.status(400).json({
@@ -368,19 +442,12 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
             });
         }
 
-        if (!companyLimit || companyLimit < 1) {
+        if (!companyLimit || companyLimit < 1 || !contactLimit || contactLimit < 1) {
             return res.status(400).json({
-                message: "Company limit must be at least 1"
+                message: "Limits must be at least 1"
             });
         }
 
-        if (!contactLimit || contactLimit < 1) {
-            return res.status(400).json({
-                message: "Contact limit must be at least 1"
-            });
-        }
-
-        // Check if user exists
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({
@@ -388,64 +455,69 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
             });
         }
 
-        // ✅ Combine and validate phone number
         const fullPhoneNumber = `${countryCode}${phone}`;
 
-        // Validate phone number format
-        try {
-            if (!isValidPhoneNumber(fullPhoneNumber)) {
-                return res.status(400).json({
-                    message: "Invalid phone number format"
-                });
-            }
-
-            const parsedPhone = parsePhoneNumber(fullPhoneNumber);
-            const formattedPhone = parsedPhone.format('E.164');
-
-            // Check if phone already exists
-            const existingPhone = await User.findOne({ where: { phone: formattedPhone } });
-            if (existingPhone) {
-                return res.status(400).json({
-                    message: "User with this phone number already exists"
-                });
-            }
-
-            const hashedPassword = await bcrypt.hash(password, 10);
-
-            const newUser = await User.create({
-                name,
-                email,
-                phone: formattedPhone,
-                password: hashedPassword,
-                provider: "local",
-                companyLimit: parseInt(companyLimit),
-                contactLimit: parseInt(contactLimit),
-                registrationType: registrationType || "admin",
-                selectedThemeId: 1,
-                status: "active"
-            });
-
-            console.log("✅ User created by admin:", newUser.email, "Phone:", formattedPhone);
-
-            res.status(201).json({
-                success: true,
-                message: "User created successfully",
-                user: {
-                    id: newUser.id,
-                    name: newUser.name,
-                    email: newUser.email,
-                    phone: newUser.phone,
-                    companyLimit: newUser.companyLimit,
-                    contactLimit: newUser.contactLimit,
-                    registrationType: newUser.registrationType,
-                    selectedThemeId: 1,
-                }
-            });
-        } catch (phoneError) {
+        if (!isValidPhoneNumber(fullPhoneNumber)) {
             return res.status(400).json({
-                message: "Invalid phone number format: " + phoneError.message
+                message: "Invalid phone number format"
             });
         }
+
+        const parsedPhone = parsePhoneNumber(fullPhoneNumber);
+        const formattedPhone = parsedPhone.format('E.164');
+
+        const existingPhone = await User.findOne({ where: { phone: formattedPhone } });
+        if (existingPhone) {
+            return res.status(400).json({
+                message: "User with this phone number already exists"
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUser = await User.create({
+            name,
+            email,
+            phone: formattedPhone,
+            password: hashedPassword,
+            provider: "local",
+            companyLimit: parseInt(companyLimit),
+            contactLimit: parseInt(contactLimit),
+            registrationType: registrationType || "admin",
+            selectedThemeId: 1,
+            status: "active"
+        });
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.CREATE_USER,
+            targetType: 'user',
+            targetId: newUser.id,
+            targetName: newUser.name || newUser.email,
+            description: `Created new user: ${newUser.email}`,
+            changes: {
+                companyLimit: parseInt(companyLimit),
+                contactLimit: parseInt(contactLimit),
+                registrationType: registrationType || "admin"
+            },
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "User created successfully",
+            user: {
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email,
+                phone: newUser.phone,
+                companyLimit: newUser.companyLimit,
+                contactLimit: newUser.contactLimit,
+                registrationType: newUser.registrationType,
+                selectedThemeId: 1,
+            }
+        });
     } catch (err) {
         console.error("❌ Error creating user:", err);
         res.status(500).json({
@@ -455,29 +527,16 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
     }
 });
 
+// ✅ PUT: Update company
 router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => {
-    console.log("🟢 Admin company update route hit");
-    console.log("User ID:", req.params.userId);
-    console.log("Company ID:", req.params.companyId);
-
     uploadLogo(req, res, async (err) => {
-        if (err instanceof multer.MulterError) {
-            console.error("❌ Multer error:", err);
+        if (err) {
             return res.status(400).json({
-                message: "File upload error",
-                error: err.message
-            });
-        } else if (err) {
-            console.error("❌ Upload error:", err);
-            return res.status(400).json({
-                message: err.message
+                message: err.message || "File upload error"
             });
         }
 
         try {
-            console.log("📝 Request body:", JSON.stringify(req.body, null, 2));
-            console.log("📁 File uploaded:", req.file ? req.file.filename : "No file");
-
             const company = await Company.findOne({
                 where: {
                     id: req.params.companyId,
@@ -486,20 +545,17 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
             });
 
             if (!company) {
-                console.error("❌ Company not found");
                 return res.status(404).json({ message: "Company not found" });
             }
 
-            console.log("✅ Company found:", company.companyName);
+            const oldData = { ...company.dataValues };
 
-            // Parse social links if provided
             let socialLinks = company.socialLinks || {};
             if (req.body.socialLinks) {
                 try {
                     socialLinks = typeof req.body.socialLinks === 'string'
                         ? JSON.parse(req.body.socialLinks)
                         : req.body.socialLinks;
-                    console.log("📱 Parsed social links:", socialLinks);
                 } catch (e) {
                     console.error("❌ Error parsing socialLinks:", e);
                 }
@@ -517,7 +573,6 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
                 tripAdvisor: req.body.tripAdvisor || null,
                 bio: req.body.bio || null,
                 socialLinks: socialLinks,
-                // Address fields
                 label: req.body.label || null,
                 country: req.body.country || null,
                 streetAddress: req.body.streetAddress || null,
@@ -527,28 +582,42 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
                 poBox: req.body.poBox || null
             };
 
-            // Handle logo update
             if (req.file) {
-                console.log("🖼️ New logo uploaded:", req.file.filename);
-                // Delete old logo if exists
                 if (company.logo) {
                     const oldLogoPath = path.join(__dirname, "..", company.logo);
-                    console.log("🗑️ Attempting to delete old logo:", oldLogoPath);
                     if (fs.existsSync(oldLogoPath)) {
                         fs.unlinkSync(oldLogoPath);
-                        console.log("✅ Old logo deleted");
                     }
                 }
                 updateData.logo = `/uploads/logos/${req.file.filename}`;
             } else if (req.body.existingLogo) {
-                console.log("♻️ Keeping existing logo:", req.body.existingLogo);
                 updateData.logo = req.body.existingLogo;
             }
 
-            console.log("📝 Update data prepared:", JSON.stringify(updateData, null, 2));
-
             await company.update(updateData);
-            console.log("✅ Company updated successfully");
+
+            await logAdminAction({
+                adminId: req.admin.id,
+                action: ADMIN_ACTIONS.UPDATE_COMPANY,
+                targetType: 'company',
+                targetId: req.params.companyId,
+                targetName: company.companyName,
+                description: `Updated company: ${company.companyName}`,
+                changes: {
+                    before: {
+                        companyName: oldData.companyName,
+                        email: oldData.email,
+                        website: oldData.website
+                    },
+                    after: {
+                        companyName: updateData.companyName,
+                        email: updateData.email,
+                        website: updateData.website
+                    }
+                },
+                ipAddress: getClientIp(req),
+                userAgent: req.headers['user-agent']
+            });
 
             const updatedCompany = await Company.findByPk(req.params.companyId);
 
@@ -559,29 +628,20 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
             });
         } catch (err) {
             console.error("❌ Error updating company:", err);
-            console.error("Stack trace:", err.stack);
             res.status(500).json({
                 message: "Failed to update company",
-                error: err.message,
-                details: err.stack
+                error: err.message
             });
         }
     });
 });
 
+// ✅ PUT: Update contact
 router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => {
-
     uploadPhoto(req, res, async (err) => {
-        if (err instanceof multer.MulterError) {
-            console.error("❌ Multer error:", err);
+        if (err) {
             return res.status(400).json({
-                message: "File upload error",
-                error: err.message
-            });
-        } else if (err) {
-            console.error("❌ Upload error:", err);
-            return res.status(400).json({
-                message: err.message
+                message: err.message || "File upload error"
             });
         }
 
@@ -597,40 +657,29 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
                 return res.status(404).json({ message: "Contact not found" });
             }
 
-            // Validate phone numbers if provided
+            const oldData = { ...contact.dataValues };
+
             let formattedMobile = req.body.mobile;
             let formattedTelephone = req.body.telephone || null;
 
             if (req.body.mobile) {
-                try {
-                    if (!isValidPhoneNumber(req.body.mobile)) {
-                        return res.status(400).json({
-                            message: "Invalid mobile number format"
-                        });
-                    }
-                    const parsedMobile = parsePhoneNumber(req.body.mobile);
-                    formattedMobile = parsedMobile.format('E.164');
-                } catch (phoneError) {
+                if (!isValidPhoneNumber(req.body.mobile)) {
                     return res.status(400).json({
-                        message: "Invalid mobile number: " + phoneError.message
+                        message: "Invalid mobile number format"
                     });
                 }
+                const parsedMobile = parsePhoneNumber(req.body.mobile);
+                formattedMobile = parsedMobile.format('E.164');
             }
 
             if (req.body.telephone) {
-                try {
-                    if (!isValidPhoneNumber(req.body.telephone)) {
-                        return res.status(400).json({
-                            message: "Invalid telephone number format"
-                        });
-                    }
-                    const parsedTelephone = parsePhoneNumber(req.body.telephone);
-                    formattedTelephone = parsedTelephone.format('E.164');
-                } catch (phoneError) {
+                if (!isValidPhoneNumber(req.body.telephone)) {
                     return res.status(400).json({
-                        message: "Invalid telephone number: " + phoneError.message
+                        message: "Invalid telephone number format"
                     });
                 }
+                const parsedTelephone = parsePhoneNumber(req.body.telephone);
+                formattedTelephone = parsedTelephone.format('E.164');
             }
 
             const updateData = {
@@ -644,9 +693,7 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
                 status: req.body.status || 'active'
             };
 
-            // Handle photo update
             if (req.file) {
-                // Delete old photo if exists
                 if (contact.photo) {
                     const oldPhotoPath = path.join(__dirname, "..", contact.photo);
                     if (fs.existsSync(oldPhotoPath)) {
@@ -660,14 +707,35 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
 
             await contact.update(updateData);
 
-            const updatedContact = await Contact.findByPk(req.params.contactId, {
-                include: [
-                    {
-                        model: Company,
-                        as: "Company",
-                        attributes: ["id", "companyName"]
+            await logAdminAction({
+                adminId: req.admin.id,
+                action: ADMIN_ACTIONS.UPDATE_CONTACT,
+                targetType: 'contact',
+                targetId: req.params.contactId,
+                targetName: `${contact.firstName} ${contact.lastName}`,
+                description: `Updated contact: ${contact.firstName} ${contact.lastName}`,
+                changes: {
+                    before: {
+                        firstName: oldData.firstName,
+                        lastName: oldData.lastName,
+                        email: oldData.email
+                    },
+                    after: {
+                        firstName: updateData.firstName,
+                        lastName: updateData.lastName,
+                        email: updateData.email
                     }
-                ]
+                },
+                ipAddress: getClientIp(req),
+                userAgent: req.headers['user-agent']
+            });
+
+            const updatedContact = await Contact.findByPk(req.params.contactId, {
+                include: [{
+                    model: Company,
+                    as: "Company",
+                    attributes: ["id", "companyName"]
+                }]
             });
 
             res.json({
@@ -678,8 +746,7 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
         } catch (err) {
             res.status(500).json({
                 message: "Failed to update contact",
-                error: err.message,
-                details: err.stack
+                error: err.message
             });
         }
     });

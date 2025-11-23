@@ -10,6 +10,7 @@ import Contact from "./models/Contact.js";
 import Request from "./models/Request.js";
 import Admin from "./models/Admin.js";
 import Theme from "./models/Theme.js";
+import AdminLog from "./models/AdminLog.js"; // ✅ Add this
 
 // ROUTES
 import authRoutes from "./routes/auth.js";
@@ -17,6 +18,7 @@ import dashboardRoutes from "./routes/dashboard.js";
 import publicRoutes from "./routes/public.js";
 import adminAuthRoutes from "./routes/adminAuth.js";
 import adminRoutes from "./routes/admin.js";
+import adminLogRoutes from "./routes/adminLogs.js"; // ✅ Add this
 import otpRoutes from "./routes/otp.js";
 import settingsRoutes from "./routes/settings.js";
 import themeRoutes from "./routes/theme.js";
@@ -34,7 +36,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // LOAD ALL MODELS FOR ASSOCIATIONS
-const models = { User, Company, Contact, Request, Admin, Theme };
+const models = { User, Company, Contact, Request, Admin, Theme, AdminLog }; // ✅ Add AdminLog
 
 // RUN ALL ASSOCIATIONS
 Object.values(models).forEach((model) => {
@@ -90,8 +92,6 @@ app.get("/:mobile", async (req, res, next) => {
 
         res.setHeader('Cache-Control', 'public, max-age=3600');
 
-        // ✅ NO REDIRECT - Just meta tags for crawlers
-        // Regular users should NEVER reach this endpoint (they stay on frontend)
         const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -183,6 +183,7 @@ app.get("/:mobile", async (req, res, next) => {
         return res.status(500).send('Error loading card');
     }
 });
+
 // ============================================================================
 // END OF META PROXY
 // ============================================================================
@@ -194,6 +195,7 @@ app.use("/api/public", publicRoutes);
 app.use("/api/admin/themes", adminThemeRoutes);
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin", adminLogRoutes); // ✅ Add this
 app.use("/api/otp", otpRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/themes", themeRoutes);
