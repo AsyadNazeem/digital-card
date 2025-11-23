@@ -6,7 +6,6 @@ import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
 import Request from "../models/Request.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
-import { ensurePhoneNumber } from "../middleware/checkPhone.js";
 import { Op } from 'sequelize';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import sanitizeHtml from 'sanitize-html';
@@ -311,6 +310,18 @@ router.post(
                 validatedTelephone = telValidation.e164;
             }
 
+            // ✅ FIX: Validate WhatsApp if provided, otherwise use mobile
+            let validatedWhatsapp = mobileValidation.e164; // Default to mobile
+            if (req.body.whatsapp && req.body.whatsapp !== mobile) {
+                const whatsappValidation = validatePhoneNumber(req.body.whatsapp);
+                if (!whatsappValidation.isValid) {
+                    return res.status(400).json({
+                        message: `WhatsApp: ${whatsappValidation.error}`
+                    });
+                }
+                validatedWhatsapp = whatsappValidation.e164;
+            }
+
             // Check for duplicate mobile number
             const existingContact = await Contact.findOne({
                 where: {
@@ -332,6 +343,7 @@ router.post(
                 lastName,
                 telephone: validatedTelephone,
                 mobile: mobileValidation.e164,
+                whatsapp: validatedWhatsapp, // ✅ CHANGED: Use validated WhatsApp
                 email,
                 designation,
                 companyId: companyId || null,
@@ -407,11 +419,24 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             validatedTelephone = telValidation.e164;
         }
 
+        let validatedWhatsApp = contact.whatsapp;
+        if (req.body.whatsapp) {
+            const whatsappValidation = validatePhoneNumber(req.body.whatsapp);
+            if (!whatsappValidation.isValid) {
+                return res.status(400).json({
+                    message: `WhatsApp: ${whatsappValidation.error}`
+                });
+            }
+            validatedWhatsApp = whatsappValidation.e164;
+        }
+
+
         await contact.update({
             firstName,
             lastName,
             telephone: validatedTelephone,
             mobile: validatedMobile,
+            whatsapp: validatedWhatsApp,
             email,
             designation,
             companyId: companyId || null,

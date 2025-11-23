@@ -127,8 +127,23 @@ const Contact = sequelize.define(
             type: DataTypes.ENUM("active", "inactive"),
             defaultValue: "active",
             allowNull: false
-        }
+        },
+        whatsapp: {
+            type: DataTypes.STRING(20),
+            allowNull: true,
+            validate: {
+                isValid(value) {
+                    if (value && value.trim()) {
+                        if (!/^\+\d{10,15}$/.test(value)) {
+                            throw new Error("WhatsApp must be in E.164 format (e.g., +94771234567)");
+                        }
+                    }
+                }
+            },
+            comment: "WhatsApp number in E.164 format (defaults to mobile if not provided)"
+        },
     },
+
     {
         tableName: "contacts",
         timestamps: true,

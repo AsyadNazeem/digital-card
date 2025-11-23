@@ -740,6 +740,43 @@
                 </p>
               </div>
 
+              <!-- CONTACT FORM - WHATSAPP -->
+              <div class="form-group">
+                <label class="form-label">
+                  <input
+                      type="checkbox"
+                      v-model="whatsappSameAsMobile"
+                      style="margin-right: 8px;"
+                  />
+                  WhatsApp (Same as Mobile)
+                </label>
+                <div class="phone-input-group">
+                  <CountryCodeDropdown
+                      v-model="whatsappCountryCode"
+                      :disabled="whatsappSameAsMobile"
+                  />
+                  <input
+                      v-model="contactForm.whatsapp"
+                      type="tel"
+                      class="form-input"
+                      placeholder="Enter WhatsApp number"
+                      @input="handleContactWhatsApp"
+                      :disabled="whatsappSameAsMobile"
+                      :style="{ opacity: whatsappSameAsMobile ? 0.6 : 1 }"
+                  />
+                </div>
+                <p
+                    v-if="phoneValidation.whatsapp.message && !whatsappSameAsMobile"
+                    :style="{
+      color: phoneValidation.whatsapp.isValid ? '#27ae60' : '#e74c3c',
+      fontSize: '0.85rem',
+      marginTop: '0.5rem'
+    }"
+                >
+                  {{ phoneValidation.whatsapp.message }}
+                </p>
+              </div>
+
               <div class="form-group">
                 <label class="form-label">Email <span class="required">*</span></label>
                 <input v-model="contactForm.email" type="email" class="form-input" required/>
@@ -1792,6 +1829,8 @@ const usernameMessage = ref('');
 const usernameSuccess = ref(false);
 const usernameLoading = ref(false);
 
+const whatsappSameAsMobile = ref(true);
+const whatsappCountryCode = ref('+971');
 
 const companyForm = ref({
   companyName: "",
@@ -1820,6 +1859,7 @@ const contactForm = ref({
   lastName: "",
   telephone: "",
   mobile: "",
+  whatsapp: "", // ADD THIS
   email: "",
   designation: "",
   companyId: "",
@@ -2198,8 +2238,36 @@ async function applySelectedTheme() {
 const phoneValidation = ref({
   telephone: {isValid: false, message: ''},
   mobile: {isValid: false, message: ''},
+  whatsapp: {isValid: false, message: ''},
   settingsPhone: {isValid: false, message: ''},
   popupPhone: {isValid: false, message: ''}
+});
+
+// Add WhatsApp handler function
+function handleContactWhatsApp(event) {
+  const value = event.target.value.replace(/\D/g, '');
+  contactForm.value.whatsapp = value;
+
+  if (value.length > 0) {
+    const validation = validatePhone(value, whatsappCountryCode.value);
+    phoneValidation.value.whatsapp = {
+      isValid: validation.isValid,
+      message: validation.isValid
+          ? `✅ Valid ${validation.type || 'phone'} number`
+          : `⚠️ ${validation.error}`
+    };
+  } else {
+    phoneValidation.value.whatsapp = {isValid: false, message: ''};
+  }
+}
+
+// Watch mobile field changes to sync WhatsApp
+watch([() => contactForm.value.mobile, () => mobileCountryCode.value], ([newMobile, newCode]) => {
+  if (whatsappSameAsMobile.value && newMobile) {
+    contactForm.value.whatsapp = newMobile;
+    whatsappCountryCode.value = newCode;
+    phoneValidation.value.whatsapp = phoneValidation.value.mobile;
+  }
 });
 
 async function checkMobileDuplicate() {
@@ -2618,6 +2686,7 @@ function editContact(contact) {
     lastName: contact.lastName,
     telephone: extractNumber(contact.telephone),
     mobile: extractNumber(contact.mobile),
+    whatsapp: extractNumber(contact.whatsapp || contact.mobile), // ADD THIS
     email: contact.email,
     designation: contact.designation,
     companyId: contact.companyId,
@@ -2635,6 +2704,15 @@ function editContact(contact) {
     if (contact.telephone) {
       const telPhone = parsePhoneNumber(contact.telephone);
       telephoneCountryCode.value = `+${telPhone.countryCallingCode}`;
+    }
+    // ADD THIS
+    if (contact.whatsapp) {
+      const whatsappPhone = parsePhoneNumber(contact.whatsapp);
+      whatsappCountryCode.value = `+${whatsappPhone.countryCallingCode}`;
+      whatsappSameAsMobile.value = contact.whatsapp === contact.mobile;
+    } else {
+      whatsappSameAsMobile.value = true;
+      whatsappCountryCode.value = mobileCountryCode.value;
     }
   } catch (err) {
     console.error("Error parsing phone numbers:", err);
@@ -2917,34 +2995,6 @@ async function updatePassword() {
   }
 }
 
-async function updatePhone() {
-  const validation = validatePhone(settingsForm.value.phone, countryCode.value);
-
-  if (!validation.isValid) {
-    alert(validation.error || "Please enter a valid phone number.");
-    return;
-  }
-
-  try {
-    const res = await api.post(
-        "/settings/update-phone",
-        {
-          phone: validation.e164 // Send in E.164 format
-        },
-        {
-          headers: {Authorization: `Bearer ${token}`}
-        }
-    );
-
-    alert(res.data.message || "OTP sent to your new phone number!");
-    showSettings.value = false;
-    settingsForm.value.phone = "";
-    phoneValidation.value.settingsPhone = {isValid: false, message: ''};
-  } catch (err) {
-    alert("Error updating phone: " + (err.response?.data?.message || err.message));
-  }
-}
-
 function handleLogoUpload(event) {
   const file = event.target.files[0];
   if (file) {
@@ -3081,42 +3131,6 @@ function handleContactMobile(event) {
     phoneValidation.value.mobile = {isValid: false, message: ''};
     mobileExistsMessage.value = '';
     mobileExists.value = false;
-  }
-}
-
-// Settings Phone Change
-function handleSettingsPhone(event) {
-  const value = event.target.value.replace(/\D/g, '');
-  settingsForm.value.phone = value;
-
-  if (value.length > 0) {
-    const validation = validatePhone(value, countryCode.value);
-    phoneValidation.value.settingsPhone = {
-      isValid: validation.isValid,
-      message: validation.isValid
-          ? `✅ Valid ${validation.type || 'phone'}`
-          : `⚠️ ${validation.error}`
-    };
-  } else {
-    phoneValidation.value.settingsPhone = {isValid: false, message: ''};
-  }
-}
-
-// Phone Popup (mandatory phone)
-function handlePopupPhone(event) {
-  const value = event.target.value.replace(/\D/g, '');
-  phoneNumber.value = value;
-
-  if (value.length > 0) {
-    const validation = validatePhone(value, countryCode.value);
-    phoneValidation.value.popupPhone = {
-      isValid: validation.isValid,
-      message: validation.isValid
-          ? `✅ Valid ${validation.type || 'phone'}`
-          : `⚠️ ${validation.error}`
-    };
-  } else {
-    phoneValidation.value.popupPhone = {isValid: false, message: ''};
   }
 }
 
@@ -3286,17 +3300,33 @@ async function saveContact() {
       telephoneE164 = telValidation.e164;
     }
 
+    // Validate WhatsApp if different from mobile
+    let whatsappE164 = mobileValidation.e164; // Default to mobile
+    if (!whatsappSameAsMobile.value && contactForm.value.whatsapp) {
+      const whatsappValidation = validatePhone(contactForm.value.whatsapp, whatsappCountryCode.value);
+      if (!whatsappValidation.isValid) {
+        alert(`WhatsApp number error: ${whatsappValidation.error}`);
+        return;
+      }
+      whatsappE164 = whatsappValidation.e164;
+    }
+
     const formData = new FormData();
 
-    // Add all form fields (address fields removed)
+    // ✅ FIXED: Handle special fields explicitly, then add others
     Object.keys(contactForm.value).forEach(key => {
       if (key === "photo" && contactForm.value[key]) {
         formData.append("photo", contactForm.value[key]);
       } else if (key === "mobile") {
         formData.append("mobile", mobileValidation.e164);
-      } else if (key === "telephone" && telephoneE164) {
-        formData.append("telephone", telephoneE164);
-      } else if (key !== "photo" && key !== "telephone" && key !== "mobile") {
+      } else if (key === "whatsapp") {
+        formData.append("whatsapp", whatsappE164);
+      } else if (key === "telephone") {
+        if (telephoneE164) {
+          formData.append("telephone", telephoneE164);
+        }
+      } else if (key !== "photo") {
+        // Add all other fields except photo (already handled)
         formData.append(key, contactForm.value[key]);
       }
     });
@@ -3323,17 +3353,19 @@ async function saveContact() {
       lastName: "",
       telephone: "",
       mobile: "",
+      whatsapp: "", // ✅ ADD THIS
       email: "",
       designation: "",
       companyId: "",
       photo: null,
       status: "active",
-      // ADDRESS FIELDS REMOVED
     };
     mobileExistsMessage.value = "";
     mobileExists.value = false;
+    whatsappSameAsMobile.value = true; // ✅ ADD THIS
     phoneValidation.value.telephone = {isValid: false, message: ''};
     phoneValidation.value.mobile = {isValid: false, message: ''};
+    phoneValidation.value.whatsapp = {isValid: false, message: ''}; // ✅ ADD THIS
 
   } catch (err) {
     alert("Error saving contact: " + (err.response?.data?.message || err.message));
