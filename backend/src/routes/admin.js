@@ -185,7 +185,7 @@ router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
             attributes: [
                 'id', 'firstName', 'lastName', 'email', 'mobile',
                 'telephone', 'whatsapp', 'designation', 'photo', 'companyId',
-                'status', 'createdAt'
+                'status', 'createdAt', 'cardMobileNum'
             ],
             order: [['createdAt', 'DESC']]
         });
@@ -659,60 +659,82 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
 
             const oldData = { ...contact.dataValues };
 
+            // -------------------------
+            // FORMAT MOBILE
+            // -------------------------
             let formattedMobile = req.body.mobile;
-            let formattedWhatsapp = req.body.whatsapp;
-            let formattedTelephone = req.body.telephone || null;
-
-            if (req.body.mobile) {
-                if (!isValidPhoneNumber(req.body.mobile)) {
-                    return res.status(400).json({
-                        message: "Invalid mobile number format"
-                    });
-                }
-                const parsedMobile = parsePhoneNumber(req.body.mobile);
-                formattedMobile = parsedMobile.format('E.164');
+            if (!isValidPhoneNumber(formattedMobile)) {
+                return res.status(400).json({ message: "Invalid mobile number" });
             }
+            formattedMobile = parsePhoneNumber(formattedMobile).format("E.164");
 
+            // -------------------------
+            // FORMAT TELEPHONE
+            // -------------------------
+            let formattedTelephone = null;
             if (req.body.telephone) {
                 if (!isValidPhoneNumber(req.body.telephone)) {
-                    return res.status(400).json({
-                        message: "Invalid telephone number format"
-                    });
+                    return res.status(400).json({ message: "Invalid telephone number" });
                 }
-                const parsedTelephone = parsePhoneNumber(req.body.telephone);
-                formattedTelephone = parsedTelephone.format('E.164');
+                formattedTelephone = parsePhoneNumber(req.body.telephone).format("E.164");
             }
 
+            // -------------------------
+            // FORMAT WHATSAPP
+            // -------------------------
+            let formattedWhatsapp = req.body.whatsapp;
+
+            // -------------------------
+            // FORMAT NEW CARD MOBILE FIELD
+            // -------------------------
+            let formattedCardMobile = req.body.cardMobileNum;
+
+            if (formattedCardMobile) {
+                // User typed a manual number
+                formattedCardMobile = parsePhoneNumber(formattedCardMobile).format("E.164");
+            } else {
+                // Checkbox ON → use mobile
+                formattedCardMobile = formattedMobile;
+            }
+
+            // -------------------------
+            // BUILD UPDATE OBJECT
+            // -------------------------
             const updateData = {
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 telephone: formattedTelephone,
                 mobile: formattedMobile,
                 whatsapp: formattedWhatsapp,
+                cardMobileNum: formattedCardMobile,   // ✅ added correctly
                 email: req.body.email,
                 designation: req.body.designation,
                 companyId: req.body.companyId || null,
-                status: req.body.status || 'active'
+                status: req.body.status || "active"
             };
 
+            // -------------------------
+            // PHOTO HANDLING
+            // -------------------------
             if (req.file) {
                 if (contact.photo) {
-                    const oldPhotoPath = path.join(__dirname, "..", contact.photo);
-                    if (fs.existsSync(oldPhotoPath)) {
-                        fs.unlinkSync(oldPhotoPath);
-                    }
+                    const oldPath = path.join(__dirname, "..", contact.photo);
+                    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
                 }
                 updateData.photo = `/uploads/photos/${req.file.filename}`;
             } else if (req.body.existingPhoto) {
                 updateData.photo = req.body.existingPhoto;
             }
 
+            // -------------------------
+            // UPDATE CONTACT
+            // -------------------------
             await contact.update(updateData);
 
             await logAdminAction({
                 adminId: req.admin.id,
                 action: ADMIN_ACTIONS.UPDATE_CONTACT,
-                targetType: 'contact',
+                targetType: "contact",
                 targetId: req.params.contactId,
                 targetName: `${contact.firstName} ${contact.lastName}`,
                 description: `Updated contact: ${contact.firstName} ${contact.lastName}`,
@@ -729,7 +751,7 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
                     }
                 },
                 ipAddress: getClientIp(req),
-                userAgent: req.headers['user-agent']
+                userAgent: req.headers["user-agent"]
             });
 
             const updatedContact = await Contact.findByPk(req.params.contactId, {
@@ -745,7 +767,9 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
                 message: "Contact updated successfully",
                 contact: updatedContact
             });
+
         } catch (err) {
+            console.error("❌ Error updating contact:", err);
             res.status(500).json({
                 message: "Failed to update contact",
                 error: err.message
@@ -753,6 +777,7 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
         }
     });
 });
+
 
 // ✅ POST: Create company
 router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
@@ -869,30 +894,42 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
                 });
             }
 
+            // --- FORMAT MOBILE ---
             let formattedMobile = req.body.mobile;
-            let formattedWhatsapp = req.body.whatsapp;
-            let formattedTelephone = req.body.telephone || null;
-
-            if (req.body.mobile) {
-                if (!isValidPhoneNumber(req.body.mobile)) {
-                    return res.status(400).json({
-                        message: "Invalid mobile number format"
-                    });
-                }
-                const parsedMobile = parsePhoneNumber(req.body.mobile);
-                formattedMobile = parsedMobile.format('E.164');
+            if (!isValidPhoneNumber(formattedMobile)) {
+                return res.status(400).json({
+                    message: "Invalid mobile number format"
+                });
             }
+            formattedMobile = parsePhoneNumber(formattedMobile).format("E.164");
 
+            // --- FORMAT TELEPHONE ---
+            let formattedTelephone = null;
             if (req.body.telephone) {
                 if (!isValidPhoneNumber(req.body.telephone)) {
                     return res.status(400).json({
                         message: "Invalid telephone number format"
                     });
                 }
-                const parsedTelephone = parsePhoneNumber(req.body.telephone);
-                formattedTelephone = parsedTelephone.format('E.164');
+                formattedTelephone = parsePhoneNumber(req.body.telephone).format("E.164");
             }
 
+            // --- FORMAT WHATSAPP ---
+            let formattedWhatsapp = req.body.whatsapp;
+
+            // --- FORMAT CARD MOBILE (NEW FIELD) ---
+            let formattedCardMobile = req.body.cardMobileNum;
+
+            if (formattedCardMobile) {
+                // user entered a manual number
+                const parsed = parsePhoneNumber(formattedCardMobile);
+                formattedCardMobile = parsed.format("E.164");
+            } else {
+                // checkbox ON → same as mobile
+                formattedCardMobile = formattedMobile;
+            }
+
+            // --- FINAL CONTACT DATA ---
             const contactData = {
                 userId,
                 firstName: req.body.firstName,
@@ -900,16 +937,19 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
                 telephone: formattedTelephone,
                 mobile: formattedMobile,
                 whatsapp: formattedWhatsapp,
+                cardMobileNum: formattedCardMobile,   // ✅ added correctly here
                 email: req.body.email,
                 designation: req.body.designation,
                 companyId: req.body.companyId || null,
                 status: req.body.status || 'active'
             };
 
+            // Photo upload
             if (req.file) {
                 contactData.photo = `/uploads/photos/${req.file.filename}`;
             }
 
+            // Create new contact
             const newContact = await Contact.create(contactData);
 
             await logAdminAction({
@@ -936,6 +976,7 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
                 message: "Contact created successfully",
                 contact: contactWithCompany
             });
+
         } catch (err) {
             console.error("❌ Error creating contact:", err);
             res.status(500).json({
@@ -945,5 +986,6 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
         }
     });
 });
+
 
 export default router;

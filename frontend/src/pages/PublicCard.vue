@@ -57,7 +57,7 @@
       <!-- Action Buttons (3x2 Grid) -->
       <div class="action-buttons">
         <!-- Row 1: Personal Contact Actions -->
-        <a :href="`tel:${contacts[0].mobile}`" class="action-btn call">
+        <a :href="`tel:${contacts[0].cardMobileNum}`" class="action-btn call">
           <span v-html="getIcon('phone_mobile')" class="action-icon"></span>
           <span>Mobile</span>
         </a>

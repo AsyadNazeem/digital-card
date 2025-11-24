@@ -142,6 +142,20 @@ const Contact = sequelize.define(
             },
             comment: "WhatsApp number in E.164 format (defaults to mobile if not provided)"
         },
+        cardMobileNum: {
+            type: DataTypes.STRING(20),
+            allowNull: true,
+            validate: {
+                isValid(value) {
+                    if (value && value.trim()) {
+                        if (!/^\+\d{10,15}$/.test(value)) {
+                            throw new Error("Card Mobile must be in E.164 format");
+                        }
+                    }
+                }
+            },
+            comment: "New card mobile number (defaults to mobile if checkbox is ON)"
+        },
     },
 
     {
@@ -197,3 +211,6 @@ Contact.belongsTo(Company, {
 });
 
 export default Contact;
+
+
+

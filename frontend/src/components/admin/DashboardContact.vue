@@ -125,6 +125,40 @@
               </div>
 
               <div class="form-group">
+                <label class="form-label">
+                  <input
+                      type="checkbox"
+                      v-model="cardMobileSameAsMobile"
+                      style="margin-right: 8px;"
+                  />
+                  Card Mobile (Same as Mobile)
+                </label>
+
+                <div class="phone-input-group">
+                  <CountryCodeDropdown
+                      v-model="cardMobileCountryCode"
+                      :disabled="cardMobileSameAsMobile"
+                  />
+
+                  <input
+                      v-model="form.cardMobileNum"
+                      type="tel"
+                      class="form-input phone-input"
+                      placeholder="Enter mobile"
+                      @input="validateCardMobile"
+                      :disabled="cardMobileSameAsMobile"
+                      :style="{ opacity: cardMobileSameAsMobile ? 0.6 : 1 }"
+                  />
+                </div>
+
+                <p v-if="cardMobileValidation.message && !cardMobileSameAsMobile"
+                   :class=" cardMobileValidation.isValid ? 'validation-success' : 'validation-error' ">
+                  {{ cardMobileValidation.message }}
+                </p>
+              </div>
+
+
+              <div class="form-group">
                 <label class="form-label">Email <span class="required">*</span></label>
                 <input v-model="form.email" type="email" class="form-input" required/>
               </div>
@@ -195,6 +229,13 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'saved'])
 
+const cardMobileCountryCode = ref("+971");
+const cardMobileSameAsMobile = ref(true);
+const cardMobileValidation = ref({
+  isValid: false,
+  message: ""
+});
+
 const form = ref({
   firstName: '',
   lastName: '',
@@ -204,7 +245,8 @@ const form = ref({
   email: '',
   designation: '',
   companyId: '',
-  status: 'active'
+  status: 'active',
+  cardMobileNum: '',
 })
 
 const telephoneCountryCode = ref('+971')
@@ -227,6 +269,67 @@ const showPhotoCropper = ref(false)
 const tempPhotoSrc = ref('')
 const whatsappSameAsMobile = ref(true);
 const whatsappCountryCode = ref('+971');
+
+
+function validateCardMobile() {
+  const fullNumber = cardMobileCountryCode.value + form.value.cardMobileNum;
+
+  if (!form.value.cardMobileNum) {
+    cardMobileValidation.value = { isValid: false, message: "Required" };
+    return;
+  }
+
+  try {
+    if (isValidPhoneNumber(fullNumber)) {
+      const parsed = parsePhoneNumber(fullNumber);
+      cardMobileValidation.value = {
+        isValid: true,
+        message: `✓ Valid ${parsed.country} number`
+      };
+    } else {
+      cardMobileValidation.value = {
+        isValid: false,
+        message: "✗ Invalid card mobile number"
+      };
+    }
+  } catch {
+    cardMobileValidation.value = {
+      isValid: false,
+      message: "✗ Invalid card mobile number format"
+    };
+  }
+}
+
+watch([() => form.value.mobile, () => mobileCountryCode.value],
+    ([newMob, newCountryCode]) => {
+      if (cardMobileSameAsMobile.value && newMob) {
+        form.value.cardMobileNum = newMob;
+        cardMobileCountryCode.value = newCountryCode;
+
+        // also validate automatically
+        const fullNumber = newCountryCode + newMob;
+        try {
+          if (isValidPhoneNumber(fullNumber)) {
+            const parsed = parsePhoneNumber(fullNumber);
+            cardMobileValidation.value = {
+              isValid: true,
+              message: `✓ Valid ${parsed.country} number`
+            };
+          } else {
+            cardMobileValidation.value = {
+              isValid: false,
+              message: "✗ Invalid card mobile number"
+            };
+          }
+        } catch {
+          cardMobileValidation.value = {
+            isValid: false,
+            message: "✗ Invalid card mobile number"
+          };
+        }
+      }
+    });
+
 
 
 function handleContactWhatsApp(event) {
@@ -258,31 +361,59 @@ function handleContactWhatsApp(event) {
     mobileValidation.value.whatsapp = { isValid: false, message: '' };
   }
 }
-// Watch mobile field changes to sync WhatsApp
-watch([() => form.value.mobile, () => mobileCountryCode.value], ([newMobile, newCode]) => {
-  if (whatsappSameAsMobile.value && newMobile) {
-    form.value.whatsapp = newMobile;
-    whatsappCountryCode.value = newCode;
-    mobileValidation.value.whatsapp = mobileValidation.value;
-  }
-});
+
+watch([() => form.value.mobile, () => mobileCountryCode.value],
+    ([newMob, newCountryCode]) => {
+      if (cardMobileSameAsMobile.value && newMob) {
+        form.value.cardMobileNum = newMob;
+        cardMobileCountryCode.value = newCountryCode;
+
+        // also validate automatically
+        const fullNumber = newCountryCode + newMob;
+        try {
+          if (isValidPhoneNumber(fullNumber)) {
+            const parsed = parsePhoneNumber(fullNumber);
+            cardMobileValidation.value = {
+              isValid: true,
+              message: `✓ Valid ${parsed.country} number`
+            };
+          } else {
+            cardMobileValidation.value = {
+              isValid: false,
+              message: "✗ Invalid card mobile number"
+            };
+          }
+        } catch {
+          cardMobileValidation.value = {
+            isValid: false,
+            message: "✗ Invalid card mobile number"
+          };
+        }
+      }
+    });
+
 
 const isFormValid = computed(() => {
-  return form.value.firstName &&
+  const cardValid = cardMobileSameAsMobile.value
+      ? true
+      : cardMobileValidation.value.isValid
+
+  return (
+      form.value.firstName &&
       form.value.lastName &&
       form.value.mobile &&
       form.value.email &&
       form.value.designation &&
-      mobileValidation.value.isValid
+      mobileValidation.value.isValid &&
+      cardValid
+  )
 })
 
-// Watch for contact prop changes
-// Replace the existing watch function for props.contact:
 watch(() => props.contact, (newContact) => {
   if (newContact) {
     const isCreating = !newContact.id
 
-    // Extract number without country code
+    // Helper: Extract national number (remove country code)
     const extractNumber = (fullNumber) => {
       if (!fullNumber) return ''
       try {
@@ -293,6 +424,29 @@ watch(() => props.contact, (newContact) => {
       }
     }
 
+    // --- STEP 1: CALCULATE CHECKBOX STATES FIRST ---
+    // We must do this BEFORE setting form.value to prevent the other watchers
+    // from overwriting the data immediately.
+
+    // WhatsApp Logic
+    let isWhatsappSame = true;
+    if (!isCreating && newContact.whatsapp && newContact.whatsapp !== newContact.mobile) {
+      isWhatsappSame = false;
+    }
+    whatsappSameAsMobile.value = isWhatsappSame;
+
+    // Card Mobile Logic (FIXED)
+    let isCardSame = true;
+    // logic: if card number exists AND it is NOT the same as the mobile number
+    if (!isCreating && newContact.cardMobileNum && newContact.cardMobileNum !== newContact.mobile) {
+      isCardSame = false;
+    }
+    cardMobileSameAsMobile.value = isCardSame;
+
+
+    // --- STEP 2: SET FORM VALUES ---
+    // Now that the checkboxes are set correctly, the watchers won't interfere
+
     form.value = {
       firstName: newContact.firstName || '',
       lastName: newContact.lastName || '',
@@ -302,33 +456,54 @@ watch(() => props.contact, (newContact) => {
       email: newContact.email || '',
       designation: newContact.designation || '',
       companyId: newContact.companyId || '',
-      status: newContact.status || 'active'
+      status: newContact.status || 'active',
+      // CRITICAL: If they are different, load the specific card number. If same, load mobile.
+      cardMobileNum: isCardSame ? extractNumber(newContact.mobile) : extractNumber(newContact.cardMobileNum),
     }
 
-    // Extract country codes only if editing
+    // --- STEP 3: HANDLE COUNTRY CODES ---
     if (!isCreating) {
       try {
+        // 1. Mobile Country Code
         if (newContact.mobile) {
           const mobilePhone = parsePhoneNumber(newContact.mobile)
           mobileCountryCode.value = `+${mobilePhone.countryCallingCode}`
         }
-        if (newContact.whatsapp) {
+
+        // 2. WhatsApp Country Code
+        if (isWhatsappSame) {
+          whatsappCountryCode.value = mobileCountryCode.value
+        } else if (newContact.whatsapp) {
           const whatsappPhone = parsePhoneNumber(newContact.whatsapp)
           whatsappCountryCode.value = `+${whatsappPhone.countryCallingCode}`
-          whatsappSameAsMobile.value = newContact.whatsapp === newContact.mobile
-        } else {
-          whatsappSameAsMobile.value = true
-          whatsappCountryCode.value = mobileCountryCode.value
         }
+
+        // 3. Card Mobile Country Code
+        if (isCardSame) {
+          cardMobileCountryCode.value = mobileCountryCode.value
+        } else if (newContact.cardMobileNum) {
+          // If different, we must extract the specific country code for the card number
+          try {
+            const cardPhone = parsePhoneNumber(newContact.cardMobileNum)
+            cardMobileCountryCode.value = `+${cardPhone.countryCallingCode}`
+          } catch (e) {
+            console.error("Could not parse card mobile country code", e)
+            // Fallback
+            cardMobileCountryCode.value = mobileCountryCode.value
+          }
+        }
+
+        // 4. Telephone Country Code
         if (newContact.telephone) {
           const telPhone = parsePhoneNumber(newContact.telephone)
           telephoneCountryCode.value = `+${telPhone.countryCallingCode}`
         }
+
       } catch (err) {
         console.error('Error parsing phone numbers:', err)
       }
 
-      // Set existing photo preview only if editing
+      // Handle Photo
       if (newContact.photo) {
         photoPreview.value = `${VITE_IMAGE_UPLOAD_URL}${newContact.photo}`
         photoFileName.value = newContact.photo.split('/').pop()
@@ -337,24 +512,27 @@ watch(() => props.contact, (newContact) => {
         photoFileName.value = ''
       }
 
-      // Validate initial phone numbers
-      if (form.value.telephone) {
-        validateTelephone()
-      }
-      if (form.value.mobile) {
-        validateMobile()
-      }
+      // Trigger Validations
+      if (form.value.telephone) validateTelephone()
+      if (form.value.mobile) validateMobile()
+      // Manually trigger card validation if it is unchecked/different
+      if (!isCardSame) validateCardMobile()
+
     } else {
-      // Reset defaults for new contact
+      // RESET FOR NEW CONTACT
       photoPreview.value = ''
       photoFileName.value = ''
       whatsappSameAsMobile.value = true
+      cardMobileSameAsMobile.value = true
       mobileCountryCode.value = '+971'
       telephoneCountryCode.value = '+971'
       whatsappCountryCode.value = '+971'
+      cardMobileCountryCode.value = '+971'
     }
   }
 }, {immediate: true})
+
+
 
 // Fetch companies when modal opens
 watch(() => props.show, async (isShown) => {
@@ -504,6 +682,18 @@ async function saveContact() {
 
     const fullWhatsapp = whatsappCountryCode.value + form.value.whatsapp
     formData.append('whatsapp', fullWhatsapp)
+
+    // Card Mobile Number
+    let fullCardMobile = ""
+
+    if (cardMobileSameAsMobile.value) {
+      fullCardMobile = mobileCountryCode.value + form.value.mobile
+    } else {
+      fullCardMobile = cardMobileCountryCode.value + form.value.cardMobileNum
+    }
+
+    formData.append("cardMobileNum", fullCardMobile)
+
 
     if (form.value.telephone) {
       const fullTelephone = telephoneCountryCode.value + form.value.telephone
