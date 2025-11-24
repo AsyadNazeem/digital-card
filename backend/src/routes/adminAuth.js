@@ -26,7 +26,6 @@ router.post("/login", async (req, res) => {
         });
 
         if (!admin) {
-            // Log failed login attempt
             await logAdminAction({
                 adminId: null,
                 action: ADMIN_ACTIONS.LOGIN,
@@ -37,7 +36,6 @@ router.post("/login", async (req, res) => {
                 status: 'failed',
                 errorMessage: 'Admin not found'
             });
-
             return res.status(404).json({ message: "Admin not found" });
         }
 
@@ -53,7 +51,6 @@ router.post("/login", async (req, res) => {
                 status: 'failed',
                 errorMessage: 'Admin is inactive'
             });
-
             return res.status(403).json({ message: "Admin is inactive" });
         }
 
@@ -71,17 +68,15 @@ router.post("/login", async (req, res) => {
                 status: 'failed',
                 errorMessage: 'Invalid credentials'
             });
-
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
         const token = jwt.sign(
-            { id: admin.id, role: "admin" },
+            { id: admin.id, role: admin.role }, // CHANGED: Include role
             process.env.ADMIN_JWT_SECRET,
             { expiresIn: process.env.ADMIN_TOKEN_EXPIRY || "1d" }
         );
 
-        // Log successful login
         await logAdminAction({
             adminId: admin.id,
             action: ADMIN_ACTIONS.LOGIN,
@@ -99,7 +94,8 @@ router.post("/login", async (req, res) => {
                 id: admin.id,
                 username: admin.username,
                 email: admin.email,
-                name: admin.name
+                name: admin.name,
+                role: admin.role // ADD THIS
             }
         });
     } catch (err) {
@@ -107,7 +103,6 @@ router.post("/login", async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
-
 // Optional: Logout endpoint to log logout
 router.post("/logout", async (req, res) => {
     try {

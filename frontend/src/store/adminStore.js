@@ -1,26 +1,141 @@
-// store/adminStore.js
 import {defineStore} from "pinia";
 import adminApi from "../services/adminApi";
 
 export const useAdminStore = defineStore("adminStore", {
     state: () => ({
-        users: [],              // ✅ Added for user management
+        users: [],
         requests: [],
+        adminUsers: [], // ADD THIS
         admin: null,
+        role: null,
         token: localStorage.getItem("adminToken") || null,
-        stats: {                // ✅ Added for dashboard stats
+        stats: {
             total: 0,
             today: 0,
             month: 0,
             google: 0,
             local: 0
         },
-        loading: false,         // ✅ Added for loading states
-        error: null,            // ✅ Added for error handling
+        loading: false,
+        error: null,
+        // Permission management
+        myPermissions: [],
+        rolePermissions: {},
+        permissionHistory: [],
     }),
 
+    getters: {
+        isAuthenticated: (state) => !!state.admin,
+        isSuperAdmin: (state) => state.role === 'super_admin',
+        adminRole: (state) => state.role,
+
+        pendingRequestsCount: (state) => {
+            return state.requests.filter(r => r.status === "pending").length;
+        },
+        activeUsersCount: (state) => {
+            return state.users.filter(u => u.status === "active").length;
+        },
+        usersByProvider: (state) => (provider) => {
+            return state.users.filter(u => u.provider === provider);
+        },
+        usersByRegistrationType: (state) => (type) => {
+            return state.users.filter(u => u.registrationType === type);
+        }
+    },
+
     actions: {
-        // ✅ NEW: Fetch all users
+        initializeAuth() {
+            const storedAdmin = localStorage.getItem("adminUser");
+            if (storedAdmin) {
+                try {
+                    const adminData = JSON.parse(storedAdmin);
+                    this.admin = adminData;
+                    this.role = adminData.role;
+                    console.log("✅ Admin restored from localStorage:", adminData);
+
+                    // ADD THIS LINE:
+                    this.fetchMyPermissions();
+                } catch (err) {
+                    console.error("❌ Error parsing stored admin:", err);
+                    localStorage.removeItem("adminUser");
+                }
+            }
+        },
+
+        setAdmin(adminData) {
+            this.admin = adminData;
+            this.role = adminData.role;
+            localStorage.setItem("adminUser", JSON.stringify(adminData));
+            console.log("✅ Admin set:", adminData);
+
+            // ADD THIS LINE:
+            this.fetchMyPermissions();
+        },
+
+        // Permission Management Actions
+        async fetchMyPermissions() {
+            try {
+                const response = await adminApi.get("/permissions/my-permissions");
+                this.myPermissions = response.data.permissions || [];
+                console.log("✅ Permissions loaded:", this.myPermissions);
+            } catch (err) {
+                console.error("❌ Error fetching permissions:", err);
+                this.myPermissions = [];
+            }
+        },
+
+        async fetchRolePermissions(role) {
+            try {
+                const response = await adminApi.get(`/permissions/role/${role}`);
+                this.rolePermissions[role] = response.data;
+                return response.data;
+            } catch (err) {
+                console.error("❌ Error fetching role permissions:", err);
+                throw err;
+            }
+        },
+
+        async grantPermission(role, permission) {
+            try {
+                await adminApi.post(`/permissions/role/${role}/grant`, { permission });
+                await this.fetchRolePermissions(role);
+                return { success: true };
+            } catch (err) {
+                console.error("❌ Error granting permission:", err);
+                return {
+                    success: false,
+                    error: err.response?.data?.message || "Failed to grant permission"
+                };
+            }
+        },
+
+        async revokePermission(role, permission) {
+            try {
+                await adminApi.delete(`/permissions/role/${role}/revoke/${permission}`);
+                await this.fetchRolePermissions(role);
+                return { success: true };
+            } catch (err) {
+                console.error("❌ Error revoking permission:", err);
+                return {
+                    success: false,
+                    error: err.response?.data?.message || "Failed to revoke permission"
+                };
+            }
+        },
+
+        async fetchPermissionHistory() {
+            try {
+                const response = await adminApi.get("/permissions/history");
+                this.permissionHistory = response.data.history || [];
+                return { success: true };
+            } catch (err) {
+                console.error("❌ Error fetching permission history:", err);
+                return { success: false };
+            }
+        },
+
+
+        // Existing actions...
         async fetchUsers() {
             this.loading = true;
             this.error = null;
@@ -32,13 +147,12 @@ export const useAdminStore = defineStore("adminStore", {
             } catch (err) {
                 console.error("❌ Error fetching users:", err);
                 this.error = err.response?.data?.message || "Failed to fetch users";
-                this.users = []; // Ensure it's an empty array on error
+                this.users = [];
             } finally {
                 this.loading = false;
             }
         },
 
-        // ✅ NEW: Fetch dashboard stats
         async fetchStats() {
             this.loading = true;
             this.error = null;
@@ -60,7 +174,6 @@ export const useAdminStore = defineStore("adminStore", {
             }
         },
 
-        // ✅ EXISTING: Load requests (kept your original function)
         async loadRequests() {
             this.loading = true;
             this.error = null;
@@ -77,16 +190,13 @@ export const useAdminStore = defineStore("adminStore", {
             }
         },
 
-        // ✅ NEW: Alias for consistency
         async fetchRequests() {
             return this.loadRequests();
         },
 
-        // ✅ NEW: Delete user
         async deleteUser(userId) {
             try {
                 await adminApi.delete(`/user/${userId}`);
-                // Remove from local state
                 this.users = this.users.filter(u => u.id !== userId);
                 console.log("✅ User deleted:", userId);
                 return {success: true};
@@ -96,11 +206,9 @@ export const useAdminStore = defineStore("adminStore", {
             }
         },
 
-        // ✅ NEW: Approve request
         async approveRequest(requestId) {
             try {
                 const response = await adminApi.post(`/request/${requestId}/approve`);
-                // Update local state
                 const request = this.requests.find(r => r.id === requestId);
                 if (request) {
                     request.status = "approved";
@@ -113,11 +221,9 @@ export const useAdminStore = defineStore("adminStore", {
             }
         },
 
-        // ✅ NEW: Reject request
         async rejectRequest(requestId, reason = "") {
             try {
                 const response = await adminApi.post(`/request/${requestId}/reject`, {reason});
-                // Update local state
                 const request = this.requests.find(r => r.id === requestId);
                 if (request) {
                     request.status = "rejected";
@@ -131,24 +237,81 @@ export const useAdminStore = defineStore("adminStore", {
             }
         },
 
-        // ✅ EXISTING: Set token (kept your original)
+        // Fetch all admin users with their permissions
+        async fetchAdminUsers() {
+            try {
+                const response = await adminApi.get("/permissions/users");
+                this.adminUsers = response.data.users || [];
+                console.log("✅ Admin users loaded:", this.adminUsers.length);
+                return { success: true };
+            } catch (err) {
+                console.error("❌ Error fetching admin users:", err);
+                return { success: false, error: err.response?.data?.message };
+            }
+        },
+
+// Fetch permissions for a specific user
+        async fetchUserPermissions(userId) {
+            try {
+                const response = await adminApi.get(`/permissions/user/${userId}`);
+                console.log("✅ User permissions loaded:", response.data);
+                return { success: true, data: response.data };
+            } catch (err) {
+                console.error("❌ Error fetching user permissions:", err);
+                return { success: false, error: err.response?.data?.message };
+            }
+        },
+
+// Grant permission to a user
+        async grantUserPermission(userId, permission) {
+            try {
+                await adminApi.post(`/permissions/user/${userId}/grant`, { permission });
+                console.log("✅ Permission granted to user");
+                return { success: true };
+            } catch (err) {
+                console.error("❌ Error granting permission:", err);
+                return {
+                    success: false,
+                    error: err.response?.data?.message || "Failed to grant permission"
+                };
+            }
+        },
+
+// Revoke permission from a user
+        async revokeUserPermission(userId, permission) {
+            try {
+                await adminApi.delete(`/permissions/user/${userId}/revoke/${permission}`);
+                console.log("✅ Permission revoked from user");
+                return { success: true };
+            } catch (err) {
+                console.error("❌ Error revoking permission:", err);
+                return {
+                    success: false,
+                    error: err.response?.data?.message || "Failed to revoke permission"
+                };
+            }
+        },
+
         setToken(token) {
             this.token = token;
             localStorage.setItem("adminToken", token);
         },
 
-        // ✅ UPDATED: Logout (enhanced with cleanup)
         logout() {
             this.token = null;
             this.admin = null;
+            this.role = null;
             this.users = [];
             this.requests = [];
+            // ADD THESE THREE LINES:
+            this.myPermissions = [];
+            this.rolePermissions = {};
+            this.permissionHistory = [];
             localStorage.removeItem("adminToken");
             localStorage.removeItem("adminUser");
             console.log("✅ Admin logged out");
         },
 
-        // ✅ NEW: Reset store
         resetStore() {
             this.users = [];
             this.requests = [];
@@ -161,28 +324,6 @@ export const useAdminStore = defineStore("adminStore", {
             };
             this.loading = false;
             this.error = null;
-        }
-    },
-
-    getters: {
-        // ✅ NEW: Get pending requests count
-        pendingRequestsCount: (state) => {
-            return state.requests.filter(r => r.status === "pending").length;
-        },
-
-        // ✅ NEW: Get active users count
-        activeUsersCount: (state) => {
-            return state.users.filter(u => u.status === "active").length;
-        },
-
-        // ✅ NEW: Get users by provider
-        usersByProvider: (state) => (provider) => {
-            return state.users.filter(u => u.provider === provider);
-        },
-
-        // ✅ NEW: Get users by registration type
-        usersByRegistrationType: (state) => (type) => {
-            return state.users.filter(u => u.registrationType === type);
         }
     }
 });

@@ -25,7 +25,6 @@ function authenticate(req, res, next) {
     });
 }
 
-
 // ✅ Phone validation helper function
 function validatePhoneNumber(phoneNumber) {
     try {

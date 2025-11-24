@@ -1,7 +1,11 @@
 <template>
   <div class="admin-users-page">
     <div class="page-header">
-      <button @click="$router.push('/admin/users/create')" class="btn-create">
+      <button
+          v-if="can(PERMISSIONS.CREATE_USER)"
+          @click="$router.push('/admin/users/create')"
+          class="btn-create"
+      >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -11,6 +15,14 @@
     </div>
 
     <div class="users-table-card">
+      <div style="width: 20%; display: flex" >
+        <div v-if="isSuperAdmin" class="role-indicator super">
+          🌟 Super Admin Access
+        </div>
+        <div v-else class="role-indicator normal">
+          👤 Standard Admin
+        </div>
+      </div>
       <div class="table-controls">
         <div class="search-box">
           <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -31,6 +43,11 @@
           <option value="local">Local Users</option>
           <option value="google">Google Users</option>
         </select>
+        <select v-model="sortOrder" class="filter-select">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+        </select>
+
       </div>
 
       <div class="table-wrapper">
@@ -54,6 +71,7 @@
         <table v-else class="users-table">
           <thead>
           <tr>
+            <th>#</th>
             <th>Name</th>
             <th>Email</th>
             <th>Phone</th>
@@ -66,7 +84,8 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="user in filteredUsers" :key="user.id" @click="openUserDetails(user)" class="clickable-row">
+          <tr v-for="(user, index) in paginatedUsers" :key="user.id" @click="openUserDetails(user)" class="clickable-row">
+            <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
             <td class="user-name">{{ user.name }}</td>
             <td class="user-email">{{ user.email }}</td>
             <td class="text-muted">{{ user.phone || 'N/A' }}</td>
@@ -84,16 +103,47 @@
             <td class="text-center">{{ user.contactLimit }}</td>
             <td class="text-muted">{{ formatDate(user.createdAt) }}</td>
             <td class="actions" @click.stop>
-              <button @click="deleteUser(user.id)" class="btn-delete" title="Delete User">
+              <button
+                  v-if="can(PERMISSIONS.DELETE_USER)"
+                  @click="deleteUser(user.id)"
+                  class="btn-delete"
+                  title="Delete User"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3 6 5 6 21 6"></polyline>
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
               </button>
+              <span v-else class="no-permission-badge">View Only</span>
             </td>
           </tr>
           </tbody>
         </table>
+
+        <div class="pagination-controls" v-if="totalPages > 1">
+
+          <button
+              class="page-btn"
+              :disabled="currentPage === 1"
+              @click="currentPage--"
+          >
+            ← Prev
+          </button>
+
+          <span class="page-info">
+    Page {{ currentPage }} of {{ totalPages }}
+  </span>
+
+          <button
+              class="page-btn"
+              :disabled="currentPage === totalPages"
+              @click="currentPage++"
+          >
+            Next →
+          </button>
+
+        </div>
+
 
         <!-- No Data State -->
         <div v-if="!adminStore.loading && filteredUsers.length === 0" class="no-data">
@@ -179,7 +229,7 @@
             </div>
 
             <button
-                v-if="limitsChanged"
+                v-if="limitsChanged && can(PERMISSIONS.EDIT_USER_LIMITS)"
                 @click="saveLimits"
                 class="btn-save-limits"
                 :disabled="savingLimits"
@@ -235,6 +285,19 @@
 
             <!-- Companies Tab -->
             <div v-else-if="activeTab === 'companies'">
+              <!-- Add Company Button -->
+              <div v-if="canCreateCompany" style="margin-bottom: 20px;">
+                <button @click="createCompany" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Add Company
+                </button>
+              </div>
+              <div v-else style="margin-bottom: 20px; padding: 12px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                <strong>Company limit reached:</strong> {{ companies.length }} / {{ selectedUser?.companyLimit }}
+              </div>
               <div v-if="companies.length === 0" class="empty-state">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -245,7 +308,7 @@
                 <table class="data-table">
                   <thead>
                   <tr>
-                    <th>ID</th>
+                    <th>#</th>
                     <th>Company Name</th>
                     <th>Website</th>
                     <th>Email</th>
@@ -255,8 +318,8 @@
                   </tr>
                   </thead>
                   <tbody>
-                  <tr v-for="company in companies" :key="company.id">
-                    <td class="td-id">#{{ company.id }}</td>
+                  <tr v-for="(company, index) in companies" :key="company.id">
+                    <td>{{ index + 1 }}</td>
                     <td class="td-name">
                       <div class="name-cell">
                         <span class="cell-icon">🏢</span>
@@ -284,16 +347,19 @@
                     </td>
                     <td class="td-actions">
                       <button
+                          v-if="can(PERMISSIONS.EDIT_COMPANY)"
                           @click="editCompany(company)"
                           class="btn-view-card"
                           title="Edit Company"
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
                         Edit
                       </button>
+                      <span v-else class="view-only-text">View Only</span>
                     </td>
                   </tr>
                   </tbody>
@@ -303,6 +369,18 @@
 
             <!-- Contacts Tab -->
             <div v-else-if="activeTab === 'contacts'">
+              <div v-if="canCreateContact" style="margin-bottom: 20px;">
+                <button @click="createContact" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Add Contact
+                </button>
+              </div>
+              <div v-else style="margin-bottom: 20px; padding: 12px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                <strong>Contact limit reached:</strong> {{ filteredContacts.length }} / {{ selectedUser?.contactLimit }}
+              </div>
               <!-- Company Filter Dropdown (only show if 2+ companies) -->
               <div v-if="companies.length >= 2" class="company-filter-section">
                 <label for="company-filter" class="filter-label">Filter by Company:</label>
@@ -332,7 +410,7 @@
                 <table class="data-table">
                   <thead>
                   <tr>
-                    <th>ID</th>
+                    <th>#</th>
                     <th>Name</th>
                     <th>Email</th>
                     <th>Mobile</th>
@@ -343,8 +421,8 @@
                   </tr>
                   </thead>
                   <tbody>
-                  <tr v-for="contact in filteredContacts" :key="contact.id">
-                    <td class="td-id">#{{ contact.id }}</td>
+                  <tr v-for="(contact, index) in filteredContacts" :key="contact.id">
+                    <td>{{ index + 1 }}</td>
                     <td class="td-name">
                       <div class="name-cell">
                         <span class="cell-icon">👤</span>
@@ -363,7 +441,8 @@
                             class="btn-view-card"
                             title="Edit Contact"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                           </svg>
@@ -450,12 +529,16 @@
 
 <script setup>
 import {computed, nextTick, onMounted, ref} from 'vue'
-import {useAdminStore} from '../../store/adminStore'
+import {useAdminStore} from '@/store/adminStore.js'
+import {usePermissions} from '@/composables/usePermissions.js' // ADD THIS
+import {PERMISSIONS} from '@/config/adminPermissions.js' // ADD THIS
 import adminApi from '../../services/adminApi'
 import {VITE_FRONTEND_URL} from "@/config.js";
 import QRCode from "qrcode";
-import DashboardEditCompany from '../../components/admin/DashboardEditCompany.vue'
-import DashboardEditContact from '../../components/admin/DashboardEditContact.vue'
+import DashboardEditCompany from '../../components/admin/DashboardCompany.vue'
+import DashboardEditContact from '../../components/admin/DashboardContact.vue'
+
+const {can, isSuperAdmin, role} = usePermissions()
 
 const showQrPopup = ref(false);
 const qrCanvas = ref(null);
@@ -483,6 +566,91 @@ const savingLimits = ref(false)
 
 const selectedCompanyFilter = ref('all')
 
+// Pagination
+const currentPage = ref(1);
+const itemsPerPage = 10; // you can change this
+
+// Sorting
+const sortOrder = ref("newest"); // "newest" or "oldest"
+
+// Add these new refs for create mode
+const isCreatingCompany = ref(false)
+const isCreatingContact = ref(false)
+
+// Add these computed properties
+const canCreateCompany = computed(() => {
+  if (!selectedUser.value) return false
+  const companyCount = companies.value.length
+  return companyCount < selectedUser.value.companyLimit
+})
+
+const canCreateContact = computed(() => {
+  if (!selectedUser.value) return false
+  const contactCount = contacts.value.length
+  return contactCount < selectedUser.value.contactLimit
+})
+
+const createCompany = () => {
+  if (!can(PERMISSIONS.EDIT_COMPANY)) {
+    alert('You do not have permission to create companies')
+    return
+  }
+
+  selectedCompany.value = {
+    userId: selectedUser.value.id,
+    // No id means it's a new company
+  }
+  showEditCompanyModal.value = true
+}
+
+const createContact = () => {
+  if (!can(PERMISSIONS.EDIT_CONTACT)) {
+    alert('You do not have permission to create contacts')
+    return
+  }
+
+  selectedContact.value = {
+    userId: selectedUser.value.id,
+    // No id means it's a new contact
+  }
+  showEditContactModal.value = true
+}
+
+
+const sortedUsers = computed(() => {
+  const users = [...filteredUsers.value];
+
+  return users.sort((a, b) => {
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+
+    return sortOrder.value === "newest"
+        ? dateB - dateA   // New → Old
+        : dateA - dateB;  // Old → New
+  });
+});
+
+
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return sortedUsers.value.slice(start, start + itemsPerPage);
+});
+
+const totalPages = computed(() =>
+    Math.ceil(sortedUsers.value.length / itemsPerPage)
+);
+
+
+onMounted(() => {
+  console.log("🔍 Current role:", role.value)
+  console.log("🔍 Is Super Admin:", isSuperAdmin.value)
+  console.log("🔍 Admin store role:", adminStore.role)
+  console.log("🔍 Admin store admin:", adminStore.admin)
+  console.log("🔍 Can edit company:", can(PERMISSIONS.EDIT_COMPANY))
+
+  adminStore.fetchUsers()
+})
+
 
 // Replace the existing filteredContacts computed property with:
 const filteredContacts = computed(() => {
@@ -501,6 +669,11 @@ const getCompanyName = (companyId) => {
 
 // Update editCompany function
 function editCompany(company) {
+  if (!can(PERMISSIONS.EDIT_COMPANY)) {
+    alert('You do not have permission to edit companies')
+    return
+  }
+
   selectedCompany.value = {
     ...company,
     userId: selectedUser.value.id
@@ -509,6 +682,11 @@ function editCompany(company) {
 }
 
 function editContact(contact) {
+  if (!can(PERMISSIONS.EDIT_CONTACT)) {
+    alert('You do not have permission to edit contacts')
+    return
+  }
+
   selectedContact.value = contact
   showEditContactModal.value = true
 }
@@ -537,7 +715,6 @@ async function openQrPopup1(contact) {
   await nextTick();
   await generatePlainQr();
 }
-
 
 
 async function generatePlainQr() {
@@ -744,6 +921,11 @@ function updateLimit(type, change) {
 }
 
 async function saveLimits() {
+  if (!can(PERMISSIONS.EDIT_USER_LIMITS)) {
+    alert('You do not have permission to edit user limits')
+    return
+  }
+
   if (!selectedUser.value || savingLimits.value) return
 
   savingLimits.value = true
@@ -772,6 +954,11 @@ function closeModal() {
 }
 
 async function deleteUser(userId) {
+  if (!can(PERMISSIONS.DELETE_USER)) {
+    alert('You do not have permission to delete users')
+    return
+  }
+
   if (!confirm('Are you sure you want to delete this user?')) return
 
   try {
@@ -790,6 +977,197 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* ————————————————————————
+   TABLE CONTROLS WRAPPER
+———————————————————————— */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #f8f6f4 0%, #f0ede8 100%);
+  color: #5c4033;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+  border: 1px solid #e5e1dc;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.25);
+  border-color: #5c4033;
+}
+
+
+.table-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e1dc;
+  background: #faf9f7;
+}
+
+/* ————————————————————————
+   SEARCH BOX
+———————————————————————— */
+.search-box {
+  position: relative;
+  flex: 1; /* takes full-width on left */
+  min-width: 200px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8a7b75;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 93%;
+  padding: 12px 16px 12px 48px;
+  border: 1px solid #e5e1dc;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  color: #2d1f1a;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #5c4033;
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
+}
+
+/* ————————————————————————
+   FILTER SELECT BOXES
+———————————————————————— */
+.filter-select {
+  padding: 12px 16px;
+  border: 1px solid #e5e1dc;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-width: 160px;
+  height: 48px;
+  font-weight: 500;
+  color: #2d1f1a;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #5c4033;
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
+}
+
+/* Group filters to the right */
+.table-controls select {
+  margin-left: auto;
+}
+
+/* ————————————————————————
+   PAGINATION STYLING
+———————————————————————— */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.page-btn {
+  background: #1a472a;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #153a22;
+}
+
+.page-btn:disabled {
+  background: #cfcfcf;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #2d1f1a;
+}
+
+/* ————————————————————————
+   RESPONSIVE
+———————————————————————— */
+@media (max-width: 768px) {
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+}
+
+
+.no-permission-badge {
+  padding: 6px 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.view-only-text {
+  color: #8a7b75;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.role-indicator {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 12px 32px;
+}
+
+.role-indicator.super {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #78350f;
+  border: 1px solid #fcd34d;
+}
+
+.role-indicator.normal {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #3730a3;
+  border: 1px solid #a5b4fc;
+}
+
 .company-filter-section {
   display: flex;
   align-items: center;
@@ -895,64 +1273,6 @@ onMounted(() => {
 
 .users-table-card:hover {
   box-shadow: 0 4px 16px rgba(45, 31, 26, 0.12);
-}
-
-.table-controls {
-  display: flex;
-  gap: 16px;
-  padding: 24px;
-  border-bottom: 1px solid #e5e1dc;
-  background: #f8f6f4;
-}
-
-.search-box {
-  flex: 1;
-  position: relative;
-}
-
-.search-icon {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #8a7b75;
-  pointer-events: none;
-}
-
-.search-input {
-  width: 95%;
-  padding: 12px 16px 12px 48px;
-  border: 1px solid #e5e1dc;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  background: white;
-  transition: all 0.2s;
-  color: #2d1f1a;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #5c4033;
-  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
-}
-
-.filter-select {
-  padding: 12px 16px;
-  border: 1px solid #e5e1dc;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 160px;
-  font-weight: 500;
-  color: #2d1f1a;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: #5c4033;
-  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
 }
 
 .table-wrapper {

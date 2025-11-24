@@ -184,7 +184,7 @@ router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
             }],
             attributes: [
                 'id', 'firstName', 'lastName', 'email', 'mobile',
-                'telephone', 'designation', 'photo', 'companyId',
+                'telephone', 'whatsapp', 'designation', 'photo', 'companyId',
                 'status', 'createdAt'
             ],
             order: [['createdAt', 'DESC']]
@@ -660,6 +660,7 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
             const oldData = { ...contact.dataValues };
 
             let formattedMobile = req.body.mobile;
+            let formattedWhatsapp = req.body.whatsapp;
             let formattedTelephone = req.body.telephone || null;
 
             if (req.body.mobile) {
@@ -687,6 +688,7 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
                 lastName: req.body.lastName,
                 telephone: formattedTelephone,
                 mobile: formattedMobile,
+                whatsapp: formattedWhatsapp,
                 email: req.body.email,
                 designation: req.body.designation,
                 companyId: req.body.companyId || null,
@@ -746,6 +748,198 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
         } catch (err) {
             res.status(500).json({
                 message: "Failed to update contact",
+                error: err.message
+            });
+        }
+    });
+});
+
+// ✅ POST: Create company
+router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
+    uploadLogo(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json({
+                message: err.message || "File upload error"
+            });
+        }
+
+        try {
+            const userId = req.params.userId;
+            const user = await User.findByPk(userId);
+
+            if (!user) {
+                return res.status(404).json({ message: "User not found" });
+            }
+
+            // Check company limit
+            const companyCount = await Company.count({ where: { userId } });
+            if (companyCount >= user.companyLimit) {
+                return res.status(400).json({
+                    message: "Company limit reached for this user"
+                });
+            }
+
+            let socialLinks = {};
+            if (req.body.socialLinks) {
+                try {
+                    socialLinks = typeof req.body.socialLinks === 'string'
+                        ? JSON.parse(req.body.socialLinks)
+                        : req.body.socialLinks;
+                } catch (e) {
+                    console.error("❌ Error parsing socialLinks:", e);
+                }
+            }
+
+            const companyData = {
+                userId,
+                companyName: req.body.companyName,
+                website: req.body.website,
+                displayUrl: req.body.displayUrl || null,
+                email: req.body.email,
+                status: req.body.status || 'active',
+                view360: req.body.view360 || null,
+                googleLocation: req.body.googleLocation || null,
+                googleReviews: req.body.googleReviews || null,
+                tripAdvisor: req.body.tripAdvisor || null,
+                bio: req.body.bio || null,
+                socialLinks: socialLinks,
+                label: req.body.label || null,
+                country: req.body.country || null,
+                streetAddress: req.body.streetAddress || null,
+                streetAddressLine2: req.body.streetAddressLine2 || null,
+                city: req.body.city || null,
+                postalCode: req.body.postalCode || null,
+                poBox: req.body.poBox || null
+            };
+
+            if (req.file) {
+                companyData.logo = `/uploads/logos/${req.file.filename}`;
+            }
+
+            const newCompany = await Company.create(companyData);
+
+            await logAdminAction({
+                adminId: req.admin.id,
+                action: ADMIN_ACTIONS.CREATE_COMPANY,
+                targetType: 'company',
+                targetId: newCompany.id,
+                targetName: newCompany.companyName,
+                description: `Created company: ${newCompany.companyName} for user ${user.email}`,
+                ipAddress: getClientIp(req),
+                userAgent: req.headers['user-agent']
+            });
+
+            res.status(201).json({
+                success: true,
+                message: "Company created successfully",
+                company: newCompany
+            });
+        } catch (err) {
+            console.error("❌ Error creating company:", err);
+            res.status(500).json({
+                message: "Failed to create company",
+                error: err.message
+            });
+        }
+    });
+});
+
+// ✅ POST: Create contact
+router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
+    uploadPhoto(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json({
+                message: err.message || "File upload error"
+            });
+        }
+
+        try {
+            const userId = req.params.userId;
+            const user = await User.findByPk(userId);
+
+            if (!user) {
+                return res.status(404).json({ message: "User not found" });
+            }
+
+            // Check contact limit
+            const contactCount = await Contact.count({ where: { userId } });
+            if (contactCount >= user.contactLimit) {
+                return res.status(400).json({
+                    message: "Contact limit reached for this user"
+                });
+            }
+
+            let formattedMobile = req.body.mobile;
+            let formattedWhatsapp = req.body.whatsapp;
+            let formattedTelephone = req.body.telephone || null;
+
+            if (req.body.mobile) {
+                if (!isValidPhoneNumber(req.body.mobile)) {
+                    return res.status(400).json({
+                        message: "Invalid mobile number format"
+                    });
+                }
+                const parsedMobile = parsePhoneNumber(req.body.mobile);
+                formattedMobile = parsedMobile.format('E.164');
+            }
+
+            if (req.body.telephone) {
+                if (!isValidPhoneNumber(req.body.telephone)) {
+                    return res.status(400).json({
+                        message: "Invalid telephone number format"
+                    });
+                }
+                const parsedTelephone = parsePhoneNumber(req.body.telephone);
+                formattedTelephone = parsedTelephone.format('E.164');
+            }
+
+            const contactData = {
+                userId,
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                telephone: formattedTelephone,
+                mobile: formattedMobile,
+                whatsapp: formattedWhatsapp,
+                email: req.body.email,
+                designation: req.body.designation,
+                companyId: req.body.companyId || null,
+                status: req.body.status || 'active'
+            };
+
+            if (req.file) {
+                contactData.photo = `/uploads/photos/${req.file.filename}`;
+            }
+
+            const newContact = await Contact.create(contactData);
+
+            await logAdminAction({
+                adminId: req.admin.id,
+                action: ADMIN_ACTIONS.CREATE_CONTACT,
+                targetType: 'contact',
+                targetId: newContact.id,
+                targetName: `${newContact.firstName} ${newContact.lastName}`,
+                description: `Created contact: ${newContact.firstName} ${newContact.lastName} for user ${user.email}`,
+                ipAddress: getClientIp(req),
+                userAgent: req.headers['user-agent']
+            });
+
+            const contactWithCompany = await Contact.findByPk(newContact.id, {
+                include: [{
+                    model: Company,
+                    as: "Company",
+                    attributes: ["id", "companyName"]
+                }]
+            });
+
+            res.status(201).json({
+                success: true,
+                message: "Contact created successfully",
+                contact: contactWithCompany
+            });
+        } catch (err) {
+            console.error("❌ Error creating contact:", err);
+            res.status(500).json({
+                message: "Failed to create contact",
                 error: err.message
             });
         }

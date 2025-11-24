@@ -4,7 +4,7 @@
       <div class="modal-container" @click.stop>
         <!-- Modal Header -->
         <div class="modal-header">
-          <h2 class="modal-title">Edit Contact</h2>
+          <h2 class="modal-title">{{ contact?.id ? 'Edit Contact' : 'Create Contact' }}</h2>
           <button @click="closeModal" class="btn-close">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -57,9 +57,9 @@
               <div class="form-group">
                 <label class="form-label">Telephone</label>
                 <div class="phone-input-group">
-                  <select v-model="telephoneCountryCode" class="country-code-select">
-                    <option v-for="code in countryCodes" :key="code" :value="code">{{ code }}</option>
-                  </select>
+                  <CountryCodeDropdown
+                      v-model="telephoneCountryCode"
+                  />
                   <input
                       v-model="form.telephone"
                       type="tel"
@@ -77,9 +77,9 @@
               <div class="form-group">
                 <label class="form-label">Mobile <span class="required">*</span></label>
                 <div class="phone-input-group">
-                  <select v-model="mobileCountryCode" class="country-code-select">
-                    <option v-for="code in countryCodes" :key="code" :value="code">{{ code }}</option>
-                  </select>
+                  <CountryCodeDropdown
+                      v-model="mobileCountryCode"
+                  />
                   <input
                       v-model="form.mobile"
                       type="tel"
@@ -91,6 +91,36 @@
                 </div>
                 <p v-if="mobileValidation.message" :class="mobileValidation.isValid ? 'validation-success' : 'validation-error'">
                   {{ mobileValidation.message }}
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <input
+                      type="checkbox"
+                      v-model="whatsappSameAsMobile"
+                      style="margin-right: 8px;"
+                  />
+                  WhatsApp (Same as Mobile)
+                </label>
+                <div class="phone-input-group">
+                  <CountryCodeDropdown
+                      v-model="whatsappCountryCode"
+                      :disabled="whatsappSameAsMobile"
+                  />
+                  <input
+                      v-model="form.whatsapp"
+                      type="tel"
+                      class="form-input phone-input"
+                      placeholder="Enter mobile number"
+                      @input="handleContactWhatsApp"
+                      :disabled="whatsappSameAsMobile"
+                      :style="{ opacity: whatsappSameAsMobile ? 0.6 : 1 }"
+                  />
+                </div>
+                <p v-if="mobileValidation.whatsapp?.message && !whatsappSameAsMobile"
+                   :class="mobileValidation.whatsapp?.isValid ? 'validation-success' : 'validation-error'">
+                  {{ mobileValidation.whatsapp.message }}
                 </p>
               </div>
 
@@ -155,6 +185,7 @@ import adminApi from '../../services/adminApi'
 import { VITE_IMAGE_UPLOAD_URL } from '@/config.js'
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js'
 import ImageCropperModal from "@/components/ImageCropper.vue"
+import CountryCodeDropdown from "@/components/CountryCodeDropdown.vue";
 
 const props = defineProps({
   show: Boolean,
@@ -169,38 +200,21 @@ const form = ref({
   lastName: '',
   telephone: '',
   mobile: '',
+  whatsapp: "", // ADD THIS
   email: '',
   designation: '',
   companyId: '',
   status: 'active'
 })
 
-const telephoneCountryCode = ref('+94')
-const mobileCountryCode = ref('+94')
+const telephoneCountryCode = ref('+971')
+const mobileCountryCode = ref('+971')
 const telephoneValidation = ref({isValid: false, message: ''})
-const mobileValidation = ref({isValid: false, message: ''})
-
-const countryCodes = [
-  '+1', '+7', '+20', '+27', '+30', '+31', '+32', '+33', '+34', '+36', '+39', '+40',
-  '+41', '+43', '+44', '+45', '+46', '+47', '+48', '+49', '+51', '+52', '+53', '+54',
-  '+55', '+56', '+57', '+58', '+60', '+61', '+62', '+63', '+64', '+65', '+66', '+81',
-  '+82', '+84', '+86', '+90', '+91', '+92', '+93', '+94', '+95', '+98', '+212', '+213',
-  '+216', '+218', '+220', '+221', '+222', '+223', '+224', '+225', '+226', '+227', '+228',
-  '+229', '+230', '+231', '+232', '+233', '+234', '+235', '+236', '+237', '+238', '+239',
-  '+240', '+241', '+242', '+243', '+244', '+245', '+246', '+248', '+249', '+250', '+251',
-  '+252', '+253', '+254', '+255', '+256', '+257', '+258', '+260', '+261', '+262', '+263',
-  '+264', '+265', '+266', '+267', '+268', '+269', '+290', '+291', '+297', '+298', '+299',
-  '+350', '+351', '+352', '+353', '+354', '+355', '+356', '+357', '+358', '+359', '+370',
-  '+371', '+372', '+373', '+374', '+375', '+376', '+377', '+378', '+380', '+381', '+382',
-  '+383', '+385', '+386', '+387', '+389', '+420', '+421', '+423', '+500', '+501', '+502',
-  '+503', '+504', '+505', '+506', '+507', '+508', '+509', '+590', '+591', '+592', '+593',
-  '+594', '+595', '+596', '+597', '+598', '+599', '+670', '+672', '+673', '+674', '+675',
-  '+676', '+677', '+678', '+679', '+680', '+681', '+682', '+683', '+685', '+686', '+687',
-  '+688', '+689', '+690', '+691', '+692', '+850', '+852', '+853', '+855', '+856', '+870',
-  '+878', '+880', '+886', '+960', '+961', '+962', '+963', '+964', '+965', '+966', '+967',
-  '+968', '+970', '+971', '+972', '+973', '+974', '+975', '+976', '+977', '+992', '+993',
-  '+994', '+995', '+996', '+998'
-]
+const mobileValidation = ref({
+  isValid: false,
+  message: '',
+  whatsapp: { isValid: false, message: '' }
+})
 
 const photoFile = ref(null)
 const photoFileName = ref('')
@@ -211,6 +225,47 @@ const companies = ref([])
 // Image cropper states
 const showPhotoCropper = ref(false)
 const tempPhotoSrc = ref('')
+const whatsappSameAsMobile = ref(true);
+const whatsappCountryCode = ref('+971');
+
+
+function handleContactWhatsApp(event) {
+  const value = event.target.value.replace(/\D/g, '');
+  form.value.whatsapp = value;
+
+  if (value.length > 0) {
+    const fullNumber = whatsappCountryCode.value + value;
+    try {
+      if (isValidPhoneNumber(fullNumber)) {
+        const phoneNumber = parsePhoneNumber(fullNumber);
+        mobileValidation.value.whatsapp = {
+          isValid: true,
+          message: `✓ Valid ${phoneNumber.country} number`
+        };
+      } else {
+        mobileValidation.value.whatsapp = {
+          isValid: false,
+          message: '✗ Invalid WhatsApp number'
+        };
+      }
+    } catch (error) {
+      mobileValidation.value.whatsapp = {
+        isValid: false,
+        message: '✗ Invalid WhatsApp number format'
+      };
+    }
+  } else {
+    mobileValidation.value.whatsapp = { isValid: false, message: '' };
+  }
+}
+// Watch mobile field changes to sync WhatsApp
+watch([() => form.value.mobile, () => mobileCountryCode.value], ([newMobile, newCode]) => {
+  if (whatsappSameAsMobile.value && newMobile) {
+    form.value.whatsapp = newMobile;
+    whatsappCountryCode.value = newCode;
+    mobileValidation.value.whatsapp = mobileValidation.value;
+  }
+});
 
 const isFormValid = computed(() => {
   return form.value.firstName &&
@@ -222,8 +277,11 @@ const isFormValid = computed(() => {
 })
 
 // Watch for contact prop changes
+// Replace the existing watch function for props.contact:
 watch(() => props.contact, (newContact) => {
   if (newContact) {
+    const isCreating = !newContact.id
+
     // Extract number without country code
     const extractNumber = (fullNumber) => {
       if (!fullNumber) return ''
@@ -238,43 +296,62 @@ watch(() => props.contact, (newContact) => {
     form.value = {
       firstName: newContact.firstName || '',
       lastName: newContact.lastName || '',
-      telephone: extractNumber(newContact.telephone),
-      mobile: extractNumber(newContact.mobile),
+      telephone: isCreating ? '' : extractNumber(newContact.telephone),
+      mobile: isCreating ? '' : extractNumber(newContact.mobile),
+      whatsapp: isCreating ? '' : extractNumber(newContact.whatsapp),
       email: newContact.email || '',
       designation: newContact.designation || '',
       companyId: newContact.companyId || '',
       status: newContact.status || 'active'
     }
 
-    // Extract country codes
-    try {
-      if (newContact.mobile) {
-        const mobilePhone = parsePhoneNumber(newContact.mobile)
-        mobileCountryCode.value = `+${mobilePhone.countryCallingCode}`
+    // Extract country codes only if editing
+    if (!isCreating) {
+      try {
+        if (newContact.mobile) {
+          const mobilePhone = parsePhoneNumber(newContact.mobile)
+          mobileCountryCode.value = `+${mobilePhone.countryCallingCode}`
+        }
+        if (newContact.whatsapp) {
+          const whatsappPhone = parsePhoneNumber(newContact.whatsapp)
+          whatsappCountryCode.value = `+${whatsappPhone.countryCallingCode}`
+          whatsappSameAsMobile.value = newContact.whatsapp === newContact.mobile
+        } else {
+          whatsappSameAsMobile.value = true
+          whatsappCountryCode.value = mobileCountryCode.value
+        }
+        if (newContact.telephone) {
+          const telPhone = parsePhoneNumber(newContact.telephone)
+          telephoneCountryCode.value = `+${telPhone.countryCallingCode}`
+        }
+      } catch (err) {
+        console.error('Error parsing phone numbers:', err)
       }
-      if (newContact.telephone) {
-        const telPhone = parsePhoneNumber(newContact.telephone)
-        telephoneCountryCode.value = `+${telPhone.countryCallingCode}`
-      }
-    } catch (err) {
-      console.error('Error parsing phone numbers:', err)
-    }
 
-    // Set existing photo preview
-    if (newContact.photo) {
-      photoPreview.value = `${VITE_IMAGE_UPLOAD_URL}${newContact.photo}`
-      photoFileName.value = newContact.photo.split('/').pop()
+      // Set existing photo preview only if editing
+      if (newContact.photo) {
+        photoPreview.value = `${VITE_IMAGE_UPLOAD_URL}${newContact.photo}`
+        photoFileName.value = newContact.photo.split('/').pop()
+      } else {
+        photoPreview.value = ''
+        photoFileName.value = ''
+      }
+
+      // Validate initial phone numbers
+      if (form.value.telephone) {
+        validateTelephone()
+      }
+      if (form.value.mobile) {
+        validateMobile()
+      }
     } else {
+      // Reset defaults for new contact
       photoPreview.value = ''
       photoFileName.value = ''
-    }
-
-    // Validate initial phone numbers
-    if (form.value.telephone) {
-      validateTelephone()
-    }
-    if (form.value.mobile) {
-      validateMobile()
+      whatsappSameAsMobile.value = true
+      mobileCountryCode.value = '+971'
+      telephoneCountryCode.value = '+971'
+      whatsappCountryCode.value = '+971'
     }
   }
 }, {immediate: true})
@@ -402,10 +479,13 @@ async function saveContact() {
     return
   }
 
-  if (!props.userId || !props.contact?.id) {
+  if (!props.userId) {
     alert('Invalid contact data')
     return
   }
+
+  // Determine if we're creating or editing
+  const isCreating = !props.contact?.id
 
   saving.value = true
   try {
@@ -422,6 +502,9 @@ async function saveContact() {
     const fullMobile = mobileCountryCode.value + form.value.mobile
     formData.append('mobile', fullMobile)
 
+    const fullWhatsapp = whatsappCountryCode.value + form.value.whatsapp
+    formData.append('whatsapp', fullWhatsapp)
+
     if (form.value.telephone) {
       const fullTelephone = telephoneCountryCode.value + form.value.telephone
       formData.append('telephone', fullTelephone)
@@ -435,25 +518,32 @@ async function saveContact() {
     // Append photo if changed
     if (photoFile.value) {
       formData.append('photo', photoFile.value)
-    } else if (props.contact.photo) {
+    } else if (!isCreating && props.contact.photo) {
       formData.append('existingPhoto', props.contact.photo)
     }
 
-    const response = await adminApi.put(
-        `/user/${props.userId}/contact/${props.contact.id}`,
+    // Different endpoints for create vs edit
+    const url = isCreating
+        ? `/user/${props.userId}/contact`
+        : `/user/${props.userId}/contact/${props.contact.id}`
+
+    const method = isCreating ? 'post' : 'put'
+
+    const response = await adminApi[method](
+        url,
         formData,
         {
           headers: {'Content-Type': 'multipart/form-data'}
         }
     )
 
-    console.log('✅ Contact updated:', response.data)
-    alert('Contact updated successfully!')
+    console.log(isCreating ? '✅ Contact created:' : '✅ Contact updated:', response.data)
+    alert(isCreating ? 'Contact created successfully!' : 'Contact updated successfully!')
     emit('saved')
     closeModal()
   } catch (err) {
-    console.error('❌ Error updating contact:', err)
-    alert(err.response?.data?.message || 'Failed to update contact')
+    console.error('❌ Error saving contact:', err)
+    alert(err.response?.data?.message || 'Failed to save contact')
   } finally {
     saving.value = false
   }

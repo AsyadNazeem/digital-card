@@ -9,10 +9,11 @@ async function run() {
     try {
         await sequelize.authenticate();
         await sequelize.sync(); // ensure table exists
-        const username = "superadmin";
-        const email = "admin@example.com";
+        const username = "jaufer";
+        const email = "jaufer@gmail.com";
         const password = "test@123";
         const hashed = await bcrypt.hash(password, 10);
+        const role = "admin";
         const [admin, created] = await Admin.findOrCreate({
             where: { username },
             defaults: { username, email, password: hashed, name: "Super admin", status: "active" }

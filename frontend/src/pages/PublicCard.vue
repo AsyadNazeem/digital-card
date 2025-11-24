@@ -61,7 +61,7 @@
           <span v-html="getIcon('phone_mobile')" class="action-icon"></span>
           <span>Mobile</span>
         </a>
-        <a :href="`https://wa.me/${contacts[0].mobile?.replace(/[^0-9]/g, '')}`" target="_blank"
+        <a :href="`https://wa.me/${contacts[0].whatsapp?.replace(/[^0-9]/g, '')}`" target="_blank"
            class="action-btn whatsapp" v-if="contacts.length && contacts[0].mobile">
           <span v-html="getIcon('whatsapp')" class="action-icon"></span>
           <span>WhatsApp</span>

@@ -1,3 +1,7 @@
+<!-- ============================================ -->
+<!-- FILE 3: frontend/src/components/admin/AdminSidebar.vue (REPLACE) -->
+<!-- ============================================ -->
+
 <template>
   <aside class="sidebar">
     <div class="sidebar-header">
@@ -7,32 +11,25 @@
     </div>
 
     <nav class="sidebar-nav">
-      <router-link to="/admin/dashboard" class="nav-item" active-class="active">
-        <span class="nav-icon">📊</span>
-        <span>Dashboard</span>
+      <!-- ✅ AUTO-GENERATE navigation from ADMIN_PAGES -->
+      <router-link
+          v-for="page in visiblePages"
+          :key="page.permission"
+          :to="`/admin/${page.path}`"
+          class="nav-item"
+          active-class="active"
+      >
+        <span class="nav-icon">{{ page.icon }}</span>
+        <span>{{ page.name }}</span>
+
+        <!-- Show badge if page has badge config -->
+        <span
+            v-if="page.showBadge && getBadgeCount(page.showBadge) > 0"
+            class="badge"
+        >
+          {{ getBadgeCount(page.showBadge) }}
+        </span>
       </router-link>
-
-      <router-link to="/admin/users" class="nav-item" active-class="active">
-        <span class="nav-icon">👥</span>
-        <span>Users</span>
-      </router-link>
-
-      <router-link to="/admin/requests" class="nav-item" active-class="active">
-        <span class="nav-icon">📋</span>
-        <span>Requests</span>
-        <span v-if="pendingRequests > 0" class="badge">{{ pendingRequests }}</span>
-      </router-link>
-
-      <router-link to="/admin/themes" class="nav-item" active-class="active">
-        <span class="nav-icon">🎨</span>
-        <span>Themes</span>
-      </router-link>
-
-<!--      <router-link to="/admin/settings" class="nav-item" active-class="active">-->
-<!--        <span class="nav-icon">⚙️</span>-->
-<!--        <span>Settings</span>-->
-<!--      </router-link>-->
-
     </nav>
 
     <div class="sidebar-footer">
@@ -47,23 +44,42 @@
 <script setup>
 import { computed } from "vue"
 import { useRouter } from "vue-router"
-import { useAdminStore } from "../../store/adminStore"
-import adminApi from "../../services/adminApi.js";
+import { useAdminStore } from "@/store/adminStore.js"
+import { ADMIN_PAGES } from "@/config/permissionRegistry.js"
+import adminApi from "../../services/adminApi.js"
 
 const router = useRouter()
-const admin = useAdminStore()
+const adminStore = useAdminStore()
 
-const pendingRequests = computed(() =>
-    admin.requests.filter(r => r.status === "pending").length
-)
+// ✅ AUTO-FILTER pages based on permissions
+const visiblePages = computed(() => {
+  return ADMIN_PAGES.filter(page => {
+    // Don't show if hideFromSidebar is true
+    if (page.hideFromSidebar) return false
 
-function logout() {
-  localStorage.removeItem("adminToken");
-  delete adminApi.defaults.headers.common["Authorization"];
-  router.push("/admin/login");
+    // Super admin sees everything
+    if (adminStore.isSuperAdmin) return true
+
+    // Check if user has permission
+    return adminStore.myPermissions.includes(page.permission)
+  })
+})
+
+// Get badge count from store
+const getBadgeCount = (badgeKey) => {
+  const counts = {
+    pendingRequests: adminStore.pendingRequestsCount || 0,
+    // Add more badge counts here if needed
+    // activeUsers: adminStore.activeUsersCount || 0,
+  }
+  return counts[badgeKey] || 0
 }
 
-
+function logout() {
+  adminStore.logout()
+  delete adminApi.defaults.headers.common["Authorization"]
+  router.push("/admin/login")
+}
 </script>
 
 <style scoped>
@@ -73,7 +89,7 @@ function logout() {
 
 .sidebar {
   width: 260px;
-  background: linear-gradient(180deg, #2d1f1a 0%, #1a1310 100%); /* Changed from blue gradient */
+  background: linear-gradient(180deg, #2d1f1a 0%, #1a1310 100%);
   color: white;
   display: flex;
   flex-direction: column;
@@ -94,28 +110,26 @@ function logout() {
   gap: 12px;
 }
 
-.logo-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); /* Changed */
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-}
-
-.logo-text {
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
 .sidebar-nav {
   flex: 1;
   padding: 20px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-y: auto;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
 }
 
 .nav-item {
@@ -137,9 +151,9 @@ function logout() {
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); /* Changed */
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.3); /* Changed */
+  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.3);
 }
 
 .nav-icon {
@@ -148,14 +162,13 @@ function logout() {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .badge {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  background: #d4af37; /* Changed to gold */
-  color: #2d1f1a; /* Dark text for contrast */
+  margin-left: auto;
+  background: #d4af37;
+  color: #2d1f1a;
   font-size: 0.7rem;
   font-weight: 700;
   padding: 2px 6px;

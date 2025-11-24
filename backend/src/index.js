@@ -10,7 +10,9 @@ import Contact from "./models/Contact.js";
 import Request from "./models/Request.js";
 import Admin from "./models/Admin.js";
 import Theme from "./models/Theme.js";
-import AdminLog from "./models/AdminLog.js"; // ✅ Add this
+import AdminLog from "./models/AdminLog.js";
+import UserPermission from "./models/UserPermission.js"; // CHANGE THIS (was RolePermission)
+import PermissionChange from "./models/PermissionChange.js"; // ADD THIS
 
 // ROUTES
 import authRoutes from "./routes/auth.js";
@@ -23,6 +25,7 @@ import otpRoutes from "./routes/otp.js";
 import settingsRoutes from "./routes/settings.js";
 import themeRoutes from "./routes/theme.js";
 import adminThemeRoutes from "./routes/adminTheme.js";
+import adminPermissionRoutes from './routes/adminPermissionRoutes.js';
 
 // PATH
 import path from "path";
@@ -36,7 +39,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // LOAD ALL MODELS FOR ASSOCIATIONS
-const models = { User, Company, Contact, Request, Admin, Theme, AdminLog }; // ✅ Add AdminLog
+const models = { User, Company, Contact, Request, Admin, Theme, AdminLog, UserPermission, PermissionChange };
 
 // RUN ALL ASSOCIATIONS
 Object.values(models).forEach((model) => {
@@ -196,6 +199,7 @@ app.use("/api/admin/themes", adminThemeRoutes);
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminLogRoutes); // ✅ Add this
+app.use('/api/admin/permissions', adminPermissionRoutes); // ADD THIS
 app.use("/api/otp", otpRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/themes", themeRoutes);

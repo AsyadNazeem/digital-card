@@ -4,7 +4,7 @@
       <div class="modal-container" @click.stop>
         <!-- Modal Header -->
         <div class="modal-header">
-          <h2 class="modal-title">Edit Company</h2>
+          <h2 class="modal-title">{{ company?.id ? 'Edit Company' : 'Create Company' }}</h2>
           <button @click="closeModal" class="btn-close">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -282,8 +282,12 @@ const showLogoCropper = ref(false)
 const tempLogoSrc = ref('')
 
 // Watch for company prop changes
+// Replace the existing watch function with this:
 watch(() => props.company, (newCompany) => {
   if (newCompany) {
+    // If there's an ID, we're editing; otherwise, we're creating
+    const isCreating = !newCompany.id
+
     form.value = {
       companyName: newCompany.companyName || '',
       website: newCompany.website || '',
@@ -304,8 +308,8 @@ watch(() => props.company, (newCompany) => {
       poBox: newCompany.poBox || ''
     }
 
-    // Set existing logo preview
-    if (newCompany.logo) {
+    // Only set logo preview if editing existing company
+    if (!isCreating && newCompany.logo) {
       logoPreview.value = `${VITE_IMAGE_UPLOAD_URL}${newCompany.logo}`
       logoFileName.value = newCompany.logo.split('/').pop()
     } else {
@@ -313,7 +317,7 @@ watch(() => props.company, (newCompany) => {
       logoFileName.value = ''
     }
 
-    // Load social links
+    // Load social links only if editing
     const socialLinks = newCompany.socialLinks || {}
 
     // Reset and populate main social media
@@ -331,16 +335,18 @@ watch(() => props.company, (newCompany) => {
     customSocialMedia.value = []
 
     // Add custom social links (those not in mainSocialMedia)
-    const mainSocialNames = mainSocialMedia.value.map(s => s.name)
-    Object.entries(socialLinks).forEach(([name, url]) => {
-      if (!mainSocialNames.includes(name)) {
-        customSocialMedia.value.push({
-          name: name,
-          url: url,
-          enabled: true
-        })
-      }
-    })
+    if (!isCreating) {
+      const mainSocialNames = mainSocialMedia.value.map(s => s.name)
+      Object.entries(socialLinks).forEach(([name, url]) => {
+        if (!mainSocialNames.includes(name)) {
+          customSocialMedia.value.push({
+            name: name,
+            url: url,
+            enabled: true
+          })
+        }
+      })
+    }
   }
 }, {immediate: true})
 
@@ -408,10 +414,13 @@ async function saveCompany() {
     return
   }
 
-  if (!props.company?.userId || !props.company?.id) {
+  if (!props.company?.userId) {
     alert('Invalid company data')
     return
   }
+
+  // Determine if we're creating or editing
+  const isCreating = !props.company?.id
 
   saving.value = true
   try {
@@ -446,25 +455,32 @@ async function saveCompany() {
     // Append logo if changed
     if (logoFile.value) {
       formData.append('logo', logoFile.value)
-    } else if (props.company.logo) {
+    } else if (!isCreating && props.company.logo) {
       formData.append('existingLogo', props.company.logo)
     }
 
-    const response = await adminApi.put(
-        `/user/${props.company.userId}/company/${props.company.id}`,
+    // Different endpoints for create vs edit
+    const url = isCreating
+        ? `/user/${props.company.userId}/company`
+        : `/user/${props.company.userId}/company/${props.company.id}`
+
+    const method = isCreating ? 'post' : 'put'
+
+    const response = await adminApi[method](
+        url,
         formData,
         {
           headers: {'Content-Type': 'multipart/form-data'}
         }
     )
 
-    console.log('✅ Company updated:', response.data)
-    alert('Company updated successfully!')
+    console.log(isCreating ? '✅ Company created:' : '✅ Company updated:', response.data)
+    alert(isCreating ? 'Company created successfully!' : 'Company updated successfully!')
     emit('saved')
     closeModal()
   } catch (err) {
-    console.error('❌ Error updating company:', err)
-    alert(err.response?.data?.message || 'Failed to update company')
+    console.error('❌ Error saving company:', err)
+    alert(err.response?.data?.message || 'Failed to save company')
   } finally {
     saving.value = false
   }

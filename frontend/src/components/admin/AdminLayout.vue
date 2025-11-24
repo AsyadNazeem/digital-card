@@ -14,12 +14,12 @@
 import { onMounted } from 'vue'
 import AdminSidebar from "./AdminSidebar.vue"
 import AdminHeader from "./AdminHeader.vue"
-import { useAdminStore } from '../../store/adminStore.js'
+import { useAdminStore } from '@/store/adminStore.js'
 
 const admin = useAdminStore()
 
 onMounted(() => {
-  // Load requests when layout mounts
+  admin.initializeAuth() // ADD THIS LINE
   admin.loadRequests()
 
   // Poll for new requests every 30 seconds
