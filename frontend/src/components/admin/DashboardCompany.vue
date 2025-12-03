@@ -1,6 +1,6 @@
 <template>
   <transition name="modal-fade">
-    <div v-if="show" class="modal-overlay" @click="closeModal">
+    <div v-if="show" class="modal-overlay">
       <div class="modal-container" @click.stop>
         <!-- Modal Header -->
         <div class="modal-header">

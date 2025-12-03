@@ -9,6 +9,7 @@ import Dashboard from "../pages/Dashboard.vue";
 import PublicCard from "../pages/PublicCard.vue";
 import ResetPassword from "../pages/ResetPassword.vue";
 import AdminLogin from "../pages/admin/AdminLogin.vue";
+import ReviewShare from "../pages/ReviewShare.vue";
 import { startIdleTimer, stopIdleTimer } from "../utils/idleLogout";
 import { useAdminStore } from "@/store/adminStore.js";
 import { ADMIN_PAGES, ADMIN_ROLES } from "@/config/permissionRegistry.js";
@@ -43,6 +44,15 @@ const routes = [
         meta: { requiresAdminAuth: true },
         children: adminChildRoutes // ✅ AUTO-GENERATED FROM ADMIN_PAGES!
     },
+    {
+        path: '/r/:code',
+        name: 'ReviewShare',
+        component: (ReviewShare),
+        meta: {
+            requiresAuth: false,
+            title: 'Leave a Review'
+        }
+    }
 ];
 
 const router = createRouter({

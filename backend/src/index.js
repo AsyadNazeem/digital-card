@@ -1,3 +1,5 @@
+// server.js
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -11,8 +13,9 @@ import Request from "./models/Request.js";
 import Admin from "./models/Admin.js";
 import Theme from "./models/Theme.js";
 import AdminLog from "./models/AdminLog.js";
-import UserPermission from "./models/UserPermission.js"; // CHANGE THIS (was RolePermission)
-import PermissionChange from "./models/PermissionChange.js"; // ADD THIS
+import UserPermission from "./models/UserPermission.js";
+import PermissionChange from "./models/PermissionChange.js";
+import Review from "./models/Review.js"; // ✅ ALREADY ADDED
 
 // ROUTES
 import authRoutes from "./routes/auth.js";
@@ -20,7 +23,7 @@ import dashboardRoutes from "./routes/dashboard.js";
 import publicRoutes from "./routes/public.js";
 import adminAuthRoutes from "./routes/adminAuth.js";
 import adminRoutes from "./routes/admin.js";
-import adminLogRoutes from "./routes/adminLogs.js"; // ✅ Add this
+import adminLogRoutes from "./routes/adminLogs.js";
 import otpRoutes from "./routes/otp.js";
 import settingsRoutes from "./routes/settings.js";
 import themeRoutes from "./routes/theme.js";
@@ -34,12 +37,22 @@ import { fileURLToPath } from "url";
 dotenv.config();
 const app = express();
 
-// Fix dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // LOAD ALL MODELS FOR ASSOCIATIONS
-const models = { User, Company, Contact, Request, Admin, Theme, AdminLog, UserPermission, PermissionChange };
+const models = {
+    User,
+    Company,
+    Contact,
+    Request,
+    Admin,
+    Theme,
+    AdminLog,
+    UserPermission,
+    PermissionChange,
+    Review // ✅ ALREADY ADDED
+};
 
 // RUN ALL ASSOCIATIONS
 Object.values(models).forEach((model) => {
@@ -53,11 +66,52 @@ app.use(express.urlencoded({ extended: true }));
 // Static storage for uploaded images
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
+// ✅ MOVE THIS PUBLIC ROUTE TO THE TOP - BEFORE /:mobile ROUTE
+// ✅ PUBLIC REVIEW API ENDPOINT - for frontend to fetch data
+app.get('/api/reviews/share/:code', async (req, res) => {
+    try {
+        const { code } = req.params;
+
+        const review = await Review.findOne({
+            where: { shareCode: code, status: 'active' },
+            include: [{
+                model: Company,
+                as: 'Company',
+                attributes: ['id', 'companyName', 'logo'] // ✅ Include logo
+            }]
+        });
+
+        if (!review) {
+            return res.status(404).json({
+                message: 'Review not found or no longer available'
+            });
+        }
+
+        // Return JSON data with all necessary fields including logo
+        return res.json({
+            branchName: review.branchName,
+            location: review.location,
+            googleLink: review.googleLink,
+            tripadvisorLink: review.tripadvisorLink,
+            company: review.Company?.companyName || null,
+            logo: review.Company?.logo || null, // ✅ Include logo path
+            createdAt: review.createdAt
+        });
+
+    } catch (err) {
+        console.error('Public review error:', err);
+        return res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+
+// /:mobile route comes AFTER /api/r/:code
 app.get("/:mobile", async (req, res, next) => {
     const mobile = req.params.mobile;
-    const userAgent = req.headers['user-agent'] || '';
 
-    if (mobile.startsWith('api')) {
+    // Skip if it starts with 'api' or 'r'
+    if (mobile.startsWith('api') || mobile === 'r') {
         return next();
     }
 
@@ -65,6 +119,7 @@ app.get("/:mobile", async (req, res, next) => {
         return next();
     }
 
+    // ... rest of your mobile route code
     try {
         let formattedMobile = "+" + mobile.replace(/[^0-9]/g, '');
 
@@ -187,19 +242,15 @@ app.get("/:mobile", async (req, res, next) => {
     }
 });
 
-// ============================================================================
-// END OF META PROXY
-// ============================================================================
-
-// API ROUTES - These come AFTER the meta proxy
+// API ROUTES
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/public", publicRoutes);
 app.use("/api/admin/themes", adminThemeRoutes);
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/admin", adminLogRoutes); // ✅ Add this
-app.use('/api/admin/permissions', adminPermissionRoutes); // ADD THIS
+app.use("/api/admin", adminLogRoutes);
+app.use('/api/admin/permissions', adminPermissionRoutes);
 app.use("/api/otp", otpRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/themes", themeRoutes);

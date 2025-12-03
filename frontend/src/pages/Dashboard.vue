@@ -72,14 +72,29 @@
           </button>
 
           <button
+              @click="activeTab = 'Review'"
+              :class="['tab-button', { active: activeTab === 'Review' }]"
+          >
+            <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2">
+              <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            Review
+          </button>
+
+          <button
               @click="activeTab = 'Theme'"
               :class="['tab-button', { active: activeTab === 'Theme' }]"
           >
             <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+              <circle cx="13.5" cy="6.5" r=".5"></circle>
+              <circle cx="17.5" cy="10.5" r=".5"></circle>
+              <circle cx="8.5" cy="7.5" r=".5"></circle>
+              <circle cx="6.5" cy="12.5" r=".5"></circle>
+              <path
+                  d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
             </svg>
             Contact Card Theme
           </button>
@@ -116,6 +131,7 @@
             <table class="data-table">
               <thead>
               <tr>
+                <th>#</th>
                 <th>Company Name</th>
                 <th>Logo</th>
                 <th>Website</th>
@@ -129,7 +145,8 @@
               </thead>
 
               <tbody>
-              <tr v-for="c in paginatedCompanies" :key="c.id">
+              <tr v-for="(c,index) in paginatedCompanies" :key="c.id">
+                <td>{{ index + 1 }}</td>
                 <td>{{ c.companyName }}</td>
 
                 <!-- Logo Preview -->
@@ -246,10 +263,10 @@
           <div class="form-container">
             <!-- Basic Information -->
             <div class="form-grid">
-<!--              <div class="form-group">-->
-<!--                <label class="form-label">Heading <span class="required">*</span></label>-->
-<!--                <input v-model="companyForm.heading" type="text" class="form-input" required/>-->
-<!--              </div>-->
+              <!--              <div class="form-group">-->
+              <!--                <label class="form-label">Heading <span class="required">*</span></label>-->
+              <!--                <input v-model="companyForm.heading" type="text" class="form-input" required/>-->
+              <!--              </div>-->
               <div class="form-group">
                 <label class="form-label">Company Name <span class="required">*</span></label>
                 <input v-model="companyForm.companyName" type="text" class="form-input" required/>
@@ -516,6 +533,7 @@
             <table class="data-table">
               <thead>
               <tr>
+                <th>#</th>
                 <th>Name</th>
                 <th>Mobile</th>
                 <th>Email</th>
@@ -528,7 +546,9 @@
               </thead>
 
               <tbody>
-              <tr v-for="c in paginatedContacts" :key="c.id">
+              <tr v-for="(c, index) in paginatedContacts" :key="c.id">
+
+                <td>{{ index + 1 }}</td>
                 <!-- Full Name -->
                 <td><strong>{{ c.firstName }} {{ c.lastName }}</strong></td>
 
@@ -740,6 +760,53 @@
                 </p>
               </div>
 
+
+              <!-- ✅ NEW: Public Card URL Preview -->
+              <div class="url-preview-container">
+                <div class="url-preview-label">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                  </svg>
+                  <span>Public Card URL Preview:</span>
+                </div>
+
+                <div class="url-preview-box">
+                  <input
+                      type="text"
+                      :value="publicCardUrl"
+                      readonly
+                      class="url-preview-input"
+                      @click="$event.target.select()"
+                  />
+                  <button
+                      @click="copyPublicCardUrl"
+                      class="url-copy-btn"
+                      type="button"
+                      title="Copy to clipboard"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
+
+                  <a
+                      v-if="contactForm.mobile && phoneValidation.mobile.isValid"
+                      :href="publicCardUrl"
+                      target="_blank"
+                      class="url-open-btn"
+                      title="Open in new tab"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+
               <!-- CONTACT FORM - WHATSAPP -->
               <div class="form-group">
                 <label class="form-label">
@@ -909,6 +976,148 @@
         </div>
       </div>
 
+      <!-- REVIEW TAB -->
+      <div v-if="activeTab === 'Review'" class="content-card">
+        <div v-if="!showReviewForm">
+          <div class="card-header">
+            <h2 class="card-title">Reviews / Branch Links</h2>
+            <button
+                class="btn-primary"
+                @click="openReviewForm"
+            >
+              + Add Review
+            </button>
+          </div>
+
+          <div v-if="reviewItems.length > 0" class="table-container">
+            <table class="data-table">
+              <thead>
+              <tr>
+                <th>#</th>
+                <th>Company</th>
+                <th>Branch Name</th>
+                <th>Location</th>
+                <th>Google Review</th>
+                <th>Tripadvisor</th>
+                <th>Actions</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr v-for="(r, idx) in reviewItems" :key="r._tempId || r.id">
+                <td>{{ idx + 1 }}</td>
+                <td>{{ companyNameById(r.companyId) || '-' }}</td>
+                <td>{{ r.branchName }}</td>
+                <td>{{ r.location }}</td>
+                <td>
+                  <a v-if="r.googleLink" :href="r.googleLink" target="_blank" class="link">{{
+                      shortLink(r.googleLink)
+                    }}</a>
+                  <span v-else>-</span>
+                </td>
+                <td>
+                  <a v-if="r.tripadvisorLink" :href="r.tripadvisorLink" target="_blank"
+                     class="link">{{ shortLink(r.tripadvisorLink) }}</a>
+                  <span v-else>-</span>
+                </td>
+                <td class="action-buttons">
+                  <button class="btn-action view" @click="openReviewShareModal(r)">View</button>
+                  <button class="btn-action edit" @click="editReview(idx)">✏️ Edit</button>
+                  <button class="btn-action delete" @click="removeReview(idx)">🗑️ Delete</button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div v-else class="empty-state">
+            <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2">
+              <path d="M3 7h18M3 12h18M3 17h18"></path>
+            </svg>
+            <p class="empty-text">No review entries found</p>
+            <button @click="openReviewForm" class="link-button">Add your first review</button>
+          </div>
+        </div>
+
+        <!-- REVIEW FORM -->
+        <div v-else>
+          <div class="card-header">
+            <h2 class="card-title">Add / Edit Reviews</h2>
+            <button @click="closeReviewForm" class="btn-close">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="form-container">
+            <!-- inside the v-for="(item, index) in reviewFormRows" -->
+            <div v-for="(item, index) in reviewFormRows" :key="item._tempId" class="review-row">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Company <span class="required">*</span></label>
+                  <select v-model="item.companyId" class="form-input">
+                    <option disabled value="">Select a company</option>
+                    <option v-for="c in userCompanies" :key="c.id" :value="c.id">{{ c.companyName }}</option>
+                  </select>
+                  <p v-if="item._errors?.companyId" class="field-error">{{ item._errors.companyId }}</p>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Branch Name <span class="required">*</span></label>
+                  <input v-model="item.branchName" type="text" class="form-input" placeholder="e.g. Colombo Branch"/>
+                  <p v-if="item._errors?.branchName" class="field-error">{{ item._errors.branchName }}</p>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Branch Location</label>
+                  <input v-model="item.location" type="text" class="form-input" placeholder="City, Area, Address"/>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Google Review Link</label>
+                  <input v-model="item.googleLink" type="url" class="form-input" placeholder="https://..."/>
+                  <p v-if="item._errors?.googleLink" class="field-error">{{ item._errors.googleLink }}</p>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Tripadvisor Link</label>
+                  <input v-model="item.tripadvisorLink" type="url" class="form-input" placeholder="https://..."/>
+                  <p v-if="item._errors?.tripadvisorLink" class="field-error">{{ item._errors.tripadvisorLink }}</p>
+                </div>
+              </div>
+
+              <!-- New row actions: Add More (validates current row) + Remove -->
+              <div class="form-actions" style="margin-bottom: 1rem;">
+                <button class="btn-outline" @click="addMore(index)" type="button">
+                  + Add More
+                </button>
+
+                <button
+                    class="btn-danger"
+                    @click="removeRow(index)"
+                    type="button"
+                >
+                  Remove
+                </button>
+              </div>
+
+              <hr />
+            </div>
+
+
+            <!-- Add more + final actions -->
+            <div class="form-actions" style="margin-top: 8px;">
+              <button class="btn-primary" @click="saveAllReviews" :disabled="savingReviews">
+                <span v-if="!savingReviews">Save All</span>
+                <span v-else>Saving...</span>
+              </button>
+              <button class="btn-secondary" @click="closeReviewForm">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- SETTINGS MODAL -->
       <transition name="modal">
@@ -1036,9 +1245,10 @@
                       />
                       <button
                           v-if="!emailOtpSent"
-                          class="btn-small"
+                          class="btn-primary"
                           @click="sendEmailOtp"
                           :disabled="emailLoading"
+                          style="margin-top: 20px"
                       >
                         <span v-if="!emailLoading">Send OTP</span>
                         <span v-else>⏳ Sending...</span>
@@ -1725,6 +1935,41 @@
         </div>
       </transition>
 
+<!--      &lt;!&ndash; REVIEW SHARE QR MODAL &ndash;&gt;-->
+<!--      <transition name="modal">-->
+<!--        <div v-if="showReviewShareModal" class="modal-overlay" @click="showReviewShareModal = false">-->
+<!--          <div class="modal-container" @click.stop>-->
+<!--            <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;">-->
+<!--              <h3>Share QR Codes</h3>-->
+<!--              <button class="modal-close" @click="showReviewShareModal = false">✕</button>-->
+<!--            </div>-->
+
+<!--            <div style="display:flex;gap:28px;align-items:flex-start;justify-content:center;padding:16px 8px;">-->
+<!--              <div style="text-align:center;">-->
+<!--                <h4 style="margin:6px 0 12px 0;">Google</h4>-->
+<!--                <canvas ref="shareQrCanvas1"></canvas>-->
+<!--                <p style="max-width:280px;word-break:break-all;font-size:12px;margin-top:8px;">-->
+<!--                  {{ reviewShareData.googleLink || reviewShareData.shareUrl }}-->
+<!--                </p>-->
+<!--              </div>-->
+
+<!--              <div style="text-align:center;">-->
+<!--                <h4 style="margin:6px 0 12px 0;">Tripadvisor</h4>-->
+<!--                <canvas ref="shareQrCanvas2"></canvas>-->
+<!--                <p style="max-width:280px;word-break:break-all;font-size:12px;margin-top:8px;">-->
+<!--                  {{ reviewShareData.tripadvisorLink || reviewShareData.shareUrl }}-->
+<!--                </p>-->
+<!--              </div>-->
+<!--            </div>-->
+
+<!--            <div style="text-align:center;padding:12px;">-->
+<!--              <a :href="reviewShareData.shareUrl" target="_blank" class="btn-outline" style="margin-right:8px;">Open share page</a>-->
+<!--              <button class="btn-primary" @click="downloadBothQRCodes">Download Both</button>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </transition>-->
+
 
       <!-- Logo Cropper Modal -->
       <ImageCropperModal
@@ -1751,16 +1996,14 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref, watch, nextTick} from 'vue'
+import {computed, nextTick, onMounted, ref, watch} from 'vue'
 import api from "../services/api";
 import {useRouter} from 'vue-router';
 import CountryCodeDropdown from '../components/CountryCodeDropdown.vue'
 import {isValidPhoneNumber, parsePhoneNumber} from 'libphonenumber-js'
 import CountrySelector from '../components/CountrySelector.vue'
 import ImageCropperModal from '../components/ImageCropper.vue'
-import {API_BASE_URL} from "../config.js";
-import {VITE_FRONTEND_URL} from "../config.js";
-import {VITE_IMAGE_UPLOAD_URL} from "../config.js";
+import {API_BASE_URL, VITE_FRONTEND_URL, VITE_IMAGE_UPLOAD_URL} from "../config.js";
 import RealThemePreview from "../components/RealThemePreview.vue";
 import {QuillEditor} from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
@@ -1971,6 +2214,297 @@ const previewContact = ref({
   photo: null
 });
 
+// ----- Review tab state & helpers -----
+const showReviewForm = ref(false);
+const reviewItems = ref([]);      // saved entries from server
+const reviewFormRows = ref([]);   // dynamic rows inside the form
+const savingReviews = ref(false);
+
+// Review share modal state
+const showReviewShareModal = ref(false);
+const reviewShareData = ref({
+  id: null,
+  shareUrl: '',
+  googleLink: '',
+  tripadvisorLink: '',
+  branchName: '',
+  companyName: ''
+});
+const shareQrCanvas1 = ref(null); // google/tripadvisor canvas left
+const shareQrCanvas2 = ref(null); // google/tripadvisor canvas right
+
+
+// Computed property for public card URL preview
+const publicCardUrl = computed(() => {
+  const baseUrl = import.meta.env.VITE_FRONTEND_URL || 'https://tapmy.name/';
+
+  if (!contactForm.value.mobile || !mobileCountryCode.value) {
+    return `${baseUrl}/`;
+  }
+
+  // Remove all non-digit characters from mobile
+  const cleanMobile = contactForm.value.mobile.replace(/\D/g, '');
+
+  if (!cleanMobile) {
+    return `${baseUrl}/`;
+  }
+
+  // Remove the + from country code and combine with mobile
+  const cleanCountryCode = mobileCountryCode.value.replace(/\+/g, '');
+  const fullNumber = cleanCountryCode + cleanMobile;
+
+  return `${baseUrl}/${fullNumber}`;
+});
+
+// Function to copy URL to clipboard
+function copyPublicCardUrl() {
+  if (!contactForm.value.mobile) {
+    alert('Please enter a mobile number first');
+    return;
+  }
+
+  navigator.clipboard.writeText(publicCardUrl.value).then(() => {
+    alert('✅ URL copied to clipboard!');
+  }).catch(err => {
+    console.error('Failed to copy:', err);
+    alert('Failed to copy URL');
+  });
+}
+
+
+// helper: create an empty row
+function makeEmptyReviewRow(overrides = {}) {
+  return {
+    _tempId: 'tmp_' + Math.random().toString(36).substr(2, 9),
+    id: overrides.id || null,
+    companyId: overrides.companyId || '',
+    branchName: overrides.branchName || '',
+    location: overrides.location || '',
+    googleLink: overrides.googleLink || '',
+    tripadvisorLink: overrides.tripadvisorLink || '',
+    _errors: {}
+  };
+}
+
+// UI helpers
+function openReviewForm() {
+  showReviewForm.value = true;
+  if (reviewFormRows.value.length === 0) reviewFormRows.value.push(makeEmptyReviewRow());
+}
+
+function closeReviewForm() {
+  showReviewForm.value = false;
+  reviewFormRows.value = [];
+}
+
+function addEmptyRow() {
+  reviewFormRows.value.push(makeEmptyReviewRow());
+}
+
+
+// New addMore(index) - validate current row then add new empty row after it
+function addMore(index) {
+  const row = reviewFormRows.value[index];
+  if (!row) {
+    // fallback: just add a row if something odd
+    reviewFormRows.value.push(makeEmptyReviewRow());
+    return;
+  }
+
+  // Validate current row first
+  const ok = validateRow(row);
+
+  if (!ok) {
+    // Scroll to the first error field optionally (nice UX), but at minimum show message inline
+    // Keep focus on the invalid field - best-effort:
+    alert('Please fill all mandatory fields before adding a new row.');
+    return;
+  }
+
+  // If current row is valid, insert a new empty row after the current index
+  reviewFormRows.value.splice(index + 1, 0, makeEmptyReviewRow());
+}
+
+
+// Remove row remains same (no change)
+function removeRow(index) {
+  // If only one row left, just clear fields instead of removing entirely (optional)
+  if (reviewFormRows.value.length === 1) {
+    reviewFormRows.value[0] = makeEmptyReviewRow();
+    return;
+  }
+  reviewFormRows.value.splice(index, 1);
+}
+
+// small format helper for links
+function shortLink(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname + (u.pathname && u.pathname !== '/' ? u.pathname.slice(0, 18) + '…' : '');
+  } catch {
+    return url;
+  }
+}
+
+function companyNameById(id) {
+  const c = userCompanies.value.find(x => x.id === id);
+  return c ? c.companyName : null;
+}
+
+// Validate row function (make sure mandatory fields enforced)
+function validateRow(row) {
+  row._errors = row._errors || {};
+  // Clear previous
+  row._errors.companyId = undefined;
+  row._errors.branchName = undefined;
+  row._errors.googleLink = undefined;
+  row._errors.tripadvisorLink = undefined;
+
+  // Mandatory checks
+  if (!row.companyId) row._errors.companyId = 'Please select a company.';
+  if (!row.branchName || !row.branchName.trim()) row._errors.branchName = 'Branch name is required.';
+
+  // Optional URL validation if provided
+  if (row.googleLink && row.googleLink.trim()) {
+    try {
+      new URL(row.googleLink);
+    } catch {
+      row._errors.googleLink = 'Invalid URL';
+    }
+  }
+  if (row.tripadvisorLink && row.tripadvisorLink.trim()) {
+    try {
+      new URL(row.tripadvisorLink);
+    } catch {
+      row._errors.tripadvisorLink = 'Invalid URL';
+    }
+  }
+
+  // Remove any keys that are undefined to keep object clean
+  Object.keys(row._errors).forEach(k => {
+    if (row._errors[k] === undefined) delete row._errors[k];
+  });
+
+  return Object.keys(row._errors).length === 0;
+}
+
+// ----- Load reviews from server -----
+async function loadReviews() {
+  try {
+    const res = await api.get('/dashboard/reviews', {
+      headers: {Authorization: `Bearer ${token}`}
+    });
+    // Expect res.data.reviews as array
+    reviewItems.value = res.data.reviews || [];
+  } catch (err) {
+    console.error('Error loading reviews:', err);
+    reviewItems.value = [];
+  }
+}
+
+
+// ----- Bulk save all rows (upsert) -----
+async function saveAllReviews() {
+  // validate
+  let ok = true;
+  for (const r of reviewFormRows.value) {
+    if (!validateRow(r)) ok = false;
+  }
+  if (!ok) {
+    alert('Fix validation errors before saving all rows.');
+    return;
+  }
+
+  savingReviews.value = true;
+  try {
+    // send payload (server should handle create/update by id)
+    const payload = reviewFormRows.value.map(r => ({
+      id: r.id || null,
+      companyId: r.companyId,
+      branchName: r.branchName,
+      location: r.location,
+      googleLink: r.googleLink,
+      tripadvisorLink: r.tripadvisorLink
+    }));
+
+    const res = await api.post('/dashboard/reviews/bulk-save', {items: payload}, {
+      headers: {Authorization: `Bearer ${token}`}
+    });
+
+    // if server returns the full list, use it; otherwise refresh
+    if (res.data.reviews) {
+      reviewItems.value = res.data.reviews;
+    } else {
+      await loadReviews();
+    }
+
+    // clear form
+    reviewFormRows.value = [];
+    showReviewForm.value = false;
+    alert('All review entries saved.');
+  } catch (err) {
+    console.error('Bulk save error:', err);
+    alert('Failed to save reviews. You can try saving rows individually.');
+  } finally {
+    savingReviews.value = false;
+  }
+}
+
+// ----- Edit or remove existing saved items -----
+function editReview(index) {
+  const item = reviewItems.value[index];
+  const row = makeEmptyReviewRow({
+    id: item.id,
+    companyId: item.companyId,
+    branchName: item.branchName,
+    location: item.location,
+    googleLink: item.googleLink,
+    tripadvisorLink: item.tripadvisorLink
+  });
+  reviewFormRows.value = [row];
+  showReviewForm.value = true;
+}
+
+async function removeReview(index) {
+  const item = reviewItems.value[index];
+  if (!confirm('Delete this review entry?')) return;
+  try {
+    if (item.id) {
+      await api.delete(`/dashboard/reviews/${item.id}`, {
+        headers: {Authorization: `Bearer ${token}`}
+      });
+    }
+    reviewItems.value.splice(index, 1);
+    alert('Entry deleted.');
+  } catch (err) {
+    console.error('Delete review error:', err);
+    alert('Failed to delete entry.');
+  }
+}
+
+async function openReviewShareModal(review) {
+  try {
+    // 1) Ensure there is a shareCode on the server
+    let shareUrl = review.shareUrl;
+
+    if (!shareUrl) {
+      const res = await api.post(`/dashboard/reviews/${review.id}/generate-share`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      shareUrl = res.data.shareUrl;
+      review.shareUrl = shareUrl;
+      review.shareCode = res.data.shareCode;
+    }
+
+    // 2) Open in new tab instead of modal
+    window.open(shareUrl, '_blank');
+
+  } catch (err) {
+    console.error("❌ openReviewShareModal error:", err);
+    alert("Failed to open review page: " + (err.response?.data?.message || err.message));
+  }
+}
 
 
 async function openQrPopup(contact) {
@@ -1988,7 +2522,6 @@ async function openQrPopup(contact) {
 }
 
 
-
 async function generatePlainQr() {
   const canvas = qrCanvas.value;
   if (!canvas) return;
@@ -2004,44 +2537,75 @@ async function generatePlainQr() {
 }
 
 
-async function downloadQr() {
-  const qr = qrCanvas.value;
-  if (!qr) return;
+async function downloadBothQRCodes() {
+  try {
+    const c1 = shareQrCanvas1.value;
+    const c2 = shareQrCanvas2.value;
+    if (!c1 || !c2) return alert('QRs not ready');
 
-  const poster = document.createElement("canvas");
-  poster.width = 600;
-  poster.height = 900;
+    // Convert canvases to images (ensure drawn)
+    // Create a new poster canvas
+    const poster = document.createElement('canvas');
+    const padding = 40;
+    const qrSize = 320; // output size per QR in poster
+    const width = qrSize * 2 + padding * 3; // left + right + paddings
+    const height = qrSize + 260; // QR + text area
+    poster.width = width;
+    poster.height = height;
+    const ctx = poster.getContext('2d');
 
-  const ctx = poster.getContext("2d");
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
 
-  // Background
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, poster.width, poster.height);
+    // Draw left QR
+    const img1 = new Image();
+    img1.src = c1.toDataURL('image/png');
+    await new Promise((resolve) => { img1.onload = resolve; });
 
-  // Draw QR
-  const qrSize = 350;
-  const qrY = 120;
+    const img2 = new Image();
+    img2.src = c2.toDataURL('image/png');
+    await new Promise((resolve) => { img2.onload = resolve; });
 
-  ctx.drawImage(
-      qr,
-      poster.width / 2 - qrSize / 2,
-      qrY,
-      qrSize,
-      qrSize
-  );
+    const leftX = padding;
+    const rightX = padding * 2 + qrSize;
+    const qrY = 40;
 
-  // Bottom Text
-  ctx.fillStyle = "#000";
-  ctx.font = "bold 32px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("Scan to view my", poster.width / 2, 540);
-  ctx.fillText("Digital Business Card", poster.width / 2, 590);
+    // Draw QR images centered in QR boxes
+    ctx.drawImage(img1, leftX, qrY, qrSize, qrSize);
+    ctx.drawImage(img2, rightX, qrY, qrSize, qrSize);
 
-  // Download
-  const link = document.createElement("a");
-  link.download = `${qrName.value}-QR.png`;
-  link.href = poster.toDataURL("image/png");
-  link.click();
+    // Draw separators / labels
+    ctx.fillStyle = '#111';
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'center';
+
+    // Left label (Google)
+    ctx.fillText('Google Review', leftX + qrSize / 2, qrY + qrSize + 32);
+    // Right label (Tripadvisor)
+    ctx.fillText('Tripadvisor', rightX + qrSize / 2, qrY + qrSize + 32);
+
+    // Add small subtitle or branch name
+    ctx.font = 'bold 28px Arial';
+    ctx.fillText(reviewShareData.value.companyName || reviewShareData.value.branchName || 'My Business', width / 2, qrY + qrSize + 80);
+
+    // Add share URL for convenience
+    ctx.font = '16px Arial';
+    ctx.fillText(reviewShareData.value.shareUrl, width / 2, qrY + qrSize + 110);
+
+    // Trigger download
+    poster.toBlob((blob) => {
+      const file = new File([blob], `${(reviewShareData.value.companyName || 'review')}-qrs.png`, { type: 'image/png' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(file);
+      a.download = file.name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }, 'image/png');
+  } catch (err) {
+    console.error('❌ downloadBothQRCodes error:', err);
+    alert('Failed to create download.');
+  }
 }
 
 
@@ -2079,7 +2643,7 @@ async function sharePoster() {
 
   // Convert to Blob
   poster.toBlob(async (blob) => {
-    const file = new File([blob], `${qrName.value}-digital-card.png`, { type: "image/png" });
+    const file = new File([blob], `${qrName.value}-digital-card.png`, {type: "image/png"});
 
     if (navigator.share) {
       try {
@@ -3113,6 +3677,8 @@ async function loadData() {
     userLimits.value.contactLimit = userData.contactLimit;
     userLimits.value.role = userData.role;
 
+    await loadReviews();
+
     console.log("✅ Dashboard data loaded successfully.");
   } catch (err) {
     console.error("❌ Load dashboard error:", err);
@@ -3379,6 +3945,138 @@ onMounted(loadData);
 
 
 <style scoped>
+/* Add these styles to your <style scoped> section */
+
+/* URL Preview Container */
+.url-preview-container {
+  margin-top: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px solid #bae6fd;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.url-preview-container:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15);
+}
+
+/* URL Label */
+.url-preview-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.url-preview-label svg {
+  color: #0284c7;
+}
+
+/* URL Preview Box */
+.url-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0f2fe;
+}
+
+/* URL Input (readonly) */
+.url-preview-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: #0c4a6e;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.url-preview-input:hover {
+  background: #f0f9ff;
+  border-radius: 6px;
+}
+
+.url-preview-input:focus {
+  outline: none;
+  background: #f0f9ff;
+  border-radius: 6px;
+}
+
+/* Copy Button */
+.url-copy-btn {
+  padding: 6px 10px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.url-copy-btn:hover {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.url-copy-btn:active {
+  transform: translateY(0);
+}
+
+/* Open in New Tab Button */
+.url-open-btn {
+  padding: 6px 10px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.url-open-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.url-open-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .url-preview-input {
+    font-size: 0.8rem;
+  }
+
+  .url-preview-box {
+    flex-wrap: wrap;
+  }
+
+  .url-copy-btn,
+  .url-open-btn {
+    padding: 6px 8px;
+  }
+}
+
 .header-logo {
   height: 50px;
   width: auto;
@@ -6598,7 +7296,7 @@ onMounted(loadData);
 .qr-popup-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6612,7 +7310,7 @@ onMounted(loadData);
   width: 330px;
   text-align: center;
   position: relative;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .qr-container {
@@ -6646,5 +7344,4 @@ onMounted(loadData);
   background: #10b981;
   color: white;
 }
-
 </style>

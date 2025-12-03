@@ -1,3 +1,5 @@
+// dahboard.js
+
 import express from "express";
 import multer from "multer";
 import path from "path";
@@ -5,11 +7,15 @@ import jwt from "jsonwebtoken";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
 import Request from "../models/Request.js";
+import Review from "../models/Review.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { Op } from 'sequelize';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import sanitizeHtml from 'sanitize-html';
+import { customAlphabet } from 'nanoid';
 
+
+const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 8); // 8 chars
 const router = express.Router();
 
 
@@ -607,5 +613,278 @@ router.get("/request-history", authenticateToken, async (req, res) => {
         });
     }
 });
+
+// GET /reviews - list reviews for logged-in user
+router.get("/reviews", authenticate, async (req, res) => {
+    try {
+        const reviews = await Review.findAll({
+            where: { userId: req.userId },
+            include: [
+                {
+                    model: Company,
+                    as: "Company",
+                    attributes: ["id", "companyName"]
+                }
+            ],
+            order: [["createdAt", "DESC"]]
+        });
+
+        return res.json({ reviews });
+    } catch (err) {
+        console.error("❌ Error fetching reviews:", err);
+        return res.status(500).json({ message: "Failed to load reviews" });
+    }
+});
+
+// Helper: simple URL validator (accepts empty)
+function isValidUrlOrEmpty(v) {
+    if (!v || !String(v).trim()) return true;
+    try {
+        new URL(v);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+// POST /reviews - create single review
+router.post("/reviews", authenticate, async (req, res) => {
+    try {
+        const { companyId = null, branchName, location = null, googleLink = null, tripadvisorLink = null } = req.body;
+
+        // Validate mandatory fields
+        if (!branchName || !String(branchName).trim()) {
+            return res.status(400).json({ message: "Branch name is required" });
+        }
+
+        // Validate URLs if provided
+        if (!isValidUrlOrEmpty(googleLink)) {
+            return res.status(400).json({ message: "Invalid googleLink URL" });
+        }
+        if (!isValidUrlOrEmpty(tripadvisorLink)) {
+            return res.status(400).json({ message: "Invalid tripadvisorLink URL" });
+        }
+
+        // optional: ensure company belongs to user (if companyId provided)
+        if (companyId) {
+            const company = await Company.findByPk(companyId);
+            if (!company || company.userId !== req.userId) {
+                return res.status(403).json({ message: "Invalid company selection" });
+            }
+        }
+
+        const created = await Review.create({
+            userId: req.userId,
+            companyId: companyId || null,
+            branchName: String(branchName).trim(),
+            location: location ? String(location).trim() : null,
+            googleLink: googleLink ? String(googleLink).trim() : null,
+            tripadvisorLink: tripadvisorLink ? String(tripadvisorLink).trim() : null,
+            status: "active"
+        });
+
+        return res.status(201).json({ message: "Review saved", review: created });
+    } catch (err) {
+        console.error("❌ Create review error:", err);
+        // handle unique constraint violation gracefully
+        if (err?.name === "SequelizeUniqueConstraintError") {
+            return res.status(409).json({ message: "Duplicate entry: same branch already exists" });
+        }
+        return res.status(500).json({ message: "Failed to create review", error: err.message });
+    }
+});
+
+// PUT /reviews/:id - update single review (owner only)
+router.put("/reviews/:id", authenticate, async (req, res) => {
+    try {
+        const review = await Review.findByPk(req.params.id);
+        if (!review) return res.status(404).json({ message: "Review not found" });
+
+        if (review.userId !== req.userId) return res.status(403).json({ message: "Unauthorized" });
+
+        const { companyId = null, branchName, location = null, googleLink = null, tripadvisorLink = null, status } = req.body;
+
+        if (branchName && !String(branchName).trim()) {
+            return res.status(400).json({ message: "Branch name cannot be empty" });
+        }
+
+        if (!isValidUrlOrEmpty(googleLink)) {
+            return res.status(400).json({ message: "Invalid googleLink URL" });
+        }
+        if (!isValidUrlOrEmpty(tripadvisorLink)) {
+            return res.status(400).json({ message: "Invalid tripadvisorLink URL" });
+        }
+
+        // optional: ensure company belongs to user (if provided)
+        if (companyId) {
+            const company = await Company.findByPk(companyId);
+            if (!company || company.userId !== req.userId) {
+                return res.status(403).json({ message: "Invalid company selection" });
+            }
+        }
+
+        await review.update({
+            companyId: companyId || null,
+            branchName: branchName ? String(branchName).trim() : review.branchName,
+            location: location !== undefined ? (location ? String(location).trim() : null) : review.location,
+            googleLink: googleLink !== undefined ? (googleLink ? String(googleLink).trim() : null) : review.googleLink,
+            tripadvisorLink: tripadvisorLink !== undefined ? (tripadvisorLink ? String(tripadvisorLink).trim() : null) : review.tripadvisorLink,
+            status: status || review.status
+        });
+
+        return res.json({ message: "Review updated", review });
+    } catch (err) {
+        console.error("❌ Update review error:", err);
+        if (err?.name === "SequelizeUniqueConstraintError") {
+            return res.status(409).json({ message: "Duplicate entry: same branch already exists" });
+        }
+        return res.status(500).json({ message: "Failed to update review", error: err.message });
+    }
+});
+
+// DELETE /reviews/:id - delete review (owner only)
+router.delete("/reviews/:id", authenticate, async (req, res) => {
+    try {
+        const review = await Review.findByPk(req.params.id);
+        if (!review) return res.status(404).json({ message: "Review not found" });
+        if (review.userId !== req.userId) return res.status(403).json({ message: "Unauthorized" });
+
+        await review.destroy();
+        return res.json({ message: "Review deleted" });
+    } catch (err) {
+        console.error("❌ Delete review error:", err);
+        return res.status(500).json({ message: "Failed to delete review", error: err.message });
+    }
+});
+
+// POST /reviews/bulk-save - bulk upsert (create or update) inside a transaction
+router.post("/reviews/bulk-save", authenticate, async (req, res) => {
+    const items = Array.isArray(req.body.items) ? req.body.items : [];
+    if (!items.length) return res.status(400).json({ message: "No items provided" });
+
+    const sequelizeInstance = Review.sequelize; // get sequelize instance from model
+    const results = [];
+
+    const t = await sequelizeInstance.transaction();
+    try {
+        for (const raw of items) {
+            // normalize fields
+            const id = raw.id || null;
+            const companyId = raw.companyId || null;
+            const branchName = raw.branchName ? String(raw.branchName).trim() : null;
+            const location = raw.location ? String(raw.location).trim() : null;
+            const googleLink = raw.googleLink ? String(raw.googleLink).trim() : null;
+            const tripadvisorLink = raw.tripadvisorLink ? String(raw.tripadvisorLink).trim() : null;
+
+            // Validate required
+            if (!branchName) {
+                await t.rollback();
+                return res.status(400).json({ message: "Branch name is required for each item" });
+            }
+
+            if (!isValidUrlOrEmpty(googleLink) || !isValidUrlOrEmpty(tripadvisorLink)) {
+                await t.rollback();
+                return res.status(400).json({ message: "Invalid URL in one of the items" });
+            }
+
+            // If companyId present, ensure it belongs to this user
+            if (companyId) {
+                const company = await Company.findByPk(companyId);
+                if (!company || company.userId !== req.userId) {
+                    await t.rollback();
+                    return res.status(403).json({ message: "Invalid company selection in one of the items" });
+                }
+            }
+
+            if (id) {
+                // Update existing record if belongs to user
+                const existing = await Review.findByPk(id, { transaction: t });
+                if (!existing) {
+                    await t.rollback();
+                    return res.status(404).json({ message: `Review id=${id} not found` });
+                }
+                if (existing.userId !== req.userId) {
+                    await t.rollback();
+                    return res.status(403).json({ message: `Unauthorized for review id=${id}` });
+                }
+
+                const updated = await existing.update({
+                    companyId: companyId || null,
+                    branchName,
+                    location,
+                    googleLink: googleLink || null,
+                    tripadvisorLink: tripadvisorLink || null,
+                    status: raw.status || existing.status
+                }, { transaction: t });
+
+                results.push(updated);
+            } else {
+                // Create new
+                const created = await Review.create({
+                    userId: req.userId,
+                    companyId: companyId || null,
+                    branchName,
+                    location,
+                    googleLink: googleLink || null,
+                    tripadvisorLink: tripadvisorLink || null,
+                    status: raw.status || "active"
+                }, { transaction: t });
+
+                results.push(created);
+            }
+        }
+
+        await t.commit();
+        // Reload user's reviews to return fresh state (optional)
+        const userReviews = await Review.findAll({
+            where: { userId: req.userId },
+            include: [{ model: Company, as: "Company", attributes: ["id","companyName"] }],
+            order: [["createdAt", "DESC"]]
+        });
+
+        return res.json({ message: "Bulk save completed", reviews: userReviews });
+    } catch (err) {
+        console.error("❌ Bulk save error:", err);
+        try { await t.rollback(); } catch (e) { /* ignore */ }
+        if (err?.name === "SequelizeUniqueConstraintError") {
+            return res.status(409).json({ message: "Duplicate branch entry detected" });
+        }
+        return res.status(500).json({ message: "Failed to bulk-save reviews", error: err.message });
+    }
+});
+
+// POST /reviews/:id/generate-share  - generate or return existing share URL
+// POST /reviews/:id/generate-share - generate or return existing share URL
+router.post('/reviews/:id/generate-share', authenticate, async (req, res) => {
+    try {
+        const review = await Review.findByPk(req.params.id);
+        if (!review) return res.status(404).json({ message: 'Review not found' });
+        if (review.userId !== req.userId) return res.status(403).json({ message: 'Unauthorized' });
+
+        // If already has shareCode, return it (or optionally regenerate if requested)
+        if (!review.shareCode || req.body.regenerate === true) {
+            // generate until unique (rare collision)
+            let code;
+            let exists;
+            do {
+                code = nanoid();
+                exists = await Review.findOne({ where: { shareCode: code } });
+            } while (exists);
+
+            review.shareCode = code;
+            await review.save();
+        }
+
+        // ✅ FIXED: Use FRONTEND_URL for the share link (not backend URL)
+        const frontendBase = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const shareUrl = `${frontendBase.replace(/\/$/, '')}/r/${review.shareCode}`;
+
+        return res.json({ shareUrl, shareCode: review.shareCode });
+    } catch (err) {
+        console.error('Generate share error', err);
+        return res.status(500).json({ message: 'Failed to generate share link' });
+    }
+});
+
 
 export default router;

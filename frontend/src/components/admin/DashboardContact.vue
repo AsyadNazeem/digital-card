@@ -1,6 +1,6 @@
 <template>
   <transition name="modal-fade">
-    <div v-if="show" class="modal-overlay" @click="closeModal">
+    <div v-if="show" class="modal-overlay">
       <div class="modal-container" @click.stop>
         <!-- Modal Header -->
         <div class="modal-header">
@@ -53,26 +53,6 @@
                 <input v-model="form.lastName" type="text" class="form-input" required/>
               </div>
 
-              <!-- Telephone with Country Code -->
-              <div class="form-group">
-                <label class="form-label">Telephone</label>
-                <div class="phone-input-group">
-                  <CountryCodeDropdown
-                      v-model="telephoneCountryCode"
-                  />
-                  <input
-                      v-model="form.telephone"
-                      type="tel"
-                      class="form-input phone-input"
-                      placeholder="Enter phone number"
-                      @input="validateTelephone"
-                  />
-                </div>
-                <p v-if="telephoneValidation.message" :class="telephoneValidation.isValid ? 'validation-success' : 'validation-error'">
-                  {{ telephoneValidation.message }}
-                </p>
-              </div>
-
               <!-- Mobile with Country Code -->
               <div class="form-group">
                 <label class="form-label">Mobile <span class="required">*</span></label>
@@ -91,6 +71,26 @@
                 </div>
                 <p v-if="mobileValidation.message" :class="mobileValidation.isValid ? 'validation-success' : 'validation-error'">
                   {{ mobileValidation.message }}
+                </p>
+              </div>
+
+              <!-- Telephone with Country Code -->
+              <div class="form-group">
+                <label class="form-label">Telephone</label>
+                <div class="phone-input-group">
+                  <CountryCodeDropdown
+                      v-model="telephoneCountryCode"
+                  />
+                  <input
+                      v-model="form.telephone"
+                      type="tel"
+                      class="form-input phone-input"
+                      placeholder="Enter phone number"
+                      @input="validateTelephone"
+                  />
+                </div>
+                <p v-if="telephoneValidation.message" :class="telephoneValidation.isValid ? 'validation-success' : 'validation-error'">
+                  {{ telephoneValidation.message }}
                 </p>
               </div>
 
@@ -302,15 +302,44 @@ function validateCardMobile() {
 
 watch([() => form.value.mobile, () => mobileCountryCode.value],
     ([newMob, newCountryCode]) => {
+      // ✅ 1. Handle WhatsApp (Same as Mobile)
+      if (whatsappSameAsMobile.value && newMob) {
+        form.value.whatsapp = newMob;
+        whatsappCountryCode.value = newCountryCode;
+
+        // Validate WhatsApp automatically
+        const fullWhatsappNumber = newCountryCode + newMob;
+        try {
+          if (isValidPhoneNumber(fullWhatsappNumber)) {
+            const parsed = parsePhoneNumber(fullWhatsappNumber);
+            mobileValidation.value.whatsapp = {
+              isValid: true,
+              message: `✓ Valid ${parsed.country} number`
+            };
+          } else {
+            mobileValidation.value.whatsapp = {
+              isValid: false,
+              message: "✗ Invalid WhatsApp number"
+            };
+          }
+        } catch {
+          mobileValidation.value.whatsapp = {
+            isValid: false,
+            message: "✗ Invalid WhatsApp number"
+          };
+        }
+      }
+
+      // ✅ 2. Handle Card Mobile (Same as Mobile)
       if (cardMobileSameAsMobile.value && newMob) {
         form.value.cardMobileNum = newMob;
         cardMobileCountryCode.value = newCountryCode;
 
-        // also validate automatically
-        const fullNumber = newCountryCode + newMob;
+        // Validate Card Mobile automatically
+        const fullCardNumber = newCountryCode + newMob;
         try {
-          if (isValidPhoneNumber(fullNumber)) {
-            const parsed = parsePhoneNumber(fullNumber);
+          if (isValidPhoneNumber(fullCardNumber)) {
+            const parsed = parsePhoneNumber(fullCardNumber);
             cardMobileValidation.value = {
               isValid: true,
               message: `✓ Valid ${parsed.country} number`
@@ -328,7 +357,71 @@ watch([() => form.value.mobile, () => mobileCountryCode.value],
           };
         }
       }
-    });
+    }
+);
+
+// ✅ 3. Add separate watcher for WhatsApp checkbox toggle
+watch(whatsappSameAsMobile, (isSame) => {
+  if (isSame) {
+    // When checkbox is checked, copy from mobile
+    form.value.whatsapp = form.value.mobile;
+    whatsappCountryCode.value = mobileCountryCode.value;
+
+    // Validate
+    if (form.value.mobile) {
+      const fullNumber = mobileCountryCode.value + form.value.mobile;
+      try {
+        if (isValidPhoneNumber(fullNumber)) {
+          const parsed = parsePhoneNumber(fullNumber);
+          mobileValidation.value.whatsapp = {
+            isValid: true,
+            message: `✓ Valid ${parsed.country} number`
+          };
+        }
+      } catch {
+        mobileValidation.value.whatsapp = {
+          isValid: false,
+          message: ""
+        };
+      }
+    }
+  } else {
+    // When unchecked, clear validation
+    mobileValidation.value.whatsapp = { isValid: false, message: '' };
+  }
+});
+
+// ✅ 4. Add separate watcher for Card Mobile checkbox toggle
+watch(cardMobileSameAsMobile, (isSame) => {
+  if (isSame) {
+    // When checkbox is checked, copy from mobile
+    form.value.cardMobileNum = form.value.mobile;
+    cardMobileCountryCode.value = mobileCountryCode.value;
+
+    // Validate
+    if (form.value.mobile) {
+      const fullNumber = mobileCountryCode.value + form.value.mobile;
+      try {
+        if (isValidPhoneNumber(fullNumber)) {
+          const parsed = parsePhoneNumber(fullNumber);
+          cardMobileValidation.value = {
+            isValid: true,
+            message: `✓ Valid ${parsed.country} number`
+          };
+        }
+      } catch {
+        cardMobileValidation.value = {
+          isValid: false,
+          message: ""
+        };
+      }
+    }
+  } else {
+    // When unchecked, clear the field and validation
+    form.value.cardMobileNum = '';
+    cardMobileValidation.value = { isValid: false, message: '' };
+  }
+});
 
 
 

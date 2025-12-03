@@ -3,6 +3,511 @@
     /*font-family: 'Montserrat', sans-serif;*/
 }
 
+/* Floating Contact Button */
+.floating-contact-btn {
+    position: fixed; /* Changed from fixed to absolute */
+    bottom: 30px;
+    right: 30px;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999; /* Reduced z-index since it's now inside the card */
+    overflow: visible;
+    animation: floatingPulse 3s ease-in-out infinite;
+}
+
+.floating-contact-btn:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5);
+}
+
+.floating-contact-btn:active {
+    transform: translateY(-2px) scale(1.02);
+}
+
+/* Pulse Animation */
+@keyframes floatingPulse {
+    0%, 100% {
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    }
+    50% {
+        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.6), 0 0 0 8px rgba(16, 185, 129, 0.1);
+    }
+}
+
+/* Tooltip */
+.floating-btn-tooltip {
+    position: absolute;
+    right: 75px;
+    background: #1f2937;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.floating-btn-tooltip::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid #1f2937;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+}
+
+.floating-contact-btn:hover .floating-btn-tooltip {
+    opacity: 1;
+    right: 80px;
+}
+
+/* RTL Support for Floating Button */
+[dir="rtl"] .floating-contact-btn {
+    left: 30px;
+    right: auto;
+}
+
+[dir="rtl"] .floating-btn-tooltip {
+    left: 75px;
+    right: auto;
+}
+
+[dir="rtl"] .floating-btn-tooltip::after {
+    left: -6px;
+    right: auto;
+    border-left: none;
+    border-right: 6px solid #1f2937;
+}
+
+[dir="rtl"] .floating-contact-btn:hover .floating-btn-tooltip {
+    left: 80px;
+    right: auto;
+}
+
+/* Mobile Responsive */
+@media (max-width: 940px) {
+    .floating-contact-btn {
+        bottom: 20px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+    }
+
+    .floating-contact-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .floating-btn-tooltip {
+        display: none; /* Hide tooltip on mobile */
+    }
+
+    [dir="rtl"] .floating-contact-btn {
+        left: 20px;
+        right: auto;
+    }
+}
+
+/* Ensure floating button stays above other elements */
+.public-card-container {
+    position: relative;
+    min-height: 100vh;
+}
+
+/* Contact Modal Overlay */
+.contact-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+}
+
+/* Contact Modal */
+.contact-modal {
+    background: white;
+    border-radius: 16px;
+    max-width: 550px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.contact-modal-header {
+    padding: 30px 30px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.contact-modal-header h3 {
+    font-size: 24px;
+    color: #1f2937;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.contact-modal-header p {
+    color: #6b7280;
+    font-size: 14px;
+    margin: 0;
+}
+
+.contact-modal-form {
+    padding: 30px;
+}
+
+.contact-modal-form .form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.contact-modal-form label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.contact-modal-form input,
+.contact-modal-form textarea {
+    width: 93%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.contact-modal-form input:focus,
+.contact-modal-form textarea:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.contact-modal-form input:disabled,
+.contact-modal-form textarea:disabled {
+    background: #f9fafb;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.contact-modal-form textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.char-count {
+    position: absolute;
+    right: 0;
+    bottom: -18px;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.submit-contact-btn {
+    width: 100%;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.submit-contact-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+}
+
+.submit-contact-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.alert-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+    .contact-modal {
+        margin: 0;
+        border-radius: 16px 16px 0 0;
+        max-height: 95vh;
+    }
+
+    .contact-modal-header,
+    .contact-modal-form {
+        padding: 20px;
+    }
+
+    .contact-modal-header h3 {
+        font-size: 20px;
+    }
+
+    .contact-modal-form input,
+    .contact-modal-form textarea {
+        width: 89%;
+    }
+}
+
+/* Close Button Styles */
+.modal-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #f3f4f6;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.modal-close-btn:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+    transform: rotate(90deg);
+}
+
+[dir="rtl"] .modal-close-btn {
+    left: 15px;
+    right: auto;
+}
+
+/* Translation Loading Indicator */
+.translation-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    margin-top: 10px;
+    background: rgba(0, 123, 255, 0.1);
+    border-radius: 8px;
+    font-size: 14px;
+    color: #007bff;
+}
+
+.translation-loading span {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* RTL Support for Arabic */
+[dir="rtl"] .language-button {
+    left: auto;
+    right: 20px;
+}
+
+[dir="rtl"] .share-button {
+    right: auto;
+    left: 20px;
+}
+
+[dir="rtl"] .company-name,
+[dir="rtl"] .company-designation,
+[dir="rtl"] .company-bio {
+    text-align: right;
+}
+
+[dir="rtl"] .action-btn,
+[dir="rtl"] .action-link-secondary {
+    direction: rtl;
+    text-align: right;
+}
+
+[dir="rtl"] .action-icon {
+    margin-left: 8px;
+    margin-right: 0;
+}
+
+[dir="rtl"] .footer {
+    direction: rtl;
+    text-align: center;
+}
+
+[dir="rtl"] .review-modal h3 {
+    text-align: center;
+}
+
+[dir="rtl"] .modal-close-btn {
+    right: auto;
+    left: 10px;
+}
+
+/* Language button styling */
+.language-button {
+     position: absolute;
+     top: 15px;
+     left: 15px;
+     background: rgba(255, 255, 255, 0.95);
+     backdrop-filter: blur(10px);
+     border: 2px solid rgba(0, 0, 0, 0.08);
+     padding: 8px 14px;
+     border-radius: 20px;
+     cursor: pointer;
+     font-size: 14px;
+     font-weight: 600;
+     color: #1f2937;
+     transition: all 0.3s ease;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+     z-index: 100;
+     display: flex;
+     align-items: center;
+     gap: 6px;
+ }
+
+.language-button:hover {
+    background: white;
+    border-color: #10b981;
+    color: #10b981;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.lang-switch {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.lang-text {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+/* For text-based version */
+.lang-switch-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lang-code {
+    font-size: 16px;
+    font-weight: 700;
+    color: #10b981;
+}
+
+.lang-name {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* RTL Support */
+[dir="rtl"] .language-button {
+    left: auto;
+    right: 15px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+    .language-button {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+
+    .lang-text {
+        font-size: 13px;
+    }
+
+    .lang-switch svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
 /* HEADER SECTION */
 .header-section {
     position: relative;
@@ -243,6 +748,7 @@
     border-radius: 24px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     margin: 0 auto;
+    position: relative;
 }
 
 .share-button {
