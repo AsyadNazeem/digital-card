@@ -172,6 +172,29 @@ const Company = sequelize.define(
             allowNull: true,
             comment: "Trip Advisor URL"
         },
+        files: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            defaultValue: '[]',
+            comment: "Array of file paths as JSON string (brochures, catalogs, menus, etc.)",
+            get() {
+                const rawValue = this.getDataValue('files');
+                if (!rawValue) return [];
+                try {
+                    return typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+                } catch (e) {
+                    console.error('Error parsing files:', e);
+                    return [];
+                }
+            },
+            set(value) {
+                if (value === null || value === undefined) {
+                    this.setDataValue('files', '[]');
+                } else {
+                    this.setDataValue('files', typeof value === 'string' ? value : JSON.stringify(value));
+                }
+            }
+        },
     },
     {
         tableName: "companies",

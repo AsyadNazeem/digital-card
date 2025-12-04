@@ -335,6 +335,7 @@
               </div>
             </div>
 
+            <!-- In the form grid after Google Reviews and Trip Advisor -->
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label">Google Reviews</label>
@@ -345,6 +346,107 @@
                 <input v-model="companyForm.tripAdvisor" type="text" class="form-input"/>
               </div>
             </div>
+
+            <!-- ✅ NEW: File Upload Section -->
+            <div class="form-section">
+              <h3 class="section-title">Company Files</h3>
+
+              <!-- Existing Files Display -->
+              <div v-if="companyForm.files && companyForm.files.length > 0" class="uploaded-files-list">
+                <div
+                    v-for="(file, index) in companyForm.files"
+                    :key="index"
+                    class="uploaded-file-item"
+                >
+                  <div class="file-info">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                      <polyline points="13 2 13 9 20 9"></polyline>
+                    </svg>
+                    <div class="file-details">
+                      <span class="file-name">{{ file.name || file.path.split('/').pop() }}</span>
+                      <div class="file-badges">
+                        <span v-if="file.isBrochure" class="file-badge brochure">📄 Brochure</span>
+                        <span v-if="file.isMenu" class="file-badge menu">🍽️ Menu</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button @click="removeFile(index)" class="btn-remove-file" type="button" title="Remove file">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- File Upload Area -->
+              <div class="file-upload-section">
+                <div class="form-group full-width">
+                  <label class="form-label">Upload File (PDF, Images)</label>
+                  <div class="upload-area">
+                    <input
+                        type="file"
+                        @change="handleFileUpload"
+                        accept=".pdf,image/*"
+                        id="file-upload"
+                        class="file-input"
+                        ref="fileInput"
+                    />
+                    <label for="file-upload" class="upload-label">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      <span>{{ pendingFileName || 'Click to upload brochure or menu' }}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- File Type Selection (only show when file is selected) -->
+                <div v-if="pendingFile" class="file-type-selection">
+                  <p class="selection-label">Select file type:</p>
+                  <div class="file-type-checkboxes">
+                    <div class="file-type-checkbox">
+                      <input
+                          type="checkbox"
+                          id="file-type-brochure"
+                          v-model="pendingFileType.isBrochure"
+                          class="checkbox-input"
+                      />
+                      <label for="file-type-brochure" class="checkbox-label">
+                        📄 Brochure
+                      </label>
+                    </div>
+                    <div class="file-type-checkbox">
+                      <input
+                          type="checkbox"
+                          id="file-type-menu"
+                          v-model="pendingFileType.isMenu"
+                          class="checkbox-input"
+                      />
+                      <label for="file-type-menu" class="checkbox-label">
+                        🍽️ Menu
+                      </label>
+                    </div>
+                  </div>
+                  <button
+                      @click="addFileToList"
+                      class="btn-add-file"
+                      type="button"
+                      :disabled="!pendingFileType.isBrochure && !pendingFileType.isMenu"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add File
+                  </button>
+                </div>
+              </div>
+            </div>
+
 
             <!-- Address Section -->
             <div class="form-section">
@@ -541,6 +643,7 @@
                 <th>Company</th>
                 <th>Status</th>
                 <th>Photo</th>
+                <th>Wallet</th>
                 <th>Actions</th>
               </tr>
               </thead>
@@ -582,6 +685,13 @@
                       alt="Contact Photo"
                   />
                   <span v-else>-</span>
+                </td>
+
+                <td>
+                  <button class="btn-primary" @click="saveToGoogleWallet(c)">
+                    Save
+                  </button>
+
                 </td>
 
                 <!-- Actions -->
@@ -2008,7 +2118,6 @@ import RealThemePreview from "../components/RealThemePreview.vue";
 import {QuillEditor} from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import QRCode from "qrcode";
-
 import Quill from 'quill';
 
 const Block = Quill.import('blots/block');
@@ -2073,7 +2182,16 @@ const usernameSuccess = ref(false);
 const usernameLoading = ref(false);
 
 const whatsappSameAsMobile = ref(true);
-const whatsappCountryCode = ref('+971');
+const whatsappCountryCode = ref('+1');
+
+// Add to your existing ref declarations
+const pendingFile = ref(null);
+const pendingFileName = ref('');
+const pendingFileType = ref({
+  isBrochure: false,
+  isMenu: false
+});
+const fileInput = ref(null);
 
 const companyForm = ref({
   companyName: "",
@@ -2094,7 +2212,8 @@ const companyForm = ref({
   postalCode: "",
   poBox: "",
   label: "",
-  tripAdvisor: ""
+  tripAdvisor: "",
+  files: []
 });
 
 const contactForm = ref({
@@ -2143,8 +2262,8 @@ const mainSocialMedia = ref([
   {name: 'tiktok', label: 'TikTok', enabled: false, url: ''}
 ]);
 
-const telephoneCountryCode = ref('+971')
-const mobileCountryCode = ref('+971')
+const telephoneCountryCode = ref('+1')
+const mobileCountryCode = ref('+1')
 
 const customSocialMedia = ref([]);
 
@@ -2255,6 +2374,136 @@ const publicCardUrl = computed(() => {
 
   return `${baseUrl}/${fullNumber}`;
 });
+
+
+// File upload handler
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please upload a PDF or image file (JPG, PNG)');
+      event.target.value = '';
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      alert('File size must be less than 10MB');
+      event.target.value = '';
+      return;
+    }
+
+    pendingFile.value = file;
+    pendingFileName.value = file.name;
+    pendingFileType.value = {
+      isBrochure: false,
+      isMenu: false
+    };
+  }
+}
+
+// Add file to the list
+function addFileToList() {
+  if (!pendingFile.value) return;
+
+  if (!pendingFileType.value.isBrochure && !pendingFileType.value.isMenu) {
+    alert('Please select at least one file type (Brochure or Menu)');
+    return;
+  }
+
+  // Add to files array
+  if (!companyForm.value.files) {
+    companyForm.value.files = [];
+  }
+
+  companyForm.value.files.push({
+    file: pendingFile.value,
+    name: pendingFileName.value,
+    isBrochure: pendingFileType.value.isBrochure,
+    isMenu: pendingFileType.value.isMenu,
+    isNew: true // Flag to indicate this needs to be uploaded
+  });
+
+  // Reset pending file state
+  pendingFile.value = null;
+  pendingFileName.value = '';
+  pendingFileType.value = {
+    isBrochure: false,
+    isMenu: false
+  };
+
+  // Clear file input
+  if (fileInput.value) {
+    fileInput.value.value = '';
+  }
+}
+
+// Remove file from list
+function removeFile(index) {
+  if (confirm('Are you sure you want to remove this file?')) {
+    companyForm.value.files.splice(index, 1);
+  }
+}
+
+async function saveToGoogleWallet(contact) {
+  try {
+    // Build share URL
+    const cleanedPhone = contact.cardMobileNum || contact.mobile;
+    const shareUrl = `${window.location.origin}/${cleanedPhone.replace(/\D/g, '')}`;
+
+    console.log("🎫 Requesting wallet save for:", {
+      name: `${contact.firstName} ${contact.lastName}`,
+      phone: cleanedPhone,
+      shareUrl
+    });
+
+    const res = await api.post('/wallet/google/save-url', {
+      contact: {
+        name: `${contact.firstName} ${contact.lastName}`,
+        firstName: contact.firstName,
+        lastName: contact.lastName,
+        phone: cleanedPhone,
+        email: contact.email,
+        designation: contact.designation || contact.jobTitle || '',
+        companyName: contact.Company?.companyName || '',
+        shareUrl,
+        googleReview: contact.googleReviews || '',
+        tripAdvisor: contact.tripAdvisor || '',
+      },
+      objectIdSuffix: `contact_${contact.id}`,
+    });
+
+    console.log("✅ Received save URL:", res.data.saveUrl);
+
+    if (res.data.saveUrl) {
+      // Try to open in same tab for mobile devices
+      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        window.location.href = res.data.saveUrl;
+      } else {
+        // Desktop: open in new tab
+        const walletWindow = window.open(res.data.saveUrl, '_blank');
+        if (!walletWindow) {
+          // Popup blocked - try direct navigation
+          console.warn("⚠️ Popup blocked, redirecting in same tab");
+          window.location.href = res.data.saveUrl;
+        }
+      }
+    } else {
+      console.error("❌ No saveUrl in response");
+      alert('Could not generate Google Wallet link.');
+    }
+  } catch (err) {
+    console.error('❌ Save to Google Wallet error:', {
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status
+    });
+    alert(err.response?.data?.message || 'Failed to generate Google Wallet link');
+  }
+}
 
 // Function to copy URL to clipboard
 function copyPublicCardUrl() {
@@ -2482,30 +2731,22 @@ async function removeReview(index) {
   }
 }
 
+// Replace the existing openReviewShareModal function in Document 3:
+
 async function openReviewShareModal(review) {
   try {
-    // 1) Ensure there is a shareCode on the server
-    let shareUrl = review.shareUrl;
+    const res = await api.post(`/dashboard/reviews/${review.id}/generate-share`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-    if (!shareUrl) {
-      const res = await api.post(`/dashboard/reviews/${review.id}/generate-share`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      shareUrl = res.data.shareUrl;
-      review.shareUrl = shareUrl;
-      review.shareCode = res.data.shareCode;
-    }
-
-    // 2) Open in new tab instead of modal
-    window.open(shareUrl, '_blank');
+    // Open the new URL format in a new tab
+    window.open(res.data.shareUrl, '_blank');
 
   } catch (err) {
     console.error("❌ openReviewShareModal error:", err);
     alert("Failed to open review page: " + (err.response?.data?.message || err.message));
   }
 }
-
 
 async function openQrPopup(contact) {
   const phone = contact.mobile.replace(/\D/g, "");
@@ -3158,7 +3399,8 @@ function editCompany(selectedCompany) {
     postalCode: selectedCompany.postalCode || "",
     poBox: selectedCompany.poBox || "",
     label: selectedCompany.label || "",
-    tripAdvisor: selectedCompany.tripAdvisor || ""
+    tripAdvisor: selectedCompany.tripAdvisor || "",
+    files: selectedCompany.files || [] // ✅ ADD THIS
   };
 
   // Set logo preview if exists
@@ -3729,7 +3971,7 @@ async function saveCompany() {
     formData.append('tripAdvisor', companyForm.value.tripAdvisor || '');
     formData.append('status', companyForm.value.status || 'active');
 
-    // ADD ADDRESS FIELDS
+    // Add address fields
     formData.append('country', companyForm.value.country || '');
     formData.append('streetAddress', companyForm.value.streetAddress || '');
     formData.append('streetAddressLine2', companyForm.value.streetAddressLine2 || '');
@@ -3738,33 +3980,57 @@ async function saveCompany() {
     formData.append('poBox', companyForm.value.poBox || '');
     formData.append('label', companyForm.value.label || '');
 
-    // Build socialLinks object from enabled items
+    // Build socialLinks object
     const socialLinks = {};
-
-    // Add main social media links
     mainSocialMedia.value.forEach(social => {
       if (social.enabled && social.url && social.url.trim()) {
         socialLinks[social.name] = social.url.trim();
       }
     });
-
-    // Add custom social media links
     customSocialMedia.value.forEach(custom => {
       if (custom.enabled && custom.name && custom.url && custom.name.trim() && custom.url.trim()) {
         socialLinks[custom.name.trim()] = custom.url.trim();
       }
     });
-
-    // Stringify socialLinks for multipart form
     formData.append('socialLinks', JSON.stringify(socialLinks));
 
-    // Handle logo file
+    // Handle logo
     if (companyForm.value.logo instanceof File) {
-      // New logo file selected
       formData.append('logo', companyForm.value.logo);
     } else if (companyForm.value.existingLogoPath) {
-      // No new file, but has existing logo - send the path
       formData.append('existingLogo', companyForm.value.existingLogoPath);
+    }
+
+    // ✅ FIXED: Handle files with correct format
+    const existingFiles = [];
+
+    if (companyForm.value.files && companyForm.value.files.length > 0) {
+      companyForm.value.files.forEach((fileObj) => {
+        if (fileObj.isNew && fileObj.file instanceof File) {
+          // New file to upload
+          formData.append('files', fileObj.file);
+
+          // ✅ Send each file's metadata as a separate JSON string
+          formData.append('fileTypes', JSON.stringify({
+            isBrochure: fileObj.isBrochure,
+            isMenu: fileObj.isMenu,
+            name: fileObj.name
+          }));
+        } else if (!fileObj.isNew) {
+          // Existing file to keep
+          existingFiles.push({
+            path: fileObj.path,
+            name: fileObj.name,
+            isBrochure: fileObj.isBrochure,
+            isMenu: fileObj.isMenu
+          });
+        }
+      });
+    }
+
+    // Send existing files as JSON
+    if (existingFiles.length > 0) {
+      formData.append('existingFiles', JSON.stringify(existingFiles));
     }
 
     // Determine URL and method
@@ -3810,17 +4076,19 @@ async function saveCompany() {
         tripAdvisor: '',
         status: 'active',
         existingLogoPath: null,
-        // RESET ADDRESS FIELDS
         country: '',
         streetAddress: '',
         streetAddressLine2: '',
         city: '',
         postalCode: '',
         poBox: '',
-        label: ''
+        label: '',
+        files: []
       };
       logoPreview.value = null;
       logoFileName.value = '';
+      pendingFile.value = null;
+      pendingFileName.value = '';
 
       // Reset social media
       mainSocialMedia.value.forEach(social => {
@@ -3945,7 +4213,161 @@ onMounted(loadData);
 
 
 <style scoped>
-/* Add these styles to your <style scoped> section */
+/* File Upload Section Styles */
+.file-upload-section {
+  margin-top: 1rem;
+}
+
+.uploaded-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.uploaded-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.uploaded-file-item:hover {
+  background: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.file-info svg {
+  flex-shrink: 0;
+  color: #6c757d;
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.file-name {
+  font-weight: 500;
+  color: #212529;
+  font-size: 0.95rem;
+}
+
+.file-badges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.file-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.file-badge.brochure {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.file-badge.menu {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.btn-remove-file {
+  padding: 0.5rem;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-remove-file:hover {
+  background: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+.file-type-selection {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border: 1px dashed #ced4da;
+  border-radius: 8px;
+}
+
+.selection-label {
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  color: #495057;
+}
+
+.file-type-checkboxes {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.file-type-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-type-checkbox .checkbox-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.file-type-checkbox .checkbox-label {
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-add-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-file:hover:not(:disabled) {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+.btn-add-file:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
 
 /* URL Preview Container */
 .url-preview-container {

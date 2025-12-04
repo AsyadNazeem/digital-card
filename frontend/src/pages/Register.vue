@@ -268,7 +268,7 @@ import api from '../services/api'
 import countriesData from '../assets/country_code.json'
 
 const router = useRouter()
-const countryCode = ref("+971")
+const countryCode = ref("+1")
 const name = ref('')
 const email = ref('')
 const phone = ref('')

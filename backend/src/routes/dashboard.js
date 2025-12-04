@@ -1,5 +1,3 @@
-// dahboard.js
-
 import express from "express";
 import multer from "multer";
 import path from "path";
@@ -64,6 +62,7 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         if (file.fieldname === "logo") cb(null, "uploads/logos");
         else if (file.fieldname === "photo") cb(null, "uploads/photos");
+        else if (file.fieldname === "files") cb(null, "uploads/files"); // ✅ ADD THIS
         else cb(null, "uploads");
     },
     filename: (req, file, cb) => {
@@ -74,14 +73,23 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+
+// Update the upload middleware to handle multiple files
+const uploadCompanyFiles = upload.fields([
+    { name: 'logo', maxCount: 1 },
+    { name: 'files', maxCount: 10 } // Allow up to 10 files
+]);
 // ============================================
 // COMPANY ROUTES
 // ============================================
 
 // ✅ Create a new company
-router.post("/company", authenticate, upload.single("logo"), async (req, res) => {
+router.post("/company", authenticate, uploadCompanyFiles, async (req, res) => {
     try {
-        // Required fields
+        console.log("📥 Received files:", req.files);
+        console.log("📥 Received body:", req.body);
+
+        // Required fields validation
         if (
             !req.body.companyName ||
             !req.body.website ||
@@ -93,7 +101,8 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
             });
         }
 
-        if (!req.file) {
+        // Check if logo exists
+        if (!req.files || !req.files.logo || !req.files.logo[0]) {
             return res.status(400).json({
                 message: "Company logo is required"
             });
@@ -105,6 +114,7 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
             try {
                 socialLinks = JSON.parse(req.body.socialLinks);
             } catch (e) {
+                console.error("Error parsing socialLinks:", e);
                 socialLinks = {};
             }
         }
@@ -115,21 +125,63 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
             allowedAttributes: { 'a': ['href','target','rel'] }
         });
 
-        // Create company
+        // ✅ Handle file uploads properly
+        let uploadedFiles = [];
+
+        if (req.files && req.files.files && req.files.files.length > 0) {
+            console.log("📁 Processing files...");
+
+            // Get fileTypes array
+            const fileTypesArray = Array.isArray(req.body.fileTypes)
+                ? req.body.fileTypes
+                : (req.body.fileTypes ? [req.body.fileTypes] : []);
+
+            console.log("📋 FileTypes array:", fileTypesArray);
+
+            req.files.files.forEach((file, index) => {
+                let fileTypeData = { isBrochure: false, isMenu: false, name: file.originalname };
+
+                try {
+                    if (fileTypesArray[index]) {
+                        const parsed = JSON.parse(fileTypesArray[index]);
+                        fileTypeData = {
+                            isBrochure: parsed.isBrochure || false,
+                            isMenu: parsed.isMenu || false,
+                            name: parsed.name || file.originalname
+                        };
+                    }
+                } catch (e) {
+                    console.error("Error parsing fileType at index", index, ":", e);
+                }
+
+                uploadedFiles.push({
+                    path: `/uploads/files/${file.filename}`,
+                    name: fileTypeData.name,
+                    isBrochure: fileTypeData.isBrochure,
+                    isMenu: fileTypeData.isMenu,
+                    size: file.size,
+                    uploadedAt: new Date().toISOString()
+                });
+            });
+        }
+
+        console.log("✅ Final uploadedFiles array:", uploadedFiles);
+
+        // Create company with stringified files
         const company = await Company.create({
-            heading: null,   // <-- ALWAYS NULL
+            heading: null,
             companyName: req.body.companyName,
             website: req.body.website,
             displayUrl: req.body.displayUrl,
             email: req.body.email,
             bio: cleanBio || null,
-            logo: `/uploads/logos/${req.file.filename}`,
+            logo: `/uploads/logos/${req.files.logo[0].filename}`,
             view360: req.body.view360 || null,
             googleLocation: req.body.googleLocation || null,
             googleReviews: req.body.googleReviews || null,
             tripAdvisor: req.body.tripAdvisor || null,
-            socialLinks: socialLinks || null,
-            // Address fields (optional)
+            socialLinks: socialLinks,
+            files: uploadedFiles, // Sequelize will handle JSON stringification
             label: req.body.label || null,
             country: req.body.country || null,
             streetAddress: req.body.streetAddress || null,
@@ -141,6 +193,8 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
             userId: req.userId
         });
 
+        console.log("✅ Company created successfully:", company.id);
+
         res.status(201).json({
             message: "Company created successfully",
             company
@@ -149,21 +203,25 @@ router.post("/company", authenticate, upload.single("logo"), async (req, res) =>
         console.error("❌ Company save error:", err);
         res.status(500).json({
             message: "Error creating company",
-            error: err.message
+            error: err.message,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
         });
     }
 });
 
 
 // ✅ Update company
-router.put("/company/:id", authenticate, upload.single("logo"), async (req, res) => {
+router.put("/company/:id", authenticate, uploadCompanyFiles, async (req, res) => {
     try {
+        console.log("📝 Updating company:", req.params.id);
+        console.log("📥 Received files:", req.files);
+        console.log("📥 Received body:", req.body);
+
         const company = await Company.findByPk(req.params.id);
         if (!company) {
             return res.status(404).json({ message: "Company not found" });
         }
 
-        // Check ownership
         if (company.userId !== req.userId) {
             return res.status(403).json({ message: "Unauthorized" });
         }
@@ -179,7 +237,7 @@ router.put("/company/:id", authenticate, upload.single("logo"), async (req, res)
             }
         }
 
-        // ✅ ADDED: Sanitize bio HTML
+        // Sanitize bio
         const cleanBio = sanitizeHtml(req.body.bio || '', {
             allowedTags: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'blockquote'],
             allowedAttributes: {
@@ -187,20 +245,75 @@ router.put("/company/:id", authenticate, upload.single("logo"), async (req, res)
             }
         });
 
+        // ✅ Handle files - merge existing and new
+        let allFiles = [];
+
+        // Keep existing files
+        if (req.body.existingFiles) {
+            try {
+                const existing = JSON.parse(req.body.existingFiles);
+                if (Array.isArray(existing)) {
+                    allFiles = existing;
+                }
+                console.log("📂 Existing files:", allFiles);
+            } catch (e) {
+                console.error("Error parsing existingFiles:", e);
+            }
+        }
+
+        // Add new uploaded files
+        if (req.files && req.files.files && req.files.files.length > 0) {
+            console.log("📁 Processing new files...");
+
+            const fileTypesArray = Array.isArray(req.body.fileTypes)
+                ? req.body.fileTypes
+                : (req.body.fileTypes ? [req.body.fileTypes] : []);
+
+            console.log("📋 FileTypes array:", fileTypesArray);
+
+            req.files.files.forEach((file, index) => {
+                let fileTypeData = { isBrochure: false, isMenu: false, name: file.originalname };
+
+                try {
+                    if (fileTypesArray[index]) {
+                        const parsed = JSON.parse(fileTypesArray[index]);
+                        fileTypeData = {
+                            isBrochure: parsed.isBrochure || false,
+                            isMenu: parsed.isMenu || false,
+                            name: parsed.name || file.originalname
+                        };
+                    }
+                } catch (e) {
+                    console.error("Error parsing fileType at index", index, ":", e);
+                }
+
+                allFiles.push({
+                    path: `/uploads/files/${file.filename}`,
+                    name: fileTypeData.name,
+                    isBrochure: fileTypeData.isBrochure,
+                    isMenu: fileTypeData.isMenu,
+                    size: file.size,
+                    uploadedAt: new Date().toISOString()
+                });
+            });
+        }
+
+        console.log("✅ Final allFiles array:", allFiles);
+
         const updateData = {
-            heading: req.body.heading,
+            heading: req.body.heading || null,
             companyName: req.body.companyName,
             website: req.body.website,
             displayUrl: req.body.displayUrl,
             email: req.body.email,
-            bio: cleanBio || null, // ✅ FIXED: Use cleanBio instead of req.body.bio
+            bio: cleanBio || null,
             view360: req.body.view360 || null,
             googleLocation: req.body.googleLocation || null,
             googleReviews: req.body.googleReviews || null,
             tripAdvisor: req.body.tripAdvisor || null,
             status: req.body.status || null,
-            socialLinks: socialLinks || null,
-            // ADDRESS FIELDS
+            socialLinks: socialLinks,
+            files: allFiles, // Sequelize will handle JSON stringification
             label: req.body.label || null,
             country: req.body.country || null,
             streetAddress: req.body.streetAddress || null,
@@ -211,18 +324,17 @@ router.put("/company/:id", authenticate, upload.single("logo"), async (req, res)
         };
 
         // Handle logo update
-        if (req.file) {
-            // New file uploaded
-            updateData.logo = `/uploads/logos/${req.file.filename}`;
+        if (req.files && req.files.logo && req.files.logo[0]) {
+            updateData.logo = `/uploads/logos/${req.files.logo[0].filename}`;
         } else if (req.body.existingLogo) {
-            // Keep existing logo
             updateData.logo = req.body.existingLogo;
         }
 
         await company.update(updateData);
 
-        // Fetch updated company to return
         const updatedCompany = await Company.findByPk(req.params.id);
+
+        console.log("✅ Company updated successfully");
 
         res.json({
             message: "Company updated successfully",
@@ -232,7 +344,8 @@ router.put("/company/:id", authenticate, upload.single("logo"), async (req, res)
         console.error("❌ Update error:", err);
         res.status(500).json({
             message: "Error updating company",
-            error: err.message
+            error: err.message,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
         });
     }
 });
@@ -853,33 +966,25 @@ router.post("/reviews/bulk-save", authenticate, async (req, res) => {
     }
 });
 
-// POST /reviews/:id/generate-share  - generate or return existing share URL
-// POST /reviews/:id/generate-share - generate or return existing share URL
+
+// ADD: Generate shareable URL helper
 router.post('/reviews/:id/generate-share', authenticate, async (req, res) => {
     try {
-        const review = await Review.findByPk(req.params.id);
+        const review = await Review.findByPk(req.params.id, {
+            include: [{ model: Company, as: 'Company' }]
+        });
+
         if (!review) return res.status(404).json({ message: 'Review not found' });
         if (review.userId !== req.userId) return res.status(403).json({ message: 'Unauthorized' });
 
-        // If already has shareCode, return it (or optionally regenerate if requested)
-        if (!review.shareCode || req.body.regenerate === true) {
-            // generate until unique (rare collision)
-            let code;
-            let exists;
-            do {
-                code = nanoid();
-                exists = await Review.findOne({ where: { shareCode: code } });
-            } while (exists);
+        // Create URL-friendly names
+        const companySlug = review.Company.companyName.toLowerCase().replace(/\s+/g, '-');
+        const branchSlug = review.branchName.toLowerCase().replace(/\s+/g, '-');
 
-            review.shareCode = code;
-            await review.save();
-        }
-
-        // ✅ FIXED: Use FRONTEND_URL for the share link (not backend URL)
         const frontendBase = process.env.FRONTEND_URL || 'http://localhost:5173';
-        const shareUrl = `${frontendBase.replace(/\/$/, '')}/r/${review.shareCode}`;
+        const shareUrl = `${frontendBase}/${companySlug}/${branchSlug}`;
 
-        return res.json({ shareUrl, shareCode: review.shareCode });
+        return res.json({ shareUrl });
     } catch (err) {
         console.error('Generate share error', err);
         return res.status(500).json({ message: 'Failed to generate share link' });

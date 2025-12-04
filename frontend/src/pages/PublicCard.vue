@@ -125,7 +125,8 @@
       </button>
 
       <!-- Additional Action Buttons -->
-      <div class="additional-actions" v-if="company.view360 || hasReviewLinks()">
+      <!-- Additional Action Buttons -->
+      <div class="additional-actions" v-if="company.view360 || hasReviewLinks() || filesList.length">
         <a
             v-if="company.view360"
             :href="company.view360"
@@ -144,7 +145,22 @@
           <span v-html="getIcon('review')" class="action-icon"></span>
           <span>{{ t('reviews') }}</span>
         </button>
+
+        <!-- FILE BUTTONS: one button per saved file -->
+        <template v-for="(file, idx) in filesList" :key="idx">
+          <a
+              :href="getFileUrl(file.path)"
+              class="action-link-secondary file-btn"
+              target="_blank"
+              :title="getFileLabel(file)"
+              rel="noopener noreferrer"
+          >
+            <span v-html="getFileIcon(file)" class="action-icon"></span>
+            <span>{{ getFileLabel(file) }}</span>
+          </a>
+        </template>
       </div>
+
 
       <div class="company-details">
         <h2 v-if="displayCompanyName">{{ displayCompanyName }}</h2>
@@ -384,6 +400,49 @@ const closeContactPopup = () => {
     message: '',
     success: false
   };
+};
+
+const filesList = computed(() => {
+  if (!company.value || !company.value.files) return [];
+  if (Array.isArray(company.value.files)) return company.value.files;
+  try {
+    const parsed = JSON.parse(company.value.files);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn('Could not parse company.files', e);
+    return [];
+  }
+});
+
+const getFileUrl = (path) => {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path; // already absolute
+  // API_BASE_URL is already imported at top of your file
+  return `${VITE_IMAGE_UPLOAD_URL}${path}`;
+};
+
+// Choose label for button
+const getFileLabel = (file) => {
+  if (!file) return locale.value === 'ar' ? 'ملف' : 'File';
+  if (file.isMenu) return locale.value === 'ar' ? 'قائمة' : 'Menu';
+  if (file.isBrochure) return locale.value === 'ar' ? 'بروشور' : 'Brochure';
+  return file.name || (locale.value === 'ar' ? 'ملف' : 'File');
+};
+
+const getFileIcon = (file) => {
+  if (!file) {
+    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  }
+  // Menu (use a list icon)
+  if (file.isMenu) {
+    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><circle cx="3" cy="6" r="1.5"></circle><circle cx="3" cy="12" r="1.5"></circle><circle cx="3" cy="18" r="1.5"></circle></svg>`;
+  }
+  // Brochure / PDF (use document icon)
+  if (file.isBrochure) {
+    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  }
+  // default file icon
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>`;
 };
 
 // Submit contact message

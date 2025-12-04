@@ -44,8 +44,10 @@ const routes = [
         meta: { requiresAdminAuth: true },
         children: adminChildRoutes // ✅ AUTO-GENERATED FROM ADMIN_PAGES!
     },
+    // ADD this route (replace the existing /r/:code route):
+
     {
-        path: '/r/:code',
+        path: '/:companyName/:branchName',
         name: 'ReviewShare',
         component: (ReviewShare),
         meta: {

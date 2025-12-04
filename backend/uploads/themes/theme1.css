@@ -3,6 +3,13 @@
     /*font-family: 'Montserrat', sans-serif;*/
 }
 
+.additional-actions .file-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
 /* Floating Contact Button */
 .floating-contact-btn {
     position: fixed; /* Changed from fixed to absolute */

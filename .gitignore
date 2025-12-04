@@ -1,2 +1,3 @@
 node_modules
 backend/.env
+backend/src/config/tapmyname-06b39e405c92.json

@@ -29,10 +29,12 @@ import settingsRoutes from "./routes/settings.js";
 import themeRoutes from "./routes/theme.js";
 import adminThemeRoutes from "./routes/adminTheme.js";
 import adminPermissionRoutes from './routes/adminPermissionRoutes.js';
+import walletRoutes from "./routes/wallet.js";
 
 // PATH
 import path from "path";
 import { fileURLToPath } from "url";
+import { Op, fn, col, where as sequelizeWhere } from "sequelize";
 
 dotenv.config();
 const app = express();
@@ -66,44 +68,55 @@ app.use(express.urlencoded({ extended: true }));
 // Static storage for uploaded images
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-// ✅ MOVE THIS PUBLIC ROUTE TO THE TOP - BEFORE /:mobile ROUTE
+
 // ✅ PUBLIC REVIEW API ENDPOINT - for frontend to fetch data
-app.get('/api/reviews/share/:code', async (req, res) => {
+app.get('/api/reviews/share/:companyName/:branchName', async (req, res) => {
     try {
-        const { code } = req.params;
+        const { companyName, branchName } = req.params;
+
+        // Convert URL slugs back to readable strings, e.g. "my-company" -> "my company"
+        const decodedCompany = decodeURIComponent(String(companyName).replace(/-/g, ' '));
+        const decodedBranch = decodeURIComponent(String(branchName).replace(/-/g, ' '));
+
+        // Normalize to lowercase for MySQL case-insensitive comparison
+        const decodedCompanyNormal = decodedCompany.trim().toLowerCase();
+        const decodedBranchNormal = decodedBranch.trim().toLowerCase();
 
         const review = await Review.findOne({
-            where: { shareCode: code, status: 'active' },
-            include: [{
-                model: Company,
-                as: 'Company',
-                attributes: ['id', 'companyName', 'logo'] // ✅ Include logo
-            }]
+            where: sequelizeWhere(fn('LOWER', col('Review.branchName')), decodedBranchNormal),
+            include: [
+                {
+                    model: Company,
+                    as: 'Company',
+                    where: sequelizeWhere(fn('LOWER', col('Company.companyName')), decodedCompanyNormal),
+                    attributes: ['id', 'companyName', 'logo', 'bio', 'website', 'email']
+                }
+            ],
+            limit: 1
         });
 
         if (!review) {
-            return res.status(404).json({
-                message: 'Review not found or no longer available'
-            });
+            return res.status(404).json({ message: 'Review page not found' });
         }
 
-        // Return JSON data with all necessary fields including logo
         return res.json({
+            id: review.id,
             branchName: review.branchName,
             location: review.location,
             googleLink: review.googleLink,
             tripadvisorLink: review.tripadvisorLink,
             company: review.Company?.companyName || null,
-            logo: review.Company?.logo || null, // ✅ Include logo path
+            logo: review.Company?.logo || null,
+            bio: review.Company?.bio || null,
+            website: review.Company?.website || null,
+            email: review.Company?.email || null,
             createdAt: review.createdAt
         });
-
     } catch (err) {
-        console.error('Public review error:', err);
+        console.error('❌ Public review error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
 });
-
 
 
 // /:mobile route comes AFTER /api/r/:code
@@ -254,6 +267,7 @@ app.use('/api/admin/permissions', adminPermissionRoutes);
 app.use("/api/otp", otpRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/themes", themeRoutes);
+app.use("/api/wallet", walletRoutes);
 
 // HOME
 app.get("/", (req, res) => {

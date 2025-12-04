@@ -1,132 +1,106 @@
 <template>
-  <div class="review-share-container">
+  <div class="review-container">
     <!-- Loading State -->
     <div v-if="loading" class="loading-screen">
       <div class="spinner"></div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="error-card">
+    <div v-else-if="error" class="error-screen">
       <div class="error-icon">⚠️</div>
-      <h2>Review Not Found</h2>
+      <h2>Page Not Found</h2>
       <p>{{ error }}</p>
     </div>
 
     <!-- Main Content -->
     <div v-else class="review-card">
+      <!-- Gradient Background -->
+      <div class="gradient-bg"></div>
 
-      <!-- Header Section with Company Logo Background -->
-      <div class="header-section">
-        <!-- Company Logo as Background -->
-        <div v-if="review.logo" class="company-logo-container">
+      <!-- Company Logo -->
+      <div class="logo-section">
+        <div class="logo-circle">
           <img
+              v-if="review.logo"
               :src="`${VITE_IMAGE_UPLOAD_URL}${review.logo}`"
               alt="Company Logo"
-              class="company-logo-bg"
+              class="logo-img"
           />
-          <div class="logo-overlay"></div>
+          <div v-else class="logo-placeholder">
+            {{ review.company?.charAt(0) || '?' }}
+          </div>
         </div>
-
-        <!-- Fallback gradient if no logo -->
-        <div v-else class="gradient-background"></div>
-
       </div>
 
-      <!-- Review Info -->
-      <div class="review-info">
+      <!-- Company Info -->
+      <div class="company-info">
         <h1 class="branch-name">{{ review.branchName }}</h1>
         <p v-if="review.company" class="company-name">{{ review.company }}</p>
-        <p v-if="review.location" class="location">📍 {{ review.location }}</p>
       </div>
 
-      <!-- QR Codes Section -->
-      <div class="qr-section">
-        <h2 class="section-title">Scan to Leave a Review</h2>
-        <p class="section-subtitle">Help us improve by sharing your experience</p>
-
-        <!-- QR Code Grid (Vertical Layout) -->
-        <div class="qr-grid">
-
-          <!-- Google Review QR -->
-          <div v-if="review.googleLink" class="qr-card">
-            <div class="qr-card-header">
-              <div class="platform-badge google">
-                <svg width="24" height="24" viewBox="0 0 48 48">
-                  <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
-                  <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
-                  <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
-                  <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
-                </svg>
-              </div>
-              <h3>Google Review</h3>
-            </div>
-
-            <div class="qr-canvas-container">
-              <canvas ref="googleQrCanvas"></canvas>
-            </div>
-
-            <a :href="review.googleLink" target="_blank" class="qr-link-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-              Open Google Review
-            </a>
-          </div>
-
-          <!-- Tripadvisor Review QR -->
-          <div v-if="review.tripadvisorLink" class="qr-card">
-            <div class="qr-card-header">
-              <div class="platform-badge tripadvisor">
-                <svg width="24" height="24" viewBox="0 0 50 50">
-                  <path d="M 25 11 C 19.167969 11 13.84375 12.511719 9.789063 15 L 2 15 C 2 15 3.753906 17.152344 4.578125 19.578125 C 2.96875 21.621094 2 24.195313 2 27 C 2 33.628906 7.371094 39 14 39 C 17.496094 39 20.636719 37.492188 22.828125 35.105469 L 25 38 L 27.171875 35.105469 C 29.363281 37.492188 32.503906 39 36 39 C 42.628906 39 48 33.628906 48 27 C 48 24.195313 47.03125 21.621094 45.421875 19.578125 C 46.246094 17.152344 48 15 48 15 L 40.203125 15 C 36.148438 12.511719 30.828125 11 25 11 Z M 14 18 C 18.972656 18 23 22.027344 23 27 C 23 31.972656 18.972656 36 14 36 C 9.027344 36 5 31.972656 5 27 C 5 22.027344 9.027344 18 14 18 Z M 36 18 C 40.972656 18 45 22.027344 45 27 C 45 31.972656 40.972656 36 36 36 C 31.027344 36 27 31.972656 27 27 C 27 22.027344 31.027344 18 36 18 Z M 14 21 C 10.6875 21 8 23.6875 8 27 C 8 30.3125 10.6875 33 14 33 C 17.3125 33 20 30.3125 20 27 C 20 23.6875 17.3125 21 14 21 Z M 36 21 C 32.6875 21 30 23.6875 30 27 C 30 30.3125 32.6875 33 36 33 C 39.3125 33 42 30.3125 42 27 C 42 23.6875 39.3125 21 36 21 Z M 14 23 C 16.210938 23 18 24.789063 18 27 C 18 29.210938 16.210938 31 14 31 C 11.789063 31 10 29.210938 10 27 C 10 24.789063 11.789063 23 14 23 Z M 36 23 C 38.210938 23 40 24.789063 40 27 C 40 29.210938 38.210938 31 36 31 C 33.789063 31 32 29.210938 32 27 C 32 24.789063 33.789063 23 36 23 Z M 14 25 C 12.894531 25 12 25.894531 12 27 C 12 28.105469 12.894531 29 14 29 C 15.105469 29 16 28.105469 16 27 C 16 25.894531 15.105469 25 14 25 Z M 36 25 C 34.894531 25 34 25.894531 34 27 C 34 28.105469 34.894531 29 36 29 C 37.105469 29 38 28.105469 38 27 C 38 25.894531 37.105469 25 36 25 Z" fill="#26e07f"></path>
-                </svg>
-              </div>
-              <h3>Tripadvisor</h3>
-            </div>
-
-            <div class="qr-canvas-container">
-              <canvas ref="tripadvisorQrCanvas"></canvas>
-            </div>
-
-            <a :href="review.tripadvisorLink" target="_blank" class="qr-link-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-              Open Tripadvisor
-            </a>
-          </div>
-        </div>
-
-        <!-- Download Button -->
-        <button @click="downloadBothQRCodes" class="download-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
+      <!-- Review Buttons -->
+      <div class="button-section">
+        <a
+            v-if="review.googleLink"
+            :href="review.googleLink"
+            target="_blank"
+            class="review-btn google-btn"
+        >
+          <svg width="24" height="24" viewBox="0 0 48 48" class="btn-icon">
+            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
+            <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
+            <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
+            <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
           </svg>
-          Download QR Codes
-        </button>
+          Google Review
+        </a>
+
+        <a
+            v-if="review.tripadvisorLink"
+            :href="review.tripadvisorLink"
+            target="_blank"
+            class="review-btn tripadvisor-btn"
+        >
+          <svg width="24" height="24" viewBox="0 0 50 50" class="btn-icon">
+            <path d="M 25 11 C 19.167969 11 13.84375 12.511719 9.789063 15 L 2 15 C 2 15 3.753906 17.152344 4.578125 19.578125 C 2.96875 21.621094 2 24.195313 2 27 C 2 33.628906 7.371094 39 14 39 C 17.496094 39 20.636719 37.492188 22.828125 35.105469 L 25 38 L 27.171875 35.105469 C 29.363281 37.492188 32.503906 39 36 39 C 42.628906 39 48 33.628906 48 27 C 48 24.195313 47.03125 21.621094 45.421875 19.578125 C 46.246094 17.152344 48 15 48 15 L 40.203125 15 C 36.148438 12.511719 30.828125 11 25 11 Z M 14 18 C 18.972656 18 23 22.027344 23 27 C 23 31.972656 18.972656 36 14 36 C 9.027344 36 5 31.972656 5 27 C 5 22.027344 9.027344 18 14 18 Z M 36 18 C 40.972656 18 45 22.027344 45 27 C 45 31.972656 40.972656 36 36 36 C 31.027344 36 27 31.972656 27 27 C 27 22.027344 31.027344 18 36 18 Z M 14 21 C 10.6875 21 8 23.6875 8 27 C 8 30.3125 10.6875 33 14 33 C 17.3125 33 20 30.3125 20 27 C 20 23.6875 17.3125 21 14 21 Z M 36 21 C 32.6875 21 30 23.6875 30 27 C 30 30.3125 32.6875 33 36 33 C 39.3125 33 42 30.3125 42 27 C 42 23.6875 39.3125 21 36 21 Z" fill="#26E07F"></path>
+          </svg>
+          Tripadvisor
+        </a>
+      </div>
+
+      <!-- Additional Links (Optional) -->
+      <div v-if="review.website || review.email" class="extra-links">
+        <a v-if="review.website" :href="review.website" target="_blank" class="extra-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          Website
+        </a>
+
+        <a v-if="review.email" :href="`mailto:${review.email}`" class="extra-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          Email
+        </a>
       </div>
 
       <!-- Footer -->
       <div class="footer">
-        Powered by <span>TapMyName</span>
+        Powered by <span class="brand">TapMyName</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted, nextTick} from 'vue';
-import {useRoute} from 'vue-router';
-import QRCode from 'qrcode';
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import api from '../services/api';
 
-// ✅ Import image upload URL config
 const VITE_IMAGE_UPLOAD_URL = import.meta.env.VITE_IMAGE_UPLOAD_URL || 'http://localhost:4000';
 
 const route = useRoute();
@@ -134,158 +108,44 @@ const loading = ref(true);
 const error = ref('');
 const review = ref(null);
 
-const googleQrCanvas = ref(null);
-const tripadvisorQrCanvas = ref(null);
-
 onMounted(async () => {
   try {
-    const shareCode = route.params.code;
+    const companyName = route.params.companyName;
+    const branchName = route.params.branchName;
 
-    if (!shareCode) {
-      error.value = 'Invalid share link';
+    if (!companyName || !branchName) {
+      error.value = 'Invalid review page link';
       loading.value = false;
       return;
     }
 
-    const res = await api.get(`/reviews/share/${shareCode}`);
+    const res = await api.get(`/reviews/share/${companyName}/${branchName}`);
     review.value = res.data;
-
     loading.value = false;
 
-    await nextTick();
-    await generateQRCodes();
-
   } catch (err) {
-    console.error('Error loading review:', err);
-    error.value = err.response?.data?.message || 'Review not found or no longer available';
+    console.error('Error loading review page:', err);
+    error.value = err.response?.data?.message || 'Review page not found';
     loading.value = false;
   }
 });
-
-async function generateQRCodes() {
-  try {
-    if (review.value.googleLink && googleQrCanvas.value) {
-      await QRCode.toCanvas(googleQrCanvas.value, review.value.googleLink, {
-        width: 280,
-        margin: 2,
-        color: {dark: '#000000', light: '#ffffff'}
-      });
-    }
-
-    if (review.value.tripadvisorLink && tripadvisorQrCanvas.value) {
-      await QRCode.toCanvas(tripadvisorQrCanvas.value, review.value.tripadvisorLink, {
-        width: 280,
-        margin: 2,
-        color: {dark: '#000000', light: '#ffffff'}
-      });
-    }
-  } catch (err) {
-    console.error('Error generating QR codes:', err);
-  }
-}
-
-async function downloadBothQRCodes() {
-  try {
-    const canvas1 = googleQrCanvas.value;
-    const canvas2 = tripadvisorQrCanvas.value;
-
-    if (!canvas1 && !canvas2) {
-      alert('No QR codes available to download');
-      return;
-    }
-
-    const poster = document.createElement('canvas');
-    const padding = 40;
-    const qrSize = 320;
-
-    const hasGoogle = !!canvas1;
-    const hasTripadvisor = !!canvas2;
-    const qrCount = (hasGoogle ? 1 : 0) + (hasTripadvisor ? 1 : 0);
-
-    const width = qrSize * qrCount + padding * (qrCount + 1);
-    const height = qrSize + 260;
-
-    poster.width = width;
-    poster.height = height;
-    const ctx = poster.getContext('2d');
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, width, height);
-
-    let currentX = padding;
-
-    if (hasGoogle) {
-      const img1 = new Image();
-      img1.src = canvas1.toDataURL('image/png');
-      await new Promise((resolve) => {
-        img1.onload = resolve;
-      });
-
-      ctx.drawImage(img1, currentX, 40, qrSize, qrSize);
-
-      ctx.fillStyle = '#111';
-      ctx.font = 'bold 20px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('Google Review', currentX + qrSize / 2, 40 + qrSize + 32);
-
-      currentX += qrSize + padding;
-    }
-
-    if (hasTripadvisor) {
-      const img2 = new Image();
-      img2.src = canvas2.toDataURL('image/png');
-      await new Promise((resolve) => {
-        img2.onload = resolve;
-      });
-
-      ctx.drawImage(img2, currentX, 40, qrSize, qrSize);
-
-      ctx.fillStyle = '#111';
-      ctx.font = 'bold 20px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('Tripadvisor', currentX + qrSize / 2, 40 + qrSize + 32);
-    }
-
-    ctx.font = 'bold 28px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(
-        review.value.company || review.value.branchName,
-        width / 2,
-        40 + qrSize + 80
-    );
-
-    poster.toBlob((blob) => {
-      const file = new File(
-          [blob],
-          `${review.value.branchName || 'review'}-qr-codes.png`,
-          {type: 'image/png'}
-      );
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(file);
-      a.download = file.name;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }, 'image/png');
-
-  } catch (err) {
-    console.error('Download error:', err);
-    alert('Failed to download QR codes');
-  }
-}
 </script>
 
 <style scoped>
 * {
-  font-family: 'Gotham', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.review-share-container {
+.review-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
-  padding: 30px 15px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 /* Loading State */
@@ -299,26 +159,24 @@ async function downloadBothQRCodes() {
 .spinner {
   width: 56px;
   height: 56px;
-  border: 5px solid rgba(44, 95, 141, 0.2);
-  border-top-color: #2c5f8d;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
   border-radius: 50%;
   animation: spin 1s ease-in-out infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 /* Error State */
-.error-card {
+.error-screen {
   background: white;
   border-radius: 24px;
   padding: 60px 40px;
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 .error-icon {
@@ -326,14 +184,13 @@ async function downloadBothQRCodes() {
   margin-bottom: 20px;
 }
 
-.error-card h2 {
+.error-screen h2 {
   font-size: 28px;
-  color: #1a472a;
+  color: #333;
   margin-bottom: 12px;
-  font-weight: 700;
 }
 
-.error-card p {
+.error-screen p {
   color: #666;
   font-size: 16px;
 }
@@ -341,292 +198,209 @@ async function downloadBothQRCodes() {
 /* Main Card */
 .review-card {
   width: 100%;
-  max-width: 600px;
-  background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 440px;
+  background: white;
+  border-radius: 32px;
   overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
 }
 
-/* Header Section with Logo Background */
-.header-section {
+/* Gradient Background */
+.gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 380px;
+  background: linear-gradient(180deg, #5B86E5 0%, #E96FB4 100%);
+  z-index: 0;
+}
+
+/* Logo Section */
+.logo-section {
   position: relative;
-  height: 280px;
+  z-index: 1;
+  padding: 60px 0 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.logo-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   overflow: hidden;
 }
 
-/* Company Logo as Background */
-.company-logo-container {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.company-logo-bg {
+.logo-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
-  transform: scale(1.05);
-  transition: transform 0.8s ease;
 }
 
-
-/* Fallback gradient background */
-.gradient-background {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #2c5f8d 0%, #1a3a52 100%);
+.logo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 48px;
+  font-weight: 700;
 }
 
-
-/* Review Info */
-.review-info {
+/* Company Info */
+.company-info {
+  position: relative;
+  z-index: 1;
   text-align: center;
-  padding: 80px 30px 30px;
-  background: white;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 120px 30px 40px;
+  color: white;
 }
 
 .branch-name {
-  font-size: 1.85rem;
+  font-size: 32px;
   font-weight: 700;
-  color: #1a472a;
   margin-bottom: 8px;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.5px;
 }
 
 .company-name {
-  font-size: 1.1rem;
-  color: #c5663a;
-  font-weight: 600;
-  margin: 8px 0;
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  opacity: 0.95;
 }
 
-.location {
-  font-size: 0.95rem;
-  color: #666;
-  margin: 8px 0;
+.company-bio {
+  font-size: 15px;
+  line-height: 1.5;
+  opacity: 0.9;
+  max-width: 340px;
+  margin: 0 auto;
 }
 
-/* QR Section */
-.qr-section {
-  padding: 40px 30px;
-  background: white;
-}
-
-.section-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1a472a;
-  text-align: center;
-  margin-bottom: 8px;
-}
-
-.section-subtitle {
-  text-align: center;
-  color: #666;
-  font-size: 0.9rem;
-  margin-bottom: 30px;
-}
-
-/* QR Grid - Vertical Layout */
-.qr-grid {
+/* Button Section */
+.button-section {
+  position: relative;
+  z-index: 1;
+  padding: 30px 24px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-bottom: 30px;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
+  gap: 16px;
 }
 
-.qr-card {
-  background: #fafbfc;
-  border-radius: 16px;
-  padding: 24px;
-  border: 2px solid #e8ecf1;
-  transition: all 0.3s ease;
-}
-
-.qr-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border-color: #2c5f8d;
-}
-
-.qr-card-header {
+.review-btn {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 12px;
-  margin-bottom: 20px;
-}
-
-.platform-badge {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.platform-badge.google {
+  padding: 18px 24px;
   background: white;
-}
-
-.platform-badge.tripadvisor {
-  background: white;
-}
-
-.qr-card-header h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1a472a;
-  margin: 0;
-}
-
-.qr-canvas-container {
-  background: white;
-  padding: 16px;
-  border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.qr-canvas-container canvas {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-
-.qr-link-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 93%;
-  padding: 12px;
-  background: linear-gradient(135deg, #2c5f8d 0%, #1a3a52 100%);
-  color: white;
+  color: #5B6B8A;
   text-decoration: none;
-  border-radius: 10px;
-  font-size: 0.875rem;
+  border-radius: 16px;
+  font-size: 18px;
   font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(44, 95, 141, 0.25);
 }
 
-.qr-link-btn:hover {
+.review-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(44, 95, 141, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-/* Download Button */
-.download-btn {
+.review-btn:active {
+  transform: translateY(0);
+}
+
+.btn-icon {
+  flex-shrink: 0;
+}
+
+/* Extra Links */
+.extra-links {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 20px 24px 30px;
+}
+
+.extra-link {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(90deg, rgba(107, 168, 66, 1) 0%, rgba(25, 117, 60, 1) 52%, rgba(94, 102, 63, 1) 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(26, 71, 42, 0.3);
+  gap: 8px;
+  color: #5B6B8A;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: color 0.3s ease;
 }
 
-.download-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(26, 71, 42, 0.5);
+.extra-link:hover {
+  color: #667eea;
 }
 
-.download-btn:active {
-  transform: translateY(0);
+.extra-link svg {
+  opacity: 0.7;
 }
 
 /* Footer */
 .footer {
+  position: relative;
+  z-index: 1;
   text-align: center;
   padding: 24px;
   color: #999;
-  font-size: 0.8rem;
-  background: #fafbfc;
-  border-top: 1px solid #f0f0f0;
+  font-size: 13px;
+  background: #f8f9fa;
 }
 
-.footer span {
+.brand {
   font-weight: 700;
-  background: linear-gradient(135deg, #1a472a 0%, #c5663a 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 /* Mobile Responsive */
-@media (max-width: 640px) {
-  .review-share-container {
+@media (max-width: 480px) {
+  .review-container {
     padding: 0;
   }
 
   .review-card {
     border-radius: 0;
-    box-shadow: none;
     min-height: 100vh;
   }
 
-  .header-section {
-    height: 240px;
-  }
-
-  .qr-grid {
-    gap: 16px;
-  }
-
-  .qr-section {
-    padding: 30px 20px;
-  }
-
-  .review-info {
-    padding: 80px 20px 30px;
-  }
-
   .branch-name {
-    font-size: 1.6rem;
+    font-size: 28px;
   }
 
   .company-name {
-    font-size: 1rem;
+    font-size: 16px;
   }
 
-  .qr-card {
-    padding: 20px;
+  .logo-circle {
+    width: 120px;
+    height: 120px;
   }
 
-  .company-logo-circle {
-    bottom: -50px;
-  }
-
-  .logo-image-wrapper,
-  .logo-placeholder {
-    width: 100px;
-    height: 100px;
-  }
-
-  .logo-placeholder {
-    font-size: 40px;
+  .review-btn {
+    font-size: 16px;
+    padding: 16px 20px;
   }
 }
 </style>
