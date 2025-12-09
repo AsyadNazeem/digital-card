@@ -17,14 +17,29 @@ export const logAdminAction = async ({
                                          errorMessage = null
                                      }) => {
     try {
+        // Validate and sanitize targetId
+        let validTargetId = null;
+        if (targetId !== null && targetId !== undefined && targetId !== 'undefined') {
+            const parsed = parseInt(targetId, 10);
+            if (!isNaN(parsed)) {
+                validTargetId = parsed;
+            }
+        }
+
+        // Ensure action is not null or undefined
+        if (!action) {
+            console.error("❌ Cannot log admin action: action is required");
+            return;
+        }
+
         await AdminLog.create({
             adminId,
             action,
             targetType,
-            targetId,
+            targetId: validTargetId, // Use validated ID
             targetName,
             description,
-            changes,
+            changes: changes ? (typeof changes === 'string' ? changes : JSON.stringify(changes)) : null,
             ipAddress,
             userAgent,
             status,
@@ -32,6 +47,7 @@ export const logAdminAction = async ({
         });
     } catch (err) {
         console.error("❌ Failed to log admin action:", err);
+        console.error("Action parameters:", { adminId, action, targetType, targetId, targetName });
         // Don't throw - logging failures shouldn't break the app
     }
 };
@@ -41,6 +57,12 @@ export const logAdminAction = async ({
  */
 export const autoLogMiddleware = (action, targetType = null) => {
     return async (req, res, next) => {
+        // Validate action parameter
+        if (!action) {
+            console.error("❌ autoLogMiddleware: action is required");
+            return next();
+        }
+
         // Store original res.json
         const originalJson = res.json.bind(res);
 
@@ -49,11 +71,21 @@ export const autoLogMiddleware = (action, targetType = null) => {
             // Log the action after response is sent
             const status = res.statusCode >= 200 && res.statusCode < 300 ? 'success' : 'failed';
 
+            // Extract and validate targetId
+            const rawTargetId = req.params.id || req.params.userId || req.params.companyId || req.params.contactId;
+            let validTargetId = null;
+            if (rawTargetId && rawTargetId !== 'undefined') {
+                const parsed = parseInt(rawTargetId, 10);
+                if (!isNaN(parsed)) {
+                    validTargetId = parsed;
+                }
+            }
+
             logAdminAction({
                 adminId: req.admin?.id,
                 action,
                 targetType,
-                targetId: req.params.id || req.params.userId || req.params.companyId || req.params.contactId || null,
+                targetId: validTargetId,
                 targetName: data?.user?.name || data?.user?.email || data?.company?.companyName || data?.contact?.firstName || null,
                 description: `${action} - ${status}`,
                 ipAddress: req.ip || req.connection.remoteAddress,
@@ -108,6 +140,13 @@ export const ADMIN_ACTIONS = {
     DELETE_CONTACT: 'DELETE_CONTACT',
     VIEW_CONTACT: 'VIEW_CONTACT',
     VIEW_CONTACTS: 'VIEW_CONTACTS',
+
+    // Review Management - ADD THESE
+    CREATE_REVIEW: 'CREATE_REVIEW',
+    UPDATE_REVIEW: 'UPDATE_REVIEW',
+    DELETE_REVIEW: 'DELETE_REVIEW',
+    VIEW_REVIEW: 'VIEW_REVIEW',
+    VIEW_REVIEWS: 'VIEW_REVIEWS',
 
     // Request Management
     APPROVE_REQUEST: 'APPROVE_REQUEST',

@@ -89,128 +89,297 @@
               </div>
             </div>
 
-            <!-- Address Section -->
             <div class="form-section">
-              <h3 class="section-title">Company Address</h3>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label class="form-label">Label</label>
-                  <select v-model="form.label" class="form-input">
-                    <option value="">Select Label</option>
-                    <option value="Home">🏠 Home</option>
-                    <option value="Work">💼 Work</option>
-                    <option value="Office">🏢 Office</option>
-                    <option value="Other">📍 Other</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Country/Region</label>
-                  <CountrySelector v-model="form.country"/>
-                </div>
-                <div class="form-group full-width">
-                  <label class="form-label">Street Address</label>
-                  <input v-model="form.streetAddress" type="text" class="form-input"/>
-                </div>
-                <div class="form-group full-width">
-                  <label class="form-label">Street Address Line 2</label>
-                  <input v-model="form.streetAddressLine2" type="text" class="form-input"/>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">City</label>
-                  <input v-model="form.city" type="text" class="form-input"/>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Postal Code</label>
-                  <input v-model="form.postalCode" type="text" class="form-input"/>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">PO Box</label>
-                  <input v-model="form.poBox" type="text" class="form-input"/>
-                </div>
-              </div>
-            </div>
+              <!-- REPLACE the entire "Company Files" section in Document 5 with this -->
+              <div class="form-section">
+                <h3 class="section-title">Links (Brochure, Menu, Shop Now, Order Now)</h3>
 
-            <!-- Company Bio -->
-            <div class="form-group full-width">
-              <label class="form-label">Company Bio</label>
-              <textarea v-model="form.bio" class="form-textarea" rows="4"></textarea>
-            </div>
+                <!-- Add New Link Form -->
+                <div class="link-input-container"
+                     style="border: 1px solid #e0e0e0; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                  <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start;">
+                    <div>
+                      <input
+                          v-model="pendingLinkUrl"
+                          type="url"
+                          class="form-input"
+                          placeholder="Enter link URL (e.g., https://example.com/brochure.pdf)"
+                          style="margin-bottom: 8px;"
+                      />
+                      <input
+                          v-model="pendingLinkName"
+                          type="text"
+                          class="form-input"
+                          placeholder="Link name (e.g., 2024 Product Catalog)"
+                          style="margin-bottom: 12px;"
+                      />
 
-            <!-- Social Media Links -->
-            <div class="form-section">
-              <h3 class="section-title">Social Media Links</h3>
-              <div class="social-links-grid">
-                <div v-for="social in mainSocialMedia" :key="social.name" class="social-link-item">
-                  <div class="social-checkbox">
-                    <input
-                        type="checkbox"
-                        :id="`edit-social-${social.name}`"
-                        v-model="social.enabled"
-                        class="checkbox-input"
-                    />
-                    <label :for="`edit-social-${social.name}`" class="checkbox-label">
-                      {{ social.label }}
-                    </label>
+                      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                          <input type="checkbox" v-model="pendingLinkType.isBrochure" style="margin-right: 8px;"/>
+                          <span>📄 Brochure</span>
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                          <input type="checkbox" v-model="pendingLinkType.isMenu" style="margin-right: 8px;"/>
+                          <span>🍽️ Menu</span>
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                          <input type="checkbox" v-model="pendingLinkType.isShopNow" style="margin-right: 8px;"/>
+                          <span>🛒 Shop Now</span>
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                          <input type="checkbox" v-model="pendingLinkType.isOrderNow" style="margin-right: 8px;"/>
+                          <span>🛍️ Order Now</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        @click="addLinkToList"
+                        class="btn-primary"
+                        style="height: 40px; white-space: nowrap;"
+                    >
+                      + Add Link
+                    </button>
                   </div>
-                  <input
-                      v-model="social.url"
-                      type="url"
-                      class="form-input"
-                      :placeholder="`Enter ${social.label} URL`"
-                      :disabled="!social.enabled"
-                  />
                 </div>
-              </div>
 
-              <!-- Custom Social Media Links -->
-              <div v-if="customSocialMedia.length > 0" class="custom-social-section">
-                <div v-for="(custom, index) in customSocialMedia" :key="index" class="custom-social-item">
-                  <div class="social-checkbox">
-                    <input
-                        type="checkbox"
-                        :id="`edit-custom-social-${index}`"
-                        v-model="custom.enabled"
-                        class="checkbox-input"
-                    />
-                    <label :for="`edit-custom-social-${index}`" class="checkbox-label-small">
-                      Enable
-                    </label>
+                <!-- List of Added Links -->
+                <div v-if="form.files && form.files.length > 0" style="margin-top: 16px;">
+                  <div
+                      v-for="(link, index) in form.files"
+                      :key="index"
+                      style="
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        background: #f9f9f9;
+      "
+                  >
+                    <div style="flex: 1;">
+                      <div style="font-weight: 600; margin-bottom: 4px;">
+                        {{ link.name || 'Untitled Link' }}
+                      </div>
+                      <div style="font-size: 0.85rem; color: #666; word-break: break-all; margin-bottom: 6px;">
+                        {{ link.url || link.path }}
+                      </div>
+                      <div style="display: flex; gap: 8px;">
+          <span
+              v-if="link.isBrochure"
+              style="
+              background: #e3f2fd;
+              color: #1976d2;
+              padding: 2px 8px;
+              border-radius: 4px;
+              font-size: 0.75rem;
+            "
+          >
+            📄 Brochure
+          </span>
+                        <span
+                            v-if="link.isMenu"
+                            style="
+              background: #fff3e0;
+              color: #f57c00;
+              padding: 2px 8px;
+              border-radius: 4px;
+              font-size: 0.75rem;
+            "
+                        >
+            🍽️ Menu
+          </span>
+                        <span
+                            v-if="link.isShopNow"
+                            style="
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    "
+                        >
+  🛒 Shop Now
+</span>
+                        <span
+                            v-if="link.isOrderNow"
+                            style="
+      background: #f3e5f5;
+      color: #7b1fa2;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    "
+                        >
+  🛍️ Order Now
+</span>
+                      </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        @click="removeLink(index)"
+                        style="
+          background: #f44336;
+          color: white;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          margin-left: 12px;
+        "
+                    >
+                      🗑️ Remove
+                    </button>
                   </div>
-                  <input
-                      v-model="custom.name"
-                      type="text"
-                      class="form-input"
-                      placeholder="Social media name"
-                      :disabled="!custom.enabled"
-                  />
-                  <input
-                      v-model="custom.url"
-                      type="url"
-                      class="form-input"
-                      placeholder="Enter URL"
-                      :disabled="!custom.enabled"
-                  />
-                  <button @click="removeCustomSocial(index)" class="btn-remove" type="button">×</button>
                 </div>
+
+                <p v-else style="color: #999; font-style: italic; margin-top: 8px;">
+                  No links added yet. Add brochures or menu links above.
+                </p>
               </div>
+            </div>
+          </div>
 
-              <button @click="addCustomSocial" class="btn-add-more" type="button">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Add More
-              </button>
+          <!-- Address Section -->
+          <div class="form-section">
+            <h3 class="section-title">Company Address</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Label</label>
+                <select v-model="form.label" class="form-input">
+                  <option value="">Select Label</option>
+                  <option value="Home">🏠 Home</option>
+                  <option value="Work">💼 Work</option>
+                  <option value="Office">🏢 Office</option>
+                  <option value="Other">📍 Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Country/Region</label>
+                <CountrySelector v-model="form.country"/>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label">Street Address</label>
+                <input v-model="form.streetAddress" type="text" class="form-input"/>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label">Street Address Line 2</label>
+                <input v-model="form.streetAddressLine2" type="text" class="form-input"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">City</label>
+                <input v-model="form.city" type="text" class="form-input"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Postal Code</label>
+                <input v-model="form.postalCode" type="text" class="form-input"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">PO Box</label>
+                <input v-model="form.poBox" type="text" class="form-input"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Company Bio -->
+          <div class="form-group full-width">
+            <label class="form-label">Company Bio</label>
+            <QuillEditor
+                v-model:content="form.bio"
+                contentType="html"
+                theme="snow"
+                :toolbar="[
+        ['bold', 'italic', 'underline'],
+        [{ 'header': [1, 2, 3, false] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['link'],
+        ['clean']
+      ]"
+                class="quill-editor"
+                placeholder="Enter company bio..."
+            />
+            <p class="field-hint">Use the toolbar to format your text</p>
+          </div>
+
+          <!-- Social Media Links -->
+          <div class="form-section">
+            <h3 class="section-title">Social Media Links</h3>
+            <div class="social-links-grid">
+              <div v-for="social in mainSocialMedia" :key="social.name" class="social-link-item">
+                <div class="social-checkbox">
+                  <input
+                      type="checkbox"
+                      :id="`edit-social-${social.name}`"
+                      v-model="social.enabled"
+                      class="checkbox-input"
+                  />
+                  <label :for="`edit-social-${social.name}`" class="checkbox-label">
+                    {{ social.label }}
+                  </label>
+                </div>
+                <input
+                    v-model="social.url"
+                    type="url"
+                    class="form-input"
+                    :placeholder="`Enter ${social.label} URL`"
+                    :disabled="!social.enabled"
+                />
+              </div>
             </div>
 
-            <!-- Form Actions -->
-            <div class="form-actions">
-              <button @click="saveCompany" class="btn-save" :disabled="saving">
-                <span v-if="saving">Saving...</span>
-                <span v-else>💾 Save Changes</span>
-              </button>
-              <button @click="closeModal" class="btn-cancel">Cancel</button>
+            <!-- Custom Social Media Links -->
+            <div v-if="customSocialMedia.length > 0" class="custom-social-section">
+              <div v-for="(custom, index) in customSocialMedia" :key="index" class="custom-social-item">
+                <div class="social-checkbox">
+                  <input
+                      type="checkbox"
+                      :id="`edit-custom-social-${index}`"
+                      v-model="custom.enabled"
+                      class="checkbox-input"
+                  />
+                  <label :for="`edit-custom-social-${index}`" class="checkbox-label-small">
+                    Enable
+                  </label>
+                </div>
+                <input
+                    v-model="custom.name"
+                    type="text"
+                    class="form-input"
+                    placeholder="Social media name"
+                    :disabled="!custom.enabled"
+                />
+                <input
+                    v-model="custom.url"
+                    type="url"
+                    class="form-input"
+                    placeholder="Enter URL"
+                    :disabled="!custom.enabled"
+                />
+                <button @click="removeCustomSocial(index)" class="btn-remove" type="button">×</button>
+              </div>
             </div>
+
+            <button @click="addCustomSocial" class="btn-add-more" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add More
+            </button>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <button @click="saveCompany" class="btn-save" :disabled="saving">
+              <span v-if="saving">Saving...</span>
+              <span v-else>💾 Save Changes</span>
+            </button>
+            <button @click="closeModal" class="btn-cancel">Cancel</button>
           </div>
         </div>
       </div>
@@ -232,8 +401,16 @@
 import {ref, watch} from 'vue'
 import adminApi from '../../services/adminApi'
 import {VITE_IMAGE_UPLOAD_URL} from '@/config.js'
-import CountrySelector from "@/components/CountrySelector.vue";
-import ImageCropperModal from "@/components/ImageCropper.vue";
+import CountrySelector from "@/components/CountrySelector.vue"
+import ImageCropperModal from "@/components/ImageCropper.vue"
+import {QuillEditor} from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import Quill from 'quill'
+
+// Configure Quill to use <p> tags
+const Block = Quill.import('blots/block');
+Block.tagName = 'p';
+Quill.register(Block, true);
 
 const props = defineProps({
   show: Boolean,
@@ -241,6 +418,15 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+
+const pendingLinkUrl = ref('');
+const pendingLinkName = ref('');
+const pendingLinkType = ref({
+  isBrochure: false,
+  isMenu: false,
+  isShopNow: false,    // NEW
+  isOrderNow: false    // NEW
+});
 
 const form = ref({
   companyName: '',
@@ -259,7 +445,8 @@ const form = ref({
   streetAddressLine2: '',
   city: '',
   postalCode: '',
-  poBox: ''
+  poBox: '',
+  files: [] // Initialize files array
 })
 
 const mainSocialMedia = ref([
@@ -281,12 +468,113 @@ const saving = ref(false)
 const showLogoCropper = ref(false)
 const tempLogoSrc = ref('')
 
+// Validate URL format
+function isValidUrl(string) {
+  try {
+    const url = new URL(string);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
+// Add link to the list
+function addLinkToList() {
+  const url = pendingLinkUrl.value.trim();
+  const name = pendingLinkName.value.trim();
+
+  if (!url) {
+    alert('Please enter a URL');
+    return;
+  }
+
+  if (!isValidUrl(url)) {
+    alert('Please enter a valid URL (must start with http:// or https://)');
+    return;
+  }
+
+  if (!name) {
+    alert('Please enter a name for this link');
+    return;
+  }
+
+  // ✅ UPDATED: Check all 4 checkboxes
+  if (!pendingLinkType.value.isBrochure &&
+      !pendingLinkType.value.isMenu &&
+      !pendingLinkType.value.isShopNow &&
+      !pendingLinkType.value.isOrderNow) {
+    alert('Please select at least one type (Brochure, Menu, Shop Now, or Order Now)');
+    return;
+  }
+
+  if (!form.value.files) {
+    form.value.files = [];
+  }
+
+  // ✅ UPDATED: Add all 4 fields
+  form.value.files.push({
+    url: url,
+    name: name,
+    isBrochure: pendingLinkType.value.isBrochure,
+    isMenu: pendingLinkType.value.isMenu,
+    isShopNow: pendingLinkType.value.isShopNow,      // NEW
+    isOrderNow: pendingLinkType.value.isOrderNow,    // NEW
+    isNew: true
+  });
+
+  console.log('✅ Link added to list:', {
+    name: name,
+    url: url,
+    isBrochure: pendingLinkType.value.isBrochure,
+    isMenu: pendingLinkType.value.isMenu,
+    isShopNow: pendingLinkType.value.isShopNow,
+    isOrderNow: pendingLinkType.value.isOrderNow
+  });
+
+  // ✅ UPDATED: Reset all 4 fields
+  pendingLinkUrl.value = '';
+  pendingLinkName.value = '';
+  pendingLinkType.value = {
+    isBrochure: false,
+    isMenu: false,
+    isShopNow: false,    // NEW
+    isOrderNow: false    // NEW
+  };
+}
+
+// Remove link from list
+function removeLink(index) {
+  if (confirm('Are you sure you want to remove this link?')) {
+    form.value.files.splice(index, 1);
+    console.log('🗑️ Link removed at index:', index);
+  }
+}
+
+
 // Watch for company prop changes
-// Replace the existing watch function with this:
 watch(() => props.company, (newCompany) => {
   if (newCompany) {
-    // If there's an ID, we're editing; otherwise, we're creating
     const isCreating = !newCompany.id
+
+    // Parse files - handle both string and array formats
+    let parsedFiles = [];
+    if (newCompany.files) {
+      try {
+        // If files is a string, parse it
+        if (typeof newCompany.files === 'string') {
+          parsedFiles = JSON.parse(newCompany.files);
+        }
+        // If it's already an array, use it
+        else if (Array.isArray(newCompany.files)) {
+          parsedFiles = newCompany.files;
+        }
+      } catch (e) {
+        console.error('Error parsing files:', e);
+        parsedFiles = [];
+      }
+    }
+
+    console.log('🔗 Loading company links:', parsedFiles);
 
     form.value = {
       companyName: newCompany.companyName || '',
@@ -305,7 +593,18 @@ watch(() => props.company, (newCompany) => {
       streetAddressLine2: newCompany.streetAddressLine2 || '',
       city: newCompany.city || '',
       postalCode: newCompany.postalCode || '',
-      poBox: newCompany.poBox || ''
+      poBox: newCompany.poBox || '',
+      files: parsedFiles // ✅ Load links
+    }
+
+    // Reset link inputs
+    pendingLinkUrl.value = ''
+    pendingLinkName.value = ''
+    pendingLinkType.value = {
+      isBrochure: false,
+      isMenu: false,
+      isShopNow: false,    // NEW
+      isOrderNow: false    // NEW
     }
 
     // Only set logo preview if editing existing company
@@ -317,7 +616,7 @@ watch(() => props.company, (newCompany) => {
       logoFileName.value = ''
     }
 
-    // Load social links only if editing
+    // Load social links
     const socialLinks = newCompany.socialLinks || {}
 
     // Reset and populate main social media
@@ -419,47 +718,73 @@ async function saveCompany() {
     return
   }
 
-  // Determine if we're creating or editing
   const isCreating = !props.company?.id
 
   saving.value = true
   try {
     const formData = new FormData()
 
-    // Append all form fields
+    // Append all form fields (except files)
     Object.keys(form.value).forEach(key => {
-      if (form.value[key] !== null && form.value[key] !== '') {
+      if (key !== 'files' && form.value[key] !== null && form.value[key] !== '') {
         formData.append(key, form.value[key])
       }
     })
 
     // Prepare social links
     const socialLinks = {}
-
-    // Add enabled main social media
     mainSocialMedia.value.forEach(social => {
       if (social.enabled && social.url) {
         socialLinks[social.name] = social.url
       }
     })
-
-    // Add enabled custom social media
     customSocialMedia.value.forEach(custom => {
       if (custom.enabled && custom.name && custom.url) {
         socialLinks[custom.name] = custom.url
       }
     })
-
     formData.append('socialLinks', JSON.stringify(socialLinks))
 
-    // Append logo if changed
+    // Handle logo
     if (logoFile.value) {
       formData.append('logo', logoFile.value)
+      console.log('📷 Uploading new logo');
     } else if (!isCreating && props.company.logo) {
       formData.append('existingLogo', props.company.logo)
+      console.log('📷 Keeping existing logo');
     }
 
-    // Different endpoints for create vs edit
+    // ✅ NEW: Handle links instead of files
+    const linksToSave = [];
+
+    if (form.value.files && form.value.files.length > 0) {
+      console.log('🔗 Processing links:', form.value.files.length);
+
+      form.value.files.forEach((linkObj) => {
+        linksToSave.push({
+          url: linkObj.url || linkObj.path,
+          name: linkObj.name,
+          isBrochure: linkObj.isBrochure || false,
+          isMenu: linkObj.isMenu || false,
+          isShopNow: linkObj.isShopNow || false,      // NEW
+          isOrderNow: linkObj.isOrderNow || false,    // NEW
+          addedAt: linkObj.addedAt || new Date().toISOString()
+        });
+      });
+    }
+
+    // Send links as JSON string
+    if (linksToSave.length > 0) {
+      formData.append('files', JSON.stringify(linksToSave));
+      console.log('📤 Sending links:', linksToSave);
+    }
+
+    console.log('📦 Form data prepared:', {
+      isCreating,
+      linksCount: linksToSave.length
+    });
+
+    // Make API call
     const url = isCreating
         ? `/user/${props.company.userId}/company`
         : `/user/${props.company.userId}/company/${props.company.id}`
@@ -474,27 +799,269 @@ async function saveCompany() {
         }
     )
 
-    console.log(isCreating ? '✅ Company created:' : '✅ Company updated:', response.data)
+    console.log('✅ Company saved:', response.data)
     alert(isCreating ? 'Company created successfully!' : 'Company updated successfully!')
     emit('saved')
     closeModal()
   } catch (err) {
     console.error('❌ Error saving company:', err)
+    console.error('Error details:', err.response?.data)
     alert(err.response?.data?.message || 'Failed to save company')
   } finally {
     saving.value = false
   }
 }
 
+
 function closeModal() {
   logoFile.value = null
   logoFileName.value = ''
   logoPreview.value = ''
+
+  // Reset link inputs
+  pendingLinkUrl.value = ''
+  pendingLinkName.value = ''
+  pendingLinkType.value = {
+    isBrochure: false,
+    isMenu: false,
+    isShopNow: false,    // NEW
+    isOrderNow: false    // NEW
+  }
+
+
   emit('close')
 }
+
 </script>
 
 <style scoped>
+/* File Upload Styles for Admin Modal */
+
+/* Quill Editor Styles */
+.quill-editor {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.quill-editor :deep(.ql-toolbar) {
+  background: #f8f6f4;
+  border: 1px solid #e5e1dc;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+}
+
+.quill-editor :deep(.ql-container) {
+  border: 1px solid #e5e1dc;
+  border-radius: 0 0 8px 8px;
+  min-height: 150px;
+  font-size: 0.95rem;
+}
+
+.quill-editor :deep(.ql-editor) {
+  min-height: 150px;
+  padding: 16px;
+}
+
+.quill-editor :deep(.ql-editor.ql-blank::before) {
+  color: #8a7b75;
+  font-style: italic;
+}
+
+.field-hint {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #6b5d57;
+  font-style: italic;
+}
+
+.file-upload-section {
+  margin-top: 1rem;
+}
+
+.uploaded-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.uploaded-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.uploaded-file-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.file-info svg {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.file-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+  word-break: break-word;
+}
+
+.file-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.file-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 4px;
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.file-badge.brochure {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.file-badge.menu {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.btn-remove-file {
+  padding: 0.5rem;
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-remove-file:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.btn-remove-file svg {
+  display: block;
+}
+
+.file-type-selection {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.selection-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 0.75rem;
+}
+
+.file-type-checkboxes {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.file-type-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-input {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-add-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-file:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btn-add-file:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-add-file svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .uploaded-file-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .btn-remove-file {
+    align-self: flex-end;
+  }
+
+  .file-type-checkboxes {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;

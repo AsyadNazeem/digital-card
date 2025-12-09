@@ -5,6 +5,7 @@ import User from "../models/User.js";
 import Request from "../models/Request.js";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
+import Review from "../models/Review.js";
 import { Op } from "sequelize";
 import bcrypt from "bcryptjs";
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
@@ -28,6 +29,7 @@ const photosDir = path.join(uploadsDir, "photos");
     }
 });
 
+
 const logoStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, logosDir),
     filename: (req, file, cb) => {
@@ -35,6 +37,7 @@ const logoStorage = multer.diskStorage({
         cb(null, uniqueName);
     }
 });
+
 
 const photoStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, photosDir),
@@ -55,7 +58,7 @@ const imageFilter = (req, file, cb) => {
     }
 };
 
-const uploadLogo = multer({
+const uploadCompanyLogo = multer({
     storage: logoStorage,
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: imageFilter
@@ -66,6 +69,17 @@ const uploadPhoto = multer({
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: imageFilter
 }).single("photo");
+
+function isValidUrl(string) {
+    try {
+        const url = new URL(string);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+        return false;
+    }
+}
+
+
 
 // ✅ GET: Overview stats
 router.get("/stats/overview", authenticateAdmin, async (req, res) => {
@@ -106,12 +120,15 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
 });
 
 // ✅ GET: All users
+// ✅ GET: All users - UPDATE THIS
 router.get("/users", authenticateAdmin, async (req, res) => {
     try {
         const users = await User.findAll({
             attributes: [
                 "id", "name", "phone", "email", "provider",
-                "registrationType", "companyLimit", "contactLimit", "createdAt"
+                "registrationType", "companyLimit", "contactLimit",
+                "reviewLimit",  // ADD THIS
+                "createdAt"
             ],
             order: [["createdAt", "DESC"]],
         });
@@ -132,7 +149,7 @@ router.get("/users", authenticateAdmin, async (req, res) => {
     }
 });
 
-// ✅ GET: User's companies
+// ✅ GET: User's companies - ADD 'files' to attributes
 router.get("/user/:userId/companies", authenticateAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
@@ -141,7 +158,7 @@ router.get("/user/:userId/companies", authenticateAdmin, async (req, res) => {
             attributes: [
                 'id', 'companyName', 'website', 'displayUrl', 'email',
                 'logo', 'bio', 'view360', 'googleLocation', 'googleReviews',
-                'tripAdvisor', 'socialLinks', 'status', 'label', 'country',
+                'tripAdvisor', 'socialLinks', 'files', 'status', 'label', 'country', // ADD 'files' here
                 'streetAddress', 'streetAddressLine2', 'city', 'postalCode',
                 'poBox', 'createdAt'
             ],
@@ -170,6 +187,7 @@ router.get("/user/:userId/companies", authenticateAdmin, async (req, res) => {
         });
     }
 });
+
 
 // ✅ GET: User's contacts
 router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
@@ -302,7 +320,7 @@ router.get("/requests", authenticateAdmin, async (req, res) => {
         const requests = await Request.findAll({
             include: [{
                 model: User,
-                attributes: ["id", "name", "email", "companyLimit", "contactLimit"],
+                attributes: ["id", "name", "email", "companyLimit", "contactLimit", "reviewLimit"],  // ADD reviewLimit
             }],
             order: [["createdAt", "DESC"]],
         });
@@ -324,6 +342,7 @@ router.get("/requests", authenticateAdmin, async (req, res) => {
 });
 
 // ✅ POST: Approve request
+// ✅ POST: Approve request - UPDATE THIS FUNCTION
 router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
     try {
         const request = await Request.findByPk(req.params.id, {
@@ -341,12 +360,15 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
         const user = request.User;
         const oldLimits = {
             companyLimit: user.companyLimit,
-            contactLimit: user.contactLimit
+            contactLimit: user.contactLimit,
+            reviewLimit: user.reviewLimit  // ADD THIS
         };
 
+        // UPDATE: Include reviewLimit
         await user.update({
             companyLimit: user.companyLimit + request.requestedCompanies,
             contactLimit: user.contactLimit + request.requestedContacts,
+            reviewLimit: user.reviewLimit + request.requestedReviews,  // ADD THIS
         });
 
         await request.update({ status: "approved" });
@@ -362,11 +384,13 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
                 before: oldLimits,
                 after: {
                     companyLimit: user.companyLimit,
-                    contactLimit: user.contactLimit
+                    contactLimit: user.contactLimit,
+                    reviewLimit: user.reviewLimit  // ADD THIS
                 },
                 requested: {
                     companies: request.requestedCompanies,
-                    contacts: request.requestedContacts
+                    contacts: request.requestedContacts,
+                    reviews: request.requestedReviews  // ADD THIS
                 }
             },
             ipAddress: getClientIp(req),
@@ -379,6 +403,7 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
             newLimits: {
                 companyLimit: user.companyLimit,
                 contactLimit: user.contactLimit,
+                reviewLimit: user.reviewLimit,  // ADD THIS
             },
         });
     } catch (err) {
@@ -529,7 +554,7 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
 
 // ✅ PUT: Update company
 router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => {
-    uploadLogo(req, res, async (err) => {
+    uploadCompanyLogo(req, res, async (err) => {
         if (err) {
             return res.status(400).json({
                 message: err.message || "File upload error"
@@ -537,6 +562,8 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
         }
 
         try {
+            console.log("📥 Update company - Body:", req.body);
+
             const company = await Company.findOne({
                 where: {
                     id: req.params.companyId,
@@ -561,6 +588,58 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
                 }
             }
 
+            // ✅ NEW: Handle links
+            let processedLinks = [];
+
+            if (req.body.files) {
+                try {
+                    const links = JSON.parse(req.body.files);
+
+                    if (Array.isArray(links)) {
+                        for (const link of links) {
+                            // Validate URL
+                            if (!link.url || !isValidUrl(link.url)) {
+                                return res.status(400).json({
+                                    message: `Invalid URL: ${link.url || 'empty'}`
+                                });
+                            }
+
+                            // Validate name
+                            if (!link.name || !link.name.trim()) {
+                                return res.status(400).json({
+                                    message: 'Link name is required'
+                                });
+                            }
+
+                            // Validate at least one type
+                            if (!link.isBrochure && !link.isMenu && !link.isShopNow && !link.isOrderNow) {
+                                return res.status(400).json({
+                                    message: 'Each link must be marked as Brochure, Menu, Shop Now, or Order Now'
+                                });
+                            }
+
+                            processedLinks.push({
+                                url: link.url.trim(),
+                                name: link.name.trim(),
+                                isBrochure: Boolean(link.isBrochure),
+                                isMenu: Boolean(link.isMenu),
+                                isShopNow: Boolean(link.isShopNow),      // NEW
+                                isOrderNow: Boolean(link.isOrderNow),    // NEW
+                                addedAt: new Date().toISOString()  // or link.addedAt for PUT
+                            });
+
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error parsing files:", e);
+                    return res.status(400).json({
+                        message: "Invalid files format"
+                    });
+                }
+            }
+
+            console.log("✅ Processed links:", processedLinks);
+
             const updateData = {
                 companyName: req.body.companyName,
                 website: req.body.website,
@@ -573,6 +652,7 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
                 tripAdvisor: req.body.tripAdvisor || null,
                 bio: req.body.bio || null,
                 socialLinks: socialLinks,
+                files: processedLinks, // Update links
                 label: req.body.label || null,
                 country: req.body.country || null,
                 streetAddress: req.body.streetAddress || null,
@@ -582,6 +662,7 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
                 poBox: req.body.poBox || null
             };
 
+            // Handle logo update
             if (req.file) {
                 if (company.logo) {
                     const oldLogoPath = path.join(__dirname, "..", company.logo);
@@ -595,6 +676,7 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
             }
 
             await company.update(updateData);
+            console.log("✅ Company updated successfully");
 
             await logAdminAction({
                 adminId: req.admin.id,
@@ -635,6 +717,7 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
         }
     });
 });
+
 
 // ✅ PUT: Update contact
 router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => {
@@ -781,7 +864,7 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
 
 // ✅ POST: Create company
 router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
-    uploadLogo(req, res, async (err) => {
+    uploadCompanyLogo(req, res, async (err) => {
         if (err) {
             return res.status(400).json({
                 message: err.message || "File upload error"
@@ -789,6 +872,8 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
         }
 
         try {
+            console.log("📥 Create company - Body:", req.body);
+
             const userId = req.params.userId;
             const user = await User.findByPk(userId);
 
@@ -804,6 +889,13 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
                 });
             }
 
+            // Logo is required for new companies
+            if (!req.file) {
+                return res.status(400).json({
+                    message: "Company logo is required"
+                });
+            }
+
             let socialLinks = {};
             if (req.body.socialLinks) {
                 try {
@@ -814,6 +906,57 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
                     console.error("❌ Error parsing socialLinks:", e);
                 }
             }
+
+            // ✅ NEW: Handle links (brochures/menus)
+            let processedLinks = [];
+
+            if (req.body.files) {
+                try {
+                    const links = JSON.parse(req.body.files);
+
+                    if (Array.isArray(links)) {
+                        for (const link of links) {
+                            // Validate URL
+                            if (!link.url || !isValidUrl(link.url)) {
+                                return res.status(400).json({
+                                    message: `Invalid URL: ${link.url || 'empty'}`
+                                });
+                            }
+
+                            // Validate name
+                            if (!link.name || !link.name.trim()) {
+                                return res.status(400).json({
+                                    message: 'Link name is required'
+                                });
+                            }
+
+                            // Validate at least one type is selected
+                            if (!link.isBrochure && !link.isMenu && !link.isShopNow && !link.isOrderNow) {
+                                return res.status(400).json({
+                                    message: 'Each link must be marked as Brochure, Menu, Shop Now, or Order Now'
+                                });
+                            }
+
+                            processedLinks.push({
+                                url: link.url.trim(),
+                                name: link.name.trim(),
+                                isBrochure: Boolean(link.isBrochure),
+                                isMenu: Boolean(link.isMenu),
+                                isShopNow: Boolean(link.isShopNow),      // NEW
+                                isOrderNow: Boolean(link.isOrderNow),    // NEW
+                                addedAt: new Date().toISOString()  // or link.addedAt for PUT
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error parsing files:", e);
+                    return res.status(400).json({
+                        message: "Invalid files format"
+                    });
+                }
+            }
+
+            console.log("✅ Processed links:", processedLinks);
 
             const companyData = {
                 userId,
@@ -828,20 +971,19 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
                 tripAdvisor: req.body.tripAdvisor || null,
                 bio: req.body.bio || null,
                 socialLinks: socialLinks,
+                files: processedLinks, // Store links array
                 label: req.body.label || null,
                 country: req.body.country || null,
                 streetAddress: req.body.streetAddress || null,
                 streetAddressLine2: req.body.streetAddressLine2 || null,
                 city: req.body.city || null,
                 postalCode: req.body.postalCode || null,
-                poBox: req.body.poBox || null
+                poBox: req.body.poBox || null,
+                logo: `/uploads/logos/${req.file.filename}`
             };
 
-            if (req.file) {
-                companyData.logo = `/uploads/logos/${req.file.filename}`;
-            }
-
             const newCompany = await Company.create(companyData);
+            console.log("✅ Company created successfully");
 
             await logAdminAction({
                 adminId: req.admin.id,
@@ -987,5 +1129,282 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
     });
 });
 
+
+router.get("/user/:userId/reviews", authenticateAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const reviews = await Review.findAll({
+            where: { userId },
+            include: [{
+                model: Company,
+                as: "Company",
+                attributes: ["id", "companyName"]
+            }],
+            attributes: [
+                'id', 'companyId', 'branchName', 'location',
+                'googleLink', 'tripadvisorLink', 'createdAt'
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        const user = await User.findByPk(userId);
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.VIEW_REVIEWS,
+            targetType: 'user',
+            targetId: userId,
+            targetName: user?.name || user?.email,
+            description: `Viewed ${reviews.length} reviews for user ${userId}`,
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
+        res.json({ success: true, reviews });
+    } catch (err) {
+        console.error("❌ Error fetching user reviews:", err);
+        res.status(500).json({
+            message: "Error fetching reviews",
+            error: err.message
+        });
+    }
+});
+
+// ✅ GET: Single review by ID
+router.get("/user/:userId/review/:reviewId", authenticateAdmin, async (req, res) => {
+    try {
+        const { userId, reviewId } = req.params;
+
+        const review = await Review.findOne({
+            where: {
+                id: reviewId,
+                userId: userId
+            }
+        });
+
+        if (!review) {
+            return res.status(404).json({ message: "Review not found" });
+        }
+
+        res.json({ success: true, review });
+    } catch (err) {
+        console.error("❌ Error fetching review:", err);
+        res.status(500).json({
+            message: "Error fetching review",
+            error: err.message
+        });
+    }
+});
+
+// ✅ POST: Create review
+router.post("/user/:userId/review", authenticateAdmin, async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Check review limit
+        const reviewCount = await Review.count({ where: { userId } });
+        if (reviewCount >= user.reviewLimit) {
+            return res.status(400).json({
+                message: "Review limit reached for this user"
+            });
+        }
+
+        // Validate required fields
+        if (!req.body.companyId) {
+            return res.status(400).json({ message: "Company is required" });
+        }
+
+        if (!req.body.branchName || !req.body.branchName.trim()) {
+            return res.status(400).json({ message: "Branch name is required" });
+        }
+
+        // Validate URLs if provided
+        if (req.body.googleLink && !isValidUrl(req.body.googleLink)) {
+            return res.status(400).json({ message: "Invalid Google Review URL" });
+        }
+
+        if (req.body.tripadvisorLink && !isValidUrl(req.body.tripadvisorLink)) {
+            return res.status(400).json({ message: "Invalid Tripadvisor URL" });
+        }
+
+        const reviewData = {
+            userId,
+            companyId: req.body.companyId,
+            branchName: req.body.branchName.trim(),
+            location: req.body.location?.trim() || null,
+            googleLink: req.body.googleLink?.trim() || null,
+            tripadvisorLink: req.body.tripadvisorLink?.trim() || null
+        };
+
+        const newReview = await Review.create(reviewData);
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.CREATE_REVIEW,
+            targetType: 'review',
+            targetId: newReview.id,
+            targetName: newReview.branchName,
+            description: `Created review: ${newReview.branchName} for user ${user.email}`,
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
+        const reviewWithCompany = await Review.findByPk(newReview.id, {
+            include: [{
+                model: Company,
+                as: "Company",
+                attributes: ["id", "companyName"]
+            }]
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Review created successfully",
+            review: reviewWithCompany
+        });
+
+    } catch (err) {
+        console.error("❌ Error creating review:", err);
+        res.status(500).json({
+            message: "Failed to create review",
+            error: err.message
+        });
+    }
+});
+
+// ✅ PUT: Update review
+router.put("/user/:userId/review/:reviewId", authenticateAdmin, async (req, res) => {
+    try {
+        const review = await Review.findOne({
+            where: {
+                id: req.params.reviewId,
+                userId: req.params.userId
+            }
+        });
+
+        if (!review) {
+            return res.status(404).json({ message: "Review not found" });
+        }
+
+        const oldData = { ...review.dataValues };
+
+        // Validate required fields
+        if (!req.body.companyId) {
+            return res.status(400).json({ message: "Company is required" });
+        }
+
+        if (!req.body.branchName || !req.body.branchName.trim()) {
+            return res.status(400).json({ message: "Branch name is required" });
+        }
+
+        // Validate URLs if provided
+        if (req.body.googleLink && !isValidUrl(req.body.googleLink)) {
+            return res.status(400).json({ message: "Invalid Google Review URL" });
+        }
+
+        if (req.body.tripadvisorLink && !isValidUrl(req.body.tripadvisorLink)) {
+            return res.status(400).json({ message: "Invalid Tripadvisor URL" });
+        }
+
+        const updateData = {
+            companyId: req.body.companyId,
+            branchName: req.body.branchName.trim(),
+            location: req.body.location?.trim() || null,
+            googleLink: req.body.googleLink?.trim() || null,
+            tripadvisorLink: req.body.tripadvisorLink?.trim() || null
+        };
+
+        await review.update(updateData);
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.UPDATE_REVIEW,
+            targetType: 'review',
+            targetId: req.params.reviewId,
+            targetName: review.branchName,
+            description: `Updated review: ${review.branchName}`,
+            changes: {
+                before: {
+                    branchName: oldData.branchName,
+                    location: oldData.location
+                },
+                after: {
+                    branchName: updateData.branchName,
+                    location: updateData.location
+                }
+            },
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
+        const updatedReview = await Review.findByPk(req.params.reviewId, {
+            include: [{
+                model: Company,
+                as: "Company",
+                attributes: ["id", "companyName"]
+            }]
+        });
+
+        res.json({
+            success: true,
+            message: "Review updated successfully",
+            review: updatedReview
+        });
+
+    } catch (err) {
+        console.error("❌ Error updating review:", err);
+        res.status(500).json({
+            message: "Failed to update review",
+            error: err.message
+        });
+    }
+});
+
+// ✅ DELETE: Delete review
+router.delete("/user/:userId/review/:reviewId", authenticateAdmin, async (req, res) => {
+    try {
+        const review = await Review.findOne({
+            where: {
+                id: req.params.reviewId,
+                userId: req.params.userId
+            }
+        });
+
+        if (!review) {
+            return res.status(404).json({ message: "Review not found" });
+        }
+
+        const reviewName = review.branchName;
+        await review.destroy();
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.DELETE_REVIEW,
+            targetType: 'review',
+            targetId: req.params.reviewId,
+            targetName: reviewName,
+            description: `Deleted review: ${reviewName}`,
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        });
+
+        res.json({
+            success: true,
+            message: "Review deleted successfully"
+        });
+
+    } catch (err) {
+        console.error("❌ Error deleting review:", err);
+        res.status(500).json({
+            message: "Failed to delete review",
+            error: err.message
+        });
+    }
+});
 
 export default router;

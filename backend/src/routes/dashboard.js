@@ -6,6 +6,7 @@ import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
 import Request from "../models/Request.js";
 import Review from "../models/Review.js";
+import User from "../models/User.js"; // ✅ ADD THIS LINE
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { Op } from 'sequelize';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
@@ -62,7 +63,6 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         if (file.fieldname === "logo") cb(null, "uploads/logos");
         else if (file.fieldname === "photo") cb(null, "uploads/photos");
-        else if (file.fieldname === "files") cb(null, "uploads/files"); // ✅ ADD THIS
         else cb(null, "uploads");
     },
     filename: (req, file, cb) => {
@@ -73,36 +73,43 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// ✅ Define middleware for company logo upload (SINGLE FILE ONLY)
+const uploadCompanyLogo = upload.single('logo');
 
-// Update the upload middleware to handle multiple files
-const uploadCompanyFiles = upload.fields([
-    { name: 'logo', maxCount: 1 },
-    { name: 'files', maxCount: 10 } // Allow up to 10 files
-]);
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+// ✅ Helper function to validate URLs
+function isValidUrl(string) {
+    try {
+        const url = new URL(string);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+        return false;
+    }
+}
+
+
 // ============================================
 // COMPANY ROUTES
 // ============================================
 
 // ✅ Create a new company
-router.post("/company", authenticate, uploadCompanyFiles, async (req, res) => {
+router.post("/company", authenticate, uploadCompanyLogo, async (req, res) => {
     try {
-        console.log("📥 Received files:", req.files);
         console.log("📥 Received body:", req.body);
 
         // Required fields validation
-        if (
-            !req.body.companyName ||
-            !req.body.website ||
-            !req.body.displayUrl ||
-            !req.body.email
-        ) {
+        if (!req.body.companyName || !req.body.website || !req.body.displayUrl || !req.body.email) {
             return res.status(400).json({
                 message: "Missing required fields: companyName, website, displayUrl, email"
             });
         }
 
         // Check if logo exists
-        if (!req.files || !req.files.logo || !req.files.logo[0]) {
+        if (!req.file) {
             return res.status(400).json({
                 message: "Company logo is required"
             });
@@ -125,49 +132,59 @@ router.post("/company", authenticate, uploadCompanyFiles, async (req, res) => {
             allowedAttributes: { 'a': ['href','target','rel'] }
         });
 
-        // ✅ Handle file uploads properly
-        let uploadedFiles = [];
+        // ✅ Handle links (brochures/menus)
+        let processedLinks = [];
 
-        if (req.files && req.files.files && req.files.files.length > 0) {
-            console.log("📁 Processing files...");
+        if (req.body.files) {
+            try {
+                const links = JSON.parse(req.body.files);
 
-            // Get fileTypes array
-            const fileTypesArray = Array.isArray(req.body.fileTypes)
-                ? req.body.fileTypes
-                : (req.body.fileTypes ? [req.body.fileTypes] : []);
+                if (Array.isArray(links)) {
+                    for (const link of links) {
+                        // Validate URL
+                        if (!link.url || !isValidUrl(link.url)) {
+                            return res.status(400).json({
+                                message: `Invalid URL: ${link.url || 'empty'}`
+                            });
+                        }
 
-            console.log("📋 FileTypes array:", fileTypesArray);
+                        // Validate name
+                        if (!link.name || !link.name.trim()) {
+                            return res.status(400).json({
+                                message: 'Link name is required'
+                            });
+                        }
 
-            req.files.files.forEach((file, index) => {
-                let fileTypeData = { isBrochure: false, isMenu: false, name: file.originalname };
+                        // Validate at least one type is selected - UPDATED
+                        if (!link.isBrochure && !link.isMenu && !link.isShopNow && !link.isOrderNow) {
+                            return res.status(400).json({
+                                message: 'Each link must be marked as Brochure, Menu, Shop Now, or Order Now'
+                            });
+                        }
 
-                try {
-                    if (fileTypesArray[index]) {
-                        const parsed = JSON.parse(fileTypesArray[index]);
-                        fileTypeData = {
-                            isBrochure: parsed.isBrochure || false,
-                            isMenu: parsed.isMenu || false,
-                            name: parsed.name || file.originalname
-                        };
+                        // UPDATED: Include new fields
+                        processedLinks.push({
+                            url: link.url.trim(),
+                            name: link.name.trim(),
+                            isBrochure: Boolean(link.isBrochure),
+                            isMenu: Boolean(link.isMenu),
+                            isShopNow: Boolean(link.isShopNow),      // NEW
+                            isOrderNow: Boolean(link.isOrderNow),    // NEW
+                            addedAt: new Date().toISOString()
+                        });
                     }
-                } catch (e) {
-                    console.error("Error parsing fileType at index", index, ":", e);
                 }
-
-                uploadedFiles.push({
-                    path: `/uploads/files/${file.filename}`,
-                    name: fileTypeData.name,
-                    isBrochure: fileTypeData.isBrochure,
-                    isMenu: fileTypeData.isMenu,
-                    size: file.size,
-                    uploadedAt: new Date().toISOString()
+            } catch (e) {
+                console.error("Error parsing files:", e);
+                return res.status(400).json({
+                    message: "Invalid files format"
                 });
-            });
+            }
         }
 
-        console.log("✅ Final uploadedFiles array:", uploadedFiles);
+        console.log("✅ Processed links:", processedLinks);
 
-        // Create company with stringified files
+        // Create company
         const company = await Company.create({
             heading: null,
             companyName: req.body.companyName,
@@ -175,13 +192,13 @@ router.post("/company", authenticate, uploadCompanyFiles, async (req, res) => {
             displayUrl: req.body.displayUrl,
             email: req.body.email,
             bio: cleanBio || null,
-            logo: `/uploads/logos/${req.files.logo[0].filename}`,
+            logo: `/uploads/logos/${req.file.filename}`,
             view360: req.body.view360 || null,
             googleLocation: req.body.googleLocation || null,
             googleReviews: req.body.googleReviews || null,
             tripAdvisor: req.body.tripAdvisor || null,
             socialLinks: socialLinks,
-            files: uploadedFiles, // Sequelize will handle JSON stringification
+            files: processedLinks,
             label: req.body.label || null,
             country: req.body.country || null,
             streetAddress: req.body.streetAddress || null,
@@ -210,11 +227,11 @@ router.post("/company", authenticate, uploadCompanyFiles, async (req, res) => {
 });
 
 
+
 // ✅ Update company
-router.put("/company/:id", authenticate, uploadCompanyFiles, async (req, res) => {
+router.put("/company/:id", authenticate, uploadCompanyLogo, async (req, res) => {
     try {
         console.log("📝 Updating company:", req.params.id);
-        console.log("📥 Received files:", req.files);
         console.log("📥 Received body:", req.body);
 
         const company = await Company.findByPk(req.params.id);
@@ -240,65 +257,60 @@ router.put("/company/:id", authenticate, uploadCompanyFiles, async (req, res) =>
         // Sanitize bio
         const cleanBio = sanitizeHtml(req.body.bio || '', {
             allowedTags: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'blockquote'],
-            allowedAttributes: {
-                'a': ['href', 'target', 'rel']
-            }
+            allowedAttributes: { 'a': ['href', 'target', 'rel'] }
         });
 
-        // ✅ Handle files - merge existing and new
-        let allFiles = [];
+        // ✅ Handle links
+        let processedLinks = [];
 
-        // Keep existing files
-        if (req.body.existingFiles) {
+        if (req.body.files) {
             try {
-                const existing = JSON.parse(req.body.existingFiles);
-                if (Array.isArray(existing)) {
-                    allFiles = existing;
+                const links = JSON.parse(req.body.files);
+
+                if (Array.isArray(links)) {
+                    for (const link of links) {
+                        // Validate URL
+                        if (!link.url || !isValidUrl(link.url)) {
+                            return res.status(400).json({
+                                message: `Invalid URL: ${link.url || 'empty'}`
+                            });
+                        }
+
+                        // Validate name
+                        if (!link.name || !link.name.trim()) {
+                            return res.status(400).json({
+                                message: 'Link name is required'
+                            });
+                        }
+
+                        // Validate at least one type - UPDATED
+                        if (!link.isBrochure && !link.isMenu && !link.isShopNow && !link.isOrderNow) {
+                            return res.status(400).json({
+                                message: 'Each link must be marked as Brochure, Menu, Shop Now, or Order Now'
+                            });
+                        }
+
+                        // UPDATED: Include new fields
+                        processedLinks.push({
+                            url: link.url.trim(),
+                            name: link.name.trim(),
+                            isBrochure: Boolean(link.isBrochure),
+                            isMenu: Boolean(link.isMenu),
+                            isShopNow: Boolean(link.isShopNow),      // NEW
+                            isOrderNow: Boolean(link.isOrderNow),    // NEW
+                            addedAt: link.addedAt || new Date().toISOString()
+                        });
+                    }
                 }
-                console.log("📂 Existing files:", allFiles);
             } catch (e) {
-                console.error("Error parsing existingFiles:", e);
+                console.error("Error parsing files:", e);
+                return res.status(400).json({
+                    message: "Invalid files format"
+                });
             }
         }
 
-        // Add new uploaded files
-        if (req.files && req.files.files && req.files.files.length > 0) {
-            console.log("📁 Processing new files...");
-
-            const fileTypesArray = Array.isArray(req.body.fileTypes)
-                ? req.body.fileTypes
-                : (req.body.fileTypes ? [req.body.fileTypes] : []);
-
-            console.log("📋 FileTypes array:", fileTypesArray);
-
-            req.files.files.forEach((file, index) => {
-                let fileTypeData = { isBrochure: false, isMenu: false, name: file.originalname };
-
-                try {
-                    if (fileTypesArray[index]) {
-                        const parsed = JSON.parse(fileTypesArray[index]);
-                        fileTypeData = {
-                            isBrochure: parsed.isBrochure || false,
-                            isMenu: parsed.isMenu || false,
-                            name: parsed.name || file.originalname
-                        };
-                    }
-                } catch (e) {
-                    console.error("Error parsing fileType at index", index, ":", e);
-                }
-
-                allFiles.push({
-                    path: `/uploads/files/${file.filename}`,
-                    name: fileTypeData.name,
-                    isBrochure: fileTypeData.isBrochure,
-                    isMenu: fileTypeData.isMenu,
-                    size: file.size,
-                    uploadedAt: new Date().toISOString()
-                });
-            });
-        }
-
-        console.log("✅ Final allFiles array:", allFiles);
+        console.log("✅ Processed links:", processedLinks);
 
         const updateData = {
             heading: req.body.heading || null,
@@ -313,7 +325,7 @@ router.put("/company/:id", authenticate, uploadCompanyFiles, async (req, res) =>
             tripAdvisor: req.body.tripAdvisor || null,
             status: req.body.status || null,
             socialLinks: socialLinks,
-            files: allFiles, // Sequelize will handle JSON stringification
+            files: processedLinks,
             label: req.body.label || null,
             country: req.body.country || null,
             streetAddress: req.body.streetAddress || null,
@@ -324,14 +336,13 @@ router.put("/company/:id", authenticate, uploadCompanyFiles, async (req, res) =>
         };
 
         // Handle logo update
-        if (req.files && req.files.logo && req.files.logo[0]) {
-            updateData.logo = `/uploads/logos/${req.files.logo[0].filename}`;
+        if (req.file) {
+            updateData.logo = `/uploads/logos/${req.file.filename}`;
         } else if (req.body.existingLogo) {
             updateData.logo = req.body.existingLogo;
         }
 
         await company.update(updateData);
-
         const updatedCompany = await Company.findByPk(req.params.id);
 
         console.log("✅ Company updated successfully");
@@ -349,6 +360,7 @@ router.put("/company/:id", authenticate, uploadCompanyFiles, async (req, res) =>
         });
     }
 });
+
 
 // ✅ Delete company
 router.delete("/company/:id", authenticate, async (req, res) => {
@@ -665,11 +677,11 @@ router.get("/data", authenticate, async (req, res) => {
 router.post("/request-limits", authenticateToken, async (req, res) => {
     try {
         const userId = req.userId;
-        const { companies, contacts, reason } = req.body;
+        const { companies, contacts, reviews, reason } = req.body; // ADD reviews
 
-        if (!companies && !contacts) {
+        if (!companies && !contacts && !reviews) { // UPDATE validation
             return res.status(400).json({
-                message: "Request must include companies or contacts"
+                message: "Request must include companies, contacts, or reviews"
             });
         }
 
@@ -677,6 +689,7 @@ router.post("/request-limits", authenticateToken, async (req, res) => {
             userId,
             requestedCompanies: companies || 0,
             requestedContacts: contacts || 0,
+            requestedReviews: reviews || 0, // ADD THIS
             reason: reason || "",
             status: "pending"
         });
@@ -707,6 +720,7 @@ router.get("/request-history", authenticateToken, async (req, res) => {
                 "id",
                 "requestedCompanies",
                 "requestedContacts",
+                "requestedReviews",
                 "reason",
                 "status",
                 "createdAt",
@@ -726,6 +740,19 @@ router.get("/request-history", authenticateToken, async (req, res) => {
         });
     }
 });
+
+router.get("/review-count", authenticate, async (req, res) => {
+    try {
+        const count = await Review.count({
+            where: { userId: req.userId }
+        });
+        res.json({ count });
+    } catch (err) {
+        console.error("❌ Review count error:", err);
+        res.status(500).json({ message: "Failed to get review count" });
+    }
+});
+
 
 // GET /reviews - list reviews for logged-in user
 router.get("/reviews", authenticate, async (req, res) => {
@@ -760,17 +787,28 @@ function isValidUrlOrEmpty(v) {
     }
 }
 
-// POST /reviews - create single review
+// Update the POST /reviews endpoint to check limits (replace existing)
 router.post("/reviews", authenticate, async (req, res) => {
     try {
+        // Check review limit first
+        const user = await User.findByPk(req.userId);
+        const currentCount = await Review.count({
+            where: { userId: req.userId }
+        });
+
+        if (currentCount >= user.reviewLimit) {
+            return res.status(403).json({
+                message: "You've reached your review limit. Please request more from admin.",
+                limitReached: true
+            });
+        }
+
         const { companyId = null, branchName, location = null, googleLink = null, tripadvisorLink = null } = req.body;
 
-        // Validate mandatory fields
         if (!branchName || !String(branchName).trim()) {
             return res.status(400).json({ message: "Branch name is required" });
         }
 
-        // Validate URLs if provided
         if (!isValidUrlOrEmpty(googleLink)) {
             return res.status(400).json({ message: "Invalid googleLink URL" });
         }
@@ -778,7 +816,6 @@ router.post("/reviews", authenticate, async (req, res) => {
             return res.status(400).json({ message: "Invalid tripadvisorLink URL" });
         }
 
-        // optional: ensure company belongs to user (if companyId provided)
         if (companyId) {
             const company = await Company.findByPk(companyId);
             if (!company || company.userId !== req.userId) {
@@ -799,13 +836,13 @@ router.post("/reviews", authenticate, async (req, res) => {
         return res.status(201).json({ message: "Review saved", review: created });
     } catch (err) {
         console.error("❌ Create review error:", err);
-        // handle unique constraint violation gracefully
         if (err?.name === "SequelizeUniqueConstraintError") {
             return res.status(409).json({ message: "Duplicate entry: same branch already exists" });
         }
         return res.status(500).json({ message: "Failed to create review", error: err.message });
     }
 });
+
 
 // PUT /reviews/:id - update single review (owner only)
 router.put("/reviews/:id", authenticate, async (req, res) => {
@@ -870,18 +907,33 @@ router.delete("/reviews/:id", authenticate, async (req, res) => {
     }
 });
 
-// POST /reviews/bulk-save - bulk upsert (create or update) inside a transaction
+// Update bulk-save to also check limits (replace existing)
 router.post("/reviews/bulk-save", authenticate, async (req, res) => {
     const items = Array.isArray(req.body.items) ? req.body.items : [];
     if (!items.length) return res.status(400).json({ message: "No items provided" });
 
-    const sequelizeInstance = Review.sequelize; // get sequelize instance from model
+    // Check review limit
+    const user = await User.findByPk(req.userId);
+    const currentCount = await Review.count({
+        where: { userId: req.userId }
+    });
+
+    // Count new items (those without id)
+    const newItemsCount = items.filter(item => !item.id).length;
+
+    if (currentCount + newItemsCount > user.reviewLimit) {
+        return res.status(403).json({
+            message: `You can only add ${user.reviewLimit - currentCount} more review(s). Please request more from admin.`,
+            limitReached: true
+        });
+    }
+
+    const sequelizeInstance = Review.sequelize;
     const results = [];
 
     const t = await sequelizeInstance.transaction();
     try {
         for (const raw of items) {
-            // normalize fields
             const id = raw.id || null;
             const companyId = raw.companyId || null;
             const branchName = raw.branchName ? String(raw.branchName).trim() : null;
@@ -889,7 +941,6 @@ router.post("/reviews/bulk-save", authenticate, async (req, res) => {
             const googleLink = raw.googleLink ? String(raw.googleLink).trim() : null;
             const tripadvisorLink = raw.tripadvisorLink ? String(raw.tripadvisorLink).trim() : null;
 
-            // Validate required
             if (!branchName) {
                 await t.rollback();
                 return res.status(400).json({ message: "Branch name is required for each item" });
@@ -900,7 +951,6 @@ router.post("/reviews/bulk-save", authenticate, async (req, res) => {
                 return res.status(400).json({ message: "Invalid URL in one of the items" });
             }
 
-            // If companyId present, ensure it belongs to this user
             if (companyId) {
                 const company = await Company.findByPk(companyId);
                 if (!company || company.userId !== req.userId) {
@@ -910,7 +960,6 @@ router.post("/reviews/bulk-save", authenticate, async (req, res) => {
             }
 
             if (id) {
-                // Update existing record if belongs to user
                 const existing = await Review.findByPk(id, { transaction: t });
                 if (!existing) {
                     await t.rollback();
@@ -932,7 +981,6 @@ router.post("/reviews/bulk-save", authenticate, async (req, res) => {
 
                 results.push(updated);
             } else {
-                // Create new
                 const created = await Review.create({
                     userId: req.userId,
                     companyId: companyId || null,
@@ -948,7 +996,6 @@ router.post("/reviews/bulk-save", authenticate, async (req, res) => {
         }
 
         await t.commit();
-        // Reload user's reviews to return fresh state (optional)
         const userReviews = await Review.findAll({
             where: { userId: req.userId },
             include: [{ model: Company, as: "Company", attributes: ["id","companyName"] }],

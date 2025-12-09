@@ -29,6 +29,10 @@ const Request = sequelize.define(
             allowNull: false,
             defaultValue: 0,
         },
+        requestedReviews: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
         reason: {
             type: DataTypes.TEXT,
             allowNull: true,

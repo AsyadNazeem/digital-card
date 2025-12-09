@@ -77,6 +77,10 @@
                 <span class="limit-icon">👤</span>
                 <span>Contacts: <strong>{{ request.User?.contactLimit || 0 }}</strong></span>
               </div>
+              <div class="limit-item">
+                <span class="limit-icon">⭐</span>
+                <span>Reviews: <strong>{{ request.User?.reviewLimit || 0 }}</strong></span>
+              </div>
             </div>
           </div>
 
@@ -84,13 +88,17 @@
           <div class="requested-limits-info">
             <h4 class="info-title">Requested Additional</h4>
             <div class="limits-display">
-              <div class="limit-item highlight">
+              <div v-if="request.requestedCompanies > 0" class="limit-item highlight">
                 <span class="limit-icon">🏢</span>
                 <span>+{{ request.requestedCompanies }} companies</span>
               </div>
-              <div class="limit-item highlight">
+              <div v-if="request.requestedContacts > 0" class="limit-item highlight">
                 <span class="limit-icon">👤</span>
                 <span>+{{ request.requestedContacts }} contacts</span>
+              </div>
+              <div v-if="request.requestedReviews > 0" class="limit-item highlight">
+                <span class="limit-icon">⭐</span>
+                <span>+{{ request.requestedReviews }} reviews</span>
               </div>
             </div>
           </div>
@@ -171,8 +179,16 @@ const filteredRequests = computed(() => {
   return admin.requests.filter(r => r.status === requestFilter.value)
 })
 
+// UPDATE: Include reviews in the confirmation message
 async function approveRequest(request) {
-  if (!confirm(`Approve request for ${request.User?.name}?\n\nThis will add:\n+${request.requestedCompanies} companies\n+${request.requestedContacts} contacts`)) {
+  const parts = [];
+  if (request.requestedCompanies > 0) parts.push(`+${request.requestedCompanies} companies`);
+  if (request.requestedContacts > 0) parts.push(`+${request.requestedContacts} contacts`);
+  if (request.requestedReviews > 0) parts.push(`+${request.requestedReviews} reviews`);
+
+  const message = `Approve request for ${request.User?.name}?\n\nThis will add:\n${parts.join('\n')}`;
+
+  if (!confirm(message)) {
     return
   }
 

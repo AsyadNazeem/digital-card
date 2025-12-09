@@ -125,9 +125,11 @@
       </button>
 
       <!-- Additional Action Buttons -->
-      <!-- Additional Action Buttons -->
-      <div class="additional-actions" v-if="company.view360 || hasReviewLinks() || filesList.length">
-        <a
+      <div
+          class="additional-actions"
+          v-if="company.view360 || hasReviewLinks() || shopNowLinks.length || orderNowLinks.length || brochureLinks.length || menuLinks.length"
+          :class="{'additional-actions--two-lines': additionalActionsCount > 3}"
+      >        <a
             v-if="company.view360"
             :href="company.view360"
             target="_blank"
@@ -146,20 +148,63 @@
           <span>{{ t('reviews') }}</span>
         </button>
 
-        <!-- FILE BUTTONS: one button per saved file -->
-        <template v-for="(file, idx) in filesList" :key="idx">
+        <!-- Shop Now Links -->
+        <template v-for="(file, idx) in shopNowLinks" :key="'shop-' + idx">
           <a
-              :href="getFileUrl(file.path)"
-              class="action-link-secondary file-btn"
+              :href="getFileUrl(file)"
+              class="action-link-secondary shop-now-btn"
               target="_blank"
-              :title="getFileLabel(file)"
+              :title="file.name"
               rel="noopener noreferrer"
           >
             <span v-html="getFileIcon(file)" class="action-icon"></span>
-            <span>{{ getFileLabel(file) }}</span>
+            <span>{{ locale === 'ar' ? 'تسوق الآن' : 'Shop Now' }}</span>
+          </a>
+        </template>
+
+        <!-- Order Now Links -->
+        <template v-for="(file, idx) in orderNowLinks" :key="'order-' + idx">
+          <a
+              :href="getFileUrl(file)"
+              class="action-link-secondary order-now-btn"
+              target="_blank"
+              :title="file.name"
+              rel="noopener noreferrer"
+          >
+            <span v-html="getFileIcon(file)" class="action-icon"></span>
+            <span>{{ locale === 'ar' ? 'اطلب الآن' : 'Order Now' }}</span>
+          </a>
+        </template>
+
+        <!-- Brochure Links -->
+        <template v-for="(file, idx) in brochureLinks" :key="'brochure-' + idx">
+          <a
+              :href="getFileUrl(file)"
+              class="action-link-secondary brochure-btn"
+              target="_blank"
+              :title="file.name"
+              rel="noopener noreferrer"
+          >
+            <span v-html="getFileIcon(file)" class="action-icon"></span>
+            <span>{{ locale === 'ar' ? 'بروشور' : 'Brochure' }}</span>
+          </a>
+        </template>
+
+        <!-- Menu Links -->
+        <template v-for="(file, idx) in menuLinks" :key="'menu-' + idx">
+          <a
+              :href="getFileUrl(file)"
+              class="action-link-secondary menu-btn"
+              target="_blank"
+              :title="file.name"
+              rel="noopener noreferrer"
+          >
+            <span v-html="getFileIcon(file)" class="action-icon"></span>
+            <span>{{ locale === 'ar' ? 'قائمة' : 'Menu' }}</span>
           </a>
         </template>
       </div>
+
 
 
       <div class="company-details">
@@ -361,7 +406,7 @@ import {useRoute} from "vue-router";
 import {useI18n} from 'vue-i18n';
 import api from "../services/api";
 import {API_BASE_URL, VITE_IMAGE_UPLOAD_URL} from "../config.js";
-import { translateBatch, translateWithGoogle } from "../utils/translator";
+import {translateBatch} from "../utils/translator";
 
 const route = useRoute();
 const {t, locale} = useI18n();
@@ -402,6 +447,21 @@ const closeContactPopup = () => {
   };
 };
 
+const additionalActionsCount = computed(() => {
+  let count = 0;
+
+  if (company.value.view360) count++;
+  if (hasReviewLinks()) count++;
+
+  count += shopNowLinks.value.length;
+  count += orderNowLinks.value.length;
+  count += brochureLinks.value.length;
+  count += menuLinks.value.length;
+
+  return count;
+});
+
+
 const filesList = computed(() => {
   if (!company.value || !company.value.files) return [];
   if (Array.isArray(company.value.files)) return company.value.files;
@@ -414,36 +474,63 @@ const filesList = computed(() => {
   }
 });
 
-const getFileUrl = (path) => {
-  if (!path) return '';
-  if (/^https?:\/\//i.test(path)) return path; // already absolute
-  // API_BASE_URL is already imported at top of your file
-  return `${VITE_IMAGE_UPLOAD_URL}${path}`;
+// ✅ FIXED: Update the getFileUrl function (around line 40)
+const getFileUrl = (file) => {
+  if (!file || !file.url) return '';
+
+  // If it's already an absolute URL (http:// or https://), return as-is
+  if (/^https?:\/\//i.test(file.url)) {
+    return file.url;
+  }
+
+  // Otherwise, prepend the base URL (for uploaded files)
+  return `${VITE_IMAGE_UPLOAD_URL}${file.url}`;
 };
 
 // Choose label for button
 const getFileLabel = (file) => {
   if (!file) return locale.value === 'ar' ? 'ملف' : 'File';
+
+  // Priority order: Shop Now > Order Now > Menu > Brochure
+  if (file.isShopNow) return locale.value === 'ar' ? 'تسوق الآن' : 'Shop Now';
+  if (file.isOrderNow) return locale.value === 'ar' ? 'اطلب الآن' : 'Order Now';
   if (file.isMenu) return locale.value === 'ar' ? 'قائمة' : 'Menu';
   if (file.isBrochure) return locale.value === 'ar' ? 'بروشور' : 'Brochure';
-  return file.name || (locale.value === 'ar' ? 'ملف' : 'File');
+
+  return locale.value === 'ar' ? 'ملف' : 'File';
 };
+
 
 const getFileIcon = (file) => {
   if (!file) {
     return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
   }
-  // Menu (use a list icon)
+
+  // Priority order for icons
+  if (file.isShopNow) {
+    // Shopping bag icon
+    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`;
+  }
+
+  if (file.isOrderNow) {
+    // Shopping cart icon
+    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>`;
+  }
+
   if (file.isMenu) {
+    // List icon
     return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><circle cx="3" cy="6" r="1.5"></circle><circle cx="3" cy="12" r="1.5"></circle><circle cx="3" cy="18" r="1.5"></circle></svg>`;
   }
-  // Brochure / PDF (use document icon)
+
   if (file.isBrochure) {
+    // Document icon
     return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
   }
-  // default file icon
+
+  // Default file icon
   return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>`;
 };
+
 
 // Submit contact message
 async function submitContactMessage() {
@@ -527,6 +614,63 @@ async function submitContactMessage() {
     contactMessageLoading.value = false;
   }
 }
+
+const shopNowLinks = computed(() => {
+  if (!company.value || !company.value.files) return [];
+  const files = Array.isArray(company.value.files)
+      ? company.value.files
+      : (() => {
+        try {
+          return JSON.parse(company.value.files);
+        } catch {
+          return [];
+        }
+      })();
+  return files.filter(file => file.isShopNow);
+});
+
+const orderNowLinks = computed(() => {
+  if (!company.value || !company.value.files) return [];
+  const files = Array.isArray(company.value.files)
+      ? company.value.files
+      : (() => {
+        try {
+          return JSON.parse(company.value.files);
+        } catch {
+          return [];
+        }
+      })();
+  return files.filter(file => file.isOrderNow);
+});
+
+const brochureLinks = computed(() => {
+  if (!company.value || !company.value.files) return [];
+  const files = Array.isArray(company.value.files)
+      ? company.value.files
+      : (() => {
+        try {
+          return JSON.parse(company.value.files);
+        } catch {
+          return [];
+        }
+      })();
+  return files.filter(file => file.isBrochure);
+});
+
+const menuLinks = computed(() => {
+  if (!company.value || !company.value.files) return [];
+  const files = Array.isArray(company.value.files)
+      ? company.value.files
+      : (() => {
+        try {
+          return JSON.parse(company.value.files);
+        } catch {
+          return [];
+        }
+      })();
+  return files.filter(file => file.isMenu);
+});
+
 
 // Computed properties for displaying translated or original content
 const displayFirstName = computed(() => {
@@ -975,7 +1119,19 @@ const getSocialIcon = (name) => {
     tiktok: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#000000"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>`,
     instagram: `<svg width="28" height="28" viewBox="0 0 24 24" fill="url(#instagram-gradient)"><defs><linearGradient id="instagram-gradient" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FD5949;stop-opacity:1" /><stop offset="50%" style="stop-color:#D6249F;stop-opacity:1" /><stop offset="100%" style="stop-color:#285AEB;stop-opacity:1" /></linearGradient></defs><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/></svg>`,
     whatsapp: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>`,
-    // Add other social icons as needed (same as before)
+    twitch: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#6441A5"><path d="M4.3 0L1 3.3v17.4h5.8V24l3.4-3.3h4.4L23 12.3V0H4.3zm16.3 11.1l-3.4 3.3h-4.4l-3.4 3.3v-3.3H4.4V2.2h16.2v8.9zM13.2 6.7h2.2v4.5h-2.2V6.7zm-4.5 0h2.2v4.5H8.7V6.7z"/></svg>`,
+    threads: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#000000"><path d="M12 0C5.37 0 0 5.34 0 12s5.37 12 12 12 12-5.34 12-12S18.63 0 12 0zm3.23 14.69c-.42 1.53-1.94 2.58-3.98 2.58-2.56 0-4.14-1.63-4.14-4.17 0-2.5 1.65-4.22 4.1-4.22 2.39 0 3.96 1.57 4.07 3.84h-2.09c-.1-1.12-.85-1.89-1.98-1.89-1.26 0-2.04.97-2.04 2.45 0 1.55.81 2.49 2.09 2.49 1.02 0 1.76-.45 2.02-1.23h-1.91v-1.54h4c.05.3.06.64.06.97 0 .42-.04.82-.14 1.32z"/></svg>`,
+    github: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#000000"><path d="M12 .3A12 12 0 000 12.6c0 5.4 3.4 10 8.2 11.6.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.3-1.2-1.6-1.2-1.6-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 .1 1.6-.7 1.9-1.1.1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.4-5.5-6a4.7 4.7 0 011.3-3.3 4.3 4.3 0 01.1-3.2s1-.3 3.3 1.2a11.4 11.4 0 016 0c2.3-1.5 3.3-1.2 3.3-1.2a4.3 4.3 0 01.1 3.2 4.7 4.7 0 011.3 3.3c0 4.6-2.8 5.7-5.5 6 .4.4.8 1.1.8 2.3v3.3c0 .3.2.7.8.6A12.1 12.1 0 0024 12.6 12 12 0 0012 .3z"/></svg>`,
+    telegram: `<svg width="28" height="28" viewBox="0 0 240 240" fill="#0088cc"><path d="M120 0C53.7 0 0 53.7 0 120s53.7 120 120 120 120-53.7 120-120S186.3 0 120 0zm52.1 83.8l-18.1 85.3c-1.4 6.2-5.1 7.7-10.3 4.8l-28.6-21.1-13.8 13.3c-1.5 1.5-2.7 2.7-5.5 2.7l2-28.5 51.9-46.9c2.3-2.1-.5-3.3-3.5-1.2l-64.2 40.4-27.7-8.7c-6-1.9-6.1-6-1.3-8.9l108.2-41.7c5-1.9 9.4 1.2 7.8 8.2z"/></svg>`,
+    steam: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#1B2838"><path d="M12 0a12 12 0 00-11.9 11.1l6.4 2.8a3.6 3.6 0 013.5-2.7l3.1-4.9a4.7 4.7 0 11-1.7 6.5l-3-.8a3.6 3.6 0 110 5.2L.7 16.9A12 12 0 1012 0z"/></svg>`,
+    discord: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#5865F2"><path d="M20 0H4C1.8 0 0 1.8 0 4v16c0 2.2 1.8 4 4 4h14l-.7-2.5 1.7 1.6 1.7 1.5 3.3-3.3V4c0-2.2-1.8-4-4-4zm-6.3 15.2c0 0-1.1-1.3-2-1.3s-2 1.3-2 1.3c-2.4-.1-3.4-1.7-3.4-1.7 0-3.6 1.6-6.5 1.6-6.5 1.6-1.2 3.1-1.2 3.1-1.2l.1.1c-.7.2-1.3.6-1.8 1.1.8-.4 1.7-.6 2.6-.6.9 0 1.8.2 2.6.6-.5-.5-1.1-.9-1.8-1.1l.1-.1s1.5 0 3.1 1.2c0 0 1.6 2.9 1.6 6.5 0 0-1 1.6-3.4 1.7z"/></svg>`,
+    vimeo: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#1AB7EA"><path d="M23.98 6.62c-.1 2.22-1.64 5.26-4.64 9.15C16.1 19.88 13.8 22 11.7 22c-1.33 0-2.46-1.28-3.38-3.84-.62-2.27-1.17-4.53-1.75-6.8C5.97 9.59 5.3 8.92 4.3 9.03a9.32 9.32 0 01-2.2.41L1.36 7.7C2.92 6.06 4.36 4.36 5.67 2.6c1.07-1.27 2.3-1.94 3.68-2 2.4-.1 3.87 1.7 4.4 5.4.3 2.4.5 3.88.67 4.43.37 1.6.78 2.4 1.24 2.4.35 0 .87-.55 1.55-1.65.68-1.1 1.04-2 1.07-2.7.04-.95-.28-1.43-.97-1.43-.33 0-.66.07-1 .2.66-2.14 1.92-3.2 3.8-3.16 2.52.06 3.71 1.72 3.56 5.06z"/></svg>`,
+    medium: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#000000"><path d="M2 4v16h20V4H2zm6.8 4.6a2.3 2.3 0 110 4.6 2.3 2.3 0 010-4.6zm7.7 2.3c0 2.54-2 4.6-4.46 4.6-2.46 0-4.46-2.06-4.46-4.6s2-4.6 4.46-4.6C14.47 6.3 16.5 8.36 16.5 11zm2.7-2.3a1.6 1.6 0 110 3.2 1.6 1.6 0 010-3.2z"/></svg>`,
+    behance: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#1769FF"><path d="M7.2 10.2c.75 0 1.35-.63 1.35-1.38S7.95 7.5 7.2 7.5H3v2.7h4.2zm.15 1.35H3V15h4.35c.75 0 1.35-.66 1.35-1.5s-.6-1.35-1.35-1.35zm10.8-1.95c-1.41 0-2.52 1.11-2.52 2.52 0 1.41 1.11 2.52 2.52 2.52 1.41 0 2.55-1.11 2.55-2.52 0-1.41-1.14-2.52-2.55-2.52zM12 4.5h6.75v1.5H12V4.5z"/></svg>`,
+    dribbble: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#EA4C89"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm6.314 5.672a9.49 9.49 0 011.993 5.898c-.315-.063-3.482-.687-6.634-.297-.093-.211-.18-.423-.273-.634-.267-.6-.566-1.21-.886-1.81 3.375-1.35 5.351-3.204 5.8-3.657zm-2.402-1.64c-.387.404-2.165 2.137-5.41 3.329-1.7-3.115-3.585-5.602-3.987-6.139a9.49 9.49 0 019.397 2.81zM6.44 2.945c.372.472 2.24 2.927 3.992 6.116-4.258 1.126-8.03 1.097-8.613 1.084a9.49 9.49 0 014.62-7.2zM2.017 12.01v-.198c.58.013 5.313.04 9.953-1.299.258.503.503 1.017.733 1.53-.116.034-.233.067-.35.103-4.697 1.487-7.221 5.561-7.506 6.032a9.43 9.43 0 01-2.83-6.168zm4.74 7.32c.248-.46 2.055-3.617 6.94-5.33 1.195 3.108 1.69 5.722 1.79 6.38a9.455 9.455 0 01-8.73-1.05zm10.78.1c-.08-.53-.56-3.05-1.71-6.14 2.99-.47 5.614.3 6.07.44a9.44 9.44 0 01-4.36 5.7z"/></svg>`,
+    reddit: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#FF4500"><path d="M12 0a12 12 0 100 24 12 12 0 000-24zm5.48 10.52c.66 0 1.2.54 1.2 1.2s-.54 1.2-1.2 1.2c-.44 0-.82-.24-1.03-.6a5.48 5.48 0 01-2.98 1.6c.06.2.09.41.09.63 0 1.8-1.52 3.26-3.4 3.26-1.87 0-3.4-1.46-3.4-3.26 0-.22.03-.43.09-.63a5.48 5.48 0 01-2.98-1.6c-.21.36-.59.6-1.03.6-.66 0-1.2-.54-1.2-1.2s.54-1.2 1.2-1.2c.66 0 1.2.54 1.2 1.2 0 .22-.06.42-.16.6a4.11 4.11 0 002.45 1.3c.54-.86 1.58-1.46 2.76-1.46s2.22.6 2.76 1.46a4.11 4.11 0 002.45-1.3c-.1-.18-.16-.38-.16-.6 0-.66.54-1.2 1.2-1.2z"/></svg>`,
+    snapchat: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#FFFC00"><path d="M12 0c-2.77 0-5.02 2.25-5.02 5.02v.29c0 .47-.21.92-.57 1.22-.67.57-1.44 1.13-1.51 1.99-.09 1.14 1.1 1.85 2.03 2.18.46.16.94.34 1.07.79.17.58-.34 1.06-.85 1.3-.7.32-1.46.55-2.23.61-.52.04-.87.51-.75 1.02.2.84 1.22 1.22 2 1.39.57.12 1.18.17 1.64.53.35.27.51.73.66 1.14.43 1.16 1.43 2.02 2.64 2.34 1.79.46 3.71.46 5.5 0 1.21-.32 2.21-1.18 2.64-2.34.15-.41.31-.86.66-1.14.46-.36 1.07-.41 1.64-.53.78-.17 1.79-.55 2-1.39.12-.51-.23-.98-.75-1.02-.77-.06-1.53-.29-2.23-.61-.51-.24-1.03-.72-.85-1.3.13-.45.61-.63 1.07-.79.93-.33 2.12-1.04 2.03-2.18-.07-.86-.84-1.42-1.51-1.99-.36-.3-.57-.75-.57-1.22v-.29C17.02 2.25 14.77 0 12 0z"/></svg>`,
+    pinterest: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#E60023"><path d="M12 0C5.373 0 0 5.372 0 12c0 4.991 3.657 9.128 8.438 10.062-.117-.855-.223-2.168.047-3.103.242-.83 1.558-5.29 1.558-5.29s-.397-.794-.397-1.965c0-1.84 1.067-3.214 2.397-3.214 1.13 0 1.676.848 1.676 1.864 0 1.136-.724 2.835-1.095 4.413-.311 1.315.662 2.387 1.962 2.387 2.355 0 3.941-3.031 3.941-6.623 0-2.732-1.839-4.776-5.184-4.776-3.777 0-6.13 2.816-6.13 5.96 0 1.084.416 2.247.936 2.879.103.125.118.235.087.362-.095.398-.311 1.266-.354 1.441-.056.232-.183.281-.423.17-1.577-.733-2.557-3.034-2.557-4.889 0-3.976 2.892-7.626 8.342-7.626 4.376 0 7.771 3.12 7.771 7.289 0 4.343-2.739 7.834-6.54 7.834-1.277 0-2.478-.662-2.892-1.448l-.786 3c-.283 1.088-1.051 2.45-1.566 3.282C9.87 23.83 10.91 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>`,
   };
   return icons[normalizedName] || icons.facebook;
 };

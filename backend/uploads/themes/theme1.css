@@ -3,6 +3,34 @@
     /*font-family: 'Montserrat', sans-serif;*/
 }
 
+
+/* default: up to 3 buttons in a single row */
+.additional-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+/* buttons themselves */
+.additional-actions .action-link-secondary {
+    flex: 1 1 0;
+    text-align: center;
+}
+
+/* when there are MORE than 3 -> 2 columns, multiple rows */
+.additional-actions.additional-actions--two-lines {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 per row */
+    gap: 10px;
+}
+
+/* make each button fill its grid cell */
+.additional-actions.additional-actions--two-lines .action-link-secondary {
+    width: 100%;
+}
+
+
 .additional-actions .file-btn {
     display: inline-flex;
     align-items: center;

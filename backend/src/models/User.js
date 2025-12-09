@@ -71,6 +71,11 @@ const User = sequelize.define(
             defaultValue: 1,
         },
 
+        reviewLimit: {
+            type: DataTypes.INTEGER,
+            defaultValue: 1,
+        },
+
         role: {
             type: DataTypes.STRING,
             defaultValue: "user",

@@ -269,6 +269,20 @@
               </svg>
               Contacts ({{ contacts.length }})
             </button>
+
+            <button
+                @click="activeTab = 'review'"
+                class="tab-button"
+                :class="{ active: activeTab === 'review' }"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Review ({{ review.length }})
+            </button>
           </div>
 
           <!-- Tab Content -->
@@ -366,7 +380,6 @@
                 </table>
               </div>
             </div>
-
             <!-- Contacts Tab -->
             <div v-else-if="activeTab === 'contacts'">
               <div v-if="canCreateContact" style="margin-bottom: 20px;">
@@ -482,6 +495,114 @@
                 </table>
               </div>
             </div>
+            <!-- Review Tab -->
+            <div v-else-if="activeTab === 'review'">
+              <div v-if="canCreateReview" style="margin-bottom: 20px;">
+                <button @click="createReview" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Add Review
+                </button>
+              </div>
+              <div v-else style="margin-bottom: 20px; padding: 12px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                <strong>Review limit reached:</strong> {{ review.length }} / {{ selectedUser?.reviewLimit }}
+              </div>
+
+              <div v-if="review.length === 0" class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <p>No reviews registered</p>
+              </div>
+
+              <div v-else class="table-container">
+                <table class="data-table">
+                  <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Company</th>
+                    <th>Branch Name</th>
+                    <th>Location</th>
+                    <th>Google Review</th>
+                    <th>Tripadvisor</th>
+                    <th>Created Date</th>
+                    <th>Actions</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr v-for="(item, index) in review" :key="item.id">
+                    <td>{{ index + 1 }}</td>
+                    <td class="td-company">{{ item.Company?.companyName || '-' }}</td>
+                    <td class="td-name">
+                      <div class="name-cell">
+                        <span class="cell-icon">🏢</span>
+                        <span>{{ item.branchName }}</span>
+                      </div>
+                    </td>
+                    <td class="td-designation">{{ item.location || '-' }}</td>
+                    <td class="td-website">
+                      <a v-if="item.googleLink" :href="item.googleLink" target="_blank" class="link-external">
+                        View Link
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                          <polyline points="15 3 21 3 21 9"></polyline>
+                          <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                      </a>
+                      <span v-else class="text-muted">-</span>
+                    </td>
+                    <td class="td-website">
+                      <a v-if="item.tripadvisorLink" :href="item.tripadvisorLink" target="_blank" class="link-external">
+                        View Link
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                          <polyline points="15 3 21 3 21 9"></polyline>
+                          <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                      </a>
+                      <span v-else class="text-muted">-</span>
+                    </td>
+                    <td class="td-date">{{ formatDate(item.createdAt) }}</td>
+                    <td class="td-actions">
+                      <div style="display: flex; align-items: center; justify-content: center; gap: 5px">
+                        <button @click="editReview(item)" class="btn-view-card" title="Edit Review">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                          Edit
+                        </button>
+                        <button @click="openReviewShareModal(item)" class="btn-view-card" title="View Share Page">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                          </svg>
+                          Share
+                        </button>
+                        <button @click="deleteReview(item)" class="btn-delete" title="Delete Review">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -524,10 +645,20 @@
         @saved="handleContactSaved"
     />
 
+    <DashboardEditReview
+        :show="showEditReviewModal"
+        :review="selectedReview"
+        :userId="selectedUser?.id"
+        :companies="companies"
+        @close="showEditReviewModal = false"
+        @saved="handleReviewSaved"
+    />
+
   </div>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import {computed, nextTick, onMounted, ref} from 'vue'
 import {useAdminStore} from '@/store/adminStore.js'
 import {usePermissions} from '@/composables/usePermissions.js' // ADD THIS
@@ -537,8 +668,13 @@ import {VITE_FRONTEND_URL} from "@/config.js";
 import QRCode from "qrcode";
 import DashboardEditCompany from '../../components/admin/DashboardCompany.vue'
 import DashboardEditContact from '../../components/admin/DashboardContact.vue'
+import DashboardEditReview from '../../components/admin/DashboardReview.vue'
 
 const {can, isSuperAdmin, role} = usePermissions()
+const router = useRouter()
+
+const showEditReviewModal = ref(false)
+const selectedReview = ref(null)
 
 const showQrPopup = ref(false);
 const qrCanvas = ref(null);
@@ -576,6 +712,13 @@ const sortOrder = ref("newest"); // "newest" or "oldest"
 // Add these new refs for create mode
 const isCreatingCompany = ref(false)
 const isCreatingContact = ref(false)
+
+const review = ref([])
+const canCreateReview = computed(() => {
+  if (!selectedUser.value) return false
+  const reviewCount = review.value.length
+  return reviewCount < selectedUser.value.reviewLimit
+})
 
 // Add these computed properties
 const canCreateCompany = computed(() => {
@@ -897,12 +1040,79 @@ async function fetchUserData(userId) {
 
     const contactsRes = await adminApi.get(`/user/${userId}/contacts`)
     contacts.value = contactsRes.data.contacts || []
+
+    // ADD THIS:
+    const reviewsRes = await adminApi.get(`/user/${userId}/reviews`)
+    review.value = reviewsRes.data.reviews || []
+
   } catch (err) {
     console.error('Error fetching user data:', err)
     companies.value = []
     contacts.value = []
+    review.value = []
   } finally {
     loadingData.value = false
+  }
+}
+
+const createReview = () => {
+  if (!can(PERMISSIONS.EDIT_REVIEW)) {
+    alert('You do not have permission to create reviews')
+    return
+  }
+
+  selectedReview.value = {
+    userId: selectedUser.value.id,
+    // No id means it's a new review
+  }
+  showEditReviewModal.value = true
+}
+const editReview = (reviewItem) => {
+  if (!can(PERMISSIONS.EDIT_REVIEW)) {
+    alert('You do not have permission to edit reviews')
+    return
+  }
+
+  selectedReview.value = reviewItem
+  showEditReviewModal.value = true
+}
+
+async function handleReviewSaved() {
+  showEditReviewModal.value = false
+  selectedReview.value = null
+  if (selectedUser.value) {
+    await fetchUserData(selectedUser.value.id)
+  }
+}
+
+
+const deleteReview = async (reviewItem) => {
+  if (!can(PERMISSIONS.DELETE_REVIEW)) {
+    alert('You do not have permission to delete reviews')
+    return
+  }
+
+  if (!confirm(`Are you sure you want to delete the review for ${reviewItem.branchName}?`)) return
+
+  try {
+    await adminApi.delete(`/user/${selectedUser.value.id}/review/${reviewItem.id}`)
+    alert('✅ Review deleted successfully')
+    await fetchUserData(selectedUser.value.id)
+  } catch (err) {
+    console.error('Error deleting review:', err)
+    alert(err.response?.data?.message || 'Failed to delete review')
+  }
+}
+
+async function openReviewShareModal(reviewItem) {
+  try {
+    const res = await adminApi.post(`/dashboard/reviews/${reviewItem.id}/generate-share`, {}, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+    window.open(res.data.shareUrl, '_blank');
+  } catch (err) {
+    console.error("❌ openReviewShareModal error:", err);
+    alert("Failed to open review page: " + (err.response?.data?.message || err.message));
   }
 }
 

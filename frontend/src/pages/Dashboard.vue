@@ -6,8 +6,6 @@
         <img src="../assets/images/logo.jpeg" alt="Dashboard Logo" class="header-logo"/>
 
         <div class="user-info">
-          <span class="welcome-text">Welcome back</span>
-          <div class="user-avatar">A</div>
           <button @click="openSettings" class="btn-settings">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="3"></circle>
@@ -21,7 +19,7 @@
     </header>
 
     <!-- Request Limit Increase Banner -->
-    <div v-if="companyCount >= userLimits.companyLimit || contactCount >= userLimits.contactLimit" class="limit-banner">
+    <div v-if="companyCount >= userLimits.companyLimit || contactCount >= userLimits.contactLimit || reviewCount >= userLimits.reviewLimit" class="limit-banner">
       <div class="limit-banner-content">
         <div class="limit-banner-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -32,7 +30,7 @@
         </div>
         <div class="limit-banner-text">
           <h3>You've reached your limit!</h3>
-          <p>Request more companies or contacts from the admin to continue adding.</p>
+          <p>Request more companies, contacts, or reviews from the admin to continue adding.</p>
         </div>
         <button @click="showRequestModal = true" class="btn-request">
           Request More
@@ -102,7 +100,6 @@
 
       </div>
 
-
       <!-- COMPANY TAB -->
       <div v-if="activeTab === 'company'" class="content-card">
         <div v-if="!showCompanyForm">
@@ -145,12 +142,10 @@
               </thead>
 
               <tbody>
-              <tr v-for="(c,index) in paginatedCompanies" :key="c.id">
-                <td>{{ index + 1 }}</td>
-                <td>{{ c.companyName }}</td>
-
-                <!-- Logo Preview -->
-                <td>
+              <tr v-for="(c, index) in paginatedCompanies" :key="c.id">
+                <td data-label="#">{{ index + 1 }}</td>
+                <td data-label="Company Name">{{ c.companyName }}</td>
+                <td data-label="Logo">
                   <img
                       v-if="c.logo"
                       :src="`${VITE_IMAGE_UPLOAD_URL}${c.logo}`"
@@ -159,52 +154,26 @@
                   />
                   <span v-else>No logo</span>
                 </td>
-
-                <!-- Website link -->
-                <td>
+                <td data-label="Website">
                   <a :href="c.website" target="_blank" class="link">{{ c.website }}</a>
                 </td>
-
-                <td>{{ c.email }}</td>
-
-                <!-- 360 View -->
-                <td>
-                  <a
-                      v-if="c.view360"
-                      :href="c.view360"
-                      target="_blank"
-                      class="link"
-                  >View</a>
+                <td data-label="Email">{{ c.email }}</td>
+                <td data-label="360° View">
+                  <a v-if="c.view360" :href="c.view360" target="_blank" class="link">View</a>
                   <span v-else>-</span>
                 </td>
-
-                <!-- Google Location -->
-                <td>
-                  <a
-                      v-if="c.googleLocation"
-                      :href="c.googleLocation"
-                      target="_blank"
-                      class="link"
-                  >Location</a>
+                <td data-label="Location">
+                  <a v-if="c.googleLocation" :href="c.googleLocation" target="_blank" class="link">Location</a>
                   <span v-else>-</span>
                 </td>
-
-                <!-- Google Reviews -->
-                <td>
-                  <a
-                      v-if="c.googleReviews"
-                      :href="c.googleReviews"
-                      target="_blank"
-                      class="link"
-                  >Reviews</a>
+                <td data-label="Reviews">
+                  <a v-if="c.googleReviews" :href="c.googleReviews" target="_blank" class="link">Reviews</a>
                   <span v-else>-</span>
                 </td>
-
-                <td>
+                <td data-label="Status">
                   <span :class="['status-badge', c.status]">{{ c.status }}</span>
                 </td>
-
-                <td>
+                <td class="action-buttons">
                   <button class="btn-action edit" @click="editCompany(c)">✏️ Edit</button>
                   <button class="btn-action delete" @click="deleteCompany(c.id)">🗑️ Delete</button>
                 </td>
@@ -347,106 +316,176 @@
               </div>
             </div>
 
-            <!-- ✅ NEW: File Upload Section -->
-            <div class="form-section">
-              <h3 class="section-title">Company Files</h3>
+            <!-- Brochure/Menu Links Section -->
+            <div class="form-group full-width">
+              <label class="form-label">Links (Brochures, Menus, Shop, Orders)</label>
 
-              <!-- Existing Files Display -->
-              <div v-if="companyForm.files && companyForm.files.length > 0" class="uploaded-files-list">
-                <div
-                    v-for="(file, index) in companyForm.files"
-                    :key="index"
-                    class="uploaded-file-item"
-                >
-                  <div class="file-info">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                      <polyline points="13 2 13 9 20 9"></polyline>
-                    </svg>
-                    <div class="file-details">
-                      <span class="file-name">{{ file.name || file.path.split('/').pop() }}</span>
-                      <div class="file-badges">
-                        <span v-if="file.isBrochure" class="file-badge brochure">📄 Brochure</span>
-                        <span v-if="file.isMenu" class="file-badge menu">🍽️ Menu</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button @click="removeFile(index)" class="btn-remove-file" type="button" title="Remove file">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- File Upload Area -->
-              <div class="file-upload-section">
-                <div class="form-group full-width">
-                  <label class="form-label">Upload File (PDF, Images)</label>
-                  <div class="upload-area">
+              <!-- Add New Link Form -->
+              <div class="link-input-container" style="border: 1px solid #e0e0e0; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start;">
+                  <div>
                     <input
-                        type="file"
-                        @change="handleFileUpload"
-                        accept=".pdf,image/*"
-                        id="file-upload"
-                        class="file-input"
-                        ref="fileInput"
+                        v-model="pendingLinkUrl"
+                        type="url"
+                        class="form-input"
+                        placeholder="Enter link URL (e.g., https://example.com/brochure.pdf)"
+                        style="margin-bottom: 8px;"
                     />
-                    <label for="file-upload" class="upload-label">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                      </svg>
-                      <span>{{ pendingFileName || 'Click to upload brochure or menu' }}</span>
-                    </label>
-                  </div>
-                </div>
+                    <input
+                        v-model="pendingLinkName"
+                        type="text"
+                        class="form-input"
+                        placeholder="Link name (e.g., 2024 Product Catalog)"
+                        style="margin-bottom: 12px;"
+                    />
 
-                <!-- File Type Selection (only show when file is selected) -->
-                <div v-if="pendingFile" class="file-type-selection">
-                  <p class="selection-label">Select file type:</p>
-                  <div class="file-type-checkboxes">
-                    <div class="file-type-checkbox">
-                      <input
-                          type="checkbox"
-                          id="file-type-brochure"
-                          v-model="pendingFileType.isBrochure"
-                          class="checkbox-input"
-                      />
-                      <label for="file-type-brochure" class="checkbox-label">
-                        📄 Brochure
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                      <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input
+                            type="checkbox"
+                            v-model="pendingLinkType.isBrochure"
+                            style="margin-right: 8px;"
+                        />
+                        <span>📄 Brochure</span>
                       </label>
-                    </div>
-                    <div class="file-type-checkbox">
-                      <input
-                          type="checkbox"
-                          id="file-type-menu"
-                          v-model="pendingFileType.isMenu"
-                          class="checkbox-input"
-                      />
-                      <label for="file-type-menu" class="checkbox-label">
-                        🍽️ Menu
+
+                      <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input
+                            type="checkbox"
+                            v-model="pendingLinkType.isMenu"
+                            style="margin-right: 8px;"
+                        />
+                        <span>🍽️ Menu</span>
+                      </label>
+
+                      <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input
+                            type="checkbox"
+                            v-model="pendingLinkType.isShopNow"
+                            style="margin-right: 8px;"
+                        />
+                        <span>🛒 Shop Now</span>
+                      </label>
+
+                      <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input
+                            type="checkbox"
+                            v-model="pendingLinkType.isOrderNow"
+                            style="margin-right: 8px;"
+                        />
+                        <span>📦 Order Now</span>
                       </label>
                     </div>
                   </div>
+
                   <button
-                      @click="addFileToList"
-                      class="btn-add-file"
                       type="button"
-                      :disabled="!pendingFileType.isBrochure && !pendingFileType.isMenu"
+                      @click="addLinkToList"
+                      class="btn-primary"
+                      style="height: 40px; white-space: nowrap;"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    Add File
+                    + Add Link
                   </button>
                 </div>
               </div>
-            </div>
 
+              <!-- List of Added Links -->
+              <div v-if="companyForm.files && companyForm.files.length > 0" style="margin-top: 16px;">
+                <div
+                    v-for="(link, index) in companyForm.files"
+                    :key="index"
+                    style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px;
+          border: 1px solid #e0e0e0;
+          border-radius: 6px;
+          margin-bottom: 8px;
+          background: #f9f9f9;
+        "
+                >
+                  <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">
+                      {{ link.name || 'Untitled Link' }}
+                    </div>
+                    <div style="font-size: 0.85rem; color: #666; word-break: break-all; margin-bottom: 6px;">
+                      {{ link.url || link.path }}
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <span
+              v-if="link.isBrochure"
+              style="
+                background: #e3f2fd;
+                color: #1976d2;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.75rem;
+              "
+          >
+            📄 Brochure
+          </span>
+                      <span
+                          v-if="link.isMenu"
+                          style="
+                background: #fff3e0;
+                color: #f57c00;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.75rem;
+              "
+                      >
+            🍽️ Menu
+          </span>
+                      <span
+                          v-if="link.isShopNow"
+                          style="
+                background: #e8f5e9;
+                color: #388e3c;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.75rem;
+              "
+                      >
+            🛒 Shop Now
+          </span>
+                      <span
+                          v-if="link.isOrderNow"
+                          style="
+                background: #f3e5f5;
+                color: #7b1fa2;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.75rem;
+              "
+                      >
+            📦 Order Now
+          </span>
+                    </div>
+                  </div>
+
+                  <button
+                      type="button"
+                      @click="removeLink(index)"
+                      style="
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 12px;
+          "
+                  >
+                    🗑️ Remove
+                  </button>
+                </div>
+              </div>
+
+              <p v-else style="color: #999; font-style: italic; margin-top: 8px;">
+                No links added yet. Add brochures, menus, or other links above.
+              </p>
+            </div>
 
             <!-- Address Section -->
             <div class="form-section">
@@ -650,67 +689,31 @@
 
               <tbody>
               <tr v-for="(c, index) in paginatedContacts" :key="c.id">
-
-                <td>{{ index + 1 }}</td>
-                <!-- Full Name -->
-                <td><strong>{{ c.firstName }} {{ c.lastName }}</strong></td>
-
-                <!-- Mobile as clickable link to contact card -->
-                <td>
-                  <a
-                      :href="`/${c.mobile.replace(/\D/g, '')}`"
-                      target="_blank"
-                      class="link"
-                  >
+                <td data-label="#">{{ index + 1 }}</td>
+                <td data-label="Name"><strong>{{ c.firstName }} {{ c.lastName }}</strong></td>
+                <td data-label="Mobile">
+                  <a :href="`/${c.mobile.replace(/\D/g, '')}`" target="_blank" class="link">
                     {{ c.mobile }}
                   </a>
                 </td>
-
-                <td>{{ c.email }}</td>
-                <td>{{ c.designation }}</td>
-
-                <!-- Company (show name from relationship or store companyName in table) -->
-                <td>{{ c.Company?.companyName || '-' }}</td>
-
-                <td>
+                <td data-label="Email">{{ c.email }}</td>
+                <td data-label="Designation">{{ c.designation }}</td>
+                <td data-label="Company">{{ c.Company?.companyName || '-' }}</td>
+                <td data-label="Status">
                   <span :class="['status-badge', c.status]">{{ c.status }}</span>
                 </td>
-
-                <!-- Photo Preview -->
-                <td>
-                  <img
-                      v-if="c.photo"
-                      :src="`${VITE_IMAGE_UPLOAD_URL}${c.photo}`"
-                      class="photo-thumb"
-                      alt="Contact Photo"
-                  />
+                <td data-label="Photo">
+                  <img v-if="c.photo" :src="`${VITE_IMAGE_UPLOAD_URL}${c.photo}`" class="photo-thumb" alt="Contact Photo"/>
                   <span v-else>-</span>
                 </td>
-
-                <td>
-                  <button class="btn-primary" @click="saveToGoogleWallet(c)">
-                    Save
-                  </button>
-
+                <td data-label="Wallet">
+                  <button class="btn-primary" @click="saveToGoogleWallet(c)">Save</button>
                 </td>
-
-                <!-- Actions -->
                 <td class="action-buttons">
-                  <a
-                      :href="`/${c.mobile.replace(/\D/g, '')}`"
-                      target="_blank"
-                      class="btn-action view"
-                  > 👁 View </a>
-                  <button class="btn-action qr" @click="openQrPopup(c)">
-                    🔳 QR
-                  </button>
-
-                  <button class="btn-action edit" @click="editContact(c)">
-                    ✏️ Edit
-                  </button>
-                  <button class="btn-action delete" @click="deleteContact(c.id)">
-                    🗑️ Delete
-                  </button>
+                  <a :href="`/${c.mobile.replace(/\D/g, '')}`" target="_blank" class="btn-action view">👁 View</a>
+                  <button class="btn-action qr" @click="openQrPopup(c)">🔳 QR</button>
+                  <button class="btn-action edit" @click="editContact(c)">✏️ Edit</button>
+                  <button class="btn-action delete" @click="deleteContact(c.id)">🗑️ Delete</button>
                 </td>
               </tr>
               </tbody>
@@ -1007,85 +1010,6 @@
         </div>
       </div>
 
-      <!-- Theme Selection Section -->
-      <div v-if="activeTab === 'Theme'" class="content-card theme-section">
-        <div class="theme-header">
-          <div class="theme-header-content">
-            <h2 class="theme-title">Choose Your Contact Card Theme</h2>
-            <p class="theme-subtitle">
-              Personalize your digital business card with beautiful themes
-              <span v-if="userPlan === 'free'" class="plan-badge free">Free Plan</span>
-              <span v-else class="plan-badge premium">Premium Plan</span>
-            </p>
-          </div>
-        </div>
-
-        <!-- Loading State -->
-        <div v-if="themesLoading" class="themes-loading">
-          <div class="spinner"></div>
-          <p>Loading themes...</p>
-        </div>
-
-        <!-- Theme Grid -->
-        <div v-else class="theme-grid">
-          <div
-              v-for="theme in themes"
-              :key="theme.id"
-              class="theme-card"
-              :class="{
-            active: theme.id === selectedTheme,
-            disabled: theme.isPremium && userPlan === 'free'
-          }"
-              @click="handleThemeClick(theme)"
-          >
-            <!-- Premium Lock Overlay -->
-            <div v-if="theme.isPremium && userPlan === 'free'" class="premium-overlay">
-              <div class="premium-lock-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-              </div>
-              <span class="upgrade-text">Upgrade to Premium</span>
-            </div>
-
-            <!-- Real Theme Preview -->
-            <div class="theme-preview-wrapper">
-              <RealThemePreview
-                  :theme="theme"
-                  :contact="previewContact"
-                  :company="previewCompany"
-              />
-
-              <!-- Active Badge -->
-              <div v-if="theme.id === selectedTheme" class="active-badge">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span>Active</span>
-              </div>
-
-              <!-- Premium Badge -->
-              <div v-if="theme.isPremium" class="premium-badge">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-                <span>Premium</span>
-              </div>
-            </div>
-
-            <!-- Theme Info -->
-            <div class="theme-info">
-              <h3 class="theme-name">{{ theme.name }}</h3>
-              <p v-if="theme.description" class="theme-description">
-                {{ theme.description }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- REVIEW TAB -->
       <div v-if="activeTab === 'Review'" class="content-card">
         <div v-if="!showReviewForm">
@@ -1094,6 +1018,7 @@
             <button
                 class="btn-primary"
                 @click="openReviewForm"
+                v-if="reviewCount < userLimits.reviewLimit"
             >
               + Add Review
             </button>
@@ -1224,6 +1149,85 @@
                 <span v-else>Saving...</span>
               </button>
               <button class="btn-secondary" @click="closeReviewForm">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Selection Section -->
+      <div v-if="activeTab === 'Theme'" class="content-card theme-section">
+        <div class="theme-header">
+          <div class="theme-header-content">
+            <h2 class="theme-title">Choose Your Contact Card Theme</h2>
+            <p class="theme-subtitle">
+              Personalize your digital business card with beautiful themes
+              <span v-if="userPlan === 'free'" class="plan-badge free">Free Plan</span>
+              <span v-else class="plan-badge premium">Premium Plan</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="themesLoading" class="themes-loading">
+          <div class="spinner"></div>
+          <p>Loading themes...</p>
+        </div>
+
+        <!-- Theme Grid -->
+        <div v-else class="theme-grid">
+          <div
+              v-for="theme in themes"
+              :key="theme.id"
+              class="theme-card"
+              :class="{
+            active: theme.id === selectedTheme,
+            disabled: theme.isPremium && userPlan === 'free'
+          }"
+              @click="handleThemeClick(theme)"
+          >
+            <!-- Premium Lock Overlay -->
+            <div v-if="theme.isPremium && userPlan === 'free'" class="premium-overlay">
+              <div class="premium-lock-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+              <span class="upgrade-text">Upgrade to Premium</span>
+            </div>
+
+            <!-- Real Theme Preview -->
+            <div class="theme-preview-wrapper">
+              <RealThemePreview
+                  :theme="theme"
+                  :contact="previewContact"
+                  :company="previewCompany"
+              />
+
+              <!-- Active Badge -->
+              <div v-if="theme.id === selectedTheme" class="active-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Active</span>
+              </div>
+
+              <!-- Premium Badge -->
+              <div v-if="theme.isPremium" class="premium-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span>Premium</span>
+              </div>
+            </div>
+
+            <!-- Theme Info -->
+            <div class="theme-info">
+              <h3 class="theme-name">{{ theme.name }}</h3>
+              <p v-if="theme.description" class="theme-description">
+                {{ theme.description }}
+              </p>
             </div>
           </div>
         </div>
@@ -1506,6 +1510,29 @@
                         </div>
                       </div>
                     </div>
+
+                    <div class="settings-limit-card">
+                      <div class="settings-limit-icon review">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="9" cy="7" r="4"></circle>
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                      </div>
+                      <div class="settings-limit-details">
+                        <span class="settings-limit-label">Review</span>
+                        <div class="settings-limit-progress">
+                          <div class="settings-progress-bar">
+                            <div
+                                class="settings-progress-fill contact"
+                                :style="{ width: `${(reviewCount / userLimits.reviewLimit) * 100}%` }"
+                            ></div>
+                          </div>
+                          <span class="settings-limit-text">{{ reviewCount }} / {{ userLimits.reviewLimit }}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <!-- Request Form -->
@@ -1579,6 +1606,39 @@
                       <label class="form-label">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="2">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="9" cy="7" r="4"></circle>
+                        </svg>
+                        Additional Review Needed
+                      </label>
+                      <div class="settings-quantity-selector">
+                        <button type="button" @click="decrementSettingsReviews" class="settings-qty-btn">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                          </svg>
+                        </button>
+                        <input
+                            type="number"
+                            v-model.number="settingsRequestForm.reviews"
+                            min="0"
+                            max="500"
+                            class="settings-qty-input"
+                        />
+                        <button type="button" @click="incrementSettingsReviews" class="settings-qty-btn">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
                         Reason for Request (Optional)
@@ -1594,7 +1654,7 @@
                     <button
                         type="submit"
                         class="btn-primary"
-                        :disabled="settingsRequestLoading || (settingsRequestForm.companies === 0 && settingsRequestForm.contacts === 0)"
+                        :disabled="settingsRequestLoading || (settingsRequestForm.companies === 0 && settingsRequestForm.contacts === 0 && settingsRequestForm.reviews === 0)"
                     >
                       <svg v-if="!settingsRequestLoading" width="16" height="16" viewBox="0 0 24 24" fill="none"
                            stroke="currentColor" stroke-width="2">
@@ -1744,6 +1804,20 @@
                                 <span class="detail-value">{{ request.requestedContacts }}</span>
                               </div>
                             </div>
+
+                            <!-- After the contacts detail-item div -->
+                            <div class="detail-item" v-if="request.requestedReviews > 0">
+                              <div class="detail-icon review">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2">
+                                  <path d="M3 7h18M3 12h18M3 17h18"></path>
+                                </svg>
+                              </div>
+                              <div class="detail-content">
+                                <span class="detail-label">Reviews Requested</span>
+                                <span class="detail-value">{{ request.requestedReviews }}</span>
+                              </div>
+                            </div>
                           </div>
 
                           <div v-if="request.reason" class="request-reason">
@@ -1814,7 +1888,6 @@
         </div>
       </transition>
 
-
       <!-- Request Limit Increase Modal -->
       <transition name="modal">
         <div v-if="showRequestModal" class="modal-overlay" @click="showRequestModal = false">
@@ -1857,6 +1930,19 @@
                     <div class="limit-info">
                       <span class="limit-label">Contacts</span>
                       <span class="limit-value">{{ contactCount }} / {{ userLimits.contactLimit }}</span>
+                    </div>
+                  </div>
+                  <div class="limit-card">
+                    <div class="limit-icon review">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                      </svg>
+                    </div>
+                    <div class="limit-info">
+                      <span class="limit-label">Review</span>
+                      <span class="limit-value">{{ reviewCount }} / {{ userLimits.reviewLimit }}</span>
                     </div>
                   </div>
                 </div>
@@ -1930,6 +2016,35 @@
                 <div class="request-form-group">
                   <label class="request-label">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 7h18M3 12h18M3 17h18"></path>
+                    </svg>
+                    How many reviews do you need?
+                  </label>
+                  <div class="quantity-selector">
+                    <button type="button" @click="decrementReviews" class="qty-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <input
+                        type="number"
+                        v-model.number="requestForm.reviews"
+                        min="0"
+                        max="100"
+                        class="qty-input"
+                    />
+                    <button type="button" @click="incrementReviews" class="qty-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="request-form-group">
+                  <label class="request-label">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
                     Reason for request (optional)
@@ -1944,7 +2059,7 @@
 
                 <div class="request-actions">
                   <button type="submit" class="btn-submit-request"
-                          :disabled="requestLoading || (requestForm.companies === 0 && requestForm.contacts === 0)">
+                          :disabled="requestLoading || (requestForm.companies === 0 && requestForm.contacts === 0 && requestForm.reviews === 0)">
                     <svg v-if="!requestLoading" width="18" height="18" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2">
                       <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
@@ -1966,7 +2081,6 @@
         </div>
       </transition>
 
-
       <!-- QR CODE POPUP -->
       <transition name="modal">
         <div v-if="showQrPopup" class="qr-popup-overlay">
@@ -1986,7 +2100,6 @@
           </div>
         </div>
       </transition>
-
 
       <!-- Theme Confirmation Modal with Large Preview -->
       <transition name="modal">
@@ -2044,42 +2157,6 @@
           </div>
         </div>
       </transition>
-
-<!--      &lt;!&ndash; REVIEW SHARE QR MODAL &ndash;&gt;-->
-<!--      <transition name="modal">-->
-<!--        <div v-if="showReviewShareModal" class="modal-overlay" @click="showReviewShareModal = false">-->
-<!--          <div class="modal-container" @click.stop>-->
-<!--            <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;">-->
-<!--              <h3>Share QR Codes</h3>-->
-<!--              <button class="modal-close" @click="showReviewShareModal = false">✕</button>-->
-<!--            </div>-->
-
-<!--            <div style="display:flex;gap:28px;align-items:flex-start;justify-content:center;padding:16px 8px;">-->
-<!--              <div style="text-align:center;">-->
-<!--                <h4 style="margin:6px 0 12px 0;">Google</h4>-->
-<!--                <canvas ref="shareQrCanvas1"></canvas>-->
-<!--                <p style="max-width:280px;word-break:break-all;font-size:12px;margin-top:8px;">-->
-<!--                  {{ reviewShareData.googleLink || reviewShareData.shareUrl }}-->
-<!--                </p>-->
-<!--              </div>-->
-
-<!--              <div style="text-align:center;">-->
-<!--                <h4 style="margin:6px 0 12px 0;">Tripadvisor</h4>-->
-<!--                <canvas ref="shareQrCanvas2"></canvas>-->
-<!--                <p style="max-width:280px;word-break:break-all;font-size:12px;margin-top:8px;">-->
-<!--                  {{ reviewShareData.tripadvisorLink || reviewShareData.shareUrl }}-->
-<!--                </p>-->
-<!--              </div>-->
-<!--            </div>-->
-
-<!--            <div style="text-align:center;padding:12px;">-->
-<!--              <a :href="reviewShareData.shareUrl" target="_blank" class="btn-outline" style="margin-right:8px;">Open share page</a>-->
-<!--              <button class="btn-primary" @click="downloadBothQRCodes">Download Both</button>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </transition>-->
-
 
       <!-- Logo Cropper Modal -->
       <ImageCropperModal
@@ -2184,14 +2261,16 @@ const usernameLoading = ref(false);
 const whatsappSameAsMobile = ref(true);
 const whatsappCountryCode = ref('+1');
 
-// Add to your existing ref declarations
-const pendingFile = ref(null);
-const pendingFileName = ref('');
-const pendingFileType = ref({
+
+// Add these to your ref declarations (replace the file-related refs)
+const pendingLinkUrl = ref('');
+const pendingLinkName = ref('');
+const pendingLinkType = ref({
   isBrochure: false,
-  isMenu: false
+  isMenu: false,
+  isShopNow: false,    // NEW
+  isOrderNow: false    // NEW
 });
-const fileInput = ref(null);
 
 const companyForm = ref({
   companyName: "",
@@ -2279,10 +2358,12 @@ const showLinkPopup = ref(false);
 const copyMessage = ref("");
 
 const userPhone = ref(""); // store the logged user's phone
+const reviewCount = ref(0);
 
 const userLimits = ref({
   companyLimit: 1,
   contactLimit: 1,
+  reviewLimit: 1,
   role: "user",
 });
 
@@ -2295,6 +2376,7 @@ const showRequestModal = ref(false);
 const requestForm = ref({
   companies: 0,
   contacts: 0,
+  reviews: 0,  // ADD THIS
   reason: ''
 });
 const requestLoading = ref(false);
@@ -2305,6 +2387,7 @@ const requestSuccess = ref(false);
 const settingsRequestForm = ref({
   companies: 0,
   contacts: 0,
+  reviews: 0,  // ADD THIS
   reason: ''
 });
 const settingsRequestLoading = ref(false);
@@ -2375,90 +2458,113 @@ const publicCardUrl = computed(() => {
   return `${baseUrl}/${fullNumber}`;
 });
 
-
-// File upload handler
-function handleFileUpload(event) {
-  const file = event.target.files[0];
-  if (file) {
-    // Validate file type
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('Please upload a PDF or image file (JPG, PNG)');
-      event.target.value = '';
-      return;
-    }
-
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      alert('File size must be less than 10MB');
-      event.target.value = '';
-      return;
-    }
-
-    pendingFile.value = file;
-    pendingFileName.value = file.name;
-    pendingFileType.value = {
-      isBrochure: false,
-      isMenu: false
-    };
+// Add increment/decrement functions
+function incrementReviews() {
+  if (requestForm.value.reviews < 100) {
+    requestForm.value.reviews++;
   }
 }
 
-// Add file to the list
-function addFileToList() {
-  if (!pendingFile.value) return;
+function decrementReviews() {
+  if (requestForm.value.reviews > 0) {
+    requestForm.value.reviews--;
+  }
+}
 
-  if (!pendingFileType.value.isBrochure && !pendingFileType.value.isMenu) {
-    alert('Please select at least one file type (Brochure or Menu)');
+// Validate URL format
+function isValidUrl(string) {
+  try {
+    const url = new URL(string);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
+// Add link to the list
+function addLinkToList() {
+  const url = pendingLinkUrl.value.trim();
+  const name = pendingLinkName.value.trim();
+
+  if (!url) {
+    alert('Please enter a URL');
     return;
   }
 
-  // Add to files array
+  if (!isValidUrl(url)) {
+    alert('Please enter a valid URL (must start with http:// or https://)');
+    return;
+  }
+
+  if (!name) {
+    alert('Please enter a name for this link');
+    return;
+  }
+
+  // Updated validation to include new checkboxes
+  if (!pendingLinkType.value.isBrochure &&
+      !pendingLinkType.value.isMenu &&
+      !pendingLinkType.value.isShopNow &&
+      !pendingLinkType.value.isOrderNow) {
+    // Auto-set to Brochure if nothing selected
+    pendingLinkType.value.isBrochure = true;
+    console.log('No type selected, defaulting to Brochure');
+  }
+
+  // Initialize files array if needed
   if (!companyForm.value.files) {
     companyForm.value.files = [];
   }
 
+  // Add to files array with new fields
   companyForm.value.files.push({
-    file: pendingFile.value,
-    name: pendingFileName.value,
-    isBrochure: pendingFileType.value.isBrochure,
-    isMenu: pendingFileType.value.isMenu,
-    isNew: true // Flag to indicate this needs to be uploaded
+    url: url,
+    name: name,
+    isBrochure: pendingLinkType.value.isBrochure,
+    isMenu: pendingLinkType.value.isMenu,
+    isShopNow: pendingLinkType.value.isShopNow,      // NEW
+    isOrderNow: pendingLinkType.value.isOrderNow,    // NEW
+    isNew: true
   });
 
-  // Reset pending file state
-  pendingFile.value = null;
-  pendingFileName.value = '';
-  pendingFileType.value = {
+  // Reset pending link state with new fields
+  pendingLinkUrl.value = '';
+  pendingLinkName.value = '';
+  pendingLinkType.value = {
     isBrochure: false,
-    isMenu: false
+    isMenu: false,
+    isShopNow: false,    // NEW
+    isOrderNow: false    // NEW
   };
-
-  // Clear file input
-  if (fileInput.value) {
-    fileInput.value.value = '';
-  }
 }
 
-// Remove file from list
-function removeFile(index) {
-  if (confirm('Are you sure you want to remove this file?')) {
+
+// Remove link from list (keep this function, just rename from removeFile)
+function removeLink(index) {
+  if (confirm('Are you sure you want to remove this link?')) {
     companyForm.value.files.splice(index, 1);
   }
 }
 
 async function saveToGoogleWallet(contact) {
   try {
-    // Build share URL
     const cleanedPhone = contact.cardMobileNum || contact.mobile;
     const shareUrl = `${window.location.origin}/${cleanedPhone.replace(/\D/g, '')}`;
 
-    console.log("🎫 Requesting wallet save for:", {
-      name: `${contact.firstName} ${contact.lastName}`,
-      phone: cleanedPhone,
-      shareUrl
-    });
+    // ✅ Ensure paths start with / if they're relative
+    const companyLogo = contact.Company?.logo
+        ? (contact.Company.logo.startsWith('http')
+            ? contact.Company.logo
+            : `/uploads/photos/${contact.Company.logo.split('/').pop()}`) // Just filename
+        : '';
+
+    const photo = contact.photo
+        ? (contact.photo.startsWith('http')
+            ? contact.photo
+            : `/uploads/photos/${contact.photo.split('/').pop()}`) // Just filename
+        : '';
+
+    console.log("🎫 Image paths:", { companyLogo, photo });
 
     const res = await api.post('/wallet/google/save-url', {
       contact: {
@@ -2467,11 +2573,16 @@ async function saveToGoogleWallet(contact) {
         lastName: contact.lastName,
         phone: cleanedPhone,
         email: contact.email,
-        designation: contact.designation || contact.jobTitle || '',
+        designation: contact.designation || '',
         companyName: contact.Company?.companyName || '',
+        companyLogo, // ✅ Cleaned path
+        photo,       // ✅ Cleaned path
+        website: contact.Company?.website || '',
+        address: contact.Company?.streetAddress || '',
+        whatsapp: contact.whatsapp || '',
         shareUrl,
-        googleReview: contact.googleReviews || '',
-        tripAdvisor: contact.tripAdvisor || '',
+        googleReview: contact.Company?.googleReviews || '',
+        tripAdvisor: contact.Company?.tripAdvisor || '',
       },
       objectIdSuffix: `contact_${contact.id}`,
     });
@@ -2479,14 +2590,11 @@ async function saveToGoogleWallet(contact) {
     console.log("✅ Received save URL:", res.data.saveUrl);
 
     if (res.data.saveUrl) {
-      // Try to open in same tab for mobile devices
       if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
         window.location.href = res.data.saveUrl;
       } else {
-        // Desktop: open in new tab
         const walletWindow = window.open(res.data.saveUrl, '_blank');
         if (!walletWindow) {
-          // Popup blocked - try direct navigation
           console.warn("⚠️ Popup blocked, redirecting in same tab");
           window.location.href = res.data.saveUrl;
         }
@@ -2536,7 +2644,15 @@ function makeEmptyReviewRow(overrides = {}) {
 }
 
 // UI helpers
+// Update openReviewForm function (around line 400)
 function openReviewForm() {
+  // Check limit before opening
+  if (reviewCount.value >= userLimits.value.reviewLimit) {
+    alert(`⚠️ You've reached your review limit (${userLimits.value.reviewLimit}). Please request more from admin.`);
+    showRequestModal.value = true; // Open request modal
+    return;
+  }
+
   showReviewForm.value = true;
   if (reviewFormRows.value.length === 0) reviewFormRows.value.push(makeEmptyReviewRow());
 }
@@ -2551,26 +2667,31 @@ function addEmptyRow() {
 }
 
 
-// New addMore(index) - validate current row then add new empty row after it
+// Update addMore function to check limits (around line 430)
 function addMore(index) {
   const row = reviewFormRows.value[index];
   if (!row) {
-    // fallback: just add a row if something odd
     reviewFormRows.value.push(makeEmptyReviewRow());
     return;
   }
 
-  // Validate current row first
   const ok = validateRow(row);
 
   if (!ok) {
-    // Scroll to the first error field optionally (nice UX), but at minimum show message inline
-    // Keep focus on the invalid field - best-effort:
     alert('Please fill all mandatory fields before adding a new row.');
     return;
   }
 
-  // If current row is valid, insert a new empty row after the current index
+  // Check if adding would exceed limit
+  const newItemsCount = reviewFormRows.value.filter(r => !r.id).length + 1;
+  const existingCount = reviewCount.value;
+
+  if (existingCount + newItemsCount > userLimits.value.reviewLimit) {
+    alert(`⚠️ Adding another row would exceed your limit (${userLimits.value.reviewLimit}). Please request more from admin.`);
+    showRequestModal.value = true;
+    return;
+  }
+
   reviewFormRows.value.splice(index + 1, 0, makeEmptyReviewRow());
 }
 
@@ -2643,18 +2764,18 @@ async function loadReviews() {
     const res = await api.get('/dashboard/reviews', {
       headers: {Authorization: `Bearer ${token}`}
     });
-    // Expect res.data.reviews as array
     reviewItems.value = res.data.reviews || [];
+    reviewCount.value = reviewItems.value.length; // ADD THIS
   } catch (err) {
     console.error('Error loading reviews:', err);
     reviewItems.value = [];
+    reviewCount.value = 0; // ADD THIS
   }
 }
 
 
 // ----- Bulk save all rows (upsert) -----
 async function saveAllReviews() {
-  // validate
   let ok = true;
   for (const r of reviewFormRows.value) {
     if (!validateRow(r)) ok = false;
@@ -2666,7 +2787,6 @@ async function saveAllReviews() {
 
   savingReviews.value = true;
   try {
-    // send payload (server should handle create/update by id)
     const payload = reviewFormRows.value.map(r => ({
       id: r.id || null,
       companyId: r.companyId,
@@ -2680,20 +2800,25 @@ async function saveAllReviews() {
       headers: {Authorization: `Bearer ${token}`}
     });
 
-    // if server returns the full list, use it; otherwise refresh
     if (res.data.reviews) {
       reviewItems.value = res.data.reviews;
     } else {
       await loadReviews();
     }
 
-    // clear form
+    reviewCount.value = reviewItems.value.length;
     reviewFormRows.value = [];
     showReviewForm.value = false;
     alert('All review entries saved.');
   } catch (err) {
     console.error('Bulk save error:', err);
-    alert('Failed to save reviews. You can try saving rows individually.');
+
+    if (err.response?.data?.limitReached) {
+      alert(err.response.data.message);
+      showRequestModal.value = true; // Open request modal
+    } else {
+      alert('Failed to save reviews: ' + (err.response?.data?.message || err.message));
+    }
   } finally {
     savingReviews.value = false;
   }
@@ -3215,10 +3340,25 @@ function decrementSettingsContacts() {
   }
 }
 
+function decrementSettingsReviews () {
+  if (settingsRequestForm.value.reviews > 0) {
+    settingsRequestForm.value.reviews--;
+  }
+}
+
+function incrementSettingsReviews () {
+  if (settingsRequestForm.value.reviews < 100) {
+    settingsRequestForm.value.reviews++;
+  }
+}
+
 // Submit Settings Request Function
 async function submitSettingsRequest() {
-  if (settingsRequestForm.value.companies === 0 && settingsRequestForm.value.contacts === 0) {
-    settingsRequestMessage.value = "Please request at least one company or contact.";
+  // UPDATE THIS CONDITION
+  if (settingsRequestForm.value.companies === 0 &&
+      settingsRequestForm.value.contacts === 0 &&
+      settingsRequestForm.value.reviews === 0) {
+    settingsRequestMessage.value = "Please request at least one item.";
     settingsRequestSuccess.value = false;
     return;
   }
@@ -3232,6 +3372,7 @@ async function submitSettingsRequest() {
         {
           companies: settingsRequestForm.value.companies,
           contacts: settingsRequestForm.value.contacts,
+          reviews: settingsRequestForm.value.reviews,  // ADD THIS
           reason: settingsRequestForm.value.reason
         },
         {
@@ -3242,9 +3383,9 @@ async function submitSettingsRequest() {
     settingsRequestSuccess.value = true;
     settingsRequestMessage.value = res.data.message || "Request submitted successfully! admin will review your request.";
 
-    // Reset form after 3 seconds
+    // Reset form after 3 seconds - UPDATE THIS
     setTimeout(() => {
-      settingsRequestForm.value = {companies: 0, contacts: 0, reason: ''};
+      settingsRequestForm.value = {companies: 0, contacts: 0, reviews: 0, reason: ''};
       settingsRequestMessage.value = '';
     }, 3000);
 
@@ -3301,8 +3442,8 @@ function decrementContacts() {
 
 // Submit Request Function
 async function submitRequest() {
-  if (requestForm.value.companies === 0 && requestForm.value.contacts === 0) {
-    requestMessage.value = "Please request at least one company or contact.";
+  if (requestForm.value.companies === 0 && requestForm.value.contacts === 0 && requestForm.value.reviews === 0) {
+    requestMessage.value = "Please request at least one item.";
     requestSuccess.value = false;
     return;
   }
@@ -3316,6 +3457,7 @@ async function submitRequest() {
         {
           companies: requestForm.value.companies,
           contacts: requestForm.value.contacts,
+          reviews: requestForm.value.reviews, // ADD THIS
           reason: requestForm.value.reason
         },
         {
@@ -3324,12 +3466,11 @@ async function submitRequest() {
     );
 
     requestSuccess.value = true;
-    requestMessage.value = res.data.message || "Request submitted successfully! admin will review your request.";
+    requestMessage.value = res.data.message || "Request submitted successfully!";
 
-    // Reset form after 2 seconds
     setTimeout(() => {
       showRequestModal.value = false;
-      requestForm.value = {companies: 0, contacts: 0, reason: ''};
+      requestForm.value = {companies: 0, contacts: 0, reviews: 0, reason: ''};
       requestMessage.value = '';
     }, 2000);
 
@@ -3391,7 +3532,7 @@ function editCompany(selectedCompany) {
     googleReviews: selectedCompany.googleReviews,
     status: selectedCompany.status,
     logo: null,
-    // NEW ADDRESS FIELDS
+    // Address fields
     country: selectedCompany.country || "",
     streetAddress: selectedCompany.streetAddress || "",
     streetAddressLine2: selectedCompany.streetAddressLine2 || "",
@@ -3400,7 +3541,8 @@ function editCompany(selectedCompany) {
     poBox: selectedCompany.poBox || "",
     label: selectedCompany.label || "",
     tripAdvisor: selectedCompany.tripAdvisor || "",
-    files: selectedCompany.files || [] // ✅ ADD THIS
+    // ✅ Load existing links
+    files: selectedCompany.files || []
   };
 
   // Set logo preview if exists
@@ -3442,6 +3584,16 @@ function editCompany(selectedCompany) {
       });
     }
   });
+
+  // ✅ Reset pending link inputs
+  pendingLinkUrl.value = '';
+  pendingLinkName.value = '';
+  pendingLinkType.value = {
+    isBrochure: false,
+    isMenu: false,
+    isShopNow: false,    // NEW
+    isOrderNow: false    // NEW
+  };
 
   showCompanyForm.value = true;
 }
@@ -3893,21 +4045,21 @@ function removeCustomSocial(index) {
   customSocialMedia.value.splice(index, 1);
 }
 
+// Update loadData function to include reviewLimit and count (around line 850)
 async function loadData() {
   try {
     const res = await api.get("/dashboard/data", {
       headers: {Authorization: `Bearer ${token}`},
     });
 
-    // ✅ Handle single company from backend
     userCompanies.value = res.data.companies || [];
     contacts.value = res.data.contacts || [];
 
-    // ✅ Update counts
+    // Update counts
     companyCount.value = userCompanies.value.length;
     contactCount.value = contacts.value.length;
 
-    // ✅ Fetch user info
+    // Fetch user info
     const userRes = await api.get("/auth/me", {
       headers: {Authorization: `Bearer ${token}`},
     });
@@ -3917,9 +4069,13 @@ async function loadData() {
     user.value.phone = userData.phone || "";
     userLimits.value.companyLimit = userData.companyLimit;
     userLimits.value.contactLimit = userData.contactLimit;
+    userLimits.value.reviewLimit = userData.reviewLimit; // ADD THIS
     userLimits.value.role = userData.role;
 
     await loadReviews();
+
+    // Get review count
+    reviewCount.value = reviewItems.value.length;
 
     console.log("✅ Dashboard data loaded successfully.");
   } catch (err) {
@@ -4001,36 +4157,27 @@ async function saveCompany() {
       formData.append('existingLogo', companyForm.value.existingLogoPath);
     }
 
-    // ✅ FIXED: Handle files with correct format
-    const existingFiles = [];
+    // ✅ FIXED: Handle links (brochures/menus/shop/order)
+    const linksToSave = [];
 
     if (companyForm.value.files && companyForm.value.files.length > 0) {
-      companyForm.value.files.forEach((fileObj) => {
-        if (fileObj.isNew && fileObj.file instanceof File) {
-          // New file to upload
-          formData.append('files', fileObj.file);
-
-          // ✅ Send each file's metadata as a separate JSON string
-          formData.append('fileTypes', JSON.stringify({
-            isBrochure: fileObj.isBrochure,
-            isMenu: fileObj.isMenu,
-            name: fileObj.name
-          }));
-        } else if (!fileObj.isNew) {
-          // Existing file to keep
-          existingFiles.push({
-            path: fileObj.path,
-            name: fileObj.name,
-            isBrochure: fileObj.isBrochure,
-            isMenu: fileObj.isMenu
-          });
-        }
+      companyForm.value.files.forEach((linkObj) => {
+        linksToSave.push({
+          url: linkObj.url || linkObj.path, // Support both new and existing
+          name: linkObj.name,
+          isBrochure: linkObj.isBrochure || false,
+          isMenu: linkObj.isMenu || false,
+          isShopNow: linkObj.isShopNow || false,      // ✅ ADDED
+          isOrderNow: linkObj.isOrderNow || false,    // ✅ ADDED
+          addedAt: linkObj.addedAt || new Date().toISOString()
+        });
       });
     }
 
-    // Send existing files as JSON
-    if (existingFiles.length > 0) {
-      formData.append('existingFiles', JSON.stringify(existingFiles));
+    // Send links as JSON string
+    if (linksToSave.length > 0) {
+      formData.append('files', JSON.stringify(linksToSave));
+      console.log('📤 Sending links:', linksToSave); // Debug log
     }
 
     // Determine URL and method
@@ -4087,8 +4234,16 @@ async function saveCompany() {
       };
       logoPreview.value = null;
       logoFileName.value = '';
-      pendingFile.value = null;
-      pendingFileName.value = '';
+
+      // Reset link inputs
+      pendingLinkUrl.value = '';
+      pendingLinkName.value = '';
+      pendingLinkType.value = {
+        isBrochure: false,
+        isMenu: false,
+        isShopNow: false,
+        isOrderNow: false
+      };
 
       // Reset social media
       mainSocialMedia.value.forEach(social => {
@@ -4107,6 +4262,7 @@ async function saveCompany() {
     alert('Failed to save company: ' + err.message);
   }
 }
+
 
 async function saveContact() {
   try {
@@ -4481,22 +4637,6 @@ onMounted(loadData);
 
 .url-open-btn:active {
   transform: translateY(0);
-}
-
-/* Responsive Design */
-@media (max-width: 640px) {
-  .url-preview-input {
-    font-size: 0.8rem;
-  }
-
-  .url-preview-box {
-    flex-wrap: wrap;
-  }
-
-  .url-copy-btn,
-  .url-open-btn {
-    padding: 6px 8px;
-  }
 }
 
 .header-logo {
@@ -5337,21 +5477,6 @@ onMounted(loadData);
   border: 1px solid #fecaca;
 }
 
-/* Responsive */
-@media (max-width: 480px) {
-  .phone-popup-container {
-    padding: 1.5rem;
-  }
-
-  .phone-popup-title {
-    font-size: 1.25rem;
-  }
-
-  .phone-popup-description {
-    font-size: 0.8125rem;
-  }
-}
-
 .phone-input-group {
   display: flex;
   align-items: center;
@@ -5777,35 +5902,6 @@ onMounted(loadData);
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .modal-layout {
-    flex-direction: column;
-    height: auto;
-    max-height: 90vh;
-  }
-
-  .settings-sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .settings-nav {
-    flex-direction: row;
-    overflow-x: auto;
-  }
-
-  .settings-content {
-    padding: 1.5rem;
-  }
-
-  .modal-close-btn {
-    top: 0.75rem;
-    right: 0.75rem;
-  }
 }
 
 /* Container */
@@ -6267,120 +6363,6 @@ onMounted(loadData);
   border-top: 1px solid #e2e8f0;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .form-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  }
-
-  .social-links-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard-container {
-    padding: 1rem;
-  }
-
-  .header-content {
-    padding: 1rem;
-  }
-
-  .content-card {
-    padding: 1rem;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .social-links-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .tabs-container {
-    flex-direction: column;
-  }
-
-  .tab-button {
-    border-bottom: none;
-    border-left: 2px solid transparent;
-    justify-content: flex-start;
-  }
-
-  .tab-button.active {
-    border-left-color: #4f46e5;
-    border-bottom-color: transparent;
-  }
-
-  .card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .form-actions {
-    flex-direction: column;
-  }
-
-  .btn-primary,
-  .btn-secondary {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .custom-social-item {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-
-  .table-container {
-    border-radius: 0.5rem;
-    border: 1px solid #e2e8f0;
-  }
-
-  .data-table {
-    font-size: 0.75rem;
-  }
-
-  .data-table th,
-  .data-table td {
-    padding: 0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .header-title {
-    font-size: 1.25rem;
-  }
-
-  .welcome-text {
-    display: none;
-  }
-
-  .upload-label {
-    padding: 1.5rem 1rem;
-    font-size: 0.875rem;
-  }
-
-  .image-preview {
-    width: 120px;
-    height: 120px;
-  }
-}
-
-/* Desktop Optimization */
-@media (min-width: 1400px) {
-  .form-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .social-links-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
 /* Limit Banner */
 .limit-banner {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
@@ -6717,57 +6699,6 @@ onMounted(loadData);
   border: 1px solid #fecaca;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .limit-banner {
-    padding: 1rem;
-  }
-
-  .limit-banner-content {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .btn-request {
-    width: 100%;
-  }
-
-  .limits-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .request-modal-body {
-    padding: 1.5rem;
-  }
-
-  .request-actions {
-    flex-direction: column;
-  }
-
-  .btn-submit-request,
-  .btn-cancel-request {
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .request-modal-header {
-    padding: 1rem 1.5rem;
-  }
-
-  .request-modal-title {
-    font-size: 1.25rem;
-  }
-
-  .quantity-selector {
-    padding: 0.5rem 0.75rem;
-  }
-
-  .qty-input {
-    font-size: 1rem;
-  }
-}
-
 /* Settings Limits Display */
 .settings-limits-display {
   display: flex;
@@ -6920,22 +6851,6 @@ onMounted(loadData);
   margin: 0;
 }
 
-/* Responsive adjustments for settings limits */
-@media (max-width: 768px) {
-  .settings-limit-card {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .settings-limit-progress {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .settings-progress-bar {
-    width: 100%;
-  }
-}
 
 /* History Loading State */
 .history-loading {
@@ -7273,40 +7188,6 @@ onMounted(loadData);
   border: 1px dashed #cbd5e1;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .history-filters {
-    flex-direction: column;
-  }
-
-  .filter-btn {
-    flex: auto;
-  }
-
-  .history-card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .request-details {
-    grid-template-columns: 1fr;
-  }
-
-  .detail-item {
-    padding: 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .history-card-body {
-    padding: 1rem;
-  }
-
-  .detail-value {
-    font-size: 1rem;
-  }
-}
 
 .dashboard-wrapper {
   background: linear-gradient(135deg, #fafaf8 0%, #f5f5f0 100%); /* Changed from purple gradient */
@@ -7765,5 +7646,1130 @@ onMounted(loadData);
 .btn-share {
   background: #10b981;
   color: white;
+}
+
+/* ============================================
+   MOBILE & TABLET RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablets and smaller desktops (1024px and below) */
+@media (max-width: 1024px) {
+  .dashboard-container {
+    padding: 1.5rem;
+  }
+
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .social-links-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .theme-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+/* Small tablets (768px and below) */
+@media (max-width: 768px) {
+  /* Header adjustments */
+  .dashboard-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-content {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .header-logo {
+    height: 40px;
+  }
+
+  .user-info {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .welcome-text {
+    display: none;
+  }
+
+  .btn-settings,
+  .logout-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  /* Limit Banner */
+  .limit-banner {
+    padding: 1rem;
+  }
+
+  .limit-banner-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .limit-banner-icon {
+    margin: 0 auto;
+  }
+
+  .btn-request {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Container */
+  .dashboard-container {
+    padding: 1rem;
+  }
+
+  /* Tabs */
+  .tabs-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tabs-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-buttons {
+    min-width: max-content;
+  }
+
+  .tab-button {
+    padding: 0.875rem 1rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  /* Content Cards */
+  .content-card {
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Forms */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .social-links-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .custom-social-item {
+    grid-template-columns: auto 1fr;
+    gap: 0.5rem;
+  }
+
+  .custom-social-item .form-input:last-child {
+    grid-column: 1 / -1;
+  }
+
+  /* Form Actions */
+  .form-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  /* Upload Areas */
+  .upload-label {
+    padding: 1.5rem 1rem;
+  }
+
+  .image-preview {
+    width: 120px;
+    height: 120px;
+  }
+
+  /* Table Controls */
+  .table-controls {
+    margin-bottom: 1rem;
+  }
+
+  .search-input {
+    width: 100%;
+    max-width: none;
+  }
+
+  /* ============================================
+     MOBILE TABLE CARDS - ENHANCED STYLING
+     ============================================ */
+
+  /* Hide table headers on mobile */
+  .data-table thead {
+    display: none;
+  }
+
+  /* Reset table display */
+  .data-table,
+  .data-table tbody,
+  .data-table tr,
+  .data-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .data-table {
+    border: 0;
+    font-size: 0.875rem;
+  }
+
+  /* Table body - card container */
+  .data-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* Individual card row */
+  .data-table tr {
+    background: #ffffff;
+    border: 1px solid #e5e1dc;
+    border-radius: 12px;
+    padding: 0;
+    margin-bottom: 0;
+    box-shadow: 0 2px 8px rgba(92, 64, 51, 0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  .data-table tr:hover {
+    box-shadow: 0 4px 16px rgba(92, 64, 51, 0.12);
+    transform: translateY(-2px);
+  }
+
+  /* Card header (first cell - typically ID or Name) */
+  .data-table td:first-child {
+    background: linear-gradient(135deg, #5c4033 0%, #7d5a4f 100%);
+    color: white;
+    padding: 1rem 1.25rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .data-table td:first-child:before {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Regular data cells */
+  .data-table td {
+    border: none;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    position: relative;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 1rem;
+    align-items: center;
+    min-height: 50px;
+    border-bottom: 1px solid #f5f3f0;
+  }
+
+  .data-table td:last-child {
+    border-bottom: none;
+  }
+
+  /* Data labels */
+  .data-table td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    grid-column: 1;
+  }
+
+  /* Data values */
+  .data-table td > * {
+    grid-column: 2;
+  }
+
+  /* Special styling for different data types */
+
+  /* Images/Thumbnails */
+  .logo-thumb,
+  .photo-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    justify-self: start;
+  }
+
+  /* Links */
+  .data-table td .link {
+    color: #5c4033;
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color 0.2s;
+    word-break: break-all;
+  }
+
+  .data-table td .link:hover {
+    color: #7d5a4f;
+    text-decoration: underline;
+  }
+
+  /* Status badges */
+  .status-badge {
+    display: inline-block;
+    padding: 0.375rem 0.875rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    justify-self: start;
+  }
+
+  .status-badge.active {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .status-badge.inactive {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  /* Action buttons section */
+  .data-table td.action-buttons {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    background: #f8f6f4;
+    margin-top: 0.5rem;
+  }
+
+  .data-table td.action-buttons:before {
+    content: 'Actions';
+    grid-column: 1 / -1;
+    color: #5c4033;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e5e1dc;
+  }
+
+  .data-table td.action-buttons .btn-action {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .btn-action.view {
+    background: #3498db;
+    color: white;
+  }
+
+  .btn-action.view:hover {
+    background: #2980b9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+  }
+
+  .btn-action.qr {
+    background: #9b59b6;
+    color: white;
+  }
+
+  .btn-action.qr:hover {
+    background: #8e44ad;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(155, 89, 182, 0.3);
+  }
+
+  .btn-action.edit {
+    background: #f39c12;
+    color: white;
+  }
+
+  .btn-action.edit:hover {
+    background: #e67e22;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(243, 156, 18, 0.3);
+  }
+
+  .btn-action.delete {
+    background: #e74c3c;
+    color: white;
+  }
+
+  .btn-action.delete:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+  }
+
+  /* Primary button in table (like Save to Wallet) */
+  .data-table td .btn-primary {
+    width: auto;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    justify-self: start;
+  }
+
+  /* Table container adjustments */
+  .table-container {
+    overflow-x: visible;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  /* Pagination */
+  .pagination {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+  }
+
+  .page-btn {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    min-width: 40px;
+  }
+
+  /* Theme Grid */
+  .theme-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .theme-preview-wrapper {
+    height: 350px;
+  }
+
+  /* Settings Modal */
+  .modal-layout {
+    flex-direction: column;
+    height: auto;
+    max-height: 90vh;
+  }
+
+  .settings-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .settings-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0.75rem;
+    scrollbar-width: none;
+  }
+
+  .settings-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .settings-nav-item {
+    white-space: nowrap;
+  }
+
+  .settings-content {
+    padding: 1.5rem 1rem;
+  }
+
+  .modal-close-btn {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
+  /* Request Modal */
+  .request-modal-container,
+  .phone-popup-container {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .request-modal-header,
+  .phone-popup-header {
+    padding: 0 0 1rem 0;
+  }
+
+  .request-modal-title,
+  .phone-popup-title {
+    font-size: 1.25rem;
+  }
+
+  .limits-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .request-actions {
+    flex-direction: column;
+  }
+
+  .btn-submit-request,
+  .btn-cancel-request {
+    width: 100%;
+  }
+
+  /* Quantity Selectors */
+  .quantity-selector,
+  .settings-quantity-selector {
+    padding: 0.625rem 0.75rem;
+  }
+
+  /* History Cards */
+  .history-filters {
+    gap: 0.375rem;
+    padding: 0.375rem;
+  }
+
+  .filter-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .history-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .history-card-body {
+    padding: 1rem;
+  }
+
+  .request-details {
+    grid-template-columns: 1fr;
+  }
+
+  /* Phone Input Groups */
+  .phone-input-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .country-dropdown-wrapper {
+    width: 100%;
+  }
+
+  .country-trigger {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .phone-number-input,
+  .form-input {
+    width: 100%;
+  }
+
+  /* Country Dropdown Menu */
+  .country-dropdown-menu {
+    width: 100%;
+    max-height: 60vh;
+  }
+
+  /* URL Preview */
+  .url-preview-container {
+    margin-top: 0.75rem;
+    padding: 1rem;
+    background: #f8f6f4;
+    border-radius: 8px;
+  }
+
+  .url-preview-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #5c4033;
+    margin-bottom: 0.75rem;
+  }
+
+  .url-preview-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .url-preview-input {
+    font-size: 0.8rem;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid #e5e1dc;
+    border-radius: 6px;
+    width: 100%;
+  }
+
+  .url-copy-btn,
+  .url-open-btn {
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .url-copy-btn {
+    background: #5c4033;
+    color: white;
+  }
+
+  .url-open-btn {
+    background: #3498db;
+    color: white;
+  }
+
+  /* File Upload Section */
+  .uploaded-files-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .uploaded-file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f6f4;
+    border-radius: 8px;
+    border: 1px solid #e5e1dc;
+  }
+
+  .file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+  }
+
+  .file-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .file-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  .file-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .file-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  .file-badge.brochure {
+    background: #e3f2fd;
+    color: #1976d2;
+  }
+
+  .file-badge.menu {
+    background: #fff3e0;
+    color: #f57c00;
+  }
+
+  .file-type-selection {
+    padding: 1rem;
+    background: #f8f6f4;
+    border-radius: 8px;
+    margin-top: 0.75rem;
+  }
+
+  .selection-label {
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #5c4033;
+  }
+
+  .file-type-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .file-type-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .checkbox-input {
+    width: 20px;
+    height: 20px;
+  }
+
+  .checkbox-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  /* QR Popup */
+  .qr-popup {
+    width: 90%;
+    max-width: 320px;
+    padding: 1.5rem;
+  }
+
+  .qr-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .qr-actions button {
+    width: 100%;
+  }
+
+  /* Theme Confirm Modal */
+  .theme-confirm-modal {
+    margin: 1rem;
+    max-height: 85vh;
+  }
+
+  .confirm-preview-large {
+    height: 450px;
+  }
+
+  .confirm-actions {
+    flex-direction: column;
+  }
+
+  .btn-cancel,
+  .btn-confirm {
+    width: 100%;
+  }
+
+  /* Empty State */
+  .empty-state {
+    padding: 3rem 1.5rem;
+    text-align: center;
+  }
+
+  .empty-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    color: #94a3b8;
+  }
+
+  .empty-text {
+    font-size: 1rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+  }
+
+  .link-button {
+    color: #5c4033;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 2px solid #5c4033;
+    transition: all 0.2s;
+  }
+
+  .link-button:hover {
+    color: #7d5a4f;
+  }
+}
+
+/* Mobile phones (480px and below) */
+@media (max-width: 480px) {
+  /* Header */
+  .header-content {
+    padding: 0.625rem 0.75rem;
+  }
+
+  .header-logo {
+    height: 35px;
+  }
+
+  .header-title {
+    font-size: 1.125rem;
+  }
+
+  .user-avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.75rem;
+  }
+
+  .btn-settings,
+  .logout-btn {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  /* Limit Banner */
+  .limit-banner-text h3 {
+    font-size: 0.95rem;
+  }
+
+  .limit-banner-text p {
+    font-size: 0.8rem;
+  }
+
+  /* Container */
+  .dashboard-container {
+    padding: 0.75rem;
+  }
+
+  /* Tabs */
+  .tab-button {
+    padding: 0.75rem 0.875rem;
+    font-size: 0.75rem;
+  }
+
+  .tab-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Cards */
+  .content-card {
+    padding: 0.875rem;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  /* Enhanced Mobile Card Styling */
+  .data-table tbody {
+    gap: 1rem;
+  }
+
+  .data-table tr {
+    border-radius: 10px;
+  }
+
+  .data-table td {
+    padding: 0.875rem 1rem;
+    grid-template-columns: 100px 1fr;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .data-table td:first-child {
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+  }
+
+  .data-table td:before {
+    font-size: 0.75rem;
+  }
+
+  .logo-thumb,
+  .photo-thumb {
+    width: 50px;
+    height: 50px;
+  }
+
+  .data-table td.action-buttons {
+    padding: 1rem;
+    gap: 0.625rem;
+  }
+
+  .data-table td.action-buttons .btn-action {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8rem;
+  }
+
+  /* Forms */
+  .form-label {
+    font-size: 0.8rem;
+  }
+
+  .form-input,
+  .form-select {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .section-title {
+    font-size: 0.95rem;
+  }
+
+  /* Buttons */
+  .btn-primary,
+  .btn-secondary,
+  .btn-add-more {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Upload Areas */
+  .upload-label {
+    padding: 1.25rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .image-preview {
+    width: 100px;
+    height: 100px;
+  }
+
+  /* Status Badges */
+  .status-badge,
+  .status-pill {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.625rem;
+  }
+
+  /* Theme Cards */
+  .theme-preview-wrapper {
+    height: 300px;
+  }
+
+  .theme-info {
+    padding: 1rem;
+  }
+
+  .theme-name {
+    font-size: 1rem;
+  }
+
+  .theme-description {
+    font-size: 0.8rem;
+  }
+
+  /* Modals */
+  .modal-container,
+  .request-modal-container,
+  .phone-popup-container {
+    margin: 0.75rem;
+    padding: 1.25rem;
+  }
+
+  .settings-panel-title,
+  .request-modal-title,
+  .phone-popup-title {
+    font-size: 1.125rem;
+  }
+
+  .settings-panel-desc,
+  .phone-popup-description {
+    font-size: 0.8rem;
+  }
+
+  /* Country Dropdown */
+  .country-list {
+    max-height: 50vh;
+  }
+
+  .country-item {
+    padding: 0.625rem 0.875rem;
+  }
+
+  /* Confirm Modal */
+  .confirm-preview-large {
+    height: 380px;
+  }
+
+  .confirm-content h4 {
+    font-size: 1.125rem;
+  }
+
+  .confirm-content p {
+    font-size: 0.875rem;
+  }
+
+  /* Review Form */
+  .form-actions {
+    gap: 0.625rem;
+  }
+
+  .btn-outline,
+  .btn-danger {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Extra small devices (360px and below) */
+@media (max-width: 360px) {
+  .header-logo {
+    height: 30px;
+  }
+
+  .header-title {
+    font-size: 1rem;
+  }
+
+  .tab-button {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.7rem;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8rem;
+  }
+
+  .data-table td {
+    grid-template-columns: 90px 1fr;
+    padding: 0.75rem 0.875rem;
+    font-size: 0.8rem;
+  }
+
+  .data-table td:before {
+    font-size: 0.7rem;
+  }
+
+  .theme-preview-wrapper {
+    height: 250px;
+  }
+
+  .modal-container {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+}
+
+/* Landscape orientation fixes */
+@media (max-width: 768px) and (orientation: landscape) {
+  .modal-container,
+  .request-modal-container,
+  .phone-popup-container {
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+
+  .theme-preview-wrapper,
+  .confirm-preview-large {
+    height: 280px;
+  }
+
+  .country-list {
+    max-height: 40vh;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase tap targets */
+  .btn-action,
+  .btn-close,
+  .btn-remove,
+  .remove-image,
+  .btn-remove-file {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Improve scroll behavior */
+  .tabs-container,
+  .table-container,
+  .settings-nav,
+  .country-list {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent zoom on input focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Accessibility improvements for mobile */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .data-table thead {
+    display: table-header-group;
+  }
+
+  .data-table,
+  .data-table tbody,
+  .data-table tr,
+  .data-table td {
+    display: table;
+  }
+
+  .data-table tr {
+    display: table-row;
+  }
+
+  .data-table td {
+    display: table-cell;
+  }
+
+  .btn-action,
+  .pagination {
+    display: none;
+  }
 }
 </style>

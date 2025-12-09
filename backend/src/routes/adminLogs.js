@@ -3,6 +3,7 @@ import { authenticateAdmin } from "../middleware/adminAuth.js";
 import AdminLog from "../models/AdminLog.js";
 import Admin from "../models/Admin.js";
 import { Op } from "sequelize";
+import sequelize from "../config/database.js"; // ADD THIS IMPORT
 
 const router = express.Router();
 
@@ -275,5 +276,9 @@ router.delete("/logs/cleanup", authenticateAdmin, async (req, res) => {
         });
     }
 });
+
+// REMOVE THE EXAMPLE ROUTE BELOW - IT SHOULDN'T BE IN THIS FILE
+// The route starting with router.get('/user/:userId/companies'...
+// should be in your admin.js routes file instead
 
 export default router;

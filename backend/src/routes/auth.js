@@ -162,6 +162,7 @@ router.get("/me", authenticateToken, async (req, res) => {
                 "status",
                 "companyLimit",
                 "contactLimit",
+                "reviewLimit",
                 "role",
                 "plan",
                 "selectedThemeId"
