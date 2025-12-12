@@ -15,7 +15,7 @@ import Theme from "./models/Theme.js";
 import AdminLog from "./models/AdminLog.js";
 import UserPermission from "./models/UserPermission.js";
 import PermissionChange from "./models/PermissionChange.js";
-import Review from "./models/Review.js"; // ✅ ALREADY ADDED
+import Review from "./models/Review.js";
 
 // ROUTES
 import authRoutes from "./routes/auth.js";
@@ -53,7 +53,7 @@ const models = {
     AdminLog,
     UserPermission,
     PermissionChange,
-    Review // ✅ ALREADY ADDED
+    Review
 };
 
 // RUN ALL ASSOCIATIONS
@@ -118,8 +118,150 @@ app.get('/api/reviews/share/:companyName/:branchName', async (req, res) => {
     }
 });
 
+app.get('/:companyName/:branchName', async (req, res, next) => {
+    try {
+        const { companyName, branchName } = req.params;
 
-// /:mobile route comes AFTER /api/r/:code
+        // Skip API routes
+        if (companyName === 'api' || companyName === 'r') {
+            return next();
+        }
+
+        // Skip if first param looks like a mobile number
+        if (/^[0-9]{7,15}$/.test(companyName)) {
+            return next();
+        }
+
+        const decodedCompany = decodeURIComponent(String(companyName).replace(/-/g, ' '));
+        const decodedBranch = decodeURIComponent(String(branchName).replace(/-/g, ' '));
+
+        const decodedCompanyNormal = decodedCompany.trim().toLowerCase();
+        const decodedBranchNormal = decodedBranch.trim().toLowerCase();
+
+        const review = await Review.findOne({
+            where: sequelizeWhere(fn('LOWER', col('Review.branchName')), decodedBranchNormal),
+            include: [{
+                model: Company,
+                as: 'Company',
+                where: sequelizeWhere(fn('LOWER', col('Company.companyName')), decodedCompanyNormal),
+                attributes: ['id', 'companyName', 'logo']
+            }],
+            limit: 1
+        });
+
+        if (!review) {
+            console.log('❌ Review not found for:', companyName, branchName);
+            return next();
+        }
+
+        const reviewUrl = `${process.env.FRONTEND_URL}/${companyName}/${branchName}`;
+        const companyNameText = review.Company?.companyName || '';
+        const branchNameText = review.branchName || '';
+        const title = `${companyNameText} - ${branchNameText}`;
+        const description = `Check out the review page for ${companyNameText} - ${branchNameText}`;
+
+        const imageUrl = review.Company?.logo
+            ? `https://tapmy.name${review.Company.logo}`
+            : 'https://tapmy.name/default-og-image.jpg';
+
+        console.log('✅ Serving review meta tags:', { title, imageUrl });
+
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+
+        const html = `<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="${title}">
+  <meta name="description" content="${description}">
+
+  <!-- Open Graph / Facebook / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="${reviewUrl}">
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="${description}">
+  <meta property="og:image" content="${imageUrl}">
+  <meta property="og:image:secure_url" content="${imageUrl}">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${title}">
+  <meta property="og:site_name" content="TapMyName">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="${reviewUrl}">
+  <meta name="twitter:title" content="${title}">
+  <meta name="twitter:description" content="${description}">
+  <meta name="twitter:image" content="${imageUrl}">
+  <meta name="twitter:image:alt" content="${title}">
+
+  <link rel="canonical" href="${reviewUrl}">
+  <meta name="robots" content="index, follow">
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: center;
+    }
+    .card {
+      max-width: 500px;
+      padding: 40px;
+    }
+    h1 { font-size: 32px; margin: 10px 0; }
+    .subtitle { font-size: 18px; opacity: 0.9; margin: 5px 0; }
+    .btn {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 15px 40px;
+      background: white;
+      color: #667eea;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      transition: transform 0.2s;
+    }
+    .btn:hover { transform: scale(1.05); }
+  </style>
+
+  <script>
+    // Only redirect for real browsers, not crawlers
+    if (!navigator.userAgent.match(/bot|crawler|spider|crawling|facebookexternalhit|whatsapp|twitter/i)) {
+      setTimeout(function() {
+        window.location.href = '${reviewUrl}';
+      }, 100);
+    }
+  </script>
+</head>
+<body>
+  <div class="card">
+    <h1>${companyNameText}</h1>
+    <p class="subtitle">${branchNameText}</p>
+    <a href="${reviewUrl}" class="btn">View Review Page</a>
+  </div>
+</body>
+</html>`;
+
+        return res.send(html);
+    } catch (err) {
+        console.error('❌ Review meta error:', err);
+        return next();
+    }
+});
+
+// ✅ MOBILE CARD PAGE - Server-side meta tags for crawlers
 app.get("/:mobile", async (req, res, next) => {
     const mobile = req.params.mobile;
 
@@ -132,7 +274,6 @@ app.get("/:mobile", async (req, res, next) => {
         return next();
     }
 
-    // ... rest of your mobile route code
     try {
         let formattedMobile = "+" + mobile.replace(/[^0-9]/g, '');
 
@@ -254,6 +395,8 @@ app.get("/:mobile", async (req, res, next) => {
         return res.status(500).send('Error loading card');
     }
 });
+
+
 
 // API ROUTES
 app.use("/api/auth", authRoutes);

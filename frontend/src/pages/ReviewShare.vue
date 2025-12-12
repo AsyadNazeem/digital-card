@@ -283,34 +283,46 @@ const promptManualCopy = (url) => {
 
 // Update meta tags for social sharing
 function updateMetaTags(reviewData) {
-  const title = `${reviewData.branchName} - Review Page`;
-  const description = locale.value === 'ar'
-      ? `تقييم ${reviewData.branchName}`
-      : `Review ${reviewData.branchName}`;
+  const companyName = reviewData.company || reviewData.companyName || '';
+  const branchName = reviewData.branchName || '';
 
-  document.title = title;
+  // Title format: "Company Name - Branch Name"
+  const title = companyName
+      ? `${companyName} - ${branchName}`
+      : branchName;
+
+  const description = locale.value === 'ar'
+      ? `تحقق من صفحة المراجعة لـ ${companyName} - ${branchName}`
+      : `Check out the review page for ${companyName} - ${branchName}`;
+
+  // Set page title to company name
+  document.title = companyName || title;
 
   const existingMeta = document.querySelectorAll('meta[property^="og:"], meta[name="description"], meta[name="twitter:"]');
   existingMeta.forEach(tag => tag.remove());
+
+  // Use absolute URL for image
+  const imageUrl = reviewData.logo
+      ? `${VITE_IMAGE_UPLOAD_URL}${reviewData.logo}`
+      : '';
 
   const metaTags = [
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: window.location.href },
-    {
-      property: 'og:image',
-      content: reviewData.logo ? `${VITE_IMAGE_UPLOAD_URL}${reviewData.logo}` : ''
-    },
-    { property: 'og:site_name', content: 'TapMyName Reviews' },
+    { property: 'og:image', content: imageUrl },
+    { property: 'og:image:secure_url', content: imageUrl },
+    { property: 'og:image:type', content: 'image/jpeg' },
+    { property: 'og:image:width', content: '1200' },
+    { property: 'og:image:height', content: '630' },
+    { property: 'og:image:alt', content: `${companyName} - ${branchName}` },
+    { property: 'og:site_name', content: 'TapMyName' },
     { name: 'description', content: description },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
-    {
-      name: 'twitter:image',
-      content: reviewData.logo ? `${VITE_IMAGE_UPLOAD_URL}${reviewData.logo}` : ''
-    },
+    { name: 'twitter:image', content: imageUrl },
   ];
 
   metaTags.forEach(tag => {
