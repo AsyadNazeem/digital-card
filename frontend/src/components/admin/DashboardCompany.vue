@@ -1345,17 +1345,26 @@ select.form-input {
   .modal-overlay {
     padding: 0;
     align-items: flex-start;
+    background: white;
+    backdrop-filter: none;
+    overflow-y: auto; /* ADD THIS - Enable scrolling */
   }
 
   .modal-container {
-    max-height: 100vh;
+    max-height: none; /* CHANGE from 100vh to none */
+    min-height: 100vh;
     border-radius: 0;
     margin: 0;
+    box-shadow: none;
   }
 
   .modal-header {
     padding: 16px;
     border-radius: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
   }
 
   .modal-title {
@@ -1368,6 +1377,8 @@ select.form-input {
 
   .modal-content {
     padding: 16px;
+    overflow-y: visible; /* Keep this as visible */
+    padding-bottom: 40px; /* ADD THIS - Extra padding at bottom */
   }
 
   .section-title {

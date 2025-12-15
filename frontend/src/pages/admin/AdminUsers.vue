@@ -1367,7 +1367,20 @@ async function openUserDetails(user) {
   selectedUser.value = user
   showModal.value = true
   activeTab.value = 'companies'
-  selectedCompanyFilter.value = 'all' // ADD THIS LINE
+  selectedCompanyFilter.value = 'all'
+
+  // Mobile scroll lock (only on screens <= 768px)
+  if (window.innerWidth <= 768) {
+    const scrollPosition = window.pageYOffset || document.documentElement.scrollTop
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollPosition}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
+    document.body.style.width = '100%'
+    document.body.style.touchAction = 'none'
+    document.body.setAttribute('data-scroll-pos', scrollPosition)
+  }
 
   updatedLimits.value = {
     companyLimit: user.companyLimit || 1,
@@ -1395,6 +1408,19 @@ onMounted(() => {
 // ADD THIS NEW onUnmounted HOOK (if you don't have one already)
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
+
+  if (showModal.value && window.innerWidth <= 768) {
+    const scrollPos = document.body.getAttribute('data-scroll-pos') || '0'
+    document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.left = ''
+    document.body.style.right = ''
+    document.body.style.width = ''
+    document.body.style.touchAction = ''
+    document.body.removeAttribute('data-scroll-pos')
+    window.scrollTo(0, parseInt(scrollPos))
+  }
 })
 
 async function fetchUserData(userId) {
@@ -1522,10 +1548,25 @@ async function saveLimits() {
 }
 
 function closeModal() {
+  // Unlock scroll on mobile before closing
+  if (window.innerWidth <= 768) {
+    const scrollPos = document.body.getAttribute('data-scroll-pos') || '0'
+    document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.left = ''
+    document.body.style.right = ''
+    document.body.style.width = ''
+    document.body.style.touchAction = ''
+    document.body.removeAttribute('data-scroll-pos')
+    window.scrollTo(0, parseInt(scrollPos))
+  }
+
   showModal.value = false
   selectedUser.value = null
   companies.value = []
   contacts.value = []
+  review.value = []
 }
 
 async function deleteUser(userId) {
@@ -2291,9 +2332,9 @@ onMounted(() => {
   justify-content: center;
   z-index: 99999;
   padding: 20px;
-  /* Remove any inherited positioning */
   margin: 0;
   transform: none;
+  touch-action: none; /* Prevent touch scrolling on overlay */
 }
 
 .modal-container {
@@ -2308,10 +2349,9 @@ onMounted(() => {
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
   border: 2px solid #e5e1dc;
   position: relative;
-  /* Perfect centering */
   margin: 0;
-  /* Smooth appearance */
   animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overscroll-behavior: contain; /* ADD THIS */
 }
 
 .modal-header {
@@ -2515,9 +2555,13 @@ onMounted(() => {
 /* Tab Content */
 .tab-content {
   flex: 1;
+  min-height: 0; /* Important for flex scrolling */
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 24px 32px;
   background: white;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .loading-state-small {
@@ -2790,6 +2834,28 @@ onMounted(() => {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
   }
 }
 
@@ -3100,20 +3166,34 @@ MOBILE RESPONSIVE (≤ 768px)
   }
 
   /* Modal - Mobile */
+  /* Modal - Mobile FULLSCREEN */
   .modal-overlay {
     padding: 0;
-    align-items: flex-end;
+    align-items: stretch;
     justify-content: stretch;
+    backdrop-filter: blur(4px);
   }
 
   .modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height */
     max-width: 100%;
-    max-height: 90vh;
-    border-radius: 20px 20px 0 0;
+    max-height: 100vh;
+    border-radius: 0; /* No rounded corners on mobile */
     margin: 0;
-    animation: none !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    overscroll-behavior: contain;
   }
 
+  /* Slide up animation for mobile */
   .modal-fade-enter-active .modal-container {
     animation: modalSlideUp 0.3s ease-out !important;
   }
@@ -3124,8 +3204,8 @@ MOBILE RESPONSIVE (≤ 768px)
 
   .modal-header {
     padding: 16px 20px;
+    flex-shrink: 0; /* Prevent header from shrinking */
   }
-
   .user-info {
     gap: 12px;
   }
@@ -3148,6 +3228,7 @@ MOBILE RESPONSIVE (≤ 768px)
     flex-direction: column;
     padding: 16px 20px;
     gap: 12px;
+    flex-shrink: 0; /* Prevent limits section from shrinking */
   }
 
   .limit-card {
@@ -3167,6 +3248,7 @@ MOBILE RESPONSIVE (≤ 768px)
     padding: 0 16px;
     overflow-x: auto;
     gap: 4px;
+    flex-shrink: 0; /* Prevent tabs from shrinking */
   }
 
   .tab-button {
@@ -3181,8 +3263,14 @@ MOBILE RESPONSIVE (≤ 768px)
   }
 
   .tab-content {
+    flex: 1;
+    min-height: 0; /* Critical for flex scrolling */
+    max-height: none; /* Remove max-height restriction */
     padding: 16px;
-    max-height: calc(90vh - 280px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .table-container {

@@ -20,24 +20,17 @@ export function useModalScrollLock(isOpen) {
             document.body.style.right = '0'
             document.body.classList.add('modal-open')
 
-            // Hide ONLY the main page header (not elements inside modals)
+            // Hide ONLY the admin sidebar (not any headers or dropdown content)
             const selectors = [
-                '.admin-header',
-                'header:not(.modal-header)',
+                '.admin-sidebar',
+                '.admin-nav',
             ]
 
             selectors.forEach(selector => {
                 const elements = document.querySelectorAll(selector)
                 elements.forEach(el => {
-                    // Skip if element is inside a modal
-                    if (el.closest('.modal-container, .modal-overlay')) {
-                        return
-                    }
-
-                    // Skip if it's a modal header or limit header
-                    if (el.classList.contains('modal-header') ||
-                        el.classList.contains('limit-header') ||
-                        el.classList.contains('card-header')) {
+                    // Skip if element is inside a modal or dropdown
+                    if (el.closest('.modal-container, .modal-overlay, .notifications-dropdown, .notification-wrapper')) {
                         return
                     }
 
@@ -46,16 +39,18 @@ export function useModalScrollLock(isOpen) {
                 })
             })
 
-            // Lock all scrollable containers (but not modal containers)
-            const adminMain = document.querySelector('.admin-main')
-            const adminContent = document.querySelector('.admin-content')
+            // Lock scrollable containers on mobile only
+            if (window.innerWidth <= 480) {
+                const adminMain = document.querySelector('.admin-main')
+                const adminContent = document.querySelector('.admin-content')
 
-            if (adminMain) {
-                adminMain.style.overflow = 'hidden'
-            }
+                if (adminMain) {
+                    adminMain.style.overflow = 'hidden'
+                }
 
-            if (adminContent) {
-                adminContent.style.overflow = 'hidden'
+                if (adminContent) {
+                    adminContent.style.overflow = 'hidden'
+                }
             }
         }
     }
@@ -72,7 +67,7 @@ export function useModalScrollLock(isOpen) {
             document.body.style.right = ''
             document.body.classList.remove('modal-open')
 
-            // Show headers again
+            // Show hidden elements again
             const hiddenElements = document.querySelectorAll('[data-modal-hidden="true"]')
             hiddenElements.forEach(el => {
                 el.style.display = ''
@@ -120,3 +115,7 @@ export function useModalScrollLock(isOpen) {
         unlockScroll
     }
 }
+
+
+
+

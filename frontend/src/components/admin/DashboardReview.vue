@@ -468,20 +468,29 @@ select.form-input:focus {
   .modal-overlay {
     padding: 0;
     align-items: flex-start;
+    background: white;
+    backdrop-filter: none;
+    overflow-y: auto; /* ADD THIS - Enable scrolling */
   }
 
   .modal-container {
-    max-height: 100vh;
+    max-height: none; /* CHANGE from 100vh to none */
+    min-height: 100vh;
     border-radius: 0;
-    border: none;
-    border-top: 2px solid #e5e1dc;
     margin: 0;
+    box-shadow: none;
   }
 
   .modal-header {
     padding: 16px;
     border-radius: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
   }
+
+
 
   .modal-title {
     font-size: 1.15rem;
@@ -493,6 +502,7 @@ select.form-input:focus {
 
   .modal-body {
     padding: 20px 16px;
+    overflow-y: visible;
   }
 
   .form-group {

@@ -44,11 +44,16 @@
         </div>
       </div>
     </transition>
+
+    <!-- Mobile Overlay -->
+    <transition name="overlay-fade">
+      <div v-if="open" class="notification-overlay" @click="open = false"></div>
+    </transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue"
+import { ref, computed, onMounted, onUnmounted, watch } from "vue"
 import { useRouter } from "vue-router"
 import { useAdminStore } from "../../store/adminStore"
 
@@ -56,6 +61,85 @@ const admin = useAdminStore()
 const router = useRouter()
 
 const open = ref(false)
+let scrollPosition = 0
+
+// Enhanced mobile scroll lock
+watch(open, (isOpen) => {
+  if (window.innerWidth <= 480) {
+    if (isOpen) {
+      // Store scroll position
+      scrollPosition = window.pageYOffset || document.documentElement.scrollTop
+
+      // Lock body scroll
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollPosition}px`
+      document.body.style.left = '0'
+      document.body.style.right = '0'
+      document.body.style.width = '100%'
+
+      // Prevent touch move on body
+      document.body.style.touchAction = 'none'
+
+      // Lock main containers
+      const adminMain = document.querySelector('.admin-main')
+      const adminContent = document.querySelector('.admin-content')
+      const dashboardHeader = document.querySelector('.dashboard-header')
+
+      if (adminMain) {
+        adminMain.style.overflow = 'hidden'
+        adminMain.style.position = 'fixed'
+        adminMain.style.width = '100%'
+      }
+
+      if (adminContent) {
+        adminContent.style.overflow = 'hidden'
+        adminContent.style.position = 'fixed'
+        adminContent.style.width = '100%'
+      }
+
+      if (dashboardHeader) {
+        dashboardHeader.style.position = 'fixed'
+        dashboardHeader.style.width = '100%'
+      }
+
+    } else {
+      // Unlock scroll
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      document.body.style.width = ''
+      document.body.style.touchAction = ''
+
+      // Unlock main containers
+      const adminMain = document.querySelector('.admin-main')
+      const adminContent = document.querySelector('.admin-content')
+      const dashboardHeader = document.querySelector('.dashboard-header')
+
+      if (adminMain) {
+        adminMain.style.overflow = ''
+        adminMain.style.position = ''
+        adminMain.style.width = ''
+      }
+
+      if (adminContent) {
+        adminContent.style.overflow = ''
+        adminContent.style.position = ''
+        adminContent.style.width = ''
+      }
+
+      if (dashboardHeader) {
+        dashboardHeader.style.position = ''
+        dashboardHeader.style.width = ''
+      }
+
+      // Restore scroll position
+      window.scrollTo(0, scrollPosition)
+    }
+  }
+})
 
 const count = computed(() => admin.requests.filter(r => r.status === "pending").length)
 const pending = computed(() => admin.requests.filter(r => r.status === "pending").slice(0, 5))
@@ -87,9 +171,9 @@ function formatTimeAgo(dateString) {
   return date.toLocaleDateString();
 }
 
-// Close dropdown when clicking outside
+// Close dropdown when clicking outside (desktop only)
 function handleClickOutside(event) {
-  if (open.value && !event.target.closest('.notification-wrapper')) {
+  if (window.innerWidth > 480 && open.value && !event.target.closest('.notification-wrapper')) {
     open.value = false
   }
 }
@@ -101,14 +185,60 @@ function handleEscape(event) {
   }
 }
 
+// Prevent touch scroll on body when modal is open (mobile)
+function preventTouchMove(e) {
+  if (window.innerWidth <= 480 && open.value) {
+    // Only allow scrolling within the notifications list
+    const notificationsList = document.querySelector('.notifications-list')
+    if (notificationsList && notificationsList.contains(e.target)) {
+      return // Allow scrolling in the list
+    }
+    e.preventDefault()
+  }
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('keydown', handleEscape)
+  document.addEventListener('touchmove', preventTouchMove, { passive: false })
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('keydown', handleEscape)
+  document.removeEventListener('touchmove', preventTouchMove)
+
+  // Cleanup scroll lock if component unmounts while open
+  if (open.value && window.innerWidth <= 480) {
+    document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.left = ''
+    document.body.style.right = ''
+    document.body.style.width = ''
+    document.body.style.touchAction = ''
+
+    const adminMain = document.querySelector('.admin-main')
+    const adminContent = document.querySelector('.admin-content')
+    const dashboardHeader = document.querySelector('.dashboard-header')
+
+    if (adminMain) {
+      adminMain.style.overflow = ''
+      adminMain.style.position = ''
+      adminMain.style.width = ''
+    }
+
+    if (adminContent) {
+      adminContent.style.overflow = ''
+      adminContent.style.position = ''
+      adminContent.style.width = ''
+    }
+
+    if (dashboardHeader) {
+      dashboardHeader.style.position = ''
+      dashboardHeader.style.width = ''
+    }
+  }
 })
 </script>
 
@@ -167,7 +297,11 @@ onUnmounted(() => {
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   overflow: hidden;
-  z-index: 1000;
+  z-index: 10001;
+}
+
+.notification-overlay {
+  display: none;
 }
 
 .notifications-header {
@@ -176,6 +310,7 @@ onUnmounted(() => {
   align-items: center;
   padding: 16px 20px;
   border-bottom: 1px solid #e5e1dc;
+  background: white;
 }
 
 .notifications-header h3 {
@@ -298,6 +433,7 @@ onUnmounted(() => {
 .notifications-footer {
   padding: 12px 20px;
   border-top: 1px solid #e5e1dc;
+  background: white;
 }
 
 .view-all-btn {
@@ -317,6 +453,7 @@ onUnmounted(() => {
   background: #f5e6d3;
 }
 
+/* Dropdown transitions for desktop */
 .dropdown-enter-active,
 .dropdown-leave-active {
   transition: all 0.3s ease;
@@ -330,6 +467,17 @@ onUnmounted(() => {
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(-5px);
+}
+
+/* Overlay transitions */
+.overlay-fade-enter-active,
+.overlay-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.overlay-fade-enter-from,
+.overlay-fade-leave-to {
+  opacity: 0;
 }
 
 /* Tablet Styles */
@@ -358,17 +506,87 @@ onUnmounted(() => {
   }
 }
 
-/* Small Mobile */
+/* Small Mobile - FULLSCREEN MODE */
 @media (max-width: 480px) {
-  .notifications-dropdown {
+  .notification-overlay {
+    display: block;
     position: fixed;
-    top: auto;
-    bottom: 0;
+    top: 0;
     left: 0;
     right: 0;
+    bottom: 0;
+    background: rgba(45, 31, 26, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    touch-action: none;
+  }
+
+  .notifications-dropdown {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
-    max-height: 70vh;
-    border-radius: 16px 16px 0 0;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 10001;
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
+
+  .dropdown-enter-active,
+  .dropdown-leave-active {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  .dropdown-enter-from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  .dropdown-leave-to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  .notifications-header {
+    padding: 16px 20px;
+    flex-shrink: 0;
+  }
+
+  .notifications-header h3 {
+    font-size: 1.125rem;
+  }
+
+  .close-dropdown {
+    font-size: 1.5rem;
+    padding: 8px;
+  }
+
+  .notifications-list {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .notifications-empty {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    overflow: hidden;
   }
 
   .notification-item {
@@ -379,6 +597,34 @@ onUnmounted(() => {
     width: 36px;
     height: 36px;
     font-size: 1.125rem;
+  }
+
+  .notifications-footer {
+    flex-shrink: 0;
+    padding: 16px 20px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Very small devices */
+@media (max-width: 360px) {
+  .notification-item {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .notification-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+
+  .notification-title {
+    font-size: 0.8125rem;
+  }
+
+  .notification-desc {
+    font-size: 0.75rem;
   }
 }
 </style>
