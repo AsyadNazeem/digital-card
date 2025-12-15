@@ -15,7 +15,7 @@
     </div>
 
     <div class="users-table-card">
-      <div style="width: 20%; display: flex" >
+      <div class="admin-role-banner">
         <div v-if="isSuperAdmin" class="role-indicator super">
           🌟 Super Admin Access
         </div>
@@ -67,8 +67,8 @@
           <p>Loading users...</p>
         </div>
 
-        <!-- Users Table -->
-        <table v-else class="users-table">
+        <!-- Desktop Table View -->
+        <table v-else-if="!isMobile" class="users-table desktop-table-view">
           <thead>
           <tr>
             <th>#</th>
@@ -84,20 +84,21 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="(user, index) in paginatedUsers" :key="user.id" @click="openUserDetails(user)" class="clickable-row">
+          <tr v-for="(user, index) in paginatedUsers" :key="user.id" @click="openUserDetails(user)"
+              class="clickable-row">
             <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
             <td class="user-name">{{ user.name }}</td>
             <td class="user-email">{{ user.email }}</td>
             <td class="text-muted">{{ user.phone || 'N/A' }}</td>
             <td>
-                <span class="badge" :class="user.provider">
-                  {{ user.provider === 'google' ? '🔗 Google' : '📧 Local' }}
-                </span>
+        <span class="badge" :class="user.provider">
+          {{ user.provider === 'google' ? '🔗 Google' : '📧 Local' }}
+        </span>
             </td>
             <td>
-                <span class="badge" :class="user.registrationType">
-                  {{ getRegistrationTypeLabel(user.registrationType) }}
-                </span>
+        <span class="badge" :class="user.registrationType">
+          {{ getRegistrationTypeLabel(user.registrationType) }}
+        </span>
             </td>
             <td class="text-center">{{ user.companyLimit }}</td>
             <td class="text-center">{{ user.contactLimit }}</td>
@@ -120,8 +121,94 @@
           </tbody>
         </table>
 
-        <div class="pagination-controls" v-if="totalPages > 1">
+        <!-- Mobile Card View -->
+        <div v-else-if="isMobile && !adminStore.loading" class="mobile-card-view">
+          <div v-if="paginatedUsers.length === 0" class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <p>No users found</p>
+          </div>
 
+          <div v-else class="mobile-user-cards">
+            <div
+                v-for="(user, index) in paginatedUsers"
+                :key="user.id"
+                class="mobile-user-card"
+                @click="openUserDetails(user)"
+            >
+              <!-- Card Header -->
+              <div class="card-header">
+                <div class="user-avatar-mobile">
+                  {{ user.name?.charAt(0).toUpperCase() }}
+                </div>
+                <div class="card-header-info">
+                  <div class="user-name">{{ user.name }}</div>
+                  <div class="user-email">{{ user.email }}</div>
+                </div>
+                <span class="provider-badge-mobile" :class="user.provider">
+            {{ user.provider === 'google' ? '🔗' : '📧' }}
+          </span>
+              </div>
+
+              <!-- Card Body -->
+              <div class="card-body">
+                <div class="detail-row">
+                  <div class="detail-item">
+                    <span class="detail-label">📞 Phone</span>
+                    <span class="detail-value">{{ user.phone || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">📋 Type</span>
+                    <span class="badge-small" :class="user.registrationType">
+                {{
+                        getRegistrationTypeLabel(user.registrationType).replace('👤 ', '').replace('⚡ ', '').replace('🔗 ', '')
+                      }}
+              </span>
+                  </div>
+                </div>
+
+                <div class="detail-row">
+                  <div class="detail-item">
+                    <span class="detail-label">🏢 Companies</span>
+                    <span class="limit-badge">{{ user.companyLimit }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">👥 Contacts</span>
+                    <span class="limit-badge">{{ user.contactLimit }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card Footer -->
+              <div class="card-footer">
+                <div class="joined-date">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <span>{{ formatDate(user.createdAt) }}</span>
+                </div>
+                <button
+                    v-if="can(PERMISSIONS.DELETE_USER)"
+                    @click.stop="deleteUser(user.id)"
+                    class="btn-delete-mobile"
+                    title="Delete User"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-controls" v-if="totalPages > 1 && !adminStore.loading">
           <button
               class="page-btn"
               :disabled="currentPage === 1"
@@ -131,8 +218,8 @@
           </button>
 
           <span class="page-info">
-    Page {{ currentPage }} of {{ totalPages }}
-  </span>
+      Page {{ currentPage }} of {{ totalPages }}
+    </span>
 
           <button
               class="page-btn"
@@ -141,9 +228,7 @@
           >
             Next →
           </button>
-
         </div>
-
 
         <!-- No Data State -->
         <div v-if="!adminStore.loading && filteredUsers.length === 0" class="no-data">
@@ -158,428 +243,666 @@
     </div>
 
     <!-- User Details Modal -->
-    <transition name="modal-fade">
-      <div v-if="showModal" class="modal-overlay" @click="closeModal">
-        <div class="modal-container" @click.stop>
-          <!-- Modal Header -->
-          <div class="modal-header">
-            <div class="user-info">
-              <div class="user-avatar">{{ selectedUser?.name?.charAt(0).toUpperCase() }}</div>
-              <div>
-                <h2 class="modal-title">{{ selectedUser?.name }}</h2>
-                <p class="modal-subtitle">{{ selectedUser?.email }}</p>
-              </div>
-            </div>
-            <button @click="closeModal" class="btn-close">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Limits Section -->
-          <div class="limits-section">
-            <div class="limit-card">
-              <div class="limit-header">
-                <span class="limit-icon">🏢</span>
-                <span class="limit-label">Company Limit</span>
-              </div>
-              <div class="limit-controls">
-                <span class="limit-value">{{ updatedLimits.companyLimit }}</span>
-                <div class="limit-buttons">
-                  <button @click="updateLimit('company', -1)" class="btn-limit"
-                          :disabled="updatedLimits.companyLimit <= 1">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  </button>
-                  <button @click="updateLimit('company', 1)" class="btn-limit">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  </button>
+    <Teleport to="body">
+      <transition name="modal-fade">
+        <div v-if="showModal" class="modal-overlay" @click="closeModal">
+          <div class="modal-container" @click.stop>
+            <!-- Modal Header -->
+            <div class="modal-header">
+              <div class="user-info">
+                <div class="user-avatar">{{ selectedUser?.name?.charAt(0).toUpperCase() }}</div>
+                <div>
+                  <h2 class="modal-title">{{ selectedUser?.name }}</h2>
+                  <p class="modal-subtitle">{{ selectedUser?.email }}</p>
                 </div>
               </div>
-            </div>
-
-            <div class="limit-card">
-              <div class="limit-header">
-                <span class="limit-icon">👥</span>
-                <span class="limit-label">Contact Limit</span>
-              </div>
-              <div class="limit-controls">
-                <span class="limit-value">{{ updatedLimits.contactLimit }}</span>
-                <div class="limit-buttons">
-                  <button @click="updateLimit('contact', -1)" class="btn-limit"
-                          :disabled="updatedLimits.contactLimit <= 1">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  </button>
-                  <button @click="updateLimit('contact', 1)" class="btn-limit">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <button
-                v-if="limitsChanged && can(PERMISSIONS.EDIT_USER_LIMITS)"
-                @click="saveLimits"
-                class="btn-save-limits"
-                :disabled="savingLimits"
-            >
-              <svg v-if="savingLimits" class="spinner-small" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="2" x2="12" y2="6"></line>
-                <line x1="12" y1="18" x2="12" y2="22"></line>
-              </svg>
-              <span v-else>💾 Save Changes</span>
-            </button>
-          </div>
-
-          <!-- Tabs -->
-          <div class="tabs-container">
-            <button
-                @click="activeTab = 'companies'"
-                class="tab-button"
-                :class="{ active: activeTab === 'companies' }"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-              </svg>
-              Companies ({{ companies.length }})
-            </button>
-            <button
-                @click="activeTab = 'contacts'"
-                class="tab-button"
-                :class="{ active: activeTab === 'contacts' }"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-              Contacts ({{ contacts.length }})
-            </button>
-
-            <button
-                @click="activeTab = 'review'"
-                class="tab-button"
-                :class="{ active: activeTab === 'review' }"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-              Review ({{ review.length }})
-            </button>
-          </div>
-
-          <!-- Tab Content -->
-          <div class="tab-content">
-            <!-- Loading State -->
-            <div v-if="loadingData" class="loading-state-small">
-              <svg class="spinner" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2">
-                <line x1="12" y1="2" x2="12" y2="6"></line>
-                <line x1="12" y1="18" x2="12" y2="22"></line>
-              </svg>
-              <p>Loading data...</p>
-            </div>
-
-            <!-- Companies Tab -->
-            <div v-else-if="activeTab === 'companies'">
-              <!-- Add Company Button -->
-              <div v-if="canCreateCompany" style="margin-bottom: 20px;">
-                <button @click="createCompany" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  Add Company
-                </button>
-              </div>
-              <div v-else style="margin-bottom: 20px; padding: 12px; background: #fff3cd; border-radius: 8px; color: #856404;">
-                <strong>Company limit reached:</strong> {{ companies.length }} / {{ selectedUser?.companyLimit }}
-              </div>
-              <div v-if="companies.length === 0" class="empty-state">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <button @click="closeModal" class="btn-close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
-                <p>No companies registered</p>
+              </button>
+            </div>
+
+            <!-- Limits Section -->
+            <div class="limits-section">
+              <div class="limit-card">
+                <div class="limit-header">
+                  <span class="limit-icon">🏢</span>
+                  <span class="limit-label">Company Limit</span>
+                </div>
+                <div class="limit-controls">
+                  <span class="limit-value">{{ updatedLimits.companyLimit }}</span>
+                  <div class="limit-buttons">
+                    <button @click="updateLimit('company', -1)" class="btn-limit"
+                            :disabled="updatedLimits.companyLimit <= 1">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <button @click="updateLimit('company', 1)" class="btn-limit">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div v-else class="table-container">
-                <table class="data-table">
-                  <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Company Name</th>
-                    <th>Website</th>
-                    <th>Email</th>
-                    <th>Created Date</th>
-                    <th>Status</th>
-                    <th>Actions</th> <!-- ADD THIS -->
-                  </tr>
-                  </thead>
-                  <tbody>
-                  <tr v-for="(company, index) in companies" :key="company.id">
-                    <td>{{ index + 1 }}</td>
-                    <td class="td-name">
-                      <div class="name-cell">
-                        <span class="cell-icon">🏢</span>
-                        <span>{{ company.companyName || 'Unnamed Company' }}</span>
-                      </div>
-                    </td>
-                    <td class="td-website">
-                      <a v-if="company.website" :href="company.website" target="_blank" class="link-external">
-                        {{ company.displayUrl || company.website }}
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                          <polyline points="15 3 21 3 21 9"></polyline>
-                          <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
-                      </a>
-                      <span v-else class="text-muted">No website</span>
-                    </td>
-                    <td class="td-email">{{ company.email || '-' }}</td>
-                    <td class="td-date">{{ formatDate(company.createdAt) }}</td>
-                    <td class="td-status">
+
+              <div class="limit-card">
+                <div class="limit-header">
+                  <span class="limit-icon">👥</span>
+                  <span class="limit-label">Contact Limit</span>
+                </div>
+                <div class="limit-controls">
+                  <span class="limit-value">{{ updatedLimits.contactLimit }}</span>
+                  <div class="limit-buttons">
+                    <button @click="updateLimit('contact', -1)" class="btn-limit"
+                            :disabled="updatedLimits.contactLimit <= 1">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <button @click="updateLimit('contact', 1)" class="btn-limit">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                  v-if="limitsChanged && can(PERMISSIONS.EDIT_USER_LIMITS)"
+                  @click="saveLimits"
+                  class="btn-save-limits"
+                  :disabled="savingLimits"
+              >
+                <svg v-if="savingLimits" class="spinner-small" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="2" x2="12" y2="6"></line>
+                  <line x1="12" y1="18" x2="12" y2="22"></line>
+                </svg>
+                <span v-else>💾 Save Changes</span>
+              </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs-container">
+              <button
+                  @click="activeTab = 'companies'"
+                  class="tab-button"
+                  :class="{ active: activeTab === 'companies' }"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                Companies ({{ companies.length }})
+              </button>
+              <button
+                  @click="activeTab = 'contacts'"
+                  class="tab-button"
+                  :class="{ active: activeTab === 'contacts' }"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Contacts ({{ contacts.length }})
+              </button>
+
+              <button
+                  @click="activeTab = 'review'"
+                  class="tab-button"
+                  :class="{ active: activeTab === 'review' }"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Review ({{ review.length }})
+              </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+              <!-- Loading State -->
+              <div v-if="loadingData" class="loading-state-small">
+                <svg class="spinner" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2">
+                  <line x1="12" y1="2" x2="12" y2="6"></line>
+                  <line x1="12" y1="18" x2="12" y2="22"></line>
+                </svg>
+                <p>Loading data...</p>
+              </div>
+
+              <!-- Companies Tab -->
+              <div v-else-if="activeTab === 'companies'">
+
+                <!-- Add Company Button -->
+                <div v-if="canCreateCompany" style="margin-bottom: 20px;">
+                  <button @click="createCompany" class="btn-primary"
+                          style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Company
+                  </button>
+                </div>
+                <div v-else
+                     style="margin-bottom: 20px; padding: 12px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                  <strong>Company limit reached:</strong> {{ companies.length }} / {{ selectedUser?.companyLimit }}
+                </div>
+
+                <!-- Empty State -->
+                <div v-if="companies.length === 0" class="empty-state">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  </svg>
+                  <p>No companies registered</p>
+                </div>
+
+                <div v-else class="desktop-data-view">
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Company Name</th>
+                        <th>Website</th>
+                        <th>Email</th>
+                        <th>Created Date</th>
+                        <th>Status</th>
+                        <th>Actions</th> <!-- ADD THIS -->
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr v-for="(company, index) in companies" :key="company.id">
+                        <td>{{ index + 1 }}</td>
+                        <td class="td-name">
+                          <div class="name-cell">
+                            <span class="cell-icon">🏢</span>
+                            <span>{{ company.companyName || 'Unnamed Company' }}</span>
+                          </div>
+                        </td>
+                        <td class="td-website">
+                          <a v-if="company.website" :href="company.website" target="_blank" class="link-external">
+                            {{ company.displayUrl || company.website }}
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2">
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              <polyline points="15 3 21 3 21 9"></polyline>
+                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                          </a>
+                          <span v-else class="text-muted">No website</span>
+                        </td>
+                        <td class="td-email">{{ company.email || '-' }}</td>
+                        <td class="td-date">{{ formatDate(company.createdAt) }}</td>
+                        <td class="td-status">
                         <span class="status-badge" :class="company.status || 'active'">
                           {{ (company.status || 'active').toUpperCase() }}
                         </span>
-                    </td>
-                    <td class="td-actions">
-                      <button
-                          v-if="can(PERMISSIONS.EDIT_COMPANY)"
-                          @click="editCompany(company)"
-                          class="btn-view-card"
-                          title="Edit Company"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                        Edit
-                      </button>
-                      <span v-else class="view-only-text">View Only</span>
-                    </td>
-                  </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <!-- Contacts Tab -->
-            <div v-else-if="activeTab === 'contacts'">
-              <div v-if="canCreateContact" style="margin-bottom: 20px;">
-                <button @click="createContact" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  Add Contact
-                </button>
-              </div>
-              <div v-else style="margin-bottom: 20px; padding: 12px; background: #fff3cd; border-radius: 8px; color: #856404;">
-                <strong>Contact limit reached:</strong> {{ filteredContacts.length }} / {{ selectedUser?.contactLimit }}
-              </div>
-              <!-- Company Filter Dropdown (only show if 2+ companies) -->
-              <div v-if="companies.length >= 2" class="company-filter-section">
-                <label for="company-filter" class="filter-label">Filter by Company:</label>
-                <select
-                    id="company-filter"
-                    v-model="selectedCompanyFilter"
-                    class="company-filter-select"
-                >
-                  <option value="all">All Companies</option>
-                  <option
-                      v-for="company in companies"
-                      :key="company.id"
-                      :value="company.id"
-                  >
-                    {{ company.companyName || 'Unnamed Company' }}
-                  </option>
-                </select>
-              </div>
-              <div v-if="contacts.length === 0" class="empty-state">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                </svg>
-                <p>No contacts registered</p>
-              </div>
-              <div v-else class="table-container">
-                <table class="data-table">
-                  <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Mobile</th>
-                    <th>Company</th>
-                    <th>Designation</th>
-                    <th>Created Date</th>
-                    <th>Actions</th>
-                  </tr>
-                  </thead>
-                  <tbody>
-                  <tr v-for="(contact, index) in filteredContacts" :key="contact.id">
-                    <td>{{ index + 1 }}</td>
-                    <td class="td-name">
-                      <div class="name-cell">
-                        <span class="cell-icon">👤</span>
-                        <span>{{ contact.firstName }} {{ contact.lastName }}</span>
+                        </td>
+                        <td class="td-actions">
+                          <button
+                              v-if="can(PERMISSIONS.EDIT_COMPANY)"
+                              @click="editCompany(company)"
+                              class="btn-view-card"
+                              title="Edit Company"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            Edit
+                          </button>
+                          <span v-else class="view-only-text">View Only</span>
+                        </td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="mobile-data-view">
+                  <div v-for="(company, index) in companies" :key="company.id" class="data-card">
+                    <div class="data-card-header">
+                      <div class="data-card-title">
+                        <span class="data-card-icon">🏢</span>
+                        <span class="data-card-name">{{ company.companyName || 'Unnamed Company' }}</span>
                       </div>
-                    </td>
-                    <td class="td-email">{{ contact.email || '-' }}</td>
-                    <td class="td-phone">{{ contact.mobile || contact.telephone || '-' }}</td>
-                    <td class="td-designation">{{ contact.designation || '-' }}</td>
-                    <td class="td-company">{{ getCompanyName(contact.companyId) }}</td>
-                    <td class="td-date">{{ formatDate(contact.createdAt) }}</td>
-                    <td class="td-actions">
-                      <div style="display: flex; align-items: center; justify-content: center; gap: 5px">
-                        <button
-                            @click="editContact(contact)"
-                            class="btn-view-card"
-                            title="Edit Contact"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      <span class="status-badge" :class="company.status || 'active'">
+        {{ (company.status || 'active').toUpperCase() }}
+      </span>
+                    </div>
+                    <div class="data-card-body">
+                      <div class="data-card-row">
+                        <span class="data-card-label">🌐 Website</span>
+                        <a v-if="company.website" :href="company.website" target="_blank" class="data-card-value link">
+                          {{ company.displayUrl || 'View' }}
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                          </svg>
+                        </a>
+                        <span v-else class="data-card-value" style="color: #8a7b75;">No website</span>
+                      </div>
+                      <div class="data-card-row">
+                        <span class="data-card-label">📧 Email</span>
+                        <span class="data-card-value">{{ company.email || '-' }}</span>
+                      </div>
+                    </div>
+                    <div class="data-card-footer">
+                      <div class="data-card-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>{{ formatDate(company.createdAt) }}</span>
+                      </div>
+                      <div class="data-card-actions">
+                        <button v-if="can(PERMISSIONS.EDIT_COMPANY)" @click="editCompany(company)"
+                                class="btn-card-action">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                           </svg>
                           Edit
                         </button>
-                        <a
-                            :href="getContactCardUrl(contact.mobile)"
-                            target="_blank"
-                            class="btn-view-card"
-                            title="View Contact Card"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Contacts Tab -->
+              <div v-else-if="activeTab === 'contacts'">
+
+                <div v-if="canCreateContact" style="margin-bottom: 20px;">
+                  <button @click="createContact" class="btn-primary"
+                          style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Contact
+                  </button>
+                </div>
+                <div v-else
+                     style="margin-bottom: 20px; padding: 12px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                  <strong>Contact limit reached:</strong> {{ filteredContacts.length }} / {{
+                    selectedUser?.contactLimit
+                  }}
+                </div>
+
+                <!-- Company Filter Dropdown (only show if 2+ companies) -->
+                <div v-if="companies.length >= 2" class="company-filter-section">
+                  <label for="company-filter" class="filter-label">Filter by Company:</label>
+                  <select id="company-filter" v-model="selectedCompanyFilter" class="company-filter-select">
+                    <option value="all">All Companies</option>
+                    <option v-for="company in companies" :key="company.id" :value="company.id">
+                      {{ company.companyName || 'Unnamed Company' }}
+                    </option>
+                  </select>
+                </div>
+
+
+                <div v-if="contacts.length === 0" class="empty-state">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                  </svg>
+                  <p>No contacts registered</p>
+                </div>
+
+                <div v-else class="desktop-data-view">
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Company</th>
+                        <th>Designation</th>
+                        <th>Created Date</th>
+                        <th>Actions</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr v-for="(contact, index) in filteredContacts" :key="contact.id">
+                        <td>{{ index + 1 }}</td>
+                        <td class="td-name">
+                          <div class="name-cell">
+                            <span class="cell-icon">👤</span>
+                            <span>{{ contact.firstName }} {{ contact.lastName }}</span>
+                          </div>
+                        </td>
+                        <td class="td-email">{{ contact.email || '-' }}</td>
+                        <td class="td-phone">{{ contact.mobile || contact.telephone || '-' }}</td>
+                        <td class="td-designation">{{ contact.designation || '-' }}</td>
+                        <td class="td-company">{{ getCompanyName(contact.companyId) }}</td>
+                        <td class="td-date">{{ formatDate(contact.createdAt) }}</td>
+                        <td class="td-actions">
+                          <div style="display: flex; align-items: center; justify-content: center; gap: 5px">
+                            <button
+                                @click="editContact(contact)"
+                                class="btn-view-card"
+                                title="Edit Contact"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                              </svg>
+                              Edit
+                            </button>
+                            <a
+                                :href="getContactCardUrl(contact.mobile)"
+                                target="_blank"
+                                class="btn-view-card"
+                                title="View Contact Card"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="2">
+                                <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                                <polyline points="22 7 13 13 2 7"></polyline>
+                              </svg>
+                              View Card
+                            </a>
+                            <button
+                                @click="openQrPopup1(contact)"
+                                class="btn-view-card"
+                                title="View Contact QR Code"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                              </svg>
+                              View QR
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div v-if="contacts.length > 0" class="mobile-data-view">
+                  <div v-for="(contact, index) in filteredContacts" :key="contact.id" class="data-card">
+                    <div class="data-card-header">
+                      <div class="data-card-title">
+                        <span class="data-card-icon">👤</span>
+                        <span class="data-card-name">{{ contact.firstName }} {{ contact.lastName }}</span>
+                      </div>
+                    </div>
+                    <div class="data-card-body">
+                      <div class="data-card-row">
+                        <span class="data-card-label">📧 Email</span>
+                        <span class="data-card-value">{{ contact.email || '-' }}</span>
+                      </div>
+                      <div class="data-card-row">
+                        <span class="data-card-label">📞 Mobile</span>
+                        <span class="data-card-value">{{ contact.mobile || '-' }}</span>
+                      </div>
+                      <div class="data-card-row">
+                        <span class="data-card-label">🏢 Company</span>
+                        <span class="data-card-value">{{ getCompanyName(contact.companyId) }}</span>
+                      </div>
+                      <div class="data-card-row">
+                        <span class="data-card-label">💼 Designation</span>
+                        <span class="data-card-value">{{ contact.designation || '-' }}</span>
+                      </div>
+                    </div>
+                    <div class="data-card-footer">
+                      <div class="data-card-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>{{ formatDate(contact.createdAt) }}</span>
+                      </div>
+                      <div class="data-card-actions">
+                        <button @click="editContact(contact)" class="btn-card-action">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                          Edit
+                        </button>
+                        <a :href="getContactCardUrl(contact.mobile)" target="_blank" class="btn-card-action">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                stroke-width="2">
                             <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
                             <polyline points="22 7 13 13 2 7"></polyline>
                           </svg>
-                          View Card
+                          Card
                         </a>
-                        <button
-                            @click="openQrPopup1(contact)"
-                            class="btn-view-card"
-                            title="View Contact QR Code"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        <button @click="openQrPopup1(contact)" class="btn-card-action">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                stroke-width="2">
                             <rect x="3" y="3" width="7" height="7"></rect>
                             <rect x="14" y="3" width="7" height="7"></rect>
                             <rect x="14" y="14" width="7" height="7"></rect>
                             <rect x="3" y="14" width="7" height="7"></rect>
                           </svg>
-                          View QR
+                          QR
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                  </tbody>
-                </table>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <!-- Review Tab -->
-            <div v-else-if="activeTab === 'review'">
-              <div v-if="canCreateReview" style="margin-bottom: 20px;">
-                <button @click="createReview" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
+              <!-- Review Tab -->
+              <div v-else-if="activeTab === 'review'">
+
+                <div v-if="canCreateReview" style="margin-bottom: 20px;">
+                  <button @click="createReview" class="btn-primary"
+                          style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Review
+                  </button>
+                </div>
+                <div v-else
+                     style="margin-bottom: 20px; padding: 12px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                  <strong>Review limit reached:</strong> {{ review.length }} / {{ selectedUser?.reviewLimit }}
+                </div>
+
+                <div v-if="review.length === 0" class="empty-state">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
                   </svg>
-                  Add Review
-                </button>
-              </div>
-              <div v-else style="margin-bottom: 20px; padding: 12px; background: #fff3cd; border-radius: 8px; color: #856404;">
-                <strong>Review limit reached:</strong> {{ review.length }} / {{ selectedUser?.reviewLimit }}
-              </div>
+                  <p>No reviews registered</p>
+                </div>
 
-              <div v-if="review.length === 0" class="empty-state">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-                <p>No reviews registered</p>
-              </div>
 
-              <div v-else class="table-container">
-                <table class="data-table">
-                  <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Company</th>
-                    <th>Branch Name</th>
-                    <th>Location</th>
-                    <th>Google Review</th>
-                    <th>Tripadvisor</th>
-                    <th>Created Date</th>
-                    <th>Actions</th>
-                  </tr>
-                  </thead>
-                  <tbody>
-                  <tr v-for="(item, index) in review" :key="item.id">
-                    <td>{{ index + 1 }}</td>
-                    <td class="td-company">{{ item.Company?.companyName || '-' }}</td>
-                    <td class="td-name">
-                      <div class="name-cell">
-                        <span class="cell-icon">🏢</span>
-                        <span>{{ item.branchName }}</span>
+                <div v-else class="desktop-data-view">
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Company</th>
+                        <th>Branch Name</th>
+                        <th>Location</th>
+                        <th>Google Review</th>
+                        <th>Tripadvisor</th>
+                        <th>Created Date</th>
+                        <th>Actions</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr v-for="(item, index) in review" :key="item.id">
+                        <td>{{ index + 1 }}</td>
+                        <td class="td-company">{{ item.Company?.companyName || '-' }}</td>
+                        <td class="td-name">
+                          <div class="name-cell">
+                            <span class="cell-icon">🏢</span>
+                            <span>{{ item.branchName }}</span>
+                          </div>
+                        </td>
+                        <td class="td-designation">{{ item.location || '-' }}</td>
+                        <td class="td-website">
+                          <a v-if="item.googleLink" :href="item.googleLink" target="_blank" class="link-external">
+                            View Link
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2">
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              <polyline points="15 3 21 3 21 9"></polyline>
+                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                          </a>
+                          <span v-else class="text-muted">-</span>
+                        </td>
+                        <td class="td-website">
+                          <a v-if="item.tripadvisorLink" :href="item.tripadvisorLink" target="_blank"
+                             class="link-external">
+                            View Link
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2">
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              <polyline points="15 3 21 3 21 9"></polyline>
+                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                          </a>
+                          <span v-else class="text-muted">-</span>
+                        </td>
+                        <td class="td-date">{{ formatDate(item.createdAt) }}</td>
+                        <td class="td-actions">
+                          <div style="display: flex; align-items: center; justify-content: center; gap: 5px">
+                            <button @click="editReview(item)" class="btn-view-card" title="Edit Review">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                              </svg>
+                              Edit
+                            </button>
+                            <button @click="openReviewShareModal(item)" class="btn-view-card" title="View Share Page">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="2">
+                                <circle cx="18" cy="5" r="3"></circle>
+                                <circle cx="6" cy="12" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                              </svg>
+                              Share
+                            </button>
+                            <button @click="deleteReview(item)" class="btn-delete" title="Delete Review">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <!-- Mobile Card View -->
+                <div v-if="review.length > 0" class="mobile-data-view">
+                  <div v-for="(item, index) in review" :key="item.id" class="data-card">
+                    <div class="data-card-header">
+                      <div class="data-card-title">
+                        <span class="data-card-icon">⭐</span>
+                        <span class="data-card-name">{{ item.branchName }}</span>
                       </div>
-                    </td>
-                    <td class="td-designation">{{ item.location || '-' }}</td>
-                    <td class="td-website">
-                      <a v-if="item.googleLink" :href="item.googleLink" target="_blank" class="link-external">
-                        View Link
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                          <polyline points="15 3 21 3 21 9"></polyline>
-                          <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </div>
+                    <div class="data-card-body">
+                      <div class="data-card-row">
+                        <span class="data-card-label">🏢 Company</span>
+                        <span class="data-card-value">{{ item.Company?.companyName || '-' }}</span>
+                      </div>
+                      <div class="data-card-row">
+                        <span class="data-card-label">📍 Location</span>
+                        <span class="data-card-value">{{ item.location || '-' }}</span>
+                      </div>
+                      <div class="data-card-row">
+                        <span class="data-card-label">Google</span>
+                        <a v-if="item.googleLink" :href="item.googleLink" target="_blank"
+                           class="data-card-value link">
+                          View Link
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                          </svg>
+                        </a>
+                        <span v-else class="data-card-value" style="color: #8a7b75;">-</span>
+                      </div>
+                      <div class="data-card-row">
+                        <span class="data-card-label">Tripadvisor</span>
+                        <a v-if="item.tripadvisorLink" :href="item.tripadvisorLink" target="_blank"
+                           class="data-card-value link">
+                          View Link
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                          </svg>
+                        </a>
+                        <span v-else class="data-card-value" style="color: #8a7b75;">-</span>
+                      </div>
+                    </div>
+                    <div class="data-card-footer">
+                      <div class="data-card-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
-                      </a>
-                      <span v-else class="text-muted">-</span>
-                    </td>
-                    <td class="td-website">
-                      <a v-if="item.tripadvisorLink" :href="item.tripadvisorLink" target="_blank" class="link-external">
-                        View Link
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                          <polyline points="15 3 21 3 21 9"></polyline>
-                          <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
-                      </a>
-                      <span v-else class="text-muted">-</span>
-                    </td>
-                    <td class="td-date">{{ formatDate(item.createdAt) }}</td>
-                    <td class="td-actions">
-                      <div style="display: flex; align-items: center; justify-content: center; gap: 5px">
-                        <button @click="editReview(item)" class="btn-view-card" title="Edit Review">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <span>{{ formatDate(item.createdAt) }}</span>
+                      </div>
+                      <div class="data-card-actions">
+                        <button @click="editReview(item)" class="btn-card-action">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                           </svg>
                           Edit
                         </button>
-                        <button @click="openReviewShareModal(item)" class="btn-view-card" title="View Share Page">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button @click="openReviewShareModal(item)" class="btn-card-action">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
                             <circle cx="18" cy="5" r="3"></circle>
                             <circle cx="6" cy="12" r="3"></circle>
                             <circle cx="18" cy="19" r="3"></circle>
@@ -588,78 +911,85 @@
                           </svg>
                           Share
                         </button>
-                        <button @click="deleteReview(item)" class="btn-delete" title="Delete Review">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button @click="deleteReview(item)" class="btn-card-action delete">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
                             <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <path
+                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                           </svg>
                           Delete
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                  </tbody>
-                </table>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
           </div>
         </div>
-      </div>
-    </transition>
+      </transition>
+    </Teleport>
 
     <!-- QR CODE POPUP -->
-    <transition name="modal">
-      <div v-if="showQrPopup" class="qr-popup-overlay">
-        <div class="qr-popup">
-          <button class="close-btn" @click="showQrPopup = false">×</button>
+    <Teleport to="body">
+      <transition name="modal">
+        <div v-if="showQrPopup" class="qr-popup-overlay">
+          <div class="qr-popup">
+            <button class="close-btn" @click="showQrPopup = false">×</button>
 
-          <h3>QR Code – {{ qrName }}</h3>
+            <h3>QR Code – {{ qrName }}</h3>
 
-          <div class="qr-container">
-            <canvas ref="qrCanvas"></canvas>
-          </div>
+            <div class="qr-container">
+              <canvas ref="qrCanvas"></canvas>
+            </div>
 
-          <div class="qr-actions">
-            <button class="btn-download" @click="downloadQr">⬇️ Download</button>
-            <button class="btn-share" @click="sharePoster">📤 Share Poster</button>
+            <div class="qr-actions">
+              <button class="btn-download" @click="downloadQr">⬇️ Download</button>
+              <button class="btn-share" @click="sharePoster">📤 Share Poster</button>
+            </div>
           </div>
         </div>
-      </div>
-    </transition>
+      </transition>
+    </Teleport>
 
     <!-- Edit Company Modal -->
-    <DashboardEditCompany
-        :show="showEditCompanyModal"
-        :company="selectedCompany"
-        @close="showEditCompanyModal = false"
-        @saved="handleCompanySaved"
-    />
+    <Teleport to="body">
+      <DashboardEditCompany
+          :show="showEditCompanyModal"
+          :company="selectedCompany"
+          @close="showEditCompanyModal = false"
+          @saved="handleCompanySaved"
+      />
+    </Teleport>
 
     <!-- Edit Contact Modal -->
-    <DashboardEditContact
-        :show="showEditContactModal"
-        :contact="selectedContact"
-        :userId="selectedUser?.id"
-        @close="showEditContactModal = false"
-        @saved="handleContactSaved"
-    />
+    <Teleport to="body">
+      <DashboardEditContact
+          :show="showEditContactModal"
+          :contact="selectedContact"
+          :userId="selectedUser?.id"
+          @close="showEditContactModal = false"
+          @saved="handleContactSaved"
+      />
+    </Teleport>
 
-    <DashboardEditReview
-        :show="showEditReviewModal"
-        :review="selectedReview"
-        :userId="selectedUser?.id"
-        :companies="companies"
-        @close="showEditReviewModal = false"
-        @saved="handleReviewSaved"
-    />
-
+    <Teleport to="body">
+      <DashboardEditReview
+          :show="showEditReviewModal"
+          :review="selectedReview"
+          :userId="selectedUser?.id"
+          :companies="companies"
+          @close="showEditReviewModal = false"
+          @saved="handleReviewSaved"
+      />
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import {computed, nextTick, onMounted, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {computed, nextTick, onMounted, onUnmounted, ref} from 'vue'
 import {useAdminStore} from '@/store/adminStore.js'
 import {usePermissions} from '@/composables/usePermissions.js' // ADD THIS
 import {PERMISSIONS} from '@/config/adminPermissions.js' // ADD THIS
@@ -669,6 +999,9 @@ import QRCode from "qrcode";
 import DashboardEditCompany from '../../components/admin/DashboardCompany.vue'
 import DashboardEditContact from '../../components/admin/DashboardContact.vue'
 import DashboardEditReview from '../../components/admin/DashboardReview.vue'
+import {useModalScrollLock} from '@/composables/useModalScrollLock' // ADD THIS LINE
+
+const moreMenuOpen = ref(false)
 
 const {can, isSuperAdmin, role} = usePermissions()
 const router = useRouter()
@@ -680,6 +1013,8 @@ const showQrPopup = ref(false);
 const qrCanvas = ref(null);
 const qrUrl = ref("");
 const qrName = ref("");
+
+const isMobile = ref(false)
 
 // ADD THESE NEW REFS
 const showEditCompanyModal = ref(false)
@@ -808,6 +1143,17 @@ const getCompanyName = (companyId) => {
   const company = companies.value.find(c => c.id === companyId)
   return company?.companyName || '-'
 }
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
+useModalScrollLock(showModal)
+useModalScrollLock(showQrPopup)
+useModalScrollLock(showEditCompanyModal)
+useModalScrollLock(showEditContactModal)
+useModalScrollLock(showEditReviewModal)
+useModalScrollLock(moreMenuOpen)
 
 
 // Update editCompany function
@@ -1032,6 +1378,25 @@ async function openUserDetails(user) {
   await fetchUserData(user.id)
 }
 
+onMounted(() => {
+  console.log("🔍 Current role:", role.value)
+  console.log("🔍 Is Super Admin:", isSuperAdmin.value)
+  console.log("🔍 Admin store role:", adminStore.role)
+  console.log("🔍 Admin store admin:", adminStore.admin)
+  console.log("🔍 Can edit company:", can(PERMISSIONS.EDIT_COMPANY))
+
+  adminStore.fetchUsers()
+
+  // ADD THESE TWO LINES:
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+// ADD THIS NEW onUnmounted HOOK (if you don't have one already)
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
 async function fetchUserData(userId) {
   loadingData.value = true
   try {
@@ -1107,7 +1472,7 @@ const deleteReview = async (reviewItem) => {
 async function openReviewShareModal(reviewItem) {
   try {
     const res = await adminApi.post(`/dashboard/reviews/${reviewItem.id}/generate-share`, {}, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
     });
     window.open(res.data.shareUrl, '_blank');
   } catch (err) {
@@ -1187,6 +1552,275 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
+.desktop-data-view {
+  display: block;
+}
+
+.mobile-data-view {
+  display: none;
+}
+
+.admin-role-banner{
+  width: 20%;
+  display: flex;
+}
+
+/* Mobile Card Styles for Companies/Contacts/Reviews */
+.data-card {
+  background: white;
+  border: 1px solid #e5e1dc;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.data-card:active {
+  background: #f8f6f4;
+  transform: scale(0.98);
+}
+
+.data-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e1dc;
+}
+
+.data-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.data-card-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.data-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2d1f1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.data-card-status {
+  flex-shrink: 0;
+}
+
+.data-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.data-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.data-card-label {
+  font-size: 0.75rem;
+  color: #8a7b75;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.data-card-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2d1f1a;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.data-card-value.link {
+  color: #5c4033;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.data-card-value.link:active {
+  color: #3e2a23;
+}
+
+.data-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #e5e1dc;
+  gap: 8px;
+}
+
+.data-card-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #8a7b75;
+}
+
+.data-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.btn-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: linear-gradient(135deg, #f8f6f4 0%, #f0ede8 100%);
+  color: #5c4033;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+  border: 1px solid #e5e1dc;
+  cursor: pointer;
+}
+
+.btn-card-action:active {
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
+  color: white;
+  transform: scale(0.95);
+}
+
+.btn-card-action.delete {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.btn-card-action.delete:active {
+  background: #fecaca;
+}
+
+.btn-card-action svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Mobile: Show cards, hide tables */
+@media (max-width: 768px) {
+  .desktop-data-view {
+    display: none !important;
+  }
+
+  .mobile-data-view {
+    display: block;
+  }
+
+  /* Override the table container on mobile */
+  .table-container {
+    border: none;
+    overflow: visible;
+  }
+
+  /* Adjust company filter for mobile */
+  .company-filter-section {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: white;
+    margin: -16px -16px 16px -16px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e1dc;
+  }
+
+  /* Make action buttons stack better on very small screens */
+  @media (max-width: 380px) {
+    .data-card-actions {
+      width: 100%;
+    }
+
+    .btn-card-action {
+      flex: 1;
+      justify-content: center;
+      min-width: 0;
+    }
+  }
+}
+
+/* Tablet: Keep desktop view but make it more compact */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .data-table th,
+  .data-table td {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+
+  .btn-view-card {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Handle landscape mobile specially */
+@media (max-width: 768px) and (orientation: landscape) {
+  .data-card {
+    padding: 12px;
+  }
+
+  .data-card-body {
+    gap: 8px;
+  }
+
+  .data-card-footer {
+    padding-top: 10px;
+  }
+}
+
+
+.admin-main {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+  will-change: margin-left;
+  /* ADD: Prepare for scroll lock */
+  height: 100vh;
+  overflow: hidden; /* Changed from auto */
+}
+
+.admin-content {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto; /* Changed from overflow-x: auto */
+  overflow-x: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Mobile with bottom navigation */
+.admin-main.has-bottom-nav {
+  margin-left: 0;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom));
+}
+
 /* ————————————————————————
    TABLE CONTROLS WRAPPER
 ———————————————————————— */
@@ -1646,17 +2280,20 @@ onMounted(() => {
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(45, 31, 26, 0.6);
-  backdrop-filter: blur(4px);
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(45, 31, 26, 0.8);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 99999;
   padding: 20px;
+  /* Remove any inherited positioning */
+  margin: 0;
+  transform: none;
 }
 
 .modal-container {
@@ -1664,12 +2301,17 @@ onMounted(() => {
   border-radius: 20px;
   width: 100%;
   max-width: 1200px;
-  max-height: 100vh;
+  max-height: 85vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(45, 31, 26, 0.3);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
   border: 2px solid #e5e1dc;
+  position: relative;
+  /* Perfect centering */
+  margin: 0;
+  /* Smooth appearance */
+  animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modal-header {
@@ -1748,7 +2390,7 @@ onMounted(() => {
 }
 
 .limit-header {
-  display: flex;
+  display: block;
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
@@ -2151,10 +2793,254 @@ onMounted(() => {
   }
 }
 
-/* Responsive */
+/* ========================================
+   MOBILE CARD VIEW STYLES
+======================================== */
+
+.mobile-card-view {
+  display: none;
+}
+
+.mobile-user-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-user-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e5e1dc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.mobile-user-card:active {
+  background: #f8f6f4;
+  transform: scale(0.98);
+}
+
+/* Card Header */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e1dc;
+}
+
+.user-avatar-mobile {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.card-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-header-info .user-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2d1f1a;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-header-info .user-email {
+  font-size: 0.8rem;
+  color: #6b5d57;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.provider-badge-mobile {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.provider-badge-mobile.google {
+  background: linear-gradient(135deg, #fef3e2 0%, #fde8c5 100%);
+}
+
+.provider-badge-mobile.local {
+  background: linear-gradient(135deg, #f0ede8 0%, #e5e1dc 100%);
+}
+
+/* Card Body */
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: #8a7b75;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2d1f1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge-small {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.badge-small.self {
+  background: linear-gradient(135deg, #e8e3dd 0%, #d4cfc8 100%);
+  color: #2d1f1a;
+}
+
+.badge-small.admin {
+  background: linear-gradient(135deg, #fef3e2 0%, #f5e6c8 100%);
+  color: #5c4033;
+}
+
+.badge-small.google {
+  background: linear-gradient(135deg, #fef3e2 0%, #fde8c5 100%);
+  color: #5c4033;
+}
+
+.limit-badge {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #5c4033;
+  line-height: 1;
+}
+
+/* Card Footer */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #e5e1dc;
+}
+
+.joined-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #8a7b75;
+}
+
+.joined-date svg {
+  flex-shrink: 0;
+}
+
+.btn-delete-mobile {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-delete-mobile:active {
+  background: #fecaca;
+  transform: scale(0.95);
+}
+
+/* ========================================
+TABLET RESPONSIVE (769px - 1024px)
+======================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .users-table th,
+  .users-table td {
+    padding: 12px;
+    font-size: 0.875rem;
+  }
+
+  .modal-container {
+    max-width: 95%;
+  }
+
+  .limits-section {
+    gap: 12px;
+  }
+
+  .limit-value {
+    font-size: 1.5rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ========================================
+MOBILE RESPONSIVE (≤ 768px)
+======================================== */
 @media (max-width: 768px) {
+  .admin-role-banner{
+    width: 200px;
+  }
+
+  .admin-users-page {
+    gap: 20px;
+  }
+
   .page-header {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .btn-create {
@@ -2162,20 +3048,86 @@ onMounted(() => {
     justify-content: center;
   }
 
+  .role-indicator {
+    margin: 8px 16px;
+    font-size: 0.8rem;
+  }
+
   .table-controls {
     flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .search-box,
+  .search-input {
+    width: 91.8%;
   }
 
   .filter-select {
     width: 100%;
+    margin-left: 0;
+  }
+
+  .users-table,
+  .desktop-table-view {
+    display: none !important;
+  }
+
+  .mobile-card-view {
+    display: block;
+  }
+
+  .table-wrapper {
+    padding: 12px;
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+  }
+
+  .page-btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  .page-info {
+    font-size: 0.85rem;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Modal - Mobile */
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+    justify-content: stretch;
   }
 
   .modal-container {
-    max-height: 95vh;
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 20px 20px 0 0;
+    margin: 0;
+    animation: none !important;
+  }
+
+  .modal-fade-enter-active .modal-container {
+    animation: modalSlideUp 0.3s ease-out !important;
+  }
+
+  .modal-fade-leave-active .modal-container {
+    animation: modalSlideDown 0.25s ease-in !important;
   }
 
   .modal-header {
-    padding: 20px;
+    padding: 16px 20px;
+  }
+
+  .user-info {
+    gap: 12px;
   }
 
   .user-avatar {
@@ -2185,25 +3137,316 @@ onMounted(() => {
   }
 
   .modal-title {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
+  }
+
+  .modal-subtitle {
+    font-size: 0.85rem;
   }
 
   .limits-section {
     flex-direction: column;
-    padding: 20px;
+    padding: 16px 20px;
+    gap: 12px;
+  }
+
+  .limit-card {
+    width: 100%;
+  }
+
+  .limit-value {
+    font-size: 1.5rem;
+  }
+
+  .btn-save-limits {
+    width: 100%;
+    justify-content: center;
   }
 
   .tabs-container {
-    padding: 0 20px;
+    padding: 0 16px;
+    overflow-x: auto;
+    gap: 4px;
   }
 
   .tab-button {
     padding: 12px 16px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .tab-button svg {
+    width: 16px;
+    height: 16px;
   }
 
   .tab-content {
+    padding: 16px;
+    max-height: calc(90vh - 280px);
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    min-width: 700px;
+    font-size: 0.85rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  .btn-view-card {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  .company-filter-section {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .filter-label {
+    font-size: 0.85rem;
+  }
+
+  .company-filter-select {
+    width: 100%;
+  }
+
+  .empty-state,
+  .loading-state,
+  .loading-state-small {
+    padding: 32px 16px;
+  }
+
+  .empty-state svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .empty-state p {
+    font-size: 0.9rem;
+  }
+
+  .qr-popup {
+    width: 90%;
+    max-width: 320px;
     padding: 20px;
   }
+
+  .qr-container canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .qr-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .qr-actions button {
+    width: 100%;
+    margin: 0;
+  }
+
+  .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
 }
+
+/* ========================================
+SMALL MOBILE (≤ 480px)
+======================================== */
+@media (max-width: 480px) {
+  .admin-users-page {
+    gap: 16px;
+  }
+
+  .users-table-card {
+    border-radius: 12px;
+  }
+
+  .table-controls {
+    padding: 12px;
+  }
+
+  .search-input {
+    font-size: 0.875rem;
+    padding: 10px 12px 10px 42px;
+  }
+
+  .filter-select {
+    font-size: 0.875rem;
+    padding: 10px 12px;
+    height: 42px;
+  }
+
+  .btn-create {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+  }
+
+  .modal-header {
+    padding: 12px 16px;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+  }
+
+  .limits-section {
+    padding: 12px 16px;
+  }
+
+  .limit-card {
+    padding: 12px;
+  }
+
+  .limit-header {
+    margin-bottom: 8px;
+  }
+
+  .limit-icon {
+    font-size: 1.1rem;
+  }
+
+  .limit-label {
+    font-size: 0.75rem;
+  }
+
+  .limit-value {
+    font-size: 1.25rem;
+  }
+
+  .btn-limit {
+    width: 28px;
+    height: 28px;
+  }
+
+  .tabs-container {
+    padding: 0 12px;
+  }
+
+  .tab-button {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    gap: 6px;
+  }
+
+  .tab-content {
+    padding: 12px;
+  }
+
+  .data-table {
+    min-width: 650px;
+  }
+
+  .page-btn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .mobile-user-card {
+    padding: 14px;
+  }
+
+  .card-header {
+    gap: 10px;
+  }
+
+  .user-avatar-mobile {
+    width: 44px;
+    height: 44px;
+    font-size: 1.125rem;
+  }
+
+  .card-header-info .user-name {
+    font-size: 0.9375rem;
+  }
+
+  .card-header-info .user-email {
+    font-size: 0.75rem;
+  }
+
+  .provider-badge-mobile {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+
+  .detail-row {
+    gap: 10px;
+  }
+
+  .limit-badge {
+    font-size: 1.125rem;
+  }
+
+  .joined-date {
+    font-size: 0.7rem;
+  }
+
+  .btn-delete-mobile {
+    width: 28px;
+    height: 28px;
+  }
+
+  .btn-delete-mobile svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* ========================================
+EXTRA SMALL MOBILE (≤ 360px)
+======================================== */
+@media (max-width: 360px) {
+  .detail-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .detail-item {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+/* ========================================
+LANDSCAPE MOBILE
+======================================== */
+@media (max-width: 768px) and (orientation: landscape) {
+  .modal-container {
+    max-height: 85vh;
+  }
+
+  .tab-content {
+    max-height: calc(85vh - 250px);
+  }
+}
+
+/* ========================================
+DESKTOP TABLE VISIBILITY
+======================================== */
+@media (min-width: 769px) {
+  .mobile-card-view {
+    display: none;
+  }
+
+  .desktop-table-view {
+    display: block;
+  }
+}
+
 </style>

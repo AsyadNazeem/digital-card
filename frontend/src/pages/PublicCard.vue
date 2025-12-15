@@ -1026,6 +1026,7 @@ const saveContact = async () => {
     const addressString = addressParts.join(';');
     const hasAddress = contact.streetAddress || contact.city || contact.postalCode || contact.country;
 
+    // Replace this section (starting from "let vcard = `BEGIN:VCARD`")
     let vcard = `BEGIN:VCARD
 VERSION:3.0
 FN:${contact.firstName} ${contact.lastName}
@@ -1051,6 +1052,17 @@ TITLE:${contact.designation || ''}`;
 
     if (company.value.website) {
       vcard += `\nURL;TYPE=WORK:${company.value.website}`;
+    }
+
+// Add social media links
+    if (company.value.socialLinks && Object.keys(company.value.socialLinks).length > 0) {
+      for (const [platform, url] of Object.entries(company.value.socialLinks)) {
+        if (url) {
+          const formattedUrl = formatUrl(url);
+          const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
+          vcard += `\nURL;TYPE=${platformName}:${formattedUrl}`;
+        }
+      }
     }
 
     if (hasAddress) {

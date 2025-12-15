@@ -14,3 +14,36 @@ html, body {
     margin: 0;
     padding: 0;
 }
+
+/* Global styles for modal state */
+body.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Hide all headers when modal is open */
+body.modal-open .admin-header,
+body.modal-open header:not(.modal-header) {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Lock all scrollable areas */
+body.modal-open .admin-main,
+body.modal-open .admin-content {
+    overflow: hidden !important;
+}
+
+/* Ensure modals are truly fullscreen and on top */
+.modal-overlay,
+.qr-popup-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 99999 !important;
+    margin: 0 !important;
+    padding: 20px !important;
+}
+
+

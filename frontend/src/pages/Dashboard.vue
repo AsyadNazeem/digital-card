@@ -1433,20 +1433,80 @@
 
                   <div class="form-group">
                     <label class="form-label">Current Password</label>
-                    <input type="password" v-model="passwordForm.current" class="form-input"
-                           placeholder="Enter current password"/>
+                    <div class="password-input-wrapper">
+                      <input
+                          :type="showCurrentPassword ? 'text' : 'password'"
+                          v-model="passwordForm.current"
+                          class="form-input"
+                          placeholder="Enter current password"
+                      />
+                      <button
+                          type="button"
+                          @click="showCurrentPassword = !showCurrentPassword"
+                          class="password-toggle-btn"
+                      >
+                        <svg v-if="!showCurrentPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                          <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
 
                   <div class="form-group">
                     <label class="form-label">New Password</label>
-                    <input type="password" v-model="passwordForm.new" class="form-input"
-                           placeholder="Enter new password"/>
+                    <div class="password-input-wrapper">
+                      <input
+                          :type="showNewPassword ? 'text' : 'password'"
+                          v-model="passwordForm.new"
+                          class="form-input"
+                          placeholder="Enter new password"
+                      />
+                      <button
+                          type="button"
+                          @click="showNewPassword = !showNewPassword"
+                          class="password-toggle-btn"
+                      >
+                        <svg v-if="!showNewPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                          <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
 
                   <div class="form-group">
                     <label class="form-label">Confirm New Password</label>
-                    <input type="password" v-model="passwordForm.confirm" class="form-input"
-                           placeholder="Re-enter new password"/>
+                    <div class="password-input-wrapper">
+                      <input
+                          :type="showConfirmPassword ? 'text' : 'password'"
+                          v-model="passwordForm.confirm"
+                          class="form-input"
+                          placeholder="Re-enter new password"
+                      />
+                      <button
+                          type="button"
+                          @click="showConfirmPassword = !showConfirmPassword"
+                          class="password-toggle-btn"
+                      >
+                        <svg v-if="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                          <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
 
                   <button class="btn-primary" @click="updatePassword">Update Password</button>
@@ -2227,6 +2287,10 @@ const passwordForm = ref({
   confirm: ''
 });
 
+const showCurrentPassword = ref(false);
+const showNewPassword = ref(false);
+const showConfirmPassword = ref(false);
+
 const userCompanies = ref([]) // holds the list of companies
 
 const showPhonePopup = ref(false);
@@ -2457,6 +2521,18 @@ const publicCardUrl = computed(() => {
 
   return `${baseUrl}/${fullNumber}`;
 });
+
+function toggleCurrentPassword() {
+  showCurrentPassword.value = !showCurrentPassword.value;
+}
+
+function toggleNewPassword() {
+  showNewPassword.value = !showNewPassword.value;
+}
+
+function toggleConfirmPassword() {
+  showConfirmPassword.value = !showConfirmPassword.value;
+}
 
 // Add increment/decrement functions
 function incrementReviews() {
@@ -4369,6 +4445,45 @@ onMounted(loadData);
 
 
 <style scoped>
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper .form-input {
+  padding-right: 45px;
+  flex: 1;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  z-index: 10;
+}
+
+.password-toggle-btn:hover {
+  color: #334155;
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+  color: #0ea5e9;
+}
+
+.password-toggle-btn svg {
+  flex-shrink: 0;
+}
+
 /* File Upload Section Styles */
 .file-upload-section {
   margin-top: 1rem;

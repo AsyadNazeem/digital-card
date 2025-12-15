@@ -231,7 +231,13 @@ function closeModal() {
 }
 </script>
 
+/* Add these responsive styles to your Review Modal */
+
 <style scoped>
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -244,7 +250,7 @@ function closeModal() {
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  padding: 20px;
+  padding: 12px;
 }
 
 .modal-container {
@@ -252,12 +258,13 @@ function closeModal() {
   border-radius: 20px;
   width: 100%;
   max-width: 600px;
-  max-height: 90vh;
+  max-height: calc(100vh - 24px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(45, 31, 26, 0.3);
   border: 2px solid #e5e1dc;
+  margin: auto;
 }
 
 .modal-header {
@@ -267,6 +274,7 @@ function closeModal() {
   padding: 24px 32px;
   border-bottom: 1px solid #e5e1dc;
   background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
+  flex-shrink: 0;
 }
 
 .modal-title {
@@ -284,6 +292,7 @@ function closeModal() {
   cursor: pointer;
   color: #6b5d57;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .btn-close:hover {
@@ -312,10 +321,12 @@ function closeModal() {
 
 .required {
   color: #dc2626;
+  margin-left: 2px;
 }
 
-.form-input {
-  width: 93%;
+.form-input,
+select.form-input {
+  width: 100%;
   padding: 12px 16px;
   border: 1px solid #e5e1dc;
   border-radius: 8px;
@@ -323,9 +334,12 @@ function closeModal() {
   transition: all 0.2s;
   color: #2d1f1a;
   background: white;
+  font-family: inherit;
+  box-sizing: border-box;
 }
 
-.form-input:focus {
+.form-input:focus,
+select.form-input:focus {
   outline: none;
   border-color: #5c4033;
   box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
@@ -335,6 +349,7 @@ function closeModal() {
   margin-top: 6px;
   color: #dc2626;
   font-size: 0.85rem;
+  word-break: break-word;
 }
 
 .form-actions {
@@ -370,6 +385,7 @@ function closeModal() {
 .btn-save:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .btn-cancel {
@@ -382,6 +398,7 @@ function closeModal() {
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .btn-cancel:hover {
@@ -421,25 +438,270 @@ function closeModal() {
   }
 }
 
-@media (max-width: 768px) {
-  .modal-container {
-    max-height: 95vh;
-  }
+/* ============================================
+   RESPONSIVE - TABLET (768px - 1024px)
+   ============================================ */
 
+@media (max-width: 1024px) {
   .modal-header {
-    padding: 20px;
+    padding: 20px 24px;
   }
 
   .modal-title {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
   }
 
   .modal-body {
-    padding: 24px 20px;
+    padding: 24px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE - MOBILE (below 768px)
+   ============================================ */
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .modal-container {
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+    border-top: 2px solid #e5e1dc;
+    margin: 0;
+  }
+
+  .modal-header {
+    padding: 16px;
+    border-radius: 0;
+  }
+
+  .modal-title {
+    font-size: 1.15rem;
+  }
+
+  .btn-close {
+    padding: 6px;
+  }
+
+  .modal-body {
+    padding: 20px 16px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-label {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+
+  .form-input,
+  select.form-input {
+    font-size: 16px; /* Prevent iOS zoom */
+    padding: 12px 14px;
+  }
+
+  .error-text {
+    font-size: 0.8rem;
+    margin-top: 4px;
+  }
+
+  /* Stack form actions vertically */
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 20px;
+  }
+
+  .btn-save,
+  .btn-cancel {
+    width: 100%;
+    padding: 14px;
+    font-size: 0.95rem;
+  }
+
+  .btn-cancel {
+    border-width: 1px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE - SMALL MOBILE (below 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  .modal-header {
+    padding: 12px;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .modal-body {
+    padding: 16px 12px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+  }
+
+  .form-input,
+  select.form-input {
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+
+  .error-text {
+    font-size: 0.75rem;
   }
 
   .form-actions {
-    flex-direction: column;
+    margin-top: 20px;
+    padding-top: 16px;
   }
+
+  .btn-save,
+  .btn-cancel {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ============================================
+   LANDSCAPE MOBILE OPTIMIZATION
+   ============================================ */
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .modal-container {
+    max-height: 100vh;
+  }
+
+  .modal-header {
+    padding: 12px 16px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-actions {
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .btn-close:hover {
+    transform: none;
+  }
+
+  .btn-save:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* Focus states for keyboard navigation */
+.btn-close:focus-visible,
+.btn-save:focus-visible,
+.btn-cancel:focus-visible,
+.form-input:focus-visible,
+select.form-input:focus-visible {
+  outline: 2px solid #5c4033;
+  outline-offset: 2px;
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  .btn-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-close svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* ============================================
+   ENHANCED SELECT DROPDOWN FOR MOBILE
+   ============================================ */
+
+@media (max-width: 768px) {
+  select.form-input {
+    /* Improve native select appearance on mobile */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232d1f1a' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+  }
+}
+
+/* ============================================
+   INPUT PLACEHOLDER OPTIMIZATION
+   ============================================ */
+
+.form-input::placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .form-input::placeholder {
+    font-size: 0.9rem;
+  }
+}
+
+/* ============================================
+   SMOOTH SCROLLING
+   ============================================ */
+
+.modal-body {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 </style>

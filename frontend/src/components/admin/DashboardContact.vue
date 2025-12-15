@@ -842,7 +842,13 @@ function closeModal() {
 }
 </script>
 
+/* Add these responsive styles to your Contact Modal */
+
 <style scoped>
+/* ============================================
+   BASE STYLES (Keep existing styles)
+   ============================================ */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -855,7 +861,7 @@ function closeModal() {
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  padding: 20px;
+  padding: 12px;
 }
 
 .modal-container {
@@ -863,11 +869,12 @@ function closeModal() {
   border-radius: 20px;
   width: 100%;
   max-width: 800px;
-  max-height: 90vh;
+  max-height: calc(100vh - 24px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(45, 31, 26, 0.3);
+  margin: auto;
 }
 
 .modal-header {
@@ -877,6 +884,7 @@ function closeModal() {
   padding: 24px 32px;
   border-bottom: 1px solid #e5e1dc;
   background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
+  flex-shrink: 0;
 }
 
 .modal-title {
@@ -894,6 +902,7 @@ function closeModal() {
   cursor: pointer;
   color: #6b5d57;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .btn-close:hover {
@@ -928,59 +937,66 @@ function closeModal() {
   margin-bottom: 8px;
   color: #2d1f1a;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.form-label input[type="checkbox"] {
+  margin-right: 8px;
 }
 
 .required {
   color: #dc2626;
+  margin-left: 2px;
 }
 
-.form-input {
+.form-input,
+select.form-input {
   padding: 10px 12px;
   border: 1px solid #e5e1dc;
   border-radius: 8px;
   font-size: 0.95rem;
   transition: border-color 0.2s;
+  width: 100%;
+  font-family: inherit;
 }
 
-.form-input:focus {
+.form-input:focus,
+select.form-input:focus {
   outline: none;
   border-color: #5c4033;
+}
+
+.form-input:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .phone-input-group {
   display: flex;
   gap: 8px;
-}
-
-.country-code-select {
-  width: 100px;
-  padding: 10px 8px;
-  border: 1px solid #e5e1dc;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  background: white;
-  cursor: pointer;
-}
-
-.country-code-select:focus {
-  outline: none;
-  border-color: #5c4033;
+  width: 100%;
 }
 
 .phone-input {
   flex: 1;
+  min-width: 0;
 }
 
 .validation-success {
   color: #27ae60;
   font-size: 0.85rem;
   margin-top: 4px;
+  word-break: break-word;
 }
 
 .validation-error {
   color: #e74c3c;
   font-size: 0.85rem;
   margin-top: 4px;
+  word-break: break-word;
 }
 
 .upload-area {
@@ -988,6 +1004,12 @@ function closeModal() {
   border-radius: 12px;
   padding: 20px;
   text-align: center;
+  transition: all 0.2s;
+}
+
+.upload-area:hover {
+  border-color: #5c4033;
+  background: #f8f6f4;
 }
 
 .file-input {
@@ -1003,6 +1025,11 @@ function closeModal() {
   color: #6b5d57;
 }
 
+.upload-label span {
+  word-break: break-word;
+  text-align: center;
+}
+
 .image-preview {
   margin-top: 16px;
   position: relative;
@@ -1010,7 +1037,7 @@ function closeModal() {
 }
 
 .image-preview img {
-  max-width: 200px;
+  max-width: 100%;
   max-height: 200px;
   border-radius: 8px;
 }
@@ -1028,6 +1055,9 @@ function closeModal() {
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .form-actions {
@@ -1058,6 +1088,7 @@ function closeModal() {
 .btn-save:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .btn-cancel {
@@ -1075,11 +1106,262 @@ function closeModal() {
   background: #e5e1dc;
 }
 
-.modal-fade-enter-active, .modal-fade-leave-active {
+.modal-fade-enter-active,
+.modal-fade-leave-active {
   transition: opacity 0.3s ease;
 }
 
-.modal-fade-enter-from, .modal-fade-leave-to {
+.modal-fade-enter-from,
+.modal-fade-leave-to {
   opacity: 0;
+}
+
+/* ============================================
+   RESPONSIVE - TABLET (768px - 1024px)
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .modal-header {
+    padding: 20px 24px;
+  }
+
+  .modal-title {
+    font-size: 1.3rem;
+  }
+
+  .modal-content {
+    padding: 20px 24px;
+  }
+
+  .form-grid {
+    gap: 14px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE - MOBILE (below 768px)
+   ============================================ */
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .modal-container {
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .modal-header {
+    padding: 16px;
+    border-radius: 0;
+  }
+
+  .modal-title {
+    font-size: 1.15rem;
+  }
+
+  .btn-close {
+    padding: 6px;
+  }
+
+  .modal-content {
+    padding: 16px;
+  }
+
+  /* Stack form grid to single column */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+
+  .form-input,
+  select.form-input {
+    font-size: 16px; /* Prevent iOS zoom */
+    padding: 12px;
+  }
+
+  /* Phone input adjustments */
+  .phone-input-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Make country code dropdown full width on mobile */
+  .phone-input-group > *:first-child {
+    width: 100%;
+  }
+
+  .phone-input {
+    width: 100%;
+  }
+
+  /* Validation messages */
+  .validation-success,
+  .validation-error {
+    font-size: 0.8rem;
+  }
+
+  /* Upload area */
+  .upload-area {
+    padding: 16px;
+  }
+
+  .upload-label {
+    gap: 6px;
+  }
+
+  .image-preview img {
+    max-width: 100%;
+    max-height: 150px;
+  }
+
+  /* Form actions - stack buttons vertically */
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+
+  .btn-save,
+  .btn-cancel {
+    width: 100%;
+    padding: 14px;
+    justify-content: center;
+  }
+
+  /* Checkbox labels */
+  .form-label input[type="checkbox"] {
+    flex-shrink: 0;
+  }
+}
+
+/* ============================================
+   RESPONSIVE - SMALL MOBILE (below 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  .modal-header {
+    padding: 12px;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+  }
+
+  .modal-content {
+    padding: 12px;
+  }
+
+  .form-grid {
+    gap: 12px;
+  }
+
+  .form-label {
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+  }
+
+  .form-input,
+  select.form-input {
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  .validation-success,
+  .validation-error {
+    font-size: 0.75rem;
+    margin-top: 3px;
+  }
+
+  .upload-area {
+    padding: 12px;
+  }
+
+  .image-preview img {
+    max-height: 120px;
+  }
+
+  .btn-save,
+  .btn-cancel {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ============================================
+   LANDSCAPE MOBILE OPTIMIZATION
+   ============================================ */
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .modal-container {
+    max-height: 100vh;
+  }
+
+  .modal-header {
+    padding: 12px 16px;
+  }
+
+  .modal-content {
+    padding: 12px 16px;
+  }
+
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus states for keyboard navigation */
+.btn-close:focus-visible,
+.btn-save:focus-visible,
+.btn-cancel:focus-visible,
+.form-input:focus-visible,
+select.form-input:focus-visible,
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid #5c4033;
+  outline-offset: 2px;
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  .btn-close,
+  .remove-image,
+  input[type="checkbox"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .upload-label {
+    padding: 8px;
+    min-height: 44px;
+  }
 }
 </style>

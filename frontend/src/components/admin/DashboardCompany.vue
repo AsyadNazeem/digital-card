@@ -1,6 +1,6 @@
 <template>
   <transition name="modal-fade">
-    <div v-if="show" class="modal-overlay">
+    <div v-if="show" class="modal-overlay" @click="closeModal">
       <div class="modal-container" @click.stop>
         <!-- Modal Header -->
         <div class="modal-header">
@@ -60,7 +60,7 @@
                     <polyline points="17 8 12 3 7 8"></polyline>
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                   </svg>
-                  <span>{{ logoFileName || 'Click to upload new logo' }}</span>
+                  <span class="upload-text">{{ logoFileName || 'Click to upload new logo' }}</span>
                 </label>
                 <div v-if="logoPreview" class="image-preview">
                   <img :src="logoPreview" alt="Logo preview"/>
@@ -89,159 +89,92 @@
               </div>
             </div>
 
+            <!-- Links Section -->
             <div class="form-section">
-              <!-- REPLACE the entire "Company Files" section in Document 5 with this -->
-              <div class="form-section">
-                <h3 class="section-title">Links (Brochure, Menu, Shop Now, Order Now)</h3>
+              <h3 class="section-title">Links (Brochure, Menu, Shop Now, Order Now)</h3>
 
-                <!-- Add New Link Form -->
-                <div class="link-input-container"
-                     style="border: 1px solid #e0e0e0; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                  <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start;">
-                    <div>
-                      <input
-                          v-model="pendingLinkUrl"
-                          type="url"
-                          class="form-input"
-                          placeholder="Enter link URL (e.g., https://example.com/brochure.pdf)"
-                          style="margin-bottom: 8px;"
-                      />
-                      <input
-                          v-model="pendingLinkName"
-                          type="text"
-                          class="form-input"
-                          placeholder="Link name (e.g., 2024 Product Catalog)"
-                          style="margin-bottom: 12px;"
-                      />
+              <!-- Add New Link Form -->
+              <div class="link-input-container">
+                <div class="link-input-grid">
+                  <div class="link-inputs">
+                    <input
+                        v-model="pendingLinkUrl"
+                        type="url"
+                        class="form-input"
+                        placeholder="Enter link URL (e.g., https://example.com/brochure.pdf)"
+                    />
+                    <input
+                        v-model="pendingLinkName"
+                        type="text"
+                        class="form-input"
+                        placeholder="Link name (e.g., 2024 Product Catalog)"
+                    />
 
-                      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                          <input type="checkbox" v-model="pendingLinkType.isBrochure" style="margin-right: 8px;"/>
-                          <span>📄 Brochure</span>
-                        </label>
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                          <input type="checkbox" v-model="pendingLinkType.isMenu" style="margin-right: 8px;"/>
-                          <span>🍽️ Menu</span>
-                        </label>
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                          <input type="checkbox" v-model="pendingLinkType.isShopNow" style="margin-right: 8px;"/>
-                          <span>🛒 Shop Now</span>
-                        </label>
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                          <input type="checkbox" v-model="pendingLinkType.isOrderNow" style="margin-right: 8px;"/>
-                          <span>🛍️ Order Now</span>
-                        </label>
-                      </div>
+                    <div class="link-type-checkboxes">
+                      <label class="checkbox-wrapper">
+                        <input type="checkbox" v-model="pendingLinkType.isBrochure"/>
+                        <span>📄 Brochure</span>
+                      </label>
+                      <label class="checkbox-wrapper">
+                        <input type="checkbox" v-model="pendingLinkType.isMenu"/>
+                        <span>🍽️ Menu</span>
+                      </label>
+                      <label class="checkbox-wrapper">
+                        <input type="checkbox" v-model="pendingLinkType.isShopNow"/>
+                        <span>🛒 Shop Now</span>
+                      </label>
+                      <label class="checkbox-wrapper">
+                        <input type="checkbox" v-model="pendingLinkType.isOrderNow"/>
+                        <span>🛍️ Order Now</span>
+                      </label>
                     </div>
-
-                    <button
-                        type="button"
-                        @click="addLinkToList"
-                        class="btn-primary"
-                        style="height: 40px; white-space: nowrap;"
-                    >
-                      + Add Link
-                    </button>
                   </div>
-                </div>
 
-                <!-- List of Added Links -->
-                <div v-if="form.files && form.files.length > 0" style="margin-top: 16px;">
-                  <div
-                      v-for="(link, index) in form.files"
-                      :key="index"
-                      style="
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        background: #f9f9f9;
-      "
+                  <button
+                      type="button"
+                      @click="addLinkToList"
+                      class="btn-add-link"
                   >
-                    <div style="flex: 1;">
-                      <div style="font-weight: 600; margin-bottom: 4px;">
-                        {{ link.name || 'Untitled Link' }}
-                      </div>
-                      <div style="font-size: 0.85rem; color: #666; word-break: break-all; margin-bottom: 6px;">
-                        {{ link.url || link.path }}
-                      </div>
-                      <div style="display: flex; gap: 8px;">
-          <span
-              v-if="link.isBrochure"
-              style="
-              background: #e3f2fd;
-              color: #1976d2;
-              padding: 2px 8px;
-              border-radius: 4px;
-              font-size: 0.75rem;
-            "
-          >
-            📄 Brochure
-          </span>
-                        <span
-                            v-if="link.isMenu"
-                            style="
-              background: #fff3e0;
-              color: #f57c00;
-              padding: 2px 8px;
-              border-radius: 4px;
-              font-size: 0.75rem;
-            "
-                        >
-            🍽️ Menu
-          </span>
-                        <span
-                            v-if="link.isShopNow"
-                            style="
-      background: #e8f5e9;
-      color: #2e7d32;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-    "
-                        >
-  🛒 Shop Now
-</span>
-                        <span
-                            v-if="link.isOrderNow"
-                            style="
-      background: #f3e5f5;
-      color: #7b1fa2;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-    "
-                        >
-  🛍️ Order Now
-</span>
-                      </div>
-                    </div>
-
-                    <button
-                        type="button"
-                        @click="removeLink(index)"
-                        style="
-          background: #f44336;
-          color: white;
-          border: none;
-          padding: 8px 12px;
-          border-radius: 6px;
-          cursor: pointer;
-          margin-left: 12px;
-        "
-                    >
-                      🗑️ Remove
-                    </button>
-                  </div>
+                    + Add Link
+                  </button>
                 </div>
-
-                <p v-else style="color: #999; font-style: italic; margin-top: 8px;">
-                  No links added yet. Add brochures or menu links above.
-                </p>
               </div>
+
+              <!-- List of Added Links -->
+              <div v-if="form.files && form.files.length > 0" class="links-list">
+                <div
+                    v-for="(link, index) in form.files"
+                    :key="index"
+                    class="link-item"
+                >
+                  <div class="link-content">
+                    <div class="link-name">
+                      {{ link.name || 'Untitled Link' }}
+                    </div>
+                    <div class="link-url">
+                      {{ link.url || link.path }}
+                    </div>
+                    <div class="link-badges">
+                      <span v-if="link.isBrochure" class="badge badge-brochure">📄 Brochure</span>
+                      <span v-if="link.isMenu" class="badge badge-menu">🍽️ Menu</span>
+                      <span v-if="link.isShopNow" class="badge badge-shop">🛒 Shop Now</span>
+                      <span v-if="link.isOrderNow" class="badge badge-order">🛍️ Order Now</span>
+                    </div>
+                  </div>
+
+                  <button
+                      type="button"
+                      @click="removeLink(index)"
+                      class="btn-remove-link"
+                  >
+                    🗑️ Remove
+                  </button>
+                </div>
+              </div>
+
+              <p v-else class="empty-message">
+                No links added yet. Add brochures or menu links above.
+              </p>
             </div>
           </div>
 
@@ -294,12 +227,12 @@
                 contentType="html"
                 theme="snow"
                 :toolbar="[
-        ['bold', 'italic', 'underline'],
-        [{ 'header': [1, 2, 3, false] }],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        ['link'],
-        ['clean']
-      ]"
+                  ['bold', 'italic', 'underline'],
+                  [{ 'header': [1, 2, 3, false] }],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  ['link'],
+                  ['clean']
+                ]"
                 class="quill-editor"
                 placeholder="Enter company bio..."
             />
@@ -424,8 +357,8 @@ const pendingLinkName = ref('');
 const pendingLinkType = ref({
   isBrochure: false,
   isMenu: false,
-  isShopNow: false,    // NEW
-  isOrderNow: false    // NEW
+  isShopNow: false,
+  isOrderNow: false
 });
 
 const form = ref({
@@ -446,7 +379,7 @@ const form = ref({
   city: '',
   postalCode: '',
   poBox: '',
-  files: [] // Initialize files array
+  files: []
 })
 
 const mainSocialMedia = ref([
@@ -464,11 +397,9 @@ const logoFileName = ref('')
 const logoPreview = ref('')
 const saving = ref(false)
 
-// Image cropper states
 const showLogoCropper = ref(false)
 const tempLogoSrc = ref('')
 
-// Validate URL format
 function isValidUrl(string) {
   try {
     const url = new URL(string);
@@ -478,7 +409,6 @@ function isValidUrl(string) {
   }
 }
 
-// Add link to the list
 function addLinkToList() {
   const url = pendingLinkUrl.value.trim();
   const name = pendingLinkName.value.trim();
@@ -498,7 +428,6 @@ function addLinkToList() {
     return;
   }
 
-  // ✅ UPDATED: Check all 4 checkboxes
   if (!pendingLinkType.value.isBrochure &&
       !pendingLinkType.value.isMenu &&
       !pendingLinkType.value.isShopNow &&
@@ -511,61 +440,42 @@ function addLinkToList() {
     form.value.files = [];
   }
 
-  // ✅ UPDATED: Add all 4 fields
   form.value.files.push({
     url: url,
     name: name,
     isBrochure: pendingLinkType.value.isBrochure,
     isMenu: pendingLinkType.value.isMenu,
-    isShopNow: pendingLinkType.value.isShopNow,      // NEW
-    isOrderNow: pendingLinkType.value.isOrderNow,    // NEW
+    isShopNow: pendingLinkType.value.isShopNow,
+    isOrderNow: pendingLinkType.value.isOrderNow,
     isNew: true
   });
 
-  console.log('✅ Link added to list:', {
-    name: name,
-    url: url,
-    isBrochure: pendingLinkType.value.isBrochure,
-    isMenu: pendingLinkType.value.isMenu,
-    isShopNow: pendingLinkType.value.isShopNow,
-    isOrderNow: pendingLinkType.value.isOrderNow
-  });
-
-  // ✅ UPDATED: Reset all 4 fields
   pendingLinkUrl.value = '';
   pendingLinkName.value = '';
   pendingLinkType.value = {
     isBrochure: false,
     isMenu: false,
-    isShopNow: false,    // NEW
-    isOrderNow: false    // NEW
+    isShopNow: false,
+    isOrderNow: false
   };
 }
 
-// Remove link from list
 function removeLink(index) {
   if (confirm('Are you sure you want to remove this link?')) {
     form.value.files.splice(index, 1);
-    console.log('🗑️ Link removed at index:', index);
   }
 }
 
-
-// Watch for company prop changes
 watch(() => props.company, (newCompany) => {
   if (newCompany) {
     const isCreating = !newCompany.id
 
-    // Parse files - handle both string and array formats
     let parsedFiles = [];
     if (newCompany.files) {
       try {
-        // If files is a string, parse it
         if (typeof newCompany.files === 'string') {
           parsedFiles = JSON.parse(newCompany.files);
-        }
-        // If it's already an array, use it
-        else if (Array.isArray(newCompany.files)) {
+        } else if (Array.isArray(newCompany.files)) {
           parsedFiles = newCompany.files;
         }
       } catch (e) {
@@ -573,8 +483,6 @@ watch(() => props.company, (newCompany) => {
         parsedFiles = [];
       }
     }
-
-    console.log('🔗 Loading company links:', parsedFiles);
 
     form.value = {
       companyName: newCompany.companyName || '',
@@ -594,20 +502,18 @@ watch(() => props.company, (newCompany) => {
       city: newCompany.city || '',
       postalCode: newCompany.postalCode || '',
       poBox: newCompany.poBox || '',
-      files: parsedFiles // ✅ Load links
+      files: parsedFiles
     }
 
-    // Reset link inputs
     pendingLinkUrl.value = ''
     pendingLinkName.value = ''
     pendingLinkType.value = {
       isBrochure: false,
       isMenu: false,
-      isShopNow: false,    // NEW
-      isOrderNow: false    // NEW
+      isShopNow: false,
+      isOrderNow: false
     }
 
-    // Only set logo preview if editing existing company
     if (!isCreating && newCompany.logo) {
       logoPreview.value = `${VITE_IMAGE_UPLOAD_URL}${newCompany.logo}`
       logoFileName.value = newCompany.logo.split('/').pop()
@@ -616,10 +522,8 @@ watch(() => props.company, (newCompany) => {
       logoFileName.value = ''
     }
 
-    // Load social links
     const socialLinks = newCompany.socialLinks || {}
 
-    // Reset and populate main social media
     mainSocialMedia.value.forEach(social => {
       if (socialLinks[social.name]) {
         social.enabled = true
@@ -630,10 +534,8 @@ watch(() => props.company, (newCompany) => {
       }
     })
 
-    // Reset custom social media
     customSocialMedia.value = []
 
-    // Add custom social links (those not in mainSocialMedia)
     if (!isCreating) {
       const mainSocialNames = mainSocialMedia.value.map(s => s.name)
       Object.entries(socialLinks).forEach(([name, url]) => {
@@ -654,7 +556,6 @@ function handleLogoUpload(e) {
   if (file) {
     logoFileName.value = file.name
 
-    // Create temporary URL for cropper
     const reader = new FileReader()
     reader.onload = (event) => {
       tempLogoSrc.value = event.target.result
@@ -665,11 +566,9 @@ function handleLogoUpload(e) {
 }
 
 function handleLogoCropped(blob) {
-  // Convert blob to file
   const file = new File([blob], logoFileName.value || 'logo.jpg', {type: 'image/jpeg'})
   logoFile.value = file
 
-  // Create preview
   const reader = new FileReader()
   reader.onload = (e) => {
     logoPreview.value = e.target.result
@@ -688,7 +587,6 @@ function removeLogo() {
     logoPreview.value = ''
   }
 
-  // Clear file input
   const fileInput = document.getElementById('edit-logo-upload')
   if (fileInput) {
     fileInput.value = ''
@@ -724,14 +622,12 @@ async function saveCompany() {
   try {
     const formData = new FormData()
 
-    // Append all form fields (except files)
     Object.keys(form.value).forEach(key => {
       if (key !== 'files' && form.value[key] !== null && form.value[key] !== '') {
         formData.append(key, form.value[key])
       }
     })
 
-    // Prepare social links
     const socialLinks = {}
     mainSocialMedia.value.forEach(social => {
       if (social.enabled && social.url) {
@@ -745,46 +641,32 @@ async function saveCompany() {
     })
     formData.append('socialLinks', JSON.stringify(socialLinks))
 
-    // Handle logo
     if (logoFile.value) {
       formData.append('logo', logoFile.value)
-      console.log('📷 Uploading new logo');
     } else if (!isCreating && props.company.logo) {
       formData.append('existingLogo', props.company.logo)
-      console.log('📷 Keeping existing logo');
     }
 
-    // ✅ NEW: Handle links instead of files
     const linksToSave = [];
 
     if (form.value.files && form.value.files.length > 0) {
-      console.log('🔗 Processing links:', form.value.files.length);
-
       form.value.files.forEach((linkObj) => {
         linksToSave.push({
           url: linkObj.url || linkObj.path,
           name: linkObj.name,
           isBrochure: linkObj.isBrochure || false,
           isMenu: linkObj.isMenu || false,
-          isShopNow: linkObj.isShopNow || false,      // NEW
-          isOrderNow: linkObj.isOrderNow || false,    // NEW
+          isShopNow: linkObj.isShopNow || false,
+          isOrderNow: linkObj.isOrderNow || false,
           addedAt: linkObj.addedAt || new Date().toISOString()
         });
       });
     }
 
-    // Send links as JSON string
     if (linksToSave.length > 0) {
       formData.append('files', JSON.stringify(linksToSave));
-      console.log('📤 Sending links:', linksToSave);
     }
 
-    console.log('📦 Form data prepared:', {
-      isCreating,
-      linksCount: linksToSave.length
-    });
-
-    // Make API call
     const url = isCreating
         ? `/user/${props.company.userId}/company`
         : `/user/${props.company.userId}/company/${props.company.id}`
@@ -799,45 +681,437 @@ async function saveCompany() {
         }
     )
 
-    console.log('✅ Company saved:', response.data)
     alert(isCreating ? 'Company created successfully!' : 'Company updated successfully!')
     emit('saved')
     closeModal()
   } catch (err) {
-    console.error('❌ Error saving company:', err)
-    console.error('Error details:', err.response?.data)
+    console.error('Error saving company:', err)
     alert(err.response?.data?.message || 'Failed to save company')
   } finally {
     saving.value = false
   }
 }
 
-
 function closeModal() {
   logoFile.value = null
   logoFileName.value = ''
   logoPreview.value = ''
 
-  // Reset link inputs
   pendingLinkUrl.value = ''
   pendingLinkName.value = ''
   pendingLinkType.value = {
     isBrochure: false,
     isMenu: false,
-    isShopNow: false,    // NEW
-    isOrderNow: false    // NEW
+    isShopNow: false,
+    isOrderNow: false
   }
-
 
   emit('close')
 }
-
 </script>
 
 <style scoped>
-/* File Upload Styles for Admin Modal */
+/* ============================================
+   BASE STYLES
+   ============================================ */
 
-/* Quill Editor Styles */
+* {
+  box-sizing: border-box;
+}
+
+/* ============================================
+   MODAL OVERLAY & CONTAINER
+   ============================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(45, 31, 26, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.modal-container {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 900px;
+  max-height: calc(100vh - 24px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(45, 31, 26, 0.3);
+  margin: auto;
+}
+
+/* ============================================
+   MODAL HEADER
+   ============================================ */
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e1dc;
+  background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
+  flex-shrink: 0;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2d1f1a;
+}
+
+.btn-close {
+  padding: 8px;
+  background: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #6b5d57;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-close:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ============================================
+   MODAL CONTENT
+   ============================================ */
+
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+/* ============================================
+   FORM SECTIONS
+   ============================================ */
+
+.form-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e1dc;
+}
+
+.form-section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d1f1a;
+  margin-bottom: 16px;
+}
+
+/* ============================================
+   FORM GRID & GROUPS
+   ============================================ */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2d1f1a;
+  font-size: 0.9rem;
+}
+
+.required {
+  color: #dc2626;
+}
+
+/* ============================================
+   FORM INPUTS
+   ============================================ */
+
+.form-input,
+.form-textarea,
+select.form-input {
+  padding: 10px 12px;
+  border: 1px solid #e5e1dc;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+  width: 100%;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #5c4033;
+}
+
+.form-input:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ============================================
+   UPLOAD AREA
+   ============================================ */
+
+.upload-area {
+  border: 2px dashed #e5e1dc;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.upload-area:hover {
+  border-color: #5c4033;
+  background: #f8f6f4;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #6b5d57;
+}
+
+.upload-text {
+  font-size: 0.9rem;
+  word-break: break-word;
+  text-align: center;
+}
+
+.image-preview {
+  margin-top: 16px;
+  position: relative;
+  display: inline-block;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+}
+
+.remove-image {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================
+   LINKS SECTION
+   ============================================ */
+
+.link-input-container {
+  border: 1px solid #e0e0e0;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background: #f9f9f9;
+}
+
+.link-input-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.link-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.link-type-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.checkbox-wrapper span {
+  font-size: 0.9rem;
+}
+
+.btn-add-link {
+  padding: 10px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  height: fit-content;
+}
+
+.btn-add-link:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.links-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.link-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f9f9f9;
+  gap: 12px;
+}
+
+.link-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.link-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.link-url {
+  font-size: 0.85rem;
+  color: #666;
+  word-break: break-all;
+  margin-bottom: 8px;
+}
+
+.link-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.badge-brochure {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.badge-menu {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.badge-shop {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badge-order {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.btn-remove-link {
+  padding: 8px 12px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-remove-link:hover {
+  background: #d32f2f;
+}
+
+.empty-message {
+  color: #999;
+  font-style: italic;
+  margin-top: 8px;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ============================================
+   QUILL EDITOR
+   ============================================ */
+
 .quill-editor {
   background: white;
   border-radius: 8px;
@@ -875,361 +1149,9 @@ function closeModal() {
   font-style: italic;
 }
 
-.file-upload-section {
-  margin-top: 1rem;
-}
-
-.uploaded-files-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.uploaded-file-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.uploaded-file-item:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-}
-
-.file-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
-}
-
-.file-info svg {
-  color: #64748b;
-  flex-shrink: 0;
-}
-
-.file-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.file-name {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #1e293b;
-  word-break: break-word;
-}
-
-.file-badges {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.file-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.125rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  border-radius: 4px;
-  background: #e0e7ff;
-  color: #4338ca;
-}
-
-.file-badge.brochure {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.file-badge.menu {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.btn-remove-file {
-  padding: 0.5rem;
-  background: transparent;
-  border: none;
-  color: #ef4444;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.btn-remove-file:hover {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.btn-remove-file svg {
-  display: block;
-}
-
-.file-type-selection {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-}
-
-.selection-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #475569;
-  margin-bottom: 0.75rem;
-}
-
-.file-type-checkboxes {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.file-type-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.checkbox-input {
-  width: 1rem;
-  height: 1rem;
-  cursor: pointer;
-}
-
-.checkbox-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #334155;
-  cursor: pointer;
-  user-select: none;
-}
-
-.btn-add-file {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-add-file:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.btn-add-file:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-add-file svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 640px) {
-  .uploaded-file-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .btn-remove-file {
-    align-self: flex-end;
-  }
-
-  .file-type-checkboxes {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(45, 31, 26, 0.6);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  padding: 20px;
-}
-
-.modal-container {
-  background: white;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 900px;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 60px rgba(45, 31, 26, 0.3);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px 32px;
-  border-bottom: 1px solid #e5e1dc;
-  background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
-}
-
-.modal-title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2d1f1a;
-}
-
-.btn-close {
-  padding: 8px;
-  background: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: #6b5d57;
-  transition: all 0.2s;
-}
-
-.btn-close:hover {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.modal-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px 32px;
-}
-
-.form-section {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #e5e1dc;
-}
-
-.section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2d1f1a;
-  margin-bottom: 16px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.full-width {
-  grid-column: 1 / -1;
-}
-
-.form-label {
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #2d1f1a;
-  font-size: 0.9rem;
-}
-
-.required {
-  color: #dc2626;
-}
-
-.form-input, .form-textarea {
-  padding: 10px 12px;
-  border: 1px solid #e5e1dc;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  transition: border-color 0.2s;
-}
-
-.form-input:focus, .form-textarea:focus {
-  outline: none;
-  border-color: #5c4033;
-}
-
-.form-input:disabled {
-  background: #f5f5f5;
-  cursor: not-allowed;
-}
-
-.upload-area {
-  border: 2px dashed #e5e1dc;
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-}
-
-.file-input {
-  display: none;
-}
-
-.upload-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  color: #6b5d57;
-}
-
-.image-preview {
-  margin-top: 16px;
-  position: relative;
-  display: inline-block;
-}
-
-.image-preview img {
-  max-width: 200px;
-  max-height: 200px;
-  border-radius: 8px;
-}
-
-.remove-image {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #dc2626;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  font-size: 18px;
-  line-height: 1;
-}
+/* ============================================
+   SOCIAL MEDIA SECTION
+   ============================================ */
 
 .social-links-grid {
   display: grid;
@@ -1259,6 +1181,7 @@ function closeModal() {
   font-weight: 500;
   color: #2d1f1a;
   cursor: pointer;
+  user-select: none;
 }
 
 .checkbox-label-small {
@@ -1266,6 +1189,7 @@ function closeModal() {
   font-weight: 500;
   color: #2d1f1a;
   cursor: pointer;
+  user-select: none;
 }
 
 .custom-social-section {
@@ -1282,7 +1206,7 @@ function closeModal() {
 }
 
 .btn-remove {
-  padding: 8px;
+  padding: 8px 12px;
   background: #fee2e2;
   color: #dc2626;
   border: none;
@@ -1291,6 +1215,7 @@ function closeModal() {
   font-size: 18px;
   line-height: 1;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .btn-remove:hover {
@@ -1316,6 +1241,10 @@ function closeModal() {
 .btn-add-more:hover {
   background: #e5e1dc;
 }
+
+/* ============================================
+   FORM ACTIONS
+   ============================================ */
 
 .form-actions {
   display: flex;
@@ -1345,6 +1274,7 @@ function closeModal() {
 .btn-save:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .btn-cancel {
@@ -1362,11 +1292,278 @@ function closeModal() {
   background: #e5e1dc;
 }
 
-.modal-fade-enter-active, .modal-fade-leave-active {
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+.modal-fade-enter-active,
+.modal-fade-leave-active {
   transition: opacity 0.3s ease;
 }
 
-.modal-fade-enter-from, .modal-fade-leave-to {
+.modal-fade-enter-from,
+.modal-fade-leave-to {
   opacity: 0;
 }
+
+/* ============================================
+   RESPONSIVE - TABLET (768px - 1024px)
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .modal-header {
+    padding: 18px 20px;
+  }
+
+  .modal-title {
+    font-size: 1.2rem;
+  }
+
+  .modal-content {
+    padding: 18px 20px;
+  }
+
+  .section-title {
+    font-size: 1rem;
+  }
+
+  .form-grid {
+    gap: 14px;
+  }
+
+  .custom-social-item {
+    grid-template-columns: 90px 1fr 1.5fr auto;
+    gap: 10px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE - MOBILE (below 768px)
+   ============================================ */
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .modal-container {
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .modal-header {
+    padding: 16px;
+    border-radius: 0;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+  }
+
+  .btn-close {
+    padding: 6px;
+  }
+
+  .modal-content {
+    padding: 16px;
+  }
+
+  .section-title {
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+
+  /* Stack form grid to single column */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .form-label {
+    font-size: 0.85rem;
+  }
+
+  .form-input,
+  .form-textarea {
+    font-size: 16px; /* Prevent iOS zoom on input focus */
+    padding: 12px;
+  }
+
+  /* Links section mobile */
+  .link-input-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-add-link {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .link-type-checkboxes {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .link-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-remove-link {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Social media mobile */
+  .social-link-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .social-checkbox {
+    padding: 8px 0;
+  }
+
+  .custom-social-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .btn-remove {
+    width: 100%;
+    padding: 10px;
+  }
+
+  /* Form actions mobile */
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .btn-save,
+  .btn-cancel {
+    width: 100%;
+    padding: 14px;
+    justify-content: center;
+  }
+
+  .btn-add-more {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Quill editor mobile */
+  .quill-editor :deep(.ql-toolbar) {
+    padding: 8px;
+  }
+
+  .quill-editor :deep(.ql-container) {
+    min-height: 120px;
+  }
+
+  .quill-editor :deep(.ql-editor) {
+    min-height: 120px;
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  .upload-area {
+    padding: 16px;
+  }
+
+  .image-preview img {
+    max-width: 100%;
+    max-height: 150px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE - SMALL MOBILE (below 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  .modal-header {
+    padding: 12px;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+  }
+
+  .modal-content {
+    padding: 12px;
+  }
+
+  .section-title {
+    font-size: 0.95rem;
+  }
+
+  .form-section {
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+
+  .form-label {
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+  }
+
+  .form-input,
+  .form-textarea {
+    padding: 10px;
+  }
+
+  .link-input-container {
+    padding: 12px;
+  }
+
+  .link-badges {
+    gap: 6px;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+
+  .checkbox-wrapper span {
+    font-size: 0.85rem;
+  }
+
+  .btn-save,
+  .btn-cancel {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+.btn-close:focus-visible,
+.btn-save:focus-visible,
+.btn-cancel:focus-visible,
+.btn-add-link:focus-visible,
+.btn-remove-link:focus-visible,
+.btn-add-more:focus-visible,
+.form-input:focus-visible,
+.checkbox-input:focus-visible {
+  outline: 2px solid #5c4033;
+  outline-offset: 2px;
+}
+
 </style>
