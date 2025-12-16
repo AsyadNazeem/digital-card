@@ -6,7 +6,7 @@
     </button>
 
     <transition name="dropdown">
-      <div v-if="open" class="notifications-dropdown" @click.stop>
+      <div v-if="open" class="notifications-dropdown" @click.stop ref="dropdownRef">
         <div class="notifications-header">
           <h3>Notifications</h3>
           <button class="close-dropdown" @click="open = false" aria-label="Close">✕</button>
@@ -17,7 +17,7 @@
           <p>No new notifications</p>
         </div>
 
-        <div v-else class="notifications-list">
+        <div v-else class="notifications-list" ref="listRef">
           <div
               v-for="r in pending"
               :key="r.id"
@@ -61,9 +61,11 @@ const admin = useAdminStore()
 const router = useRouter()
 
 const open = ref(false)
+const dropdownRef = ref(null)
+const listRef = ref(null)
 let scrollPosition = 0
 
-// Enhanced mobile scroll lock
+// Mobile scroll lock with improved touch handling
 watch(open, (isOpen) => {
   if (window.innerWidth <= 480) {
     if (isOpen) {
@@ -77,32 +79,6 @@ watch(open, (isOpen) => {
       document.body.style.left = '0'
       document.body.style.right = '0'
       document.body.style.width = '100%'
-
-      // Prevent touch move on body
-      document.body.style.touchAction = 'none'
-
-      // Lock main containers
-      const adminMain = document.querySelector('.admin-main')
-      const adminContent = document.querySelector('.admin-content')
-      const dashboardHeader = document.querySelector('.dashboard-header')
-
-      if (adminMain) {
-        adminMain.style.overflow = 'hidden'
-        adminMain.style.position = 'fixed'
-        adminMain.style.width = '100%'
-      }
-
-      if (adminContent) {
-        adminContent.style.overflow = 'hidden'
-        adminContent.style.position = 'fixed'
-        adminContent.style.width = '100%'
-      }
-
-      if (dashboardHeader) {
-        dashboardHeader.style.position = 'fixed'
-        dashboardHeader.style.width = '100%'
-      }
-
     } else {
       // Unlock scroll
       document.body.style.overflow = ''
@@ -111,29 +87,6 @@ watch(open, (isOpen) => {
       document.body.style.left = ''
       document.body.style.right = ''
       document.body.style.width = ''
-      document.body.style.touchAction = ''
-
-      // Unlock main containers
-      const adminMain = document.querySelector('.admin-main')
-      const adminContent = document.querySelector('.admin-content')
-      const dashboardHeader = document.querySelector('.dashboard-header')
-
-      if (adminMain) {
-        adminMain.style.overflow = ''
-        adminMain.style.position = ''
-        adminMain.style.width = ''
-      }
-
-      if (adminContent) {
-        adminContent.style.overflow = ''
-        adminContent.style.position = ''
-        adminContent.style.width = ''
-      }
-
-      if (dashboardHeader) {
-        dashboardHeader.style.position = ''
-        dashboardHeader.style.width = ''
-      }
 
       // Restore scroll position
       window.scrollTo(0, scrollPosition)
@@ -185,15 +138,82 @@ function handleEscape(event) {
   }
 }
 
-// Prevent touch scroll on body when modal is open (mobile)
+// Improved touch move handler
 function preventTouchMove(e) {
   if (window.innerWidth <= 480 && open.value) {
-    // Only allow scrolling within the notifications list
-    const notificationsList = document.querySelector('.notifications-list')
-    if (notificationsList && notificationsList.contains(e.target)) {
-      return // Allow scrolling in the list
+    const dropdown = dropdownRef.value
+    const list = listRef.value
+
+    // If dropdown doesn't exist, prevent all scrolling
+    if (!dropdown) {
+      e.preventDefault()
+      return
     }
+
+    // Check if touch is inside the dropdown
+    if (!dropdown.contains(e.target)) {
+      e.preventDefault()
+      return
+    }
+
+    // If there's a scrollable list and the touch is inside it
+    if (list && list.contains(e.target)) {
+      const isScrollable = list.scrollHeight > list.clientHeight
+
+      if (isScrollable) {
+        // Check if we're at boundaries
+        const scrollTop = list.scrollTop
+        const scrollHeight = list.scrollHeight
+        const clientHeight = list.clientHeight
+
+        // Get touch direction
+        const touch = e.touches[0]
+        const deltaY = touch.clientY - (list._lastTouchY || touch.clientY)
+        list._lastTouchY = touch.clientY
+
+        // Prevent overscroll at top
+        if (scrollTop <= 0 && deltaY > 0) {
+          e.preventDefault()
+          return
+        }
+
+        // Prevent overscroll at bottom
+        if (scrollTop + clientHeight >= scrollHeight && deltaY < 0) {
+          e.preventDefault()
+          return
+        }
+
+        // Allow normal scrolling within the list
+        return
+      }
+    }
+
+    // Prevent all other touches
     e.preventDefault()
+  }
+}
+
+// Reset last touch position on touch end
+function handleTouchEnd(e) {
+  if (listRef.value) {
+    delete listRef.value._lastTouchY
+  }
+}
+
+// Prevent scroll on wheel events (for mouse users on mobile devices)
+function preventWheel(e) {
+  if (window.innerWidth <= 480 && open.value) {
+    const list = listRef.value
+
+    if (!list || !list.contains(e.target)) {
+      e.preventDefault()
+      return
+    }
+
+    const isScrollable = list.scrollHeight > list.clientHeight
+    if (!isScrollable) {
+      e.preventDefault()
+    }
   }
 }
 
@@ -201,12 +221,16 @@ onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('keydown', handleEscape)
   document.addEventListener('touchmove', preventTouchMove, { passive: false })
+  document.addEventListener('touchend', handleTouchEnd, { passive: true })
+  document.addEventListener('wheel', preventWheel, { passive: false })
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('keydown', handleEscape)
   document.removeEventListener('touchmove', preventTouchMove)
+  document.removeEventListener('touchend', handleTouchEnd)
+  document.removeEventListener('wheel', preventWheel)
 
   // Cleanup scroll lock if component unmounts while open
   if (open.value && window.innerWidth <= 480) {
@@ -216,28 +240,6 @@ onUnmounted(() => {
     document.body.style.left = ''
     document.body.style.right = ''
     document.body.style.width = ''
-    document.body.style.touchAction = ''
-
-    const adminMain = document.querySelector('.admin-main')
-    const adminContent = document.querySelector('.admin-content')
-    const dashboardHeader = document.querySelector('.dashboard-header')
-
-    if (adminMain) {
-      adminMain.style.overflow = ''
-      adminMain.style.position = ''
-      adminMain.style.width = ''
-    }
-
-    if (adminContent) {
-      adminContent.style.overflow = ''
-      adminContent.style.position = ''
-      adminContent.style.width = ''
-    }
-
-    if (dashboardHeader) {
-      dashboardHeader.style.position = ''
-      dashboardHeader.style.width = ''
-    }
   }
 })
 </script>
@@ -245,6 +247,7 @@ onUnmounted(() => {
 <style scoped>
 .notification-wrapper {
   position: relative;
+  z-index: 100;
 }
 
 .icon-btn {
@@ -276,8 +279,8 @@ onUnmounted(() => {
   position: absolute;
   top: -4px;
   right: -4px;
-  background: #d4af37;
-  color: #2d1f1a;
+  background: #ff3b30;
+  color: white;
   font-size: 0.7rem;
   font-weight: 700;
   padding: 2px 6px;
@@ -311,6 +314,8 @@ onUnmounted(() => {
   padding: 16px 20px;
   border-bottom: 1px solid #e5e1dc;
   background: white;
+  position: relative;
+  z-index: 1;
 }
 
 .notifications-header h3 {
@@ -338,6 +343,7 @@ onUnmounted(() => {
 .notifications-empty {
   padding: 40px 20px;
   text-align: center;
+  background: white;
 }
 
 .empty-icon {
@@ -356,6 +362,7 @@ onUnmounted(() => {
 .notifications-list {
   max-height: 400px;
   overflow-y: auto;
+  background: white;
 }
 
 .notifications-list::-webkit-scrollbar {
@@ -378,6 +385,7 @@ onUnmounted(() => {
   border-bottom: 1px solid #f5f5f0;
   cursor: pointer;
   transition: background 0.2s ease;
+  background: white;
 }
 
 .notification-item:hover {
@@ -519,6 +527,7 @@ onUnmounted(() => {
     backdrop-filter: blur(4px);
     z-index: 10000;
     touch-action: none;
+    -webkit-overflow-scrolling: auto;
   }
 
   .notifications-dropdown {
@@ -530,33 +539,47 @@ onUnmounted(() => {
     width: 100%;
     height: 100vh;
     height: 100dvh;
-    max-height: 100vh;
+    max-height: none;
     border-radius: 0;
     display: flex;
     flex-direction: column;
     z-index: 10001;
     overflow: hidden;
-    overscroll-behavior: contain;
+    overscroll-behavior: none;
+    background: white;
   }
 
-  .dropdown-enter-active,
+  .dropdown-enter-active {
+    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
   .dropdown-leave-active {
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53);
   }
 
   .dropdown-enter-from {
-    opacity: 0;
     transform: translateY(100%);
   }
 
+  .dropdown-enter-to {
+    transform: translateY(0);
+  }
+
+  .dropdown-leave-from {
+    transform: translateY(0);
+  }
+
   .dropdown-leave-to {
-    opacity: 0;
     transform: translateY(100%);
   }
 
   .notifications-header {
     padding: 16px 20px;
+    padding-top: max(16px, env(safe-area-inset-top));
     flex-shrink: 0;
+    border-bottom: 1px solid #e5e1dc;
+    background: white;
+    z-index: 2;
   }
 
   .notifications-header h3 {
@@ -566,6 +589,7 @@ onUnmounted(() => {
   .close-dropdown {
     font-size: 1.5rem;
     padding: 8px;
+    z-index: 3;
   }
 
   .notifications-list {
@@ -576,6 +600,9 @@ onUnmounted(() => {
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    background: white;
+    position: relative;
+    z-index: 1;
   }
 
   .notifications-empty {
@@ -587,10 +614,31 @@ onUnmounted(() => {
     justify-content: center;
     padding: 40px 20px;
     overflow: hidden;
+    background: white;
+    position: relative;
+    z-index: 1;
+    touch-action: none;
+    overscroll-behavior: none;
+  }
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.6;
+    display: block;
+  }
+
+  .notifications-empty p {
+    color: #6b5d57;
+    font-size: 1rem;
+    margin: 0;
   }
 
   .notification-item {
     padding: 14px 16px;
+    background: white;
+    position: relative;
+    z-index: 1;
   }
 
   .notification-icon {
@@ -603,6 +651,9 @@ onUnmounted(() => {
     flex-shrink: 0;
     padding: 16px 20px;
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    background: white;
+    border-top: 1px solid #e5e1dc;
+    z-index: 2;
   }
 }
 
