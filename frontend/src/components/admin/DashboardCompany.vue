@@ -1,6 +1,6 @@
 <template>
   <transition name="modal-fade">
-    <div v-if="show" class="modal-overlay" @click="closeModal">
+    <div v-if="show" class="modal-overlay">
       <div class="modal-container" @click.stop>
         <!-- Modal Header -->
         <div class="modal-header">
@@ -43,9 +43,9 @@
               </div>
             </div>
 
-            <!-- Logo Upload -->
+            <!-- Logo Upload - OPTIONAL -->
             <div class="form-group full-width">
-              <label class="form-label">Company Logo</label>
+              <label class="form-label">Company Logo (Optional)</label>
               <div class="upload-area">
                 <input
                     type="file"
@@ -60,7 +60,7 @@
                     <polyline points="17 8 12 3 7 8"></polyline>
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                   </svg>
-                  <span class="upload-text">{{ logoFileName || 'Click to upload new logo' }}</span>
+                  <span class="upload-text">{{ logoFileName || 'Click to upload logo (optional)' }}</span>
                 </label>
                 <div v-if="logoPreview" class="image-preview">
                   <img :src="logoPreview" alt="Logo preview"/>
@@ -320,14 +320,16 @@
   </transition>
 
   <!-- Logo Cropper Modal -->
-  <ImageCropperModal
-      :show="showLogoCropper"
-      :imageSrc="tempLogoSrc"
-      type="logo"
-      title="Crop Company Logo"
-      @close="showLogoCropper = false"
-      @cropped="handleLogoCropped"
-  />
+  <teleport to="body">
+    <ImageCropperModal
+        :show="showLogoCropper"
+        :imageSrc="tempLogoSrc"
+        type="logo"
+        title="Crop Company Logo"
+        @close="showLogoCropper = false"
+        @cropped="handleLogoCropped"
+    />
+  </teleport>
 </template>
 
 <script setup>
@@ -641,11 +643,14 @@ async function saveCompany() {
     })
     formData.append('socialLinks', JSON.stringify(socialLinks))
 
+    // ✅ FIXED: Only append logo if a new file was uploaded
     if (logoFile.value) {
       formData.append('logo', logoFile.value)
     } else if (!isCreating && props.company.logo) {
+      // Keep existing logo when editing
       formData.append('existingLogo', props.company.logo)
     }
+    // ✅ When creating without logo, don't append anything (backend will set to null)
 
     const linksToSave = [];
 

@@ -29,23 +29,221 @@ console.log("🔍 ENV TEST:", {
 
 // ✅ Email Transporter Configuration
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // or use 'smtp.gmail.com'
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // MUST be false for port 587
     auth: {
         user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS, // Use App Password for Gmail
+        pass: process.env.MAIL_PASS,
     },
+    tls: {
+        rejectUnauthorized: false
+    }
 });
 
 // ✅ Verify email configuration on startup
 transporter.verify((error, success) => {
     if (error) {
         console.error("❌ Email configuration error:", error);
+        console.error("❌ Check MAIL_USER and MAIL_PASS in .env");
     } else {
-        console.log("✅ Email server is ready to send messages");
+        console.log("✅ Email server ready for authRoutes (welcome & password reset emails)");
     }
 });
 
 // ========== EXISTING ROUTES ==========
+
+async function sendWelcomeEmail(user) {
+    try {
+        const welcomeEmailHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    line-height: 1.6; 
+                    color: #333; 
+                    margin: 0;
+                    padding: 0;
+                }
+                .container { 
+                    max-width: 600px; 
+                    margin: 0 auto; 
+                    padding: 20px; 
+                }
+                .header { 
+                    background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); 
+                    color: white; 
+                    padding: 40px 30px; 
+                    text-align: center; 
+                    border-radius: 10px 10px 0 0; 
+                }
+                .logo {
+                    width: 180px;
+                    height: auto;
+                    margin-bottom: 20px;
+                }
+                .content { 
+                    background: #ffffff; 
+                    padding: 40px 30px; 
+                    border: 1px solid #e5e1dc; 
+                    border-top: none;
+                }
+                .welcome-title {
+                    font-size: 24px;
+                    color: #2d1f1a;
+                    margin: 0 0 20px 0;
+                    font-weight: 700;
+                }
+                .welcome-text {
+                    font-size: 16px;
+                    color: #2d1f1a;
+                    margin: 0 0 20px 0;
+                }
+                .feature-box {
+                    background: #fafaf8;
+                    border-left: 4px solid #5c4033;
+                    padding: 20px;
+                    margin: 25px 0;
+                    border-radius: 4px;
+                }
+                .feature-box h3 {
+                    margin: 0 0 15px 0;
+                    color: #2d1f1a;
+                    font-size: 18px;
+                }
+                .feature-list {
+                    margin: 15px 0;
+                    padding-left: 20px;
+                }
+                .feature-list li {
+                    margin: 10px 0;
+                    color: #2d1f1a;
+                }
+                .button { 
+                    display: inline-block; 
+                    padding: 16px 32px; 
+                    background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); 
+                    color: white !important; 
+                    text-decoration: none; 
+                    border-radius: 8px; 
+                    margin: 25px 0; 
+                    font-weight: bold;
+                    font-size: 16px;
+                }
+                .button:hover { 
+                    background: linear-gradient(135deg, #3e2a23 0%, #5c4033 100%); 
+                }
+                .info-box {
+                    background: #f6ffed;
+                    border-left: 4px solid #52c41a;
+                    padding: 15px;
+                    margin: 20px 0;
+                    border-radius: 4px;
+                }
+                .footer { 
+                    text-align: center; 
+                    color: #6b5d57; 
+                    font-size: 14px; 
+                    margin-top: 30px; 
+                    padding-top: 20px; 
+                    border-top: 1px solid #e5e1dc; 
+                }
+                .footer a {
+                    color: #5c4033;
+                    text-decoration: none;
+                }
+                .footer a:hover {
+                    text-decoration: underline;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <img src="${process.env.FRONTEND_URL}/images/logo.jpeg" alt="TapMyName" class="logo" />
+                    <h1 style="margin: 0; color: #f5e6d3; font-size: 28px;">Welcome to TapMyName</h1>
+                    <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 16px;">
+                        Your Digital Business Card Journey Starts Here
+                    </p>
+                </div>
+                
+                <div class="content">
+                    <h2 class="welcome-title">Hi ${user.name}! 👋</h2>
+                    
+                    <p class="welcome-text">
+                        Thank you for joining TapMyName! We're excited to help you create and share 
+                        beautiful digital business cards.
+                    </p>
+                    
+                    <div class="feature-box">
+                        <h3>🚀 What You Can Do:</h3>
+                        <ul class="feature-list">
+                            <li>Create stunning digital business cards that work seamlessly with Apple Wallet and Google Wallet</li>
+                            <li>Track engagement with real-time analytics</li>
+                            <li>Keep your information up to date with automatic syncing</li>
+                            <li>Share your card instantly via QR code, link, or NFC</li>
+                            <li>Customize your card with multiple themes and designs</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="info-box">
+                        <strong>✅ Account Created Successfully</strong><br>
+                        You're all set! You can now access your dashboard and start creating your digital business card.
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${process.env.FRONTEND_URL}/dashboard" class="button">
+                            Go to Dashboard
+                        </a>
+                    </div>
+                    
+                    <p class="welcome-text">
+                        Need help getting started? Check out our <a href="${process.env.FRONTEND_URL}/help" 
+                        style="color: #5c4033; text-decoration: none; font-weight: 600;">quick start guide</a> 
+                        or contact our support team.
+                    </p>
+                    
+                    <p style="margin-top: 30px; color: #6b5d57; font-size: 14px;">
+                        <strong>Best regards,</strong><br>
+                        The TapMyName Team
+                    </p>
+                </div>
+                
+                <div class="footer">
+                    <p>
+                        <a href="${process.env.FRONTEND_URL}">Visit TapMyName</a> | 
+                        <a href="${process.env.FRONTEND_URL}/support">Support</a> | 
+                        <a href="${process.env.FRONTEND_URL}/privacy">Privacy Policy</a>
+                    </p>
+                    <p style="margin-top: 15px;">
+                        This is an automated message from TapMyName. Please do not reply to this email.
+                    </p>
+                    <p>© ${new Date().getFullYear()} TapMyName. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+
+        const mailOptions = {
+            from: `"TapMyName - Welcome" <${process.env.MAIL_USER}>`,
+            to: user.email,
+            subject: "Welcome to TapMyName! 🎉",
+            html: welcomeEmailHtml,
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log("✅ Welcome email sent to:", user.email);
+        return true;
+    } catch (error) {
+        console.error("❌ Failed to send welcome email:", error);
+        // Don't throw error - we don't want to fail registration if email fails
+        return false;
+    }
+}
+
 
 router.post("/register", async (req, res) => {
     try {
@@ -54,10 +252,8 @@ router.post("/register", async (req, res) => {
         if (!name || !email || !phone || !password || !countryCode)
             return res.status(400).json({ message: "All fields are required" });
 
-        // Combine country code + phone
         const fullPhone = `${countryCode}${phone}`.replace(/\s+/g, "");
 
-        // Validate with Google/libphonenumber-js
         const validated = validatePhoneNumberGoogle(fullPhone);
         if (!validated.isValid) {
             return res.status(400).json({ message: validated.error });
@@ -82,6 +278,10 @@ router.post("/register", async (req, res) => {
             selectedThemeId: 1,
             plan: "free",
         });
+
+        // ✅ Send welcome email after successful registration
+        console.log("📧 Sending welcome email...");
+        await sendWelcomeEmail(user);
 
         return res.status(201).json({
             message: "Registered successfully",
@@ -282,11 +482,13 @@ router.post("/google-register", async (req, res) => {
         console.log("🔵 Checking if user exists...");
 
         let user = await User.findOne({ where: { email } });
+        let isNewUser = false;
 
         if (user) {
             console.log("✅ User already exists:", user.id);
         } else {
             console.log("🔵 Creating new user...");
+            isNewUser = true;
 
             user = await User.create({
                 name,
@@ -300,6 +502,10 @@ router.post("/google-register", async (req, res) => {
             });
 
             console.log("✅ User created:", user.id);
+
+            // ✅ Send welcome email for new users
+            console.log("📧 Sending welcome email...");
+            await sendWelcomeEmail(user);
         }
 
         console.log("🔵 Generating JWT token...");
@@ -314,7 +520,7 @@ router.post("/google-register", async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Google registration successful",
+            message: isNewUser ? "Google registration successful" : "Welcome back!",
             token,
             user: {
                 id: user.id,

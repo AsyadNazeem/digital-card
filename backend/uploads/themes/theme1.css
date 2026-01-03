@@ -3,6 +3,115 @@
     /*font-family: 'Montserrat', sans-serif;*/
 }
 
+/* WhatsApp Modal Styles - Matching Review Modal */
+.whatsapp-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+
+.whatsapp-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideUp 0.3s ease-out;
+}
+
+.whatsapp-modal h3 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+}
+
+.whatsapp-options {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    justify-content: center;
+    align-items: center;
+}
+
+.whatsapp-icon-btn {
+    background: #ffffff;
+    border: 2px solid #e0e0e0;
+    cursor: pointer;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    border-radius: 12px;
+    width: 90px;
+    height: 90px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.whatsapp-icon-btn:hover {
+    transform: translateY(-3px);
+    background: #f7f7f7;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    border-color: #25D366;
+}
+
+.whatsapp-icon-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.whatsapp-icon-btn svg {
+    width: 50px;
+    height: 50px;
+}
+
+.whatsapp-icon-btn p {
+    margin-top: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Responsive for WhatsApp Modal */
+@media (max-width: 500px) {
+    .whatsapp-modal {
+        width: 90%;
+        max-width: 380px;
+        padding: 28px 24px;
+    }
+
+    .whatsapp-options {
+        gap: 20px;
+    }
+
+    .whatsapp-icon-btn {
+        width: 85px;
+        height: 85px;
+    }
+
+    .whatsapp-icon-btn svg {
+        width: 46px;
+        height: 46px;
+    }
+
+    .whatsapp-icon-btn p {
+        font-size: 13px;
+    }
+}
 
 /* default: up to 3 buttons in a single row */
 .additional-actions {

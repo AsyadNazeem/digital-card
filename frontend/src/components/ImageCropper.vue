@@ -268,7 +268,7 @@ watch(() => props.imageSrc, () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10000;
+  z-index: 100001;
   padding: 20px;
   overflow-y: auto;
 }

@@ -202,7 +202,7 @@ router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
             }],
             attributes: [
                 'id', 'firstName', 'lastName', 'email', 'mobile',
-                'telephone', 'whatsapp', 'designation', 'photo', 'companyId',
+                'telephone', 'whatsapp', 'whatsappChannel', 'designation', 'photo', 'companyId',
                 'status', 'createdAt', 'cardMobileNum'
             ],
             order: [['createdAt', 'DESC']]
@@ -552,7 +552,7 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
     }
 });
 
-// ✅ PUT: Update company
+// ✅ PUT: Update company (UPDATED - Logo Optional)
 router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => {
     uploadCompanyLogo(req, res, async (err) => {
         if (err) {
@@ -588,7 +588,7 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
                 }
             }
 
-            // ✅ NEW: Handle links
+            // Handle links
             let processedLinks = [];
 
             if (req.body.files) {
@@ -597,21 +597,18 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
 
                     if (Array.isArray(links)) {
                         for (const link of links) {
-                            // Validate URL
                             if (!link.url || !isValidUrl(link.url)) {
                                 return res.status(400).json({
                                     message: `Invalid URL: ${link.url || 'empty'}`
                                 });
                             }
 
-                            // Validate name
                             if (!link.name || !link.name.trim()) {
                                 return res.status(400).json({
                                     message: 'Link name is required'
                                 });
                             }
 
-                            // Validate at least one type
                             if (!link.isBrochure && !link.isMenu && !link.isShopNow && !link.isOrderNow) {
                                 return res.status(400).json({
                                     message: 'Each link must be marked as Brochure, Menu, Shop Now, or Order Now'
@@ -623,11 +620,10 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
                                 name: link.name.trim(),
                                 isBrochure: Boolean(link.isBrochure),
                                 isMenu: Boolean(link.isMenu),
-                                isShopNow: Boolean(link.isShopNow),      // NEW
-                                isOrderNow: Boolean(link.isOrderNow),    // NEW
-                                addedAt: new Date().toISOString()  // or link.addedAt for PUT
+                                isShopNow: Boolean(link.isShopNow),
+                                isOrderNow: Boolean(link.isOrderNow),
+                                addedAt: new Date().toISOString()
                             });
-
                         }
                     }
                 } catch (e) {
@@ -652,7 +648,7 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
                 tripAdvisor: req.body.tripAdvisor || null,
                 bio: req.body.bio || null,
                 socialLinks: socialLinks,
-                files: processedLinks, // Update links
+                files: processedLinks,
                 label: req.body.label || null,
                 country: req.body.country || null,
                 streetAddress: req.body.streetAddress || null,
@@ -662,8 +658,9 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
                 poBox: req.body.poBox || null
             };
 
-            // Handle logo update
+            // ✅ FIXED: Handle logo update (OPTIONAL)
             if (req.file) {
+                // New logo uploaded - delete old one if exists
                 if (company.logo) {
                     const oldLogoPath = path.join(__dirname, "..", company.logo);
                     if (fs.existsSync(oldLogoPath)) {
@@ -672,8 +669,10 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
                 }
                 updateData.logo = `/uploads/logos/${req.file.filename}`;
             } else if (req.body.existingLogo) {
+                // Keep existing logo
                 updateData.logo = req.body.existingLogo;
             }
+            // ✅ If no file and no existingLogo, logo remains unchanged (keeps current value)
 
             await company.update(updateData);
             console.log("✅ Company updated successfully");
@@ -767,6 +766,15 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
             // -------------------------
             let formattedWhatsapp = req.body.whatsapp;
 
+            if (req.body.whatsappChannel && req.body.whatsappChannel.trim()) {
+                const urlPattern = /^https?:\/\/.+/i;
+                if (!urlPattern.test(req.body.whatsappChannel.trim())) {
+                    return res.status(400).json({
+                        message: "WhatsApp Channel must be a valid URL"
+                    });
+                }
+            }
+
             // -------------------------
             // FORMAT NEW CARD MOBILE FIELD
             // -------------------------
@@ -790,6 +798,7 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
                 mobile: formattedMobile,
                 whatsapp: formattedWhatsapp,
                 cardMobileNum: formattedCardMobile,   // ✅ added correctly
+                whatsappChannel: req.body.whatsappChannel ? req.body.whatsappChannel.trim() : null, // ✅ ADD THIS
                 email: req.body.email,
                 designation: req.body.designation,
                 companyId: req.body.companyId || null,
@@ -889,13 +898,6 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
                 });
             }
 
-            // Logo is required for new companies
-            if (!req.file) {
-                return res.status(400).json({
-                    message: "Company logo is required"
-                });
-            }
-
             let socialLinks = {};
             if (req.body.socialLinks) {
                 try {
@@ -907,7 +909,7 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
                 }
             }
 
-            // ✅ NEW: Handle links (brochures/menus)
+            // Handle links
             let processedLinks = [];
 
             if (req.body.files) {
@@ -916,21 +918,18 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
 
                     if (Array.isArray(links)) {
                         for (const link of links) {
-                            // Validate URL
                             if (!link.url || !isValidUrl(link.url)) {
                                 return res.status(400).json({
                                     message: `Invalid URL: ${link.url || 'empty'}`
                                 });
                             }
 
-                            // Validate name
                             if (!link.name || !link.name.trim()) {
                                 return res.status(400).json({
                                     message: 'Link name is required'
                                 });
                             }
 
-                            // Validate at least one type is selected
                             if (!link.isBrochure && !link.isMenu && !link.isShopNow && !link.isOrderNow) {
                                 return res.status(400).json({
                                     message: 'Each link must be marked as Brochure, Menu, Shop Now, or Order Now'
@@ -942,9 +941,9 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
                                 name: link.name.trim(),
                                 isBrochure: Boolean(link.isBrochure),
                                 isMenu: Boolean(link.isMenu),
-                                isShopNow: Boolean(link.isShopNow),      // NEW
-                                isOrderNow: Boolean(link.isOrderNow),    // NEW
-                                addedAt: new Date().toISOString()  // or link.addedAt for PUT
+                                isShopNow: Boolean(link.isShopNow),
+                                isOrderNow: Boolean(link.isOrderNow),
+                                addedAt: new Date().toISOString()
                             });
                         }
                     }
@@ -971,7 +970,7 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
                 tripAdvisor: req.body.tripAdvisor || null,
                 bio: req.body.bio || null,
                 socialLinks: socialLinks,
-                files: processedLinks, // Store links array
+                files: processedLinks,
                 label: req.body.label || null,
                 country: req.body.country || null,
                 streetAddress: req.body.streetAddress || null,
@@ -979,8 +978,13 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
                 city: req.body.city || null,
                 postalCode: req.body.postalCode || null,
                 poBox: req.body.poBox || null,
-                logo: `/uploads/logos/${req.file.filename}`
+                logo: null // ✅ Initialize as null
             };
+
+            // ✅ FIXED: Only add logo if file was uploaded
+            if (req.file) {
+                companyData.logo = `/uploads/logos/${req.file.filename}`;
+            }
 
             const newCompany = await Company.create(companyData);
             console.log("✅ Company created successfully");
@@ -1059,6 +1063,16 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
             // --- FORMAT WHATSAPP ---
             let formattedWhatsapp = req.body.whatsapp;
 
+            // ✅ ADD: Validate WhatsApp Channel URL if provided
+            if (req.body.whatsappChannel && req.body.whatsappChannel.trim()) {
+                const urlPattern = /^https?:\/\/.+/i;
+                if (!urlPattern.test(req.body.whatsappChannel.trim())) {
+                    return res.status(400).json({
+                        message: "WhatsApp Channel must be a valid URL"
+                    });
+                }
+            }
+
             // --- FORMAT CARD MOBILE (NEW FIELD) ---
             let formattedCardMobile = req.body.cardMobileNum;
 
@@ -1079,6 +1093,7 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
                 telephone: formattedTelephone,
                 mobile: formattedMobile,
                 whatsapp: formattedWhatsapp,
+                whatsappChannel: req.body.whatsappChannel?.trim() || null,  // ✅ ADD THIS LINE
                 cardMobileNum: formattedCardMobile,   // ✅ added correctly here
                 email: req.body.email,
                 designation: req.body.designation,

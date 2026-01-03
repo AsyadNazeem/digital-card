@@ -69,7 +69,8 @@
                       required
                   />
                 </div>
-                <p v-if="mobileValidation.message" :class="mobileValidation.isValid ? 'validation-success' : 'validation-error'">
+                <p v-if="mobileValidation.message"
+                   :class="mobileValidation.isValid ? 'validation-success' : 'validation-error'">
                   {{ mobileValidation.message }}
                 </p>
               </div>
@@ -89,7 +90,8 @@
                       @input="validateTelephone"
                   />
                 </div>
-                <p v-if="telephoneValidation.message" :class="telephoneValidation.isValid ? 'validation-success' : 'validation-error'">
+                <p v-if="telephoneValidation.message"
+                   :class="telephoneValidation.isValid ? 'validation-success' : 'validation-error'">
                   {{ telephoneValidation.message }}
                 </p>
               </div>
@@ -122,6 +124,19 @@
                 <p v-if="mobileValidation.whatsapp?.message && !whatsappSameAsMobile"
                    :class="mobileValidation.whatsapp?.isValid ? 'validation-success' : 'validation-error'">
                   {{ mobileValidation.whatsapp.message }}
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">WhatsApp Channel Link</label>
+                <input
+                    v-model="form.whatsappChannel"
+                    type="url"
+                    class="form-input"
+                    placeholder="https://whatsapp.com/channel/..."
+                />
+                <p class="validation-info">
+                  📢 Enter your WhatsApp Channel invite link (optional)
                 </p>
               </div>
 
@@ -204,21 +219,24 @@
   </transition>
 
   <!-- Photo Cropper Modal -->
-  <ImageCropperModal
-      :show="showPhotoCropper"
-      :imageSrc="tempPhotoSrc"
-      type="photo"
-      title="Crop Contact Photo"
-      @close="showPhotoCropper = false"
-      @cropped="handlePhotoCropped"
-  />
+  <teleport to="body">
+    <ImageCropperModal
+        :show="showPhotoCropper"
+        :imageSrc="tempPhotoSrc"
+        type="photo"
+        title="Crop Contact Photo"
+        @close="showPhotoCropper = false"
+        @cropped="handlePhotoCropped"
+    />
+  </teleport>
 </template>
 
+
 <script setup>
-import { ref, watch, computed } from 'vue'
+import {computed, ref, watch} from 'vue'
 import adminApi from '../../services/adminApi'
-import { VITE_IMAGE_UPLOAD_URL } from '@/config.js'
-import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js'
+import {VITE_IMAGE_UPLOAD_URL} from '@/config.js'
+import {isValidPhoneNumber, parsePhoneNumber} from 'libphonenumber-js'
 import ImageCropperModal from "@/components/ImageCropper.vue"
 import CountryCodeDropdown from "@/components/CountryCodeDropdown.vue";
 
@@ -243,6 +261,7 @@ const form = ref({
   telephone: '',
   mobile: '',
   whatsapp: "", // ADD THIS
+  whatsappChannel: "",  // ✅ ADD THIS NEW FIELD
   email: '',
   designation: '',
   companyId: '',
@@ -256,7 +275,7 @@ const telephoneValidation = ref({isValid: false, message: ''})
 const mobileValidation = ref({
   isValid: false,
   message: '',
-  whatsapp: { isValid: false, message: '' }
+  whatsapp: {isValid: false, message: ''}
 })
 
 const photoFile = ref(null)
@@ -276,7 +295,7 @@ function validateCardMobile() {
   const fullNumber = cardMobileCountryCode.value + form.value.cardMobileNum;
 
   if (!form.value.cardMobileNum) {
-    cardMobileValidation.value = { isValid: false, message: "Required" };
+    cardMobileValidation.value = {isValid: false, message: "Required"};
     return;
   }
 
@@ -388,7 +407,7 @@ watch(whatsappSameAsMobile, (isSame) => {
     }
   } else {
     // When unchecked, clear validation
-    mobileValidation.value.whatsapp = { isValid: false, message: '' };
+    mobileValidation.value.whatsapp = {isValid: false, message: ''};
   }
 });
 
@@ -420,10 +439,9 @@ watch(cardMobileSameAsMobile, (isSame) => {
   } else {
     // When unchecked, clear the field and validation
     form.value.cardMobileNum = '';
-    cardMobileValidation.value = { isValid: false, message: '' };
+    cardMobileValidation.value = {isValid: false, message: ''};
   }
 });
-
 
 
 function handleContactWhatsApp(event) {
@@ -452,7 +470,7 @@ function handleContactWhatsApp(event) {
       };
     }
   } else {
-    mobileValidation.value.whatsapp = { isValid: false, message: '' };
+    mobileValidation.value.whatsapp = {isValid: false, message: ''};
   }
 }
 
@@ -547,6 +565,7 @@ watch(() => props.contact, (newContact) => {
       telephone: isCreating ? '' : extractNumber(newContact.telephone),
       mobile: isCreating ? '' : extractNumber(newContact.mobile),
       whatsapp: isCreating ? '' : extractNumber(newContact.whatsapp),
+      whatsappChannel: newContact.whatsappChannel || '',  // ✅ ADD THIS
       email: newContact.email || '',
       designation: newContact.designation || '',
       companyId: newContact.companyId || '',
@@ -625,7 +644,6 @@ watch(() => props.contact, (newContact) => {
     }
   }
 }, {immediate: true})
-
 
 
 // Fetch companies when modal opens
@@ -759,6 +777,14 @@ async function saveContact() {
   // Determine if we're creating or editing
   const isCreating = !props.contact?.id
 
+  if (form.value.whatsappChannel && form.value.whatsappChannel.trim()) {
+    const urlPattern = /^https?:\/\/.+/i;
+    if (!urlPattern.test(form.value.whatsappChannel.trim())) {
+      alert("WhatsApp Channel must be a valid URL starting with http:// or https://");
+      return;
+    }
+  }
+
   saving.value = true
   try {
     const formData = new FormData()
@@ -776,6 +802,8 @@ async function saveContact() {
 
     const fullWhatsapp = whatsappCountryCode.value + form.value.whatsapp
     formData.append('whatsapp', fullWhatsapp)
+
+    formData.append('whatsappChannel', form.value.whatsappChannel || '')
 
     // Card Mobile Number
     let fullCardMobile = ""
@@ -959,7 +987,7 @@ select.form-input {
   border-radius: 8px;
   font-size: 0.95rem;
   transition: border-color 0.2s;
-  width: 100%;
+  width: 93%;
   font-family: inherit;
 }
 

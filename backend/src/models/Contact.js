@@ -122,7 +122,6 @@ const Contact = sequelize.define(
             allowNull: true,
             comment: "Path to contact photo (e.g., /uploads/photos/filename.jpg)"
         },
-        // ADDRESS FIELDS REMOVED - NOW IN COMPANY MODEL
         status: {
             type: DataTypes.ENUM("active", "inactive"),
             defaultValue: "active",
@@ -142,6 +141,22 @@ const Contact = sequelize.define(
             },
             comment: "WhatsApp number in E.164 format (defaults to mobile if not provided)"
         },
+        // ✅ NEW FIELD
+        whatsappChannel: {
+            type: DataTypes.STRING(500),
+            allowNull: true,
+            validate: {
+                isValidUrl(value) {
+                    if (value && value.trim()) {
+                        const urlPattern = /^https?:\/\/.+/i;
+                        if (!urlPattern.test(value)) {
+                            throw new Error("WhatsApp Channel must be a valid URL");
+                        }
+                    }
+                }
+            },
+            comment: "WhatsApp Channel invite link"
+        },
         cardMobileNum: {
             type: DataTypes.STRING(20),
             allowNull: true,
@@ -157,7 +172,6 @@ const Contact = sequelize.define(
             comment: "New card mobile number (defaults to mobile if checkbox is ON)"
         },
     },
-
     {
         tableName: "contacts",
         timestamps: true,
@@ -211,6 +225,3 @@ Contact.belongsTo(Company, {
 });
 
 export default Contact;
-
-
-

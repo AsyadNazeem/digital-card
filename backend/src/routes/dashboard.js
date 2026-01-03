@@ -226,8 +226,6 @@ router.post("/company", authenticate, uploadCompanyLogo, async (req, res) => {
     }
 });
 
-
-
 // ✅ Update company
 router.put("/company/:id", authenticate, uploadCompanyLogo, async (req, res) => {
     try {
@@ -361,7 +359,6 @@ router.put("/company/:id", authenticate, uploadCompanyLogo, async (req, res) => 
     }
 });
 
-
 // ✅ Delete company
 router.delete("/company/:id", authenticate, async (req, res) => {
     try {
@@ -397,7 +394,7 @@ router.get("/companies", authenticate, async (req, res) => {
 // CONTACT ROUTES
 // ============================================
 
-// ✅ Create a new contact (ADDRESS FIELDS REMOVED)
+// ✅ Create a new contact
 router.post(
     "/contact",
     authenticate,
@@ -412,7 +409,8 @@ router.post(
                 email,
                 designation,
                 companyId,
-                status
+                status,
+                whatsappChannel  // ✅ NEW
             } = req.body;
 
             // Validate required fields
@@ -452,6 +450,15 @@ router.post(
                 validatedWhatsapp = whatsappValidation.e164;
             }
 
+            if (whatsappChannel && whatsappChannel.trim()) {
+                const urlPattern = /^https?:\/\/.+/i;
+                if (!urlPattern.test(whatsappChannel.trim())) {
+                    return res.status(400).json({
+                        message: "WhatsApp Channel must be a valid URL"
+                    });
+                }
+            }
+
             // Check for duplicate mobile number
             const existingContact = await Contact.findOne({
                 where: {
@@ -474,12 +481,14 @@ router.post(
                 telephone: validatedTelephone,
                 mobile: mobileValidation.e164,
                 whatsapp: validatedWhatsapp, // ✅ CHANGED: Use validated WhatsApp
+                whatsappChannel: whatsappChannel ? whatsappChannel.trim() : null,  // ✅ NEW
                 email,
                 designation,
                 companyId: companyId || null,
                 photo,
                 status,
                 userId: req.userId,
+                cardMobileNum: mobileValidation.e164,
             });
 
             res.status(201).json({
@@ -507,7 +516,8 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             email,
             designation,
             companyId,
-            status
+            status,
+            whatsappChannel  // ✅ NEW
         } = req.body;
 
         // Validate mobile number if provided
@@ -560,6 +570,15 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             validatedWhatsApp = whatsappValidation.e164;
         }
 
+        if (whatsappChannel && whatsappChannel.trim()) {
+            const urlPattern = /^https?:\/\/.+/i;
+            if (!urlPattern.test(whatsappChannel.trim())) {
+                return res.status(400).json({
+                    message: "WhatsApp Channel must be a valid URL"
+                });
+            }
+        }
+
 
         await contact.update({
             firstName,
@@ -567,6 +586,7 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             telephone: validatedTelephone,
             mobile: validatedMobile,
             whatsapp: validatedWhatsApp,
+            whatsappChannel: whatsappChannel !== undefined ? (whatsappChannel ? whatsappChannel.trim() : null) : contact.whatsappChannel,  // ✅ NEW
             email,
             designation,
             companyId: companyId || null,

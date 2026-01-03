@@ -19,7 +19,9 @@
     </header>
 
     <!-- Request Limit Increase Banner -->
-    <div v-if="companyCount >= userLimits.companyLimit || contactCount >= userLimits.contactLimit || reviewCount >= userLimits.reviewLimit" class="limit-banner">
+    <div
+        v-if="companyCount >= userLimits.companyLimit || contactCount >= userLimits.contactLimit || reviewCount >= userLimits.reviewLimit"
+        class="limit-banner">
       <div class="limit-banner-content">
         <div class="limit-banner-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -321,7 +323,8 @@
               <label class="form-label">Links (Brochures, Menus, Shop, Orders)</label>
 
               <!-- Add New Link Form -->
-              <div class="link-input-container" style="border: 1px solid #e0e0e0; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+              <div class="link-input-container"
+                   style="border: 1px solid #e0e0e0; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
                 <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start;">
                   <div>
                     <input
@@ -680,6 +683,7 @@
                 <th>Email</th>
                 <th>Designation</th>
                 <th>Company</th>
+                <th>WhatsApp Channel</th>  <!-- ✅ NEW -->
                 <th>Status</th>
                 <th>Photo</th>
                 <th>Wallet</th>
@@ -699,11 +703,28 @@
                 <td data-label="Email">{{ c.email }}</td>
                 <td data-label="Designation">{{ c.designation }}</td>
                 <td data-label="Company">{{ c.Company?.companyName || '-' }}</td>
+                <td data-label="WhatsApp Channel">
+                  <a
+                      v-if="c.whatsappChannel"
+                      :href="c.whatsappChannel"
+                      target="_blank"
+                      class="link"
+                      style="display: inline-flex; align-items: center; gap: 4px;"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path
+                          d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                    </svg>
+                    View Channel
+                  </a>
+                  <span v-else>-</span>
+                </td>
                 <td data-label="Status">
                   <span :class="['status-badge', c.status]">{{ c.status }}</span>
                 </td>
                 <td data-label="Photo">
-                  <img v-if="c.photo" :src="`${VITE_IMAGE_UPLOAD_URL}${c.photo}`" class="photo-thumb" alt="Contact Photo"/>
+                  <img v-if="c.photo" :src="`${VITE_IMAGE_UPLOAD_URL}${c.photo}`" class="photo-thumb"
+                       alt="Contact Photo"/>
                   <span v-else>-</span>
                 </td>
                 <td data-label="Wallet">
@@ -958,6 +979,19 @@
               </div>
 
               <div class="form-group">
+                <label class="form-label">WhatsApp Channel Link</label>
+                <input
+                    v-model="contactForm.whatsappChannel"
+                    type="url"
+                    class="form-input"
+                    placeholder="https://whatsapp.com/channel/..."
+                />
+                <p style="color: #7f8c8d; font-size: 0.85rem; margin-top: 0.5rem;">
+                  📢 Enter your WhatsApp Channel invite link (optional)
+                </p>
+              </div>
+
+              <div class="form-group">
                 <label class="form-label">Email <span class="required">*</span></label>
                 <input v-model="contactForm.email" type="email" class="form-input" required/>
               </div>
@@ -1138,7 +1172,7 @@
                 </button>
               </div>
 
-              <hr />
+              <hr/>
             </div>
 
 
@@ -1445,12 +1479,15 @@
                           @click="showCurrentPassword = !showCurrentPassword"
                           class="password-toggle-btn"
                       >
-                        <svg v-if="!showCurrentPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg v-if="!showCurrentPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2">
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                           <circle cx="12" cy="12" r="3"></circle>
                         </svg>
-                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <path
+                              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                           <line x1="1" y1="1" x2="23" y2="23"></line>
                         </svg>
                       </button>
@@ -1471,12 +1508,15 @@
                           @click="showNewPassword = !showNewPassword"
                           class="password-toggle-btn"
                       >
-                        <svg v-if="!showNewPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg v-if="!showNewPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2">
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                           <circle cx="12" cy="12" r="3"></circle>
                         </svg>
-                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <path
+                              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                           <line x1="1" y1="1" x2="23" y2="23"></line>
                         </svg>
                       </button>
@@ -1497,12 +1537,15 @@
                           @click="showConfirmPassword = !showConfirmPassword"
                           class="password-toggle-btn"
                       >
-                        <svg v-if="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg v-if="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2">
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                           <circle cx="12" cy="12" r="3"></circle>
                         </svg>
-                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                          <path
+                              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                           <line x1="1" y1="1" x2="23" y2="23"></line>
                         </svg>
                       </button>
@@ -2082,7 +2125,8 @@
                   </label>
                   <div class="quantity-selector">
                     <button type="button" @click="decrementReviews" class="qty-btn">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                       </svg>
                     </button>
@@ -2094,7 +2138,8 @@
                         class="qty-input"
                     />
                     <button type="button" @click="incrementReviews" class="qty-btn">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                       </svg>
@@ -2295,7 +2340,7 @@ const userCompanies = ref([]) // holds the list of companies
 
 const showPhonePopup = ref(false);
 const phoneNumber = ref("");
-const countryCode = ref("+94");
+const countryCode = ref("+1");
 const errorMsg = ref("");
 const loading = ref(false);
 
@@ -2365,6 +2410,7 @@ const contactForm = ref({
   telephone: "",
   mobile: "",
   whatsapp: "", // ADD THIS
+  whatsappChannel: "",
   email: "",
   designation: "",
   companyId: "",
@@ -2640,7 +2686,7 @@ async function saveToGoogleWallet(contact) {
             : `/uploads/photos/${contact.photo.split('/').pop()}`) // Just filename
         : '';
 
-    console.log("🎫 Image paths:", { companyLogo, photo });
+    console.log("🎫 Image paths:", {companyLogo, photo});
 
     const res = await api.post('/wallet/google/save-url', {
       contact: {
@@ -2937,7 +2983,7 @@ async function removeReview(index) {
 async function openReviewShareModal(review) {
   try {
     const res = await api.post(`/dashboard/reviews/${review.id}/generate-share`, {}, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {Authorization: `Bearer ${token}`}
     });
 
     // Open the new URL format in a new tab
@@ -3003,11 +3049,15 @@ async function downloadBothQRCodes() {
     // Draw left QR
     const img1 = new Image();
     img1.src = c1.toDataURL('image/png');
-    await new Promise((resolve) => { img1.onload = resolve; });
+    await new Promise((resolve) => {
+      img1.onload = resolve;
+    });
 
     const img2 = new Image();
     img2.src = c2.toDataURL('image/png');
-    await new Promise((resolve) => { img2.onload = resolve; });
+    await new Promise((resolve) => {
+      img2.onload = resolve;
+    });
 
     const leftX = padding;
     const rightX = padding * 2 + qrSize;
@@ -3037,7 +3087,7 @@ async function downloadBothQRCodes() {
 
     // Trigger download
     poster.toBlob((blob) => {
-      const file = new File([blob], `${(reviewShareData.value.companyName || 'review')}-qrs.png`, { type: 'image/png' });
+      const file = new File([blob], `${(reviewShareData.value.companyName || 'review')}-qrs.png`, {type: 'image/png'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(file);
       a.download = file.name;
@@ -3049,7 +3099,6 @@ async function downloadBothQRCodes() {
     alert('Failed to create download.');
   }
 }
-
 
 
 async function sharePoster() {
@@ -3416,13 +3465,13 @@ function decrementSettingsContacts() {
   }
 }
 
-function decrementSettingsReviews () {
+function decrementSettingsReviews() {
   if (settingsRequestForm.value.reviews > 0) {
     settingsRequestForm.value.reviews--;
   }
 }
 
-function incrementSettingsReviews () {
+function incrementSettingsReviews() {
   if (settingsRequestForm.value.reviews < 100) {
     settingsRequestForm.value.reviews++;
   }
@@ -3721,6 +3770,7 @@ function editContact(contact) {
     telephone: extractNumber(contact.telephone),
     mobile: extractNumber(contact.mobile),
     whatsapp: extractNumber(contact.whatsapp || contact.mobile), // ADD THIS
+    whatsappChannel: contact.whatsappChannel || "",  // ✅ ADD THIS
     email: contact.email,
     designation: contact.designation,
     companyId: contact.companyId,
@@ -4377,6 +4427,14 @@ async function saveContact() {
       whatsappE164 = whatsappValidation.e164;
     }
 
+    if (contactForm.value.whatsappChannel && contactForm.value.whatsappChannel.trim()) {
+      const urlPattern = /^https?:\/\/.+/i;
+      if (!urlPattern.test(contactForm.value.whatsappChannel.trim())) {
+        alert("WhatsApp Channel must be a valid URL starting with http:// or https://");
+        return;
+      }
+    }
+
     const formData = new FormData();
 
     // ✅ FIXED: Handle special fields explicitly, then add others
@@ -4387,6 +4445,8 @@ async function saveContact() {
         formData.append("mobile", mobileValidation.e164);
       } else if (key === "whatsapp") {
         formData.append("whatsapp", whatsappE164);
+      } else if (key === "whatsappChannel") {  // ✅ ADD THIS
+        formData.append("whatsappChannel", contactForm.value[key] || "");
       } else if (key === "telephone") {
         if (telephoneE164) {
           formData.append("telephone", telephoneE164);
@@ -4420,6 +4480,7 @@ async function saveContact() {
       telephone: "",
       mobile: "",
       whatsapp: "", // ✅ ADD THIS
+      whatsappChannel: "",  // ✅ ADD THIS
       email: "",
       designation: "",
       companyId: "",
@@ -7936,7 +7997,6 @@ onMounted(loadData);
   /* ============================================
      MOBILE TABLE CARDS - ENHANCED STYLING
      ============================================ */
-
   /* Hide table headers on mobile */
   .data-table thead {
     display: none;
@@ -8036,7 +8096,6 @@ onMounted(loadData);
   }
 
   /* Special styling for different data types */
-
   /* Images/Thumbnails */
   .logo-thumb,
   .photo-thumb {

@@ -10,31 +10,37 @@ export function useModalScrollLock(isOpen) {
         if (activeModals === 1) {
             scrollPosition = window.pageYOffset || document.documentElement.scrollTop
 
-            document.body.style.overflow = 'hidden'
-            document.body.style.position = 'fixed'
-            document.body.style.top = `-${scrollPosition}px`
-            document.body.style.width = '100%'
-            document.body.style.left = '0'
-            document.body.style.right = '0'
-            document.body.classList.add('modal-open')
+            // Store scroll position
+            document.body.setAttribute('data-scroll-position', scrollPosition)
 
-            // REMOVED: Don't hide any navigation elements
-            // This was causing the flash issue
+            // Prevent scrolling without changing positioning
+            document.body.style.overflow = 'hidden'
+            document.body.style.position = 'relative' // Keep in normal flow
+
+            // Calculate and apply scrollbar width compensation
+            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+            if (scrollbarWidth > 0) {
+                document.body.style.paddingRight = `${scrollbarWidth}px`
+            }
+
+            document.body.classList.add('modal-open')
         }
     }
 
     const unlockScroll = () => {
         activeModals = Math.max(0, activeModals - 1)
         if (activeModals === 0) {
+            const savedPosition = parseInt(document.body.getAttribute('data-scroll-position') || '0')
+
+            // Remove all styles
             document.body.style.overflow = ''
             document.body.style.position = ''
-            document.body.style.top = ''
-            document.body.style.width = ''
-            document.body.style.left = ''
-            document.body.style.right = ''
+            document.body.style.paddingRight = ''
             document.body.classList.remove('modal-open')
+            document.body.removeAttribute('data-scroll-position')
 
-            window.scrollTo(0, scrollPosition)
+            // Restore scroll position
+            window.scrollTo(0, savedPosition)
         }
     }
 
@@ -42,6 +48,7 @@ export function useModalScrollLock(isOpen) {
         isOpen,
         (newValue) => {
             if (newValue) {
+                // Use setTimeout to ensure DOM is ready
                 setTimeout(lockScroll, 0)
             } else {
                 unlockScroll()
