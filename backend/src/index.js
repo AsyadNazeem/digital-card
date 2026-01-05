@@ -16,6 +16,9 @@ import AdminLog from "./models/AdminLog.js";
 import UserPermission from "./models/UserPermission.js";
 import PermissionChange from "./models/PermissionChange.js";
 import Review from "./models/Review.js";
+import ContactCardView from "./models/ContactCardView.js";
+import ContactCardClick from "./models/ContactCardClick.js";
+import AnalyticsSummary from "./models/AnalyticsSummary.js";
 
 // ROUTES
 import authRoutes from "./routes/auth.js";
@@ -30,6 +33,7 @@ import themeRoutes from "./routes/theme.js";
 import adminThemeRoutes from "./routes/adminTheme.js";
 import adminPermissionRoutes from './routes/adminPermissionRoutes.js';
 import walletRoutes from "./routes/wallet.js";
+import analyticsRoutes from "./routes/analytics.js";
 
 // PATH
 import path from "path";
@@ -43,6 +47,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // LOAD ALL MODELS FOR ASSOCIATIONS
+// Update models object (around line 30)
 const models = {
     User,
     Company,
@@ -53,8 +58,13 @@ const models = {
     AdminLog,
     UserPermission,
     PermissionChange,
-    Review
+    Review,
+    ContactCardView,      // ✅ ADD
+    ContactCardClick,     // ✅ ADD
+    AnalyticsSummary      // ✅ ADD
 };
+
+
 
 // RUN ALL ASSOCIATIONS
 Object.values(models).forEach((model) => {
@@ -411,6 +421,7 @@ app.use("/api/otp", otpRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/themes", themeRoutes);
 app.use("/api/wallet", walletRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // HOME
 app.get("/", (req, res) => {

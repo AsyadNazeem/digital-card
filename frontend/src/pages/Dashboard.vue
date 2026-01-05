@@ -72,8 +72,8 @@
           </button>
 
           <button
-              @click="activeTab = 'Review'"
-              :class="['tab-button', { active: activeTab === 'Review' }]"
+              @click="activeTab = 'review'"
+              :class="['tab-button', { active: activeTab === 'review' }]"
           >
             <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2">
@@ -84,8 +84,21 @@
           </button>
 
           <button
-              @click="activeTab = 'Theme'"
-              :class="['tab-button', { active: activeTab === 'Theme' }]"
+              @click="activeTab = 'analytics'"
+              :class="['tab-button', { active: activeTab === 'analytics' }]"
+          >
+            <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="20" x2="12" y2="10"></line>
+              <line x1="18" y1="20" x2="18" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Analytics
+          </button>
+
+          <button
+              @click="activeTab = 'theme'"
+              :class="['tab-button', { active: activeTab === 'theme' }]"
           >
             <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2">
@@ -1045,7 +1058,7 @@
       </div>
 
       <!-- REVIEW TAB -->
-      <div v-if="activeTab === 'Review'" class="content-card">
+      <div v-if="activeTab === 'review'" class="content-card">
         <div v-if="!showReviewForm">
           <div class="card-header">
             <h2 class="card-title">Reviews / Branch Links</h2>
@@ -1188,8 +1201,240 @@
         </div>
       </div>
 
+      <!-- ANALYTICS TAB -->
+      <div v-if="activeTab === 'analytics'" class="content-card analytics-tab">
+        <!-- Header -->
+        <div class="analytics-header">
+          <div>
+            <h2 class="card-title">📊 Analytics Dashboard</h2>
+            <p class="analytics-subtitle">Track your contact card performance</p>
+          </div>
+
+          <div class="analytics-filters">
+            <!-- Contact Filter -->
+            <div class="filter-group">
+              <label>Contact:</label>
+              <select v-model="selectedContactId" class="form-input">
+                <option value="all">All Contacts</option>
+                <option
+                    v-for="contact in userContactsList"
+                    :key="contact.id"
+                    :value="contact.id"
+                >
+                  {{ contact.name }} ({{ contact.mobile }})
+                </option>
+              </select>
+            </div>
+
+            <!-- Date Range Filter -->
+            <div class="filter-group">
+              <label>Date Range:</label>
+              <select v-model="analyticsDateRange" class="form-input">
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+                <option value="90">Last 90 Days</option>
+                <option value="365">Last Year</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Filter Display -->
+        <div v-if="selectedContactId !== 'all'" class="active-filter-badge">
+          <span class="filter-label">Showing analytics for:</span>
+          <span class="filter-value">
+      {{ userContactsList.find(c => c.id == selectedContactId)?.name }}
+    </span>
+          <button @click="selectedContactId = 'all'" class="clear-filter-btn">
+            ✕ Clear
+          </button>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="analyticsLoading" class="analytics-loading">
+          <div class="spinner"></div>
+          <p>Loading analytics...</p>
+        </div>
+
+        <!-- Analytics Content -->
+        <div v-else class="analytics-content">
+          <!-- Stats Cards -->
+          <div class="analytics-stats-grid">
+            <div class="stat-card views">
+              <div class="stat-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <p class="stat-label">Total Views</p>
+                <p class="stat-value">{{ analyticsData.totalViews.toLocaleString() }}</p>
+              </div>
+            </div>
+
+            <div class="stat-card clicks">
+              <div class="stat-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 11l3 3L22 4"></path>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <p class="stat-label">Total Clicks</p>
+                <p class="stat-value">{{ analyticsData.totalClicks.toLocaleString() }}</p>
+              </div>
+            </div>
+
+            <div class="stat-card visitors">
+              <div class="stat-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <p class="stat-label">Unique Visitors</p>
+                <p class="stat-value">{{ analyticsData.uniqueVisitors.toLocaleString() }}</p>
+              </div>
+            </div>
+
+            <div class="stat-card engagement">
+              <div class="stat-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <p class="stat-label">Engagement Rate</p>
+                <p class="stat-value">
+                  {{ analyticsData.totalViews > 0
+                    ? ((analyticsData.totalClicks / analyticsData.totalViews) * 100).toFixed(1)
+                    : 0 }}%
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Section -->
+          <div class="analytics-charts">
+            <!-- Timeline Chart -->
+            <div class="chart-container timeline-chart">
+              <h3>📈 Views Over Time</h3>
+              <div class="chart-wrapper">
+                <canvas ref="timelineChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Click Breakdown -->
+            <div class="chart-container clicks-chart">
+              <h3>🎯 Click Distribution</h3>
+              <div class="chart-wrapper">
+                <canvas ref="clicksChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Detailed Clicks Breakdown Table -->
+            <div class="chart-container clicks-table">
+              <h3>📊 Detailed Click Analysis</h3>
+
+              <!-- Summary Cards -->
+              <div class="click-summary-grid">
+                <div class="summary-card">
+                  <span class="summary-label">Communication</span>
+                  <span class="summary-value">{{ analyticsData.clickSummary?.communication || 0 }}</span>
+                </div>
+                <div class="summary-card">
+                  <span class="summary-label">Social Media</span>
+                  <span class="summary-value">{{ analyticsData.clickSummary?.social || 0 }}</span>
+                </div>
+                <div class="summary-card">
+                  <span class="summary-label">Content</span>
+                  <span class="summary-value">{{ analyticsData.clickSummary?.content || 0 }}</span>
+                </div>
+                <div class="summary-card">
+                  <span class="summary-label">Navigation</span>
+                  <span class="summary-value">{{ analyticsData.clickSummary?.navigation || 0 }}</span>
+                </div>
+              </div>
+
+              <!-- Detailed Table -->
+              <div class="clicks-table-wrapper">
+                <table class="analytics-table">
+                  <thead>
+                  <tr>
+                    <th>Link Type</th>
+                    <th>Clicks</th>
+                    <th>Percentage</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr v-for="click in analyticsData.clickBreakdown" :key="click.clickType">
+                    <td>
+                      <span class="click-type-badge">{{ click.label }}</span>
+                    </td>
+                    <td class="click-count">{{ click.count }}</td>
+                    <td>
+                      <div class="progress-bar-wrapper">
+                        <div
+                            class="progress-bar"
+                            :style="{ width: `${(click.count / analyticsData.totalClicks) * 100}%` }"
+                        ></div>
+                        <span class="progress-text">
+                      {{ ((click.count / analyticsData.totalClicks) * 100).toFixed(1) }}%
+                    </span>
+                      </div>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Device Breakdown -->
+            <div class="chart-container device-chart">
+              <h3>📱 Views by Device</h3>
+              <div class="chart-wrapper">
+                <canvas ref="deviceChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Geographic Distribution -->
+            <div class="chart-container geo-chart">
+              <h3>🌍 Views by Country</h3>
+              <div v-if="analyticsData.geoDistribution.length > 0" class="country-list">
+                <div
+                    v-for="(country, index) in analyticsData.geoDistribution"
+                    :key="country.countryCode"
+                    class="country-item"
+                >
+                  <div class="country-rank">{{ index + 1 }}</div>
+                  <div class="country-flag">{{ country.countryCode }}</div>
+                  <div class="country-info">
+                    <span class="country-name">{{ country.country }}</span>
+                    <div class="country-bar-wrapper">
+                      <div
+                          class="country-bar"
+                          :style="{
+                    width: `${(country.count / analyticsData.geoDistribution[0].count) * 100}%`
+                  }"
+                      ></div>
+                    </div>
+                  </div>
+                  <span class="country-count">{{ country.count }}</span>
+                </div>
+              </div>
+              <div v-else class="empty-chart">
+                <p>No geographic data available yet</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Theme Selection Section -->
-      <div v-if="activeTab === 'Theme'" class="content-card theme-section">
+      <div v-if="activeTab === 'theme'" class="content-card theme-section">
         <div class="theme-header">
           <div class="theme-header-content">
             <h2 class="theme-title">Choose Your Contact Card Theme</h2>
@@ -2301,6 +2546,7 @@ import {QuillEditor} from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import QRCode from "qrcode";
 import Quill from 'quill';
+import Chart from 'chart.js/auto';
 
 const Block = Quill.import('blots/block');
 Block.tagName = 'p';   // Force Quill to use <p> instead of <br>
@@ -2310,7 +2556,6 @@ const showQrPopup = ref(false);
 const qrCanvas = ref(null);
 const qrUrl = ref("");
 const qrName = ref("");
-
 
 const themes = ref([]);
 const selectedTheme = ref(null);
@@ -2568,6 +2813,436 @@ const publicCardUrl = computed(() => {
   return `${baseUrl}/${fullNumber}`;
 });
 
+// ============================================
+// CLEANED ANALYTICS CODE - FINAL VERSION
+// Replace your entire analytics section with this
+// ============================================
+
+// Analytics state
+const analyticsData = ref({
+  totalViews: 0,
+  totalClicks: 0,
+  uniqueVisitors: 0,
+  geoDistribution: [],
+  clickBreakdown: [],
+  clickSummary: {},
+  deviceBreakdown: [],
+  timeline: []
+});
+const analyticsDateRange = ref('30');
+const analyticsLoading = ref(false);
+const timelineChart = ref(null);
+const clicksChart = ref(null);
+const deviceChart = ref(null);
+let timelineChartInstance = null;
+let clicksChartInstance = null;
+let deviceChartInstance = null;
+
+// Contact filter refs
+const selectedContactId = ref('all');
+const userContactsList = ref([]);
+
+// ============================================
+// LOAD ANALYTICS FUNCTION
+// ============================================
+async function loadAnalytics() {
+  try {
+    analyticsLoading.value = true;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error('No authentication token found');
+      alert('Please log in again');
+      return;
+    }
+
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(analyticsDateRange.value));
+
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    console.log('📊 Requesting analytics:', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      daysBack: analyticsDateRange.value,
+      contactId: selectedContactId.value
+    });
+
+    const params = {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString()
+    };
+
+    if (selectedContactId.value !== 'all') {
+      params.contactId = selectedContactId.value;
+    }
+
+    const res = await api.get('/analytics/dashboard', {
+      params,
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    console.log('✅ Analytics response:', res.data);
+
+    analyticsData.value = res.data;
+
+    await nextTick();
+
+    setTimeout(() => {
+      renderCharts();
+    }, 100);
+
+  } catch (error) {
+    console.error('❌ Failed to load analytics:', error);
+    alert(`Failed to load analytics: ${error.response?.data?.message || error.message}`);
+  } finally {
+    analyticsLoading.value = false;
+  }
+}
+
+// ============================================
+// WATCHERS
+// ============================================
+
+// Sync contacts from main contacts ref to filter list
+watch(contacts, (newContacts) => {
+  if (newContacts && newContacts.length > 0) {
+    console.log('👀 Contacts updated, syncing to filter:', newContacts.length);
+    userContactsList.value = newContacts.map(contact => ({
+      id: contact.id,
+      name: `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unnamed Contact',
+      mobile: contact.mobile || 'No phone'
+    }));
+    console.log('✅ Filter list synced:', userContactsList.value.length);
+  }
+}, { immediate: true });
+
+// Watch contact filter changes
+watch(selectedContactId, () => {
+  if (activeTab.value === 'analytics') {
+    console.log('👤 Contact filter changed to:', selectedContactId.value);
+    loadAnalytics();
+  }
+});
+
+// Watch date range changes
+watch(analyticsDateRange, () => {
+  if (activeTab.value === 'analytics') {
+    console.log('📅 Date range changed, reloading analytics...');
+    loadAnalytics();
+  }
+});
+
+// Watch tab changes
+watch(activeTab, (newTab) => {
+  console.log('🔄 Tab changed to:', newTab);
+  if (newTab === 'analytics') {
+    console.log('📊 Loading analytics...');
+    loadAnalytics();
+  }
+});
+
+// ============================================
+// ON MOUNTED (ONLY ONE!)
+// ============================================
+onMounted(() => {
+  console.log('🚀 Component mounted, active tab:', activeTab.value);
+
+  if (activeTab.value === 'analytics') {
+    console.log('📊 Initial analytics load...');
+    loadAnalytics();
+  }
+});
+
+// ============================================
+// RENDER CHARTS FUNCTIONS
+// ============================================
+function renderCharts() {
+  console.log('🎨 Rendering charts...');
+  console.log('Canvas refs:', {
+    timeline: !!timelineChart.value,
+    clicks: !!clicksChart.value,
+    device: !!deviceChart.value
+  });
+
+  renderTimelineChart();
+  renderClicksChart();
+  renderDeviceChart();
+}
+
+function renderTimelineChart() {
+  console.log('📈 Rendering timeline chart...');
+
+  if (!timelineChart.value) {
+    console.warn('⚠️ Timeline canvas not found');
+    return;
+  }
+
+  if (timelineChartInstance) {
+    timelineChartInstance.destroy();
+    timelineChartInstance = null;
+  }
+
+  const timeline = analyticsData.value.timeline || [];
+  console.log('Timeline data:', timeline);
+
+  if (timeline.length === 0) {
+    console.log('📈 No timeline data available');
+    const ctx = timelineChart.value.getContext('2d');
+    ctx.clearRect(0, 0, timelineChart.value.width, timelineChart.value.height);
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#999';
+    ctx.textAlign = 'center';
+    ctx.fillText('No data available for this period', timelineChart.value.width / 2, timelineChart.value.height / 2);
+    return;
+  }
+
+  try {
+    const ctx = timelineChart.value.getContext('2d');
+
+    const labels = timeline.map(d => {
+      const date = new Date(d.date);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+
+    const data = timeline.map(d => parseInt(d.views) || 0);
+
+    timelineChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Views',
+          data,
+          borderColor: '#5c4033',
+          backgroundColor: 'rgba(92, 64, 51, 0.1)',
+          tension: 0.4,
+          fill: true,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: 12,
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            callbacks: {
+              label: function(context) {
+                return 'Views: ' + context.parsed.y;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0,
+              font: { size: 12 }
+            }
+          },
+          x: {
+            ticks: {
+              font: { size: 11 }
+            }
+          }
+        }
+      }
+    });
+
+    console.log('✅ Timeline chart rendered');
+  } catch (error) {
+    console.error('❌ Error rendering timeline chart:', error);
+  }
+}
+
+function renderClicksChart() {
+  console.log('🎯 Rendering clicks chart...');
+
+  if (!clicksChart.value) {
+    console.warn('⚠️ Clicks canvas not found');
+    return;
+  }
+
+  if (clicksChartInstance) {
+    clicksChartInstance.destroy();
+    clicksChartInstance = null;
+  }
+
+  const clickBreakdown = analyticsData.value.clickBreakdown || [];
+  console.log('Click breakdown data:', clickBreakdown);
+
+  if (clickBreakdown.length === 0) {
+    console.log('🎯 No click data available');
+    const ctx = clicksChart.value.getContext('2d');
+    ctx.clearRect(0, 0, clicksChart.value.width, clicksChart.value.height);
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#999';
+    ctx.textAlign = 'center';
+    ctx.fillText('No click data available', clicksChart.value.width / 2, clicksChart.value.height / 2);
+    return;
+  }
+
+  try {
+    const ctx = clicksChart.value.getContext('2d');
+
+    const labels = clickBreakdown.map(c => c.label || c.clickType);
+    const data = clickBreakdown.map(c => parseInt(c.count) || 0);
+
+    const colors = [
+      '#5c4033', '#7d5a4f', '#9b7461', '#b88e75',
+      '#d4af37', '#e6c87f', '#f5e6d3', '#faf8f5',
+      '#8b4513', '#a0522d', '#cd853f', '#deb887'
+    ];
+
+    clicksChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: colors.slice(0, data.length),
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 15,
+              font: { size: 12 },
+              generateLabels: function(chart) {
+                const data = chart.data;
+                return data.labels.map((label, i) => ({
+                  text: `${label}: ${data.datasets[0].data[i]}`,
+                  fillStyle: data.datasets[0].backgroundColor[i],
+                  hidden: false,
+                  index: i
+                }));
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    console.log('✅ Clicks chart rendered');
+  } catch (error) {
+    console.error('❌ Error rendering clicks chart:', error);
+  }
+}
+
+function renderDeviceChart() {
+  console.log('📱 Rendering device chart...');
+
+  if (!deviceChart.value) {
+    console.warn('⚠️ Device canvas not found');
+    return;
+  }
+
+  if (deviceChartInstance) {
+    deviceChartInstance.destroy();
+    deviceChartInstance = null;
+  }
+
+  const deviceBreakdown = analyticsData.value.deviceBreakdown || [];
+  console.log('Device breakdown data:', deviceBreakdown);
+
+  if (deviceBreakdown.length === 0) {
+    console.log('📱 No device data available');
+    const ctx = deviceChart.value.getContext('2d');
+    ctx.clearRect(0, 0, deviceChart.value.width, deviceChart.value.height);
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#999';
+    ctx.textAlign = 'center';
+    ctx.fillText('No device data available', deviceChart.value.width / 2, deviceChart.value.height / 2);
+    return;
+  }
+
+  try {
+    const ctx = deviceChart.value.getContext('2d');
+
+    const labels = deviceBreakdown.map(d => {
+      const type = d.deviceType || 'Unknown';
+      return type.charAt(0).toUpperCase() + type.slice(1);
+    });
+
+    const data = deviceBreakdown.map(d => parseInt(d.count) || 0);
+
+    deviceChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Views by Device',
+          data,
+          backgroundColor: ['#5c4033', '#7d5a4f', '#9b7461', '#b88e75'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return 'Views: ' + context.parsed.y;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0,
+              font: { size: 12 }
+            }
+          },
+          x: {
+            ticks: {
+              font: { size: 12 }
+            }
+          }
+        }
+      }
+    });
+
+    console.log('✅ Device chart rendered');
+  } catch (error) {
+    console.error('❌ Error rendering device chart:', error);
+  }
+}
+
+
 function toggleCurrentPassword() {
   showCurrentPassword.value = !showCurrentPassword.value;
 }
@@ -2712,6 +3387,18 @@ async function saveToGoogleWallet(contact) {
     console.log("✅ Received save URL:", res.data.saveUrl);
 
     if (res.data.saveUrl) {
+      // ✅ TRACK THE GOOGLE WALLET CLICK BEFORE OPENING
+      try {
+        await api.post(`/wallet/google/track/${cleanedPhone.replace(/\D/g, '')}`, {
+          userAgent: navigator.userAgent
+        });
+        console.log("✅ Google Wallet click tracked");
+      } catch (trackErr) {
+        // Don't block the wallet action if tracking fails
+        console.warn("⚠️ Tracking failed:", trackErr);
+      }
+
+      // Open Google Wallet
       if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
         window.location.href = res.data.saveUrl;
       } else {
@@ -4506,6 +5193,590 @@ onMounted(loadData);
 
 
 <style scoped>
+
+
+/* Click Summary Cards */
+.click-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.summary-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.summary-label {
+  display: block;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.summary-value {
+  display: block;
+  font-size: 28px;
+  font-weight: bold;
+  color: #5c4033;
+}
+
+/* Clicks Table */
+.clicks-table-wrapper {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.analytics-table th {
+  background: #5c4033;
+  color: white;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.analytics-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.analytics-table tr:hover {
+  background: #f9f9f9;
+}
+
+.click-type-badge {
+  display: inline-block;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.click-count {
+  font-weight: bold;
+  font-size: 16px;
+  color: #5c4033;
+}
+
+.progress-bar-wrapper {
+  position: relative;
+  background: #f0f0f0;
+  border-radius: 10px;
+  height: 24px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #5c4033 0%, #8b6f47 100%);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Analytics Tab Styles */
+.analytics-tab {
+  padding: 2rem;
+}
+
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e1dc;
+}
+
+.analytics-subtitle {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0.5rem 0 0 0;
+}
+
+.date-range-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.date-range-selector label {
+  font-weight: 600;
+  color: #2d1f1a;
+}
+
+.date-range-selector select {
+  min-width: 150px;
+}
+
+/* Loading State */
+.analytics-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+}
+
+/* Stats Grid */
+.analytics-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.stat-card {
+  background: white;
+  border: 2px solid #e5e1dc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(92, 64, 51, 0.15);
+}
+
+.stat-card.views { border-left: 4px solid #5c4033; }
+.stat-card.clicks { border-left: 4px solid #7d5a4f; }
+.stat-card.visitors { border-left: 4px solid #9b7461; }
+.stat-card.engagement { border-left: 4px solid #d4af37; }
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-card.views .stat-icon {
+  background: linear-gradient(135deg, #5c4033 0%, #7d5a4f 100%);
+  color: white;
+}
+
+.stat-card.clicks .stat-icon {
+  background: linear-gradient(135deg, #7d5a4f 0%, #9b7461 100%);
+  color: white;
+}
+
+.stat-card.visitors .stat-icon {
+  background: linear-gradient(135deg, #9b7461 0%, #b88e75 100%);
+  color: white;
+}
+
+.stat-card.engagement .stat-icon {
+  background: linear-gradient(135deg, #d4af37 0%, #f5e6d3 100%);
+  color: #2d1f1a;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d1f1a;
+  margin: 0;
+  line-height: 1;
+}
+
+/* Charts Section */
+.analytics-charts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.chart-container {
+  background: white;
+  border: 2px solid #e5e1dc;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.chart-container h3 {
+  margin: 0 0 1.25rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2d1f1a;
+}
+
+.chart-wrapper {
+  height: 300px;
+  position: relative;
+}
+
+.timeline-chart {
+  grid-column: 1 / -1;
+}
+
+.geo-chart {
+  grid-column: 1 / -1;
+}
+
+/* Country List */
+.country-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.country-item {
+  display: grid;
+  grid-template-columns: 40px 60px 1fr 60px;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fafaf8;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.country-item:hover {
+  background: #f5f5f0;
+  transform: translateX(4px);
+}
+
+.country-rank {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #5c4033;
+  text-align: center;
+}
+
+.country-flag {
+  font-size: 2rem;
+  text-align: center;
+}
+
+.country-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.country-name {
+  font-weight: 600;
+  color: #2d1f1a;
+  font-size: 0.95rem;
+}
+
+.country-bar-wrapper {
+  width: 100%;
+  height: 8px;
+  background: #e5e1dc;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.country-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #5c4033 0%, #d4af37 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.country-count {
+  font-weight: 700;
+  color: #2d1f1a;
+  text-align: right;
+}
+
+.empty-chart {
+  padding: 3rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .analytics-charts {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-chart,
+  .geo-chart {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .analytics-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+
+  .country-item {
+    grid-template-columns: 30px 50px 1fr 50px;
+    gap: 0.75rem;
+    padding: 0.875rem;
+  }
+}
+
+/* Analytics Filters Styles */
+
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e5e5e5;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.analytics-filters {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-group .form-input {
+  padding: 10px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 200px;
+}
+
+.filter-group .form-input:hover {
+  border-color: #5c4033;
+}
+
+.filter-group .form-input:focus {
+  outline: none;
+  border-color: #5c4033;
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
+}
+
+/* Active Filter Badge */
+.active-filter-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-left: 4px solid #5c4033;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+  padding: 4px 12px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.clear-filter-btn {
+  padding: 6px 12px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.clear-filter-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
+}
+
+.clear-filter-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive Filters */
+@media (max-width: 1024px) {
+  .analytics-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .analytics-filters {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .filter-group {
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .filter-group .form-input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-filters {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-group .form-input {
+    min-width: 100%;
+  }
+
+  .active-filter-badge {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .clear-filter-btn {
+    margin-left: 0;
+    align-self: stretch;
+  }
+}
+
+/* Enhanced form input styling */
+.form-input {
+  font-family: inherit;
+}
+
+.form-input option {
+  padding: 10px;
+}
+
+/* Loading state styling */
+.analytics-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  gap: 20px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #5c4033;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Empty state for no data */
+.empty-analytics {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty-analytics svg {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 20px;
+  opacity: 0.3;
+}
+
+.empty-analytics h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.empty-analytics p {
+  font-size: 14px;
+  color: #999;
+}
+
 .password-input-wrapper {
   position: relative;
   display: flex;

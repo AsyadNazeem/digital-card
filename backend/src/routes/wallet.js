@@ -1,4 +1,4 @@
-// routes/wallet.js - WITH DEVELOPMENT SUPPORT
+// routes/wallet.js - WITH ANALYTICS TRACKING
 import express from "express";
 import fs from "fs";
 import path from "path";
@@ -17,7 +17,6 @@ const SERVICE_ACCOUNT = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
 const ISSUER_ID = process.env.GW_ISSUER_ID;
 const CLASS_SUFFIX = process.env.GW_WALLET_CLASS_ID;
 const ORIGINS = (process.env.GW_ORIGINS || "").split(",").filter(Boolean);
-// Use IMAGE_UPLOAD_URL (not VITE_ prefix - that's for frontend only)
 const IMAGE_BASE_URL = process.env.IMAGE_UPLOAD_URL || "https://tapmy.name";
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'local';
 
@@ -37,7 +36,6 @@ function createSaveJwtForContact({ objectIdSuffix, contact }) {
     let logoUrl = null;
     let heroImageUrl = null;
 
-    // Build logo URL (company logo or contact photo)
     if (contact.companyLogo && contact.companyLogo.trim()) {
         logoUrl = contact.companyLogo.startsWith('http')
             ? contact.companyLogo
@@ -48,7 +46,6 @@ function createSaveJwtForContact({ objectIdSuffix, contact }) {
             : `${IMAGE_BASE_URL}${contact.photo}`;
     }
 
-    // Build hero image URL (contact photo)
     if (contact.photo && contact.photo.trim()) {
         heroImageUrl = contact.photo.startsWith('http')
             ? contact.photo
@@ -64,15 +61,12 @@ function createSaveJwtForContact({ objectIdSuffix, contact }) {
         photo: contact.photo
     });
 
-    // Validate URLs - Allow HTTP in development, require HTTPS in production
     const isValidUrl = (url) => {
         try {
             const parsed = new URL(url);
             if (IS_DEVELOPMENT) {
-                // In development, allow both HTTP and HTTPS
                 return parsed.protocol === 'https:' || parsed.protocol === 'http:';
             } else {
-                // In production, require HTTPS
                 return parsed.protocol === 'https:';
             }
         } catch {
@@ -90,7 +84,6 @@ function createSaveJwtForContact({ objectIdSuffix, contact }) {
         heroImageUrl = null;
     }
 
-    // Final check for production
     if (!IS_DEVELOPMENT) {
         if (logoUrl && !logoUrl.startsWith('https://')) {
             console.warn("🚫 Production requires HTTPS for logo, removing:", logoUrl);
@@ -116,7 +109,6 @@ function createSaveJwtForContact({ objectIdSuffix, contact }) {
                     classId: classId,
                     state: "ACTIVE",
 
-                    // Only add logo if URL is valid
                     ...(logoUrl ? {
                         logo: {
                             sourceUri: { uri: logoUrl },
@@ -129,7 +121,6 @@ function createSaveJwtForContact({ objectIdSuffix, contact }) {
                         }
                     } : {}),
 
-                    // Only add hero image if URL is valid
                     ...(heroImageUrl ? {
                         heroImage: {
                             sourceUri: { uri: heroImageUrl },
@@ -249,6 +240,34 @@ router.post("/google/save-url", authenticateToken, async (req, res) => {
             message: "Failed to generate Google Wallet URL",
             error: err.message
         });
+    }
+});
+
+// NEW: Track Google Wallet clicks (public endpoint - no auth required)
+router.post("/google/track/:phone", async (req, res) => {
+    try {
+        const phone = req.params.phone;
+        const { userAgent } = req.body;
+
+        console.log("👛 Google Wallet click tracked:", {
+            phone,
+            userAgent: userAgent || req.headers['user-agent']
+        });
+
+        // Import analytics tracking function
+        const { trackWalletClick } = await import("../controllers/analyticsController.js");
+
+        // Use the analytics tracking
+        await trackWalletClick(phone, {
+            userAgent: userAgent || req.headers['user-agent'],
+            ip: req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress
+        });
+
+        res.status(200).json({ success: true });
+    } catch (err) {
+        console.error("❌ Wallet tracking error:", err);
+        // Don't fail the request if tracking fails
+        res.status(200).json({ success: true, warning: "Tracking failed" });
     }
 });
 

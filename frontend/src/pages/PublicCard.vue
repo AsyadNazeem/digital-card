@@ -81,39 +81,33 @@
       <!-- Action Buttons (3x2 Grid) -->
       <div class="action-buttons">
         <!-- Row 1: Personal Contact Actions -->
-        <a :href="`tel:${contacts[0].cardMobileNum}`" class="action-btn call">
+        <a @click.prevent="handlePhoneClick(contacts[0].cardMobileNum)" class="action-btn call">
           <span v-html="getIcon('phone_mobile')" class="action-icon"></span>
           <span>{{ t('mobile') }}</span>
         </a>
 
-        <a
-            v-if="contacts.length && hasWhatsAppLinks()"
-            href="#"
-            @click.prevent="handleWhatsAppClick"
-            class="action-btn whatsapp"
-        >
+        <a @click.prevent="handleWhatsAppClick" class="action-btn whatsapp">
           <span v-html="getIcon('whatsapp')" class="action-icon"></span>
           <span>{{ t('whatsapp') }}</span>
         </a>
 
-
-        <a :href="`mailto:${contacts[0].email}`" class="action-btn email" v-if="contacts.length && contacts[0].email">
+        <a @click.prevent="handleEmailClick(contacts[0].email)" class="action-btn email">
           <span v-html="getIcon('mail')" class="action-icon"></span>
           <span>{{ t('email') }}</span>
         </a>
 
         <!-- Row 2: Company/General Actions -->
-        <a :href="`tel:${contacts[0].telephone}`" class="action-btn office-phone">
+        <a @click.prevent="handleOfficePhoneClick(contacts[0].telephone)" class="action-btn office-phone">
           <span v-html="getIcon('phone-office')" class="action-icon"></span>
           <span>{{ t('office') }}</span>
         </a>
 
-        <a :href="formatUrl(company.website)" target="_blank" class="action-btn website">
+        <a @click.prevent="handleWebsiteClick(company.website)" class="action-btn website">
           <span v-html="getIcon('globe')" class="action-icon"></span>
           <span>{{ t('website') }}</span>
         </a>
 
-        <a :href="company.googleLocation" target="_blank" class="action-btn maps">
+        <a @click.prevent="handleLocationClick(company.googleLocation)" class="action-btn maps">
           <span v-html="getIcon('map')" class="action-icon"></span>
           <span>{{ t('location') }}</span>
         </a>
@@ -135,10 +129,10 @@
           class="additional-actions"
           v-if="company.view360 || hasReviewLinks() || shopNowLinks.length || orderNowLinks.length || brochureLinks.length || menuLinks.length"
           :class="{'additional-actions--two-lines': additionalActionsCount > 3}"
-      >        <a
+      >
+        <a
             v-if="company.view360"
-            :href="company.view360"
-            target="_blank"
+            @click.prevent="handle360Click(company.view360)"
             class="action-link-secondary"
         >
           <span v-html="getIcon('360')" class="action-icon"></span>
@@ -157,11 +151,9 @@
         <!-- Shop Now Links -->
         <template v-for="(file, idx) in shopNowLinks" :key="'shop-' + idx">
           <a
-              :href="getFileUrl(file)"
+              @click.prevent="handleFileClick(file, 'shop_now')"
               class="action-link-secondary shop-now-btn"
-              target="_blank"
               :title="file.name"
-              rel="noopener noreferrer"
           >
             <span v-html="getFileIcon(file)" class="action-icon"></span>
             <span>{{ locale === 'ar' ? 'تسوق الآن' : 'Shop Now' }}</span>
@@ -171,11 +163,9 @@
         <!-- Order Now Links -->
         <template v-for="(file, idx) in orderNowLinks" :key="'order-' + idx">
           <a
-              :href="getFileUrl(file)"
+              @click.prevent="handleFileClick(file, 'order_now')"
               class="action-link-secondary order-now-btn"
-              target="_blank"
               :title="file.name"
-              rel="noopener noreferrer"
           >
             <span v-html="getFileIcon(file)" class="action-icon"></span>
             <span>{{ locale === 'ar' ? 'اطلب الآن' : 'Order Now' }}</span>
@@ -185,11 +175,9 @@
         <!-- Brochure Links -->
         <template v-for="(file, idx) in brochureLinks" :key="'brochure-' + idx">
           <a
-              :href="getFileUrl(file)"
+              @click.prevent="handleFileClick(file, 'brochure')"
               class="action-link-secondary brochure-btn"
-              target="_blank"
               :title="file.name"
-              rel="noopener noreferrer"
           >
             <span v-html="getFileIcon(file)" class="action-icon"></span>
             <span>{{ locale === 'ar' ? 'بروشور' : 'Brochure' }}</span>
@@ -199,11 +187,9 @@
         <!-- Menu Links -->
         <template v-for="(file, idx) in menuLinks" :key="'menu-' + idx">
           <a
-              :href="getFileUrl(file)"
+              @click.prevent="handleFileClick(file, 'menu')"
               class="action-link-secondary menu-btn"
-              target="_blank"
               :title="file.name"
-              rel="noopener noreferrer"
           >
             <span v-html="getFileIcon(file)" class="action-icon"></span>
             <span>{{ locale === 'ar' ? 'قائمة' : 'Menu' }}</span>
@@ -225,10 +211,9 @@
           <a
               v-for="(url, name) in company.socialLinks"
               :key="name"
-              :href="formatUrl(url)"
-              target="_blank"
+              @click.prevent="handleSocialClick(name, url)"
               class="social-icon-link"
-              :title="name.charAt(0).toUpperCase() + name.slice(1)"
+              :title="name"
           >
             <span v-html="getSocialIcon(name)"></span>
           </a>
@@ -513,20 +498,66 @@ const closeContactPopup = () => {
   };
 };
 
-const handleWhatsAppClick = () => {
+// Device detection helper
+function getDeviceType() {
+  const ua = navigator.userAgent;
+  if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+    return 'tablet';
+  }
+  if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+    return 'mobile';
+  }
+  return 'desktop';
+}
+
+// Track page view
+async function trackPageView() {
+  try {
+    const phone = route.params.phone;
+    const referrer = document.referrer || 'direct';
+    const userAgent = navigator.userAgent;
+    const deviceType = getDeviceType();
+
+    await api.post(`/analytics/view/${phone}`, {
+      referrer,
+      userAgent,
+      deviceType,
+      screenResolution: `${window.screen.width}x${window.screen.height}`,
+      language: navigator.language
+    });
+  } catch (error) {
+    // Silently fail - don't disrupt user experience
+    console.error('Analytics tracking error:', error);
+  }
+}
+
+// Track clicks
+async function trackClick(clickType, linkUrl = '') {
+  try {
+    const phone = route.params.phone;
+    const userAgent = navigator.userAgent;
+
+    await api.post(`/analytics/click/${phone}`, {
+      clickType,
+      linkUrl,
+      userAgent
+    });
+  } catch (error) {
+    console.error('Click tracking error:', error);
+  }
+}
+
+const handleWhatsAppClick = async () => {
   const whatsapp = contacts.value[0]?.whatsapp;
   const whatsappChannel = contacts.value[0]?.whatsappChannel;
 
-  // If only WhatsApp number exists
   if (whatsapp && !whatsappChannel) {
+    await trackClick('whatsapp', `https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`);
     window.open(`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
-  }
-  // If only WhatsApp Channel exists
-  else if (whatsappChannel && !whatsapp) {
+  } else if (whatsappChannel && !whatsapp) {
+    await trackClick('whatsapp_channel', whatsappChannel);
     window.open(whatsappChannel, '_blank');
-  }
-  // If both exist, show popup
-  else if (whatsapp && whatsappChannel) {
+  } else if (whatsapp && whatsappChannel) {
     showWhatsAppPopup.value = true;
   }
 };
@@ -536,7 +567,9 @@ const closeWhatsAppPopup = () => {
 };
 
 // 5. ADD: Redirect to selected WhatsApp option (add after redirectToReview function, around line 180)
-const redirectToWhatsApp = (url) => {
+const redirectToWhatsApp = async (url) => {
+  const isChannel = url.includes('whatsapp.com/channel') || url === contacts.value[0]?.whatsappChannel;
+  await trackClick(isChannel ? 'whatsapp_channel' : 'whatsapp', url);
   window.open(url, '_blank');
   closeWhatsAppPopup();
 };
@@ -567,6 +600,58 @@ const filesList = computed(() => {
     return [];
   }
 });
+
+// Phone click
+const handlePhoneClick = async (phoneNumber) => {
+  await trackClick('phone', `tel:${phoneNumber}`);
+  window.location.href = `tel:${phoneNumber}`;
+};
+
+// Email click
+const handleEmailClick = async (email) => {
+  await trackClick('email', `mailto:${email}`);
+  window.location.href = `mailto:${email}`;
+};
+
+const handleOfficePhoneClick = async (phone) => {
+  await trackClick('office_phone', `tel:${phone}`);
+  window.location.href = `tel:${phone}`;
+};
+
+// Website click
+const handleWebsiteClick = async (url) => {
+  await trackClick('website', url);
+  window.open(formatUrl(url), '_blank');
+};
+
+// Social media clicks
+const handleSocialClick = async (platform, url) => {
+  await trackClick(`social_${platform}`, url); // ✅ Already correct
+  window.open(formatUrl(url), '_blank');
+};
+
+
+// 360 view tracking
+const handle360Click = async () => {
+  await trackClick('360_view', company.value.view360);
+  window.open(company.value.view360, '_blank');
+};
+
+const handleLocationClick = async (url) => {
+  await trackClick('location', url);
+  window.open(formatUrl(url), '_blank');
+};
+
+// Brochure/Menu clicks
+const handleFileClick = async (file) => {
+  const fileType = file.isBrochure ? 'brochure' :
+      file.isMenu ? 'menu' :
+          file.isShopNow ? 'shop_now' :
+              file.isOrderNow ? 'order_now' : 'file';
+
+  await trackClick(fileType, getFileUrl(file));
+  window.open(getFileUrl(file), '_blank');
+};
 
 // ✅ FIXED: Update the getFileUrl function (around line 40)
 const getFileUrl = (file) => {
@@ -868,7 +953,8 @@ const hasReviewLinks = () => {
 };
 
 // Handle review button click
-const handleReviewClick = () => {
+const handleReviewClick = async () => {
+  await trackClick('review');
   const googleReviews = company.value.googleReviews;
   const tripAdvisor = company.value.tripAdvisor;
 
@@ -887,7 +973,9 @@ const closeReviewPopup = () => {
 };
 
 // Redirect to selected review platform
-const redirectToReview = (url) => {
+const redirectToReview = async (url) => {
+  const platform = url.includes('google') ? 'google_review' : 'tripadvisor_review';
+  await trackClick(platform, url);
   window.open(url, '_blank');
   closeReviewPopup();
 };
@@ -1001,6 +1089,9 @@ function updateMetaTags(contact, company) {
 }
 
 onMounted(async () => {
+
+  await trackPageView();
+
   try {
     // Load saved language preference
     const savedLanguage = localStorage.getItem('preferredLanguage');
