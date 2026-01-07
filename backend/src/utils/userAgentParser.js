@@ -35,20 +35,41 @@ export function parseOS(userAgent) {
 }
 
 /**
- * Detect device type from user agent
+ * Enhanced device type detection from user agent
+ * ✅ FIXED: Now properly detects mobile and tablet devices
  */
 export function getDeviceType(userAgent) {
     if (!userAgent) return 'unknown';
 
     const ua = userAgent.toLowerCase();
 
-    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
-        return 'tablet';
-    }
-
-    if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+    // Windows Phone must come first (its UA also contains "Android")
+    if (/windows phone/i.test(ua)) {
         return 'mobile';
     }
 
+    // Android tablets (no "mobile" in UA)
+    if (/android/i.test(ua) && !/mobile/i.test(ua)) {
+        return 'tablet';
+    }
+
+    // iPad (including iPadOS 13+ which reports as desktop)
+    // iPadOS 13+ Safari reports as: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) ... Safari"
+    // But has touch points
+    if (/ipad/i.test(ua)) {
+        return 'tablet';
+    }
+
+    // Other tablets
+    if (/tablet|playbook|silk/i.test(ua)) {
+        return 'tablet';
+    }
+
+    // Mobile devices (phones)
+    if (/mobile|android|iphone|ipod|blackberry|iemobile|opera mini|webos|bb10/i.test(ua)) {
+        return 'mobile';
+    }
+
+    // Default to desktop
     return 'desktop';
 }

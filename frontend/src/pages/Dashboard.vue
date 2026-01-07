@@ -1205,7 +1205,7 @@
       <div v-if="activeTab === 'analytics'" class="content-card analytics-tab">
         <!-- Header -->
         <div class="analytics-header">
-          <div>
+          <div class="header-left">
             <h2 class="card-title">📊 Analytics Dashboard</h2>
             <p class="analytics-subtitle">Track your contact card performance</p>
           </div>
@@ -1258,7 +1258,7 @@
 
         <!-- Analytics Content -->
         <div v-else class="analytics-content">
-          <!-- Stats Cards -->
+          <!-- Stats Cards - Enhanced Grid -->
           <div class="analytics-stats-grid">
             <div class="stat-card views">
               <div class="stat-icon">
@@ -1315,19 +1315,57 @@
                 </p>
               </div>
             </div>
+
+            <!-- ✅ NEW: VCF Downloads Card -->
+            <div class="stat-card conversions">
+              <div class="stat-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <p class="stat-label">Contact Downloads</p>
+                <p class="stat-value">{{ analyticsData.vcfDownloads.toLocaleString() }}</p>
+                <p class="stat-sublabel">
+                  {{ analyticsData.totalViews > 0
+                    ? ((analyticsData.vcfDownloads / analyticsData.totalViews) * 100).toFixed(1)
+                    : 0 }}% conversion
+                </p>
+              </div>
+            </div>
+
+            <!-- ✅ NEW: Conversion Rate Card -->
+            <div class="stat-card conversion-rate">
+              <div class="stat-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 6L9 17l-5-5"></path>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <p class="stat-label">Save Rate</p>
+                <p class="stat-value">
+                  {{ analyticsData.totalClicks > 0
+                    ? ((analyticsData.vcfDownloads / analyticsData.totalClicks) * 100).toFixed(1)
+                    : 0 }}%
+                </p>
+                <p class="stat-sublabel">of clicks save contact</p>
+              </div>
+            </div>
           </div>
 
           <!-- Charts Section -->
           <div class="analytics-charts">
             <!-- Timeline Chart -->
-            <div class="chart-container timeline-chart">
+            <div class="chart-container timeline-chart full-width">
               <h3>📈 Views Over Time</h3>
               <div class="chart-wrapper">
                 <canvas ref="timelineChart"></canvas>
               </div>
             </div>
 
-            <!-- Click Breakdown -->
+            <!-- Click Distribution -->
             <div class="chart-container clicks-chart">
               <h3>🎯 Click Distribution</h3>
               <div class="chart-wrapper">
@@ -1335,27 +1373,44 @@
               </div>
             </div>
 
+            <!-- ✅ NEW: Peak Hours Chart -->
+            <div class="chart-container peak-hours-chart">
+              <h3>⏰ Peak Activity Hours</h3>
+              <div class="chart-wrapper">
+                <canvas ref="peakHoursChart"></canvas>
+              </div>
+            </div>
+
             <!-- Detailed Clicks Breakdown Table -->
-            <div class="chart-container clicks-table">
+            <div class="chart-container clicks-table full-width">
               <h3>📊 Detailed Click Analysis</h3>
 
               <!-- Summary Cards -->
               <div class="click-summary-grid">
                 <div class="summary-card">
+                  <span class="summary-icon">📞</span>
                   <span class="summary-label">Communication</span>
                   <span class="summary-value">{{ analyticsData.clickSummary?.communication || 0 }}</span>
                 </div>
                 <div class="summary-card">
+                  <span class="summary-icon">📱</span>
                   <span class="summary-label">Social Media</span>
                   <span class="summary-value">{{ analyticsData.clickSummary?.social || 0 }}</span>
                 </div>
                 <div class="summary-card">
+                  <span class="summary-icon">📄</span>
                   <span class="summary-label">Content</span>
                   <span class="summary-value">{{ analyticsData.clickSummary?.content || 0 }}</span>
                 </div>
                 <div class="summary-card">
+                  <span class="summary-icon">🧭</span>
                   <span class="summary-label">Navigation</span>
                   <span class="summary-value">{{ analyticsData.clickSummary?.navigation || 0 }}</span>
+                </div>
+                <div class="summary-card conversion-highlight">
+                  <span class="summary-icon">💾</span>
+                  <span class="summary-label">Conversions</span>
+                  <span class="summary-value">{{ analyticsData.clickSummary?.conversion || 0 }}</span>
                 </div>
               </div>
 
@@ -1372,18 +1427,21 @@
                   <tbody>
                   <tr v-for="click in analyticsData.clickBreakdown" :key="click.clickType">
                     <td>
-                      <span class="click-type-badge">{{ click.label }}</span>
+                <span class="click-type-badge" :class="{'vcf-badge': click.clickType === 'save_contact'}">
+                  {{ click.label }}
+                </span>
                     </td>
                     <td class="click-count">{{ click.count }}</td>
                     <td>
                       <div class="progress-bar-wrapper">
                         <div
                             class="progress-bar"
+                            :class="{'vcf-progress': click.clickType === 'save_contact'}"
                             :style="{ width: `${(click.count / analyticsData.totalClicks) * 100}%` }"
                         ></div>
                         <span class="progress-text">
-                      {{ ((click.count / analyticsData.totalClicks) * 100).toFixed(1) }}%
-                    </span>
+                    {{ ((click.count / analyticsData.totalClicks) * 100).toFixed(1) }}%
+                  </span>
                       </div>
                     </td>
                   </tr>
@@ -1400,8 +1458,16 @@
               </div>
             </div>
 
+            <!-- ✅ NEW: Browser Breakdown -->
+            <div class="chart-container browser-chart">
+              <h3>🌐 Browser Distribution</h3>
+              <div class="chart-wrapper">
+                <canvas ref="browserChart"></canvas>
+              </div>
+            </div>
+
             <!-- Geographic Distribution -->
-            <div class="chart-container geo-chart">
+            <div class="chart-container geo-chart full-width">
               <h3>🌍 Views by Country</h3>
               <div v-if="analyticsData.geoDistribution.length > 0" class="country-list">
                 <div
@@ -1417,8 +1483,8 @@
                       <div
                           class="country-bar"
                           :style="{
-                    width: `${(country.count / analyticsData.geoDistribution[0].count) * 100}%`
-                  }"
+                      width: `${(country.count / analyticsData.geoDistribution[0].count) * 100}%`
+                    }"
                       ></div>
                     </div>
                   </div>
@@ -1427,6 +1493,33 @@
               </div>
               <div v-else class="empty-chart">
                 <p>No geographic data available yet</p>
+              </div>
+            </div>
+
+            <!-- ✅ NEW: Top Referrers -->
+            <div v-if="analyticsData.topReferrers && analyticsData.topReferrers.length > 0"
+                 class="chart-container referrers-chart full-width">
+              <h3>🔗 Top Referrers</h3>
+              <div class="referrers-list">
+                <div
+                    v-for="(referrer, index) in analyticsData.topReferrers"
+                    :key="index"
+                    class="referrer-item"
+                >
+                  <div class="referrer-rank">{{ index + 1 }}</div>
+                  <div class="referrer-info">
+                    <span class="referrer-url">{{ referrer.referrer }}</span>
+                    <div class="referrer-bar-wrapper">
+                      <div
+                          class="referrer-bar"
+                          :style="{
+                      width: `${(referrer.count / analyticsData.topReferrers[0].count) * 100}%`
+                    }"
+                      ></div>
+                    </div>
+                  </div>
+                  <span class="referrer-count">{{ referrer.count }} views</span>
+                </div>
               </div>
             </div>
           </div>
@@ -2823,10 +2916,14 @@ const analyticsData = ref({
   totalViews: 0,
   totalClicks: 0,
   uniqueVisitors: 0,
+  vcfDownloads: 0, // ✅ Added
   geoDistribution: [],
   clickBreakdown: [],
   clickSummary: {},
   deviceBreakdown: [],
+  browserBreakdown: [], // ✅ Added
+  topReferrers: [], // ✅ Added
+  peakHours: [], // ✅ Added
   timeline: []
 });
 const analyticsDateRange = ref('30');
@@ -2834,9 +2931,13 @@ const analyticsLoading = ref(false);
 const timelineChart = ref(null);
 const clicksChart = ref(null);
 const deviceChart = ref(null);
+const browserChart = ref(null); // ✅ Added
+const peakHoursChart = ref(null); // ✅ Added
 let timelineChartInstance = null;
 let clicksChartInstance = null;
 let deviceChartInstance = null;
+let browserChartInstance = null; // ✅ Added
+let peakHoursChartInstance = null; // ✅ Added
 
 // Contact filter refs
 const selectedContactId = ref('all');
@@ -2903,82 +3004,19 @@ async function loadAnalytics() {
 }
 
 // ============================================
-// WATCHERS
-// ============================================
-
-// Sync contacts from main contacts ref to filter list
-watch(contacts, (newContacts) => {
-  if (newContacts && newContacts.length > 0) {
-    console.log('👀 Contacts updated, syncing to filter:', newContacts.length);
-    userContactsList.value = newContacts.map(contact => ({
-      id: contact.id,
-      name: `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unnamed Contact',
-      mobile: contact.mobile || 'No phone'
-    }));
-    console.log('✅ Filter list synced:', userContactsList.value.length);
-  }
-}, { immediate: true });
-
-// Watch contact filter changes
-watch(selectedContactId, () => {
-  if (activeTab.value === 'analytics') {
-    console.log('👤 Contact filter changed to:', selectedContactId.value);
-    loadAnalytics();
-  }
-});
-
-// Watch date range changes
-watch(analyticsDateRange, () => {
-  if (activeTab.value === 'analytics') {
-    console.log('📅 Date range changed, reloading analytics...');
-    loadAnalytics();
-  }
-});
-
-// Watch tab changes
-watch(activeTab, (newTab) => {
-  console.log('🔄 Tab changed to:', newTab);
-  if (newTab === 'analytics') {
-    console.log('📊 Loading analytics...');
-    loadAnalytics();
-  }
-});
-
-// ============================================
-// ON MOUNTED (ONLY ONE!)
-// ============================================
-onMounted(() => {
-  console.log('🚀 Component mounted, active tab:', activeTab.value);
-
-  if (activeTab.value === 'analytics') {
-    console.log('📊 Initial analytics load...');
-    loadAnalytics();
-  }
-});
-
-// ============================================
 // RENDER CHARTS FUNCTIONS
 // ============================================
 function renderCharts() {
   console.log('🎨 Rendering charts...');
-  console.log('Canvas refs:', {
-    timeline: !!timelineChart.value,
-    clicks: !!clicksChart.value,
-    device: !!deviceChart.value
-  });
-
   renderTimelineChart();
   renderClicksChart();
   renderDeviceChart();
+  renderBrowserChart(); // ✅ Added
+  renderPeakHoursChart(); // ✅ Added
 }
 
 function renderTimelineChart() {
-  console.log('📈 Rendering timeline chart...');
-
-  if (!timelineChart.value) {
-    console.warn('⚠️ Timeline canvas not found');
-    return;
-  }
+  if (!timelineChart.value) return;
 
   if (timelineChartInstance) {
     timelineChartInstance.destroy();
@@ -2986,10 +3024,8 @@ function renderTimelineChart() {
   }
 
   const timeline = analyticsData.value.timeline || [];
-  console.log('Timeline data:', timeline);
 
   if (timeline.length === 0) {
-    console.log('📈 No timeline data available');
     const ctx = timelineChart.value.getContext('2d');
     ctx.clearRect(0, 0, timelineChart.value.width, timelineChart.value.height);
     ctx.font = '14px Arial';
@@ -2999,81 +3035,60 @@ function renderTimelineChart() {
     return;
   }
 
-  try {
-    const ctx = timelineChart.value.getContext('2d');
+  const ctx = timelineChart.value.getContext('2d');
 
-    const labels = timeline.map(d => {
-      const date = new Date(d.date);
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    });
+  const labels = timeline.map(d => {
+    const date = new Date(d.date);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
 
-    const data = timeline.map(d => parseInt(d.views) || 0);
+  const data = timeline.map(d => parseInt(d.views) || 0);
 
-    timelineChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Views',
-          data,
-          borderColor: '#5c4033',
-          backgroundColor: 'rgba(92, 64, 51, 0.1)',
-          tension: 0.4,
-          fill: true,
-          pointRadius: 4,
-          pointHoverRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top'
-          },
-          tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            padding: 12,
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            callbacks: {
-              label: function(context) {
-                return 'Views: ' + context.parsed.y;
-              }
-            }
-          }
+  timelineChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Views',
+        data,
+        borderColor: '#5c4033',
+        backgroundColor: 'rgba(92, 64, 51, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              precision: 0,
-              font: { size: 12 }
-            }
-          },
-          x: {
-            ticks: {
-              font: { size: 11 }
-            }
-          }
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleColor: '#fff',
+          bodyColor: '#fff'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0, font: { size: 12 } }
+        },
+        x: {
+          ticks: { font: { size: 11 } }
         }
       }
-    });
-
-    console.log('✅ Timeline chart rendered');
-  } catch (error) {
-    console.error('❌ Error rendering timeline chart:', error);
-  }
+    }
+  });
 }
 
 function renderClicksChart() {
-  console.log('🎯 Rendering clicks chart...');
-
-  if (!clicksChart.value) {
-    console.warn('⚠️ Clicks canvas not found');
-    return;
-  }
+  if (!clicksChart.value) return;
 
   if (clicksChartInstance) {
     clicksChartInstance.destroy();
@@ -3081,10 +3096,8 @@ function renderClicksChart() {
   }
 
   const clickBreakdown = analyticsData.value.clickBreakdown || [];
-  console.log('Click breakdown data:', clickBreakdown);
 
   if (clickBreakdown.length === 0) {
-    console.log('🎯 No click data available');
     const ctx = clicksChart.value.getContext('2d');
     ctx.clearRect(0, 0, clicksChart.value.width, clicksChart.value.height);
     ctx.font = '14px Arial';
@@ -3094,77 +3107,65 @@ function renderClicksChart() {
     return;
   }
 
-  try {
-    const ctx = clicksChart.value.getContext('2d');
+  const ctx = clicksChart.value.getContext('2d');
+  const labels = clickBreakdown.map(c => c.label || c.clickType);
+  const data = clickBreakdown.map(c => parseInt(c.count) || 0);
 
-    const labels = clickBreakdown.map(c => c.label || c.clickType);
-    const data = clickBreakdown.map(c => parseInt(c.count) || 0);
+  const colors = [
+    '#5c4033', '#7d5a4f', '#9b7461', '#b88e75',
+    '#d4af37', '#e6c87f', '#f5e6d3', '#faf8f5',
+    '#8b4513', '#a0522d', '#cd853f', '#deb887'
+  ];
 
-    const colors = [
-      '#5c4033', '#7d5a4f', '#9b7461', '#b88e75',
-      '#d4af37', '#e6c87f', '#f5e6d3', '#faf8f5',
-      '#8b4513', '#a0522d', '#cd853f', '#deb887'
-    ];
-
-    clicksChartInstance = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels,
-        datasets: [{
-          data,
-          backgroundColor: colors.slice(0, data.length),
-          borderWidth: 2,
-          borderColor: '#fff'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              padding: 15,
-              font: { size: 12 },
-              generateLabels: function(chart) {
-                const data = chart.data;
-                return data.labels.map((label, i) => ({
-                  text: `${label}: ${data.datasets[0].data[i]}`,
-                  fillStyle: data.datasets[0].backgroundColor[i],
-                  hidden: false,
-                  index: i
-                }));
-              }
+  clicksChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors.slice(0, data.length),
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 15,
+            font: { size: 12 },
+            generateLabels: function(chart) {
+              const data = chart.data;
+              return data.labels.map((label, i) => ({
+                text: `${label}: ${data.datasets[0].data[i]}`,
+                fillStyle: data.datasets[0].backgroundColor[i],
+                hidden: false,
+                index: i
+              }));
             }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const label = context.label || '';
-                const value = context.parsed || 0;
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const percentage = ((value / total) * 100).toFixed(1);
-                return `${label}: ${value} (${percentage}%)`;
-              }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((value / total) * 100).toFixed(1);
+              return `${label}: ${value} (${percentage}%)`;
             }
           }
         }
       }
-    });
-
-    console.log('✅ Clicks chart rendered');
-  } catch (error) {
-    console.error('❌ Error rendering clicks chart:', error);
-  }
+    }
+  });
 }
 
 function renderDeviceChart() {
-  console.log('📱 Rendering device chart...');
-
-  if (!deviceChart.value) {
-    console.warn('⚠️ Device canvas not found');
-    return;
-  }
+  if (!deviceChart.value) return;
 
   if (deviceChartInstance) {
     deviceChartInstance.destroy();
@@ -3172,10 +3173,8 @@ function renderDeviceChart() {
   }
 
   const deviceBreakdown = analyticsData.value.deviceBreakdown || [];
-  console.log('Device breakdown data:', deviceBreakdown);
 
   if (deviceBreakdown.length === 0) {
-    console.log('📱 No device data available');
     const ctx = deviceChart.value.getContext('2d');
     ctx.clearRect(0, 0, deviceChart.value.width, deviceChart.value.height);
     ctx.font = '14px Arial';
@@ -3185,62 +3184,209 @@ function renderDeviceChart() {
     return;
   }
 
-  try {
-    const ctx = deviceChart.value.getContext('2d');
+  const ctx = deviceChart.value.getContext('2d');
+  const labels = deviceBreakdown.map(d => {
+    const type = d.deviceType || 'Unknown';
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  });
+  const data = deviceBreakdown.map(d => parseInt(d.count) || 0);
 
-    const labels = deviceBreakdown.map(d => {
-      const type = d.deviceType || 'Unknown';
-      return type.charAt(0).toUpperCase() + type.slice(1);
-    });
-
-    const data = deviceBreakdown.map(d => parseInt(d.count) || 0);
-
-    deviceChartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Views by Device',
-          data,
-          backgroundColor: ['#5c4033', '#7d5a4f', '#9b7461', '#b88e75'],
-          borderWidth: 0
-        }]
+  deviceChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Views by Device',
+        data,
+        backgroundColor: ['#5c4033', '#7d5a4f', '#9b7461', '#b88e75'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return 'Views: ' + context.parsed.y;
-              }
-            }
-          }
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0, font: { size: 12 } }
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              precision: 0,
-              font: { size: 12 }
-            }
-          },
-          x: {
-            ticks: {
-              font: { size: 12 }
+        x: {
+          ticks: { font: { size: 12 } }
+        }
+      }
+    }
+  });
+}
+
+// ✅ NEW: Browser breakdown chart
+function renderBrowserChart() {
+  if (!browserChart.value) return;
+
+  if (browserChartInstance) {
+    browserChartInstance.destroy();
+    browserChartInstance = null;
+  }
+
+  const browserBreakdown = analyticsData.value.browserBreakdown || [];
+
+  if (browserBreakdown.length === 0) {
+    const ctx = browserChart.value.getContext('2d');
+    ctx.clearRect(0, 0, browserChart.value.width, browserChart.value.height);
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#999';
+    ctx.textAlign = 'center';
+    ctx.fillText('No browser data available', browserChart.value.width / 2, browserChart.value.height / 2);
+    return;
+  }
+
+  const ctx = browserChart.value.getContext('2d');
+  const labels = browserBreakdown.map(b => b.browser || 'Unknown');
+  const data = browserBreakdown.map(b => parseInt(b.count) || 0);
+
+  browserChartInstance = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: ['#5c4033', '#7d5a4f', '#9b7461', '#b88e75', '#d4af37'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { padding: 10, font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+// ✅ NEW: Peak hours chart
+function renderPeakHoursChart() {
+  if (!peakHoursChart.value) return;
+
+  if (peakHoursChartInstance) {
+    peakHoursChartInstance.destroy();
+    peakHoursChartInstance = null;
+  }
+
+  const peakHours = analyticsData.value.peakHours || [];
+
+  if (peakHours.length === 0) {
+    const ctx = peakHoursChart.value.getContext('2d');
+    ctx.clearRect(0, 0, peakHoursChart.value.width, peakHoursChart.value.height);
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#999';
+    ctx.textAlign = 'center';
+    ctx.fillText('No hourly data available', peakHoursChart.value.width / 2, peakHoursChart.value.height / 2);
+    return;
+  }
+
+  const ctx = peakHoursChart.value.getContext('2d');
+
+  // Create array with all 24 hours
+  const allHours = Array.from({ length: 24 }, (_, i) => ({
+    hour: i,
+    count: 0
+  }));
+
+  // Fill in actual data
+  peakHours.forEach(item => {
+    allHours[item.hour] = { hour: item.hour, count: parseInt(item.count) || 0 };
+  });
+
+  const labels = allHours.map(h => {
+    const hour = h.hour;
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}${ampm}`;
+  });
+
+  const data = allHours.map(h => h.count);
+
+  peakHoursChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Views',
+        data,
+        backgroundColor: 'rgba(92, 64, 51, 0.7)',
+        borderColor: '#5c4033',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return 'Views: ' + context.parsed.y;
             }
           }
         }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0, font: { size: 10 } }
+        },
+        x: {
+          ticks: { font: { size: 9 } }
+        }
       }
-    });
-
-    console.log('✅ Device chart rendered');
-  } catch (error) {
-    console.error('❌ Error rendering device chart:', error);
-  }
+    }
+  });
 }
+
+// ============================================
+// WATCHERS
+// ============================================
+watch(contacts, (newContacts) => {
+  if (newContacts && newContacts.length > 0) {
+    userContactsList.value = newContacts.map(contact => ({
+      id: contact.id,
+      name: `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unnamed Contact',
+      mobile: contact.mobile || 'No phone'
+    }));
+  }
+}, { immediate: true });
+
+watch(selectedContactId, () => {
+  if (activeTab.value === 'analytics') {
+    loadAnalytics();
+  }
+});
+
+watch(analyticsDateRange, () => {
+  if (activeTab.value === 'analytics') {
+    loadAnalytics();
+  }
+});
+
+watch(activeTab, (newTab) => {
+  if (newTab === 'analytics') {
+    loadAnalytics();
+  }
+});
+
+onMounted(() => {
+  if (activeTab.value === 'analytics') {
+    loadAnalytics();
+  }
+});
 
 
 function toggleCurrentPassword() {
@@ -5193,138 +5339,122 @@ onMounted(loadData);
 
 
 <style scoped>
+/* ================================================
+   ANALYTICS DASHBOARD - ENHANCED DESIGN
+   ================================================ */
 
-
-/* Click Summary Cards */
-.click-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin-bottom: 25px;
-}
-
-.summary-card {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-}
-
-.summary-label {
-  display: block;
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.summary-value {
-  display: block;
-  font-size: 28px;
-  font-weight: bold;
-  color: #5c4033;
-}
-
-/* Clicks Table */
-.clicks-table-wrapper {
-  overflow-x: auto;
-  margin-top: 20px;
-}
-
-.analytics-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.analytics-table th {
-  background: #5c4033;
-  color: white;
-  padding: 12px;
-  text-align: left;
-  font-weight: 600;
-}
-
-.analytics-table td {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-}
-
-.analytics-table tr:hover {
-  background: #f9f9f9;
-}
-
-.click-type-badge {
-  display: inline-block;
-  background: #e8f5e9;
-  color: #2e7d32;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.click-count {
-  font-weight: bold;
-  font-size: 16px;
-  color: #5c4033;
-}
-
-.progress-bar-wrapper {
-  position: relative;
-  background: #f0f0f0;
-  border-radius: 10px;
-  height: 24px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #5c4033 0%, #8b6f47 100%);
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  transform: translateY(-50%);
-  font-size: 12px;
-  font-weight: bold;
-  color: #333;
-}
-
-/* Analytics Tab Styles */
-.analytics-tab {
-  padding: 2rem;
-}
-
+/* Header Section */
 .analytics-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid #e5e1dc;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding: 25px;
+  background: linear-gradient(135deg, #5c4033 0%, #7d5a4f 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(92, 64, 51, 0.2);
+}
+
+.header-left {
+  flex: 1;
+}
+
+.card-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: white;
 }
 
 .analytics-subtitle {
-  color: #64748b;
-  font-size: 0.95rem;
-  margin: 0.5rem 0 0 0;
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.date-range-selector {
+.analytics-filters {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-group .form-input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 14px;
+  font-weight: 500;
+  color: #5c4033;
+  min-width: 200px;
+  transition: all 0.3s ease;
+}
+
+.filter-group .form-input:focus {
+  outline: none;
+  border-color: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  background: white;
+}
+
+/* Active Filter Badge */
+.active-filter-badge {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 12px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #f5e6d3 0%, #faf8f5 100%);
+  border-radius: 12px;
+  margin-bottom: 25px;
+  border-left: 4px solid #5c4033;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-.date-range-selector label {
+.filter-label {
+  font-size: 13px;
+  color: #7d5a4f;
   font-weight: 600;
-  color: #2d1f1a;
 }
 
-.date-range-selector select {
-  min-width: 150px;
+.filter-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #5c4033;
+}
+
+.clear-filter-btn {
+  margin-left: auto;
+  padding: 6px 14px;
+  background: #5c4033;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.clear-filter-btn:hover {
+  background: #7d5a4f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.3);
 }
 
 /* Loading State */
@@ -5333,67 +5463,115 @@ onMounted(loadData);
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
-  gap: 1rem;
+  padding: 80px 20px;
+  gap: 20px;
 }
 
-/* Stats Grid */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #5c4033;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.analytics-loading p {
+  font-size: 16px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Stats Grid - Enhanced 6 Cards */
 .analytics-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 35px;
 }
 
 .stat-card {
-  background: white;
-  border: 2px solid #e5e1dc;
-  border-radius: 12px;
-  padding: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 18px;
+  padding: 24px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #5c4033, #7d5a4f);
+  transition: width 0.3s ease;
 }
 
 .stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(92, 64, 51, 0.15);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
 }
 
-.stat-card.views { border-left: 4px solid #5c4033; }
-.stat-card.clicks { border-left: 4px solid #7d5a4f; }
-.stat-card.visitors { border-left: 4px solid #9b7461; }
-.stat-card.engagement { border-left: 4px solid #d4af37; }
+.stat-card:hover::before {
+  width: 100%;
+  opacity: 0.05;
+}
 
 .stat-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
   flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .stat-card.views .stat-icon {
-  background: linear-gradient(135deg, #5c4033 0%, #7d5a4f 100%);
-  color: white;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  color: #1976d2;
 }
 
 .stat-card.clicks .stat-icon {
-  background: linear-gradient(135deg, #7d5a4f 0%, #9b7461 100%);
-  color: white;
+  background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+  color: #7b1fa2;
 }
 
 .stat-card.visitors .stat-icon {
-  background: linear-gradient(135deg, #9b7461 0%, #b88e75 100%);
-  color: white;
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  color: #388e3c;
 }
 
 .stat-card.engagement .stat-icon {
-  background: linear-gradient(135deg, #d4af37 0%, #f5e6d3 100%);
-  color: #2d1f1a;
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  color: #f57c00;
+}
+
+.stat-card.conversions .stat-icon {
+  background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+  color: #c2185b;
+}
+
+.stat-card.conversion-rate .stat-icon {
+  background: linear-gradient(135deg, #e0f2f1, #b2dfdb);
+  color: #00897b;
 }
 
 .stat-content {
@@ -5401,145 +5579,404 @@ onMounted(loadData);
 }
 
 .stat-label {
-  font-size: 0.875rem;
-  color: #64748b;
-  margin: 0 0 0.5rem 0;
-  font-weight: 500;
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 6px 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #2d1f1a;
+  font-size: 32px;
+  font-weight: 800;
+  color: #333;
   margin: 0;
   line-height: 1;
+}
+
+.stat-sublabel {
+  font-size: 12px;
+  color: #999;
+  margin: 6px 0 0 0;
+  font-weight: 500;
 }
 
 /* Charts Section */
 .analytics-charts {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 25px;
 }
 
 .chart-container {
   background: white;
-  border: 2px solid #e5e1dc;
-  border-radius: 12px;
-  padding: 1.5rem;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.chart-container:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.chart-container.full-width {
+  grid-column: 1 / -1;
 }
 
 .chart-container h3 {
-  margin: 0 0 1.25rem 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #2d1f1a;
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
 }
 
 .chart-wrapper {
-  height: 300px;
   position: relative;
+  height: 300px;
+  width: 100%;
 }
 
-.timeline-chart {
-  grid-column: 1 / -1;
+.chart-container.timeline-chart .chart-wrapper,
+.chart-container.peak-hours-chart .chart-wrapper {
+  height: 350px;
 }
 
-.geo-chart {
-  grid-column: 1 / -1;
+/* Click Summary Grid */
+.click-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px;
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  border-radius: 12px;
+  border: 2px solid #f0f0f0;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.summary-card:hover {
+  transform: translateY(-3px);
+  border-color: #5c4033;
+  box-shadow: 0 6px 18px rgba(92, 64, 51, 0.15);
+}
+
+.summary-card.conversion-highlight {
+  background: linear-gradient(135deg, #fff8e1, #fffde7);
+  border-color: #d4af37;
+}
+
+.summary-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #5c4033;
+}
+
+/* Analytics Table */
+.clicks-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.analytics-table thead {
+  background: linear-gradient(135deg, #5c4033, #7d5a4f);
+}
+
+.analytics-table th {
+  padding: 16px 20px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.analytics-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.analytics-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.analytics-table td {
+  padding: 16px 20px;
+  font-size: 14px;
+  color: #333;
+}
+
+.click-type-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #f5e6d3, #faf8f5);
+  color: #5c4033;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #e0d5c7;
+}
+
+.click-type-badge.vcf-badge {
+  background: linear-gradient(135deg, #fff8e1, #fffde7);
+  color: #f57f17;
+  border-color: #d4af37;
+  font-weight: 700;
+}
+
+.click-count {
+  font-weight: 700;
+  font-size: 16px;
+  color: #5c4033;
+}
+
+.progress-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.progress-bar {
+  height: 8px;
+  background: linear-gradient(90deg, #5c4033, #7d5a4f);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  min-width: 2%;
+}
+
+.progress-bar.vcf-progress {
+  background: linear-gradient(90deg, #d4af37, #f4d03f);
+}
+
+.progress-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  min-width: 50px;
 }
 
 /* Country List */
 .country-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 12px;
 }
 
 .country-item {
-  display: grid;
-  grid-template-columns: 40px 60px 1fr 60px;
+  display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: #fafaf8;
-  border-radius: 8px;
-  transition: all 0.2s;
+  gap: 15px;
+  padding: 14px 18px;
+  background: #fafafa;
+  border-radius: 12px;
+  transition: all 0.3s ease;
 }
 
 .country-item:hover {
-  background: #f5f5f0;
-  transform: translateX(4px);
+  background: #f5f5f5;
+  transform: translateX(5px);
 }
 
 .country-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #5c4033, #7d5a4f);
+  color: white;
+  border-radius: 50%;
   font-weight: 700;
-  font-size: 1.25rem;
-  color: #5c4033;
-  text-align: center;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
 .country-flag {
-  font-size: 2rem;
-  text-align: center;
+  font-size: 24px;
+  flex-shrink: 0;
 }
 
 .country-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .country-name {
+  display: block;
   font-weight: 600;
-  color: #2d1f1a;
-  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 6px;
+  font-size: 14px;
 }
 
 .country-bar-wrapper {
   width: 100%;
   height: 8px;
-  background: #e5e1dc;
+  background: #e0e0e0;
   border-radius: 4px;
   overflow: hidden;
 }
 
 .country-bar {
   height: 100%;
-  background: linear-gradient(90deg, #5c4033 0%, #d4af37 100%);
+  background: linear-gradient(90deg, #5c4033, #7d5a4f);
   border-radius: 4px;
   transition: width 0.5s ease;
 }
 
 .country-count {
   font-weight: 700;
-  color: #2d1f1a;
+  color: #5c4033;
+  font-size: 16px;
+  min-width: 50px;
   text-align: right;
 }
 
-.empty-chart {
-  padding: 3rem;
-  text-align: center;
-  color: #94a3b8;
+/* Referrers List */
+.referrers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .analytics-charts {
-    grid-template-columns: 1fr;
+.referrer-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 14px 18px;
+  background: #fafafa;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.referrer-item:hover {
+  background: #f5f5f5;
+  transform: translateX(5px);
+}
+
+.referrer-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #7b1fa2, #9c27b0);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.referrer-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.referrer-url {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.referrer-bar-wrapper {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.referrer-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #7b1fa2, #9c27b0);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.referrer-count {
+  font-weight: 700;
+  color: #7b1fa2;
+  font-size: 14px;
+  min-width: 80px;
+  text-align: right;
+}
+
+/* Empty State */
+.empty-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .analytics-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 
-  .timeline-chart,
-  .geo-chart {
-    grid-column: 1;
+  .analytics-charts {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
   .analytics-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+    gap: 20px;
+  }
+
+  .analytics-filters {
+    width: 100%;
+  }
+
+  .filter-group .form-input {
+    width: 100%;
+    min-width: unset;
   }
 
   .analytics-stats-grid {
@@ -5547,178 +5984,52 @@ onMounted(loadData);
   }
 
   .stat-value {
-    font-size: 1.75rem;
+    font-size: 28px;
   }
 
-  .country-item {
-    grid-template-columns: 30px 50px 1fr 50px;
-    gap: 0.75rem;
-    padding: 0.875rem;
-  }
-}
-
-/* Analytics Filters Styles */
-
-.analytics-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #e5e5e5;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.analytics-filters {
-  display: flex;
-  gap: 16px;
-  align-items: flex-end;
-  flex-wrap: wrap;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 200px;
-}
-
-.filter-group label {
-  font-weight: 600;
-  color: #333;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.filter-group .form-input {
-  padding: 10px 14px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 200px;
-}
-
-.filter-group .form-input:hover {
-  border-color: #5c4033;
-}
-
-.filter-group .form-input:focus {
-  outline: none;
-  border-color: #5c4033;
-  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
-}
-
-/* Active Filter Badge */
-.active-filter-badge {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-left: 4px solid #5c4033;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.filter-label {
-  font-size: 13px;
-  color: #666;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.filter-value {
-  font-size: 15px;
-  font-weight: 700;
-  color: #333;
-  padding: 4px 12px;
-  background: white;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.clear-filter-btn {
-  padding: 6px 12px;
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-}
-
-.clear-filter-btn:hover {
-  background: #c82333;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
-}
-
-.clear-filter-btn:active {
-  transform: translateY(0);
-}
-
-/* Responsive Filters */
-@media (max-width: 1024px) {
-  .analytics-header {
-    flex-direction: column;
-    align-items: stretch;
+  .click-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .analytics-filters {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .filter-group {
-    flex: 1;
-    min-width: 150px;
-  }
-
-  .filter-group .form-input {
-    width: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  .analytics-filters {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .filter-group {
+  .chart-wrapper {
+    height: 250px;
     width: 100%;
   }
 
-  .filter-group .form-input {
-    min-width: 100%;
+  .analytics-table {
+    font-size: 12px;
   }
 
-  .active-filter-badge {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+  .analytics-table th,
+  .analytics-table td {
+    padding: 12px 10px;
   }
 
-  .clear-filter-btn {
-    margin-left: 0;
-    align-self: stretch;
+  .chart-container{
+    width: 87vw;
   }
 }
 
+@media (max-width: 480px) {
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .stat-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .click-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-container{
+    width: 87vw;
+  }
+}
 /* Enhanced form input styling */
 .form-input {
   font-family: inherit;

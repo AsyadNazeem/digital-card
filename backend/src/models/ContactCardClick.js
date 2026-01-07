@@ -52,6 +52,11 @@ const ContactCardClick = sequelize.define('ContactCardClick', {
     os: {
         type: DataTypes.STRING(100),
         allowNull: true
+    },
+    gaClientId: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        comment: 'Google Analytics Client ID for correlation'
     }
 }, {
     tableName: 'contact_card_clicks',

@@ -483,6 +483,20 @@ const contactMessageStatus = ref({
   success: false
 });
 
+
+// Add this helper function to get GA Client ID
+const getGAClientId = () => {
+  return new Promise((resolve) => {
+    if (window.gtag) {
+      window.gtag('get', 'G-Z9X7JZZVQF', 'client_id', (clientId) => {
+        resolve(clientId);
+      });
+    } else {
+      resolve(null);
+    }
+  });
+};
+
 // Close contact popup
 const closeContactPopup = () => {
   showContactPopup.value = false;
@@ -499,14 +513,38 @@ const closeContactPopup = () => {
 };
 
 // Device detection helper
+// Enhanced Device Detection
 function getDeviceType() {
-  const ua = navigator.userAgent;
-  if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
-    return 'tablet';
-  }
-  if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+
+  console.log('User Agent:', ua); // Debug log
+
+  // Windows Phone must come first because its UA also contains "Android"
+  if (/windows phone/i.test(ua)) {
     return 'mobile';
   }
+
+  // Android tablets
+  if (/android/i.test(ua) && !/mobile/i.test(ua)) {
+    return 'tablet';
+  }
+
+  // iPad (including iPadOS 13+ which reports as desktop)
+  if (/iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+    return 'tablet';
+  }
+
+  // Other tablets
+  if (/tablet|playbook|silk/i.test(ua)) {
+    return 'tablet';
+  }
+
+  // Mobile devices (phones)
+  if (/mobile|android|iphone|ipod|blackberry|iemobile|opera mini|webos|bb10/i.test(ua)) {
+    return 'mobile';
+  }
+
+  // Default to desktop
   return 'desktop';
 }
 
@@ -518,34 +556,158 @@ async function trackPageView() {
     const userAgent = navigator.userAgent;
     const deviceType = getDeviceType();
 
+    // Get GA Client ID
+    const gaClientId = await getGAClientId();
+
     await api.post(`/analytics/view/${phone}`, {
       referrer,
       userAgent,
       deviceType,
       screenResolution: `${window.screen.width}x${window.screen.height}`,
-      language: navigator.language
+      language: navigator.language,
+      gaClientId  // ✅ Add this
     });
   } catch (error) {
-    // Silently fail - don't disrupt user experience
     console.error('Analytics tracking error:', error);
   }
 }
 
 // Track clicks
+
+// FRONTEND: Enhanced trackClick with GA Client ID (Optional)
 async function trackClick(clickType, linkUrl = '') {
   try {
     const phone = route.params.phone;
     const userAgent = navigator.userAgent;
 
+    // Get GA Client ID
+    const gaClientId = await getGAClientId();
+
+    // Send to your backend API
     await api.post(`/analytics/click/${phone}`, {
       clickType,
       linkUrl,
-      userAgent
+      userAgent,
+      gaClientId  // ✅ Already included but now properly captured
     });
+
+    // Send to Google Analytics
+    if (window.gtag) {
+      const eventMap = {
+        'phone': 'contact_phone',
+        'email': 'contact_email',
+        'whatsapp': 'contact_whatsapp',
+        'whatsapp_channel': 'contact_whatsapp_channel',
+        'office_phone': 'contact_office',
+        'website': 'visit_website',
+        'location': 'view_location',
+        '360_view': 'view_360',
+        'brochure': 'download_brochure',
+        'menu': 'view_menu',
+        'shop_now': 'shop_now',
+        'order_now': 'order_now',
+        'review': 'write_review',
+        'google_review': 'google_review',
+        'tripadvisor_review': 'tripadvisor_review'
+      };
+
+      const gaEventName = eventMap[clickType] || clickType;
+
+      window.gtag('event', gaEventName, {
+        event_category: 'Contact Card',
+        event_label: clickType,
+        link_url: linkUrl,
+        card_owner: phone,
+        client_id: gaClientId  // ✅ Include in GA event too
+      });
+
+      // Social media clicks
+      if (clickType.startsWith('social_')) {
+        const platform = clickType.replace('social_', '');
+        window.gtag('event', 'social_click', {
+          event_category: 'Social Media',
+          event_label: platform,
+          link_url: linkUrl,
+          card_owner: phone,
+          client_id: gaClientId
+        });
+      }
+    }
   } catch (error) {
     console.error('Click tracking error:', error);
   }
 }
+
+function setupScrollTracking() {
+  let scrollDepths = [25, 50, 75, 100];
+  let trackedDepths = new Set();
+
+  window.addEventListener('scroll', () => {
+    const scrollPercentage = Math.round(
+        (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
+    );
+
+    scrollDepths.forEach(depth => {
+      if (scrollPercentage >= depth && !trackedDepths.has(depth)) {
+        trackedDepths.add(depth);
+
+        if (window.gtag) {
+          window.gtag('event', 'scroll_depth', {
+            event_category: 'Engagement',
+            event_label: `${depth}%`,
+            value: depth,
+            card_owner: route.params.phone
+          });
+        }
+      }
+    });
+  });
+}
+
+
+function setupEngagementTracking() {
+  let startTime = Date.now();
+  let engagementSent = false;
+
+  // Send engagement time after 30 seconds
+  setTimeout(() => {
+    if (!engagementSent && window.gtag) {
+      const engagementTime = Math.round((Date.now() - startTime) / 1000);
+
+      window.gtag('event', 'user_engagement', {
+        event_category: 'Engagement',
+        engagement_time_msec: engagementTime * 1000,
+        card_owner: route.params.phone
+      });
+      engagementSent = true;
+    }
+  }, 30000);
+
+  // Track on page leave
+  window.addEventListener('beforeunload', () => {
+    if (window.gtag) {
+      const timeSpent = Math.round((Date.now() - startTime) / 1000);
+
+      window.gtag('event', 'time_on_page', {
+        event_category: 'Engagement',
+        value: timeSpent,
+        card_owner: route.params.phone
+      });
+    }
+  });
+}
+
+async function trackFileDownload(fileName, fileType) {
+  if (window.gtag) {
+    window.gtag('event', 'file_download', {
+      event_category: 'Downloads',
+      event_label: fileName,
+      file_extension: fileType,
+      card_owner: route.params.phone
+    });
+  }
+}
+
 
 const handleWhatsAppClick = async () => {
   const whatsapp = contacts.value[0]?.whatsapp;
@@ -1089,11 +1251,20 @@ function updateMetaTags(contact, company) {
 }
 
 onMounted(async () => {
+  const deviceType = getDeviceType();
+  console.log('🔍 Detected Device Type:', deviceType);
+  console.log('📱 User Agent:', navigator.userAgent);
+
+  // Wait a moment for GA to initialize
+  await new Promise(resolve => setTimeout(resolve, 500));
 
   await trackPageView();
 
+
+  setupScrollTracking();
+  setupEngagementTracking();
+
   try {
-    // Load saved language preference
     const savedLanguage = localStorage.getItem('preferredLanguage');
     if (savedLanguage) {
       locale.value = savedLanguage;
@@ -1109,7 +1280,6 @@ onMounted(async () => {
     updatePageTitle();
     updateMetaTags(res.data.contact, res.data.company);
 
-    // If Arabic is selected, translate immediately
     if (locale.value === 'ar') {
       await translateDatabaseContent();
     }
@@ -1175,8 +1345,10 @@ const saveContact = async () => {
     return;
   }
 
-  const contact = contacts.value[0];
+  await trackFileDownload('contact.vcf', 'vcf');
+  await trackClick('save_contact', 'vcf_download');
 
+  const contact = contacts.value[0];
   try {
     let photoBase64 = '';
     if (contact.photo) {

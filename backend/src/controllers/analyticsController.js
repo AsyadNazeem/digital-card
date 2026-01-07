@@ -24,7 +24,7 @@ function formatClickType(clickType) {
         'google_review': 'Google Review',
         'google_wallet': 'Google Wallet',
         'tripadvisor_review': 'TripAdvisor Review',
-        'save_contact': 'Save Contact',
+        'save_contact': 'Save Contact (VCF)', // ✅ Added
         'brochure': 'Brochure',
         'menu': 'Menu',
         'shop_now': 'Shop Now',
@@ -52,24 +52,18 @@ function formatClickType(clickType) {
 export const trackView = async (req, res) => {
     try {
         const phone = req.params.phone;
-        const { referrer, userAgent, screenResolution, language } = req.body;
+        const { referrer, userAgent, screenResolution, language, gaClientId } = req.body;
 
-        // Get real IP
         const rawIP = getClientIP(req);
         const ip = anonymizeIP(rawIP);
-
-        // Get geolocation
         const location = await getLocationFromIP(rawIP);
 
-        // Parse user agent
         const deviceType = getDeviceType(userAgent);
         const browser = parseBrowser(userAgent);
         const os = parseOS(userAgent);
 
-        // Format phone number
         let formattedMobile = phone.startsWith('+') ? phone : '+' + phone.replace(/[^0-9]/g, '');
 
-        // Find contact
         const contact = await Contact.findOne({
             where: { mobile: formattedMobile }
         });
@@ -78,7 +72,6 @@ export const trackView = async (req, res) => {
             return res.status(404).json({ message: 'Contact not found' });
         }
 
-        // Save view
         await ContactCardView.create({
             contactId: contact.id,
             ipAddress: ip,
@@ -94,10 +87,10 @@ export const trackView = async (req, res) => {
             browser,
             os,
             screenResolution,
-            language
+            language,
+            gaClientId
         });
 
-        // Update daily summary
         await updateDailySummary(contact.id, 'view', ip);
 
         res.status(200).json({ success: true });
@@ -114,7 +107,7 @@ export const trackView = async (req, res) => {
 export const trackClick = async (req, res) => {
     try {
         const phone = req.params.phone;
-        const { clickType, linkUrl, userAgent } = req.body;
+        const { clickType, linkUrl, userAgent, gaClientId } = req.body;
 
         const rawIP = getClientIP(req);
         const ip = anonymizeIP(rawIP);
@@ -144,7 +137,8 @@ export const trackClick = async (req, res) => {
             city: location?.city,
             deviceType,
             browser,
-            os
+            os,
+            gaClientId
         });
 
         await updateDailySummary(contact.id, 'click', ip);
@@ -157,14 +151,8 @@ export const trackClick = async (req, res) => {
 };
 
 /**
- * Get analytics dashboard
+ * Get analytics dashboard with enhanced metrics
  * GET /api/analytics/dashboard
- */
-
-/**
- * Get analytics dashboard with contact filter support
- * GET /api/analytics/dashboard
- * Query params: startDate, endDate, contactId (optional)
  */
 export const getDashboard = async (req, res) => {
     try {
@@ -173,7 +161,6 @@ export const getDashboard = async (req, res) => {
 
         let { startDate, endDate, contactId } = req.query;
 
-        // Default to last 30 days
         if (!startDate || !endDate) {
             endDate = new Date();
             startDate = new Date();
@@ -183,64 +170,53 @@ export const getDashboard = async (req, res) => {
             endDate = new Date(endDate);
         }
 
-        // Set time boundaries
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(23, 59, 59, 999);
 
-        console.log('📅 Date range:', { startDate, endDate, contactId });
-
-        // Get user's contacts
         const userContacts = await Contact.findAll({
             where: { userId },
             attributes: ['id', 'firstName', 'lastName', 'mobile']
         });
 
-        console.log('👥 User contacts found:', userContacts.length);
-
         const contactIds = userContacts.map(c => c.id);
 
         if (contactIds.length === 0) {
-            console.log('⚠️ No contacts found for user');
             return res.json({
                 totalViews: 0,
                 totalClicks: 0,
                 uniqueVisitors: 0,
+                vcfDownloads: 0, // ✅ Added
                 clickBreakdown: [],
                 clickSummary: {
                     communication: 0,
                     social: 0,
                     content: 0,
                     navigation: 0,
+                    conversion: 0, // ✅ Added
                     other: 0
                 },
                 geoDistribution: [],
                 timeline: [],
-                deviceBreakdown: []
+                deviceBreakdown: [],
+                browserBreakdown: [], // ✅ Added
+                topReferrers: [], // ✅ Added
+                peakHours: [] // ✅ Added
             });
         }
 
-        // Build contact filter
         let whereContact;
         if (contactId && contactId !== 'all') {
-            // Specific contact requested
             const requestedContactId = parseInt(contactId);
-
-            // Verify this contact belongs to the user
             if (!contactIds.includes(requestedContactId)) {
                 return res.status(403).json({
                     message: 'You do not have access to this contact'
                 });
             }
-
             whereContact = { contactId: requestedContactId };
-            console.log('🎯 Filtering by contact ID:', requestedContactId);
         } else {
-            // All contacts
             whereContact = { contactId: { [Op.in]: contactIds } };
-            console.log('📊 Showing all contacts:', contactIds.length);
         }
 
-        // Date filter for views
         const dateWhereViews = {
             [Op.and]: [
                 { viewedAt: { [Op.gte]: startDate } },
@@ -248,7 +224,6 @@ export const getDashboard = async (req, res) => {
             ]
         };
 
-        // Date filter for clicks
         const dateWhereClicks = {
             [Op.and]: [
                 { clickedAt: { [Op.gte]: startDate } },
@@ -256,44 +231,33 @@ export const getDashboard = async (req, res) => {
             ]
         };
 
-        // Total views
+        // Basic metrics
         const totalViews = await ContactCardView.count({
-            where: {
-                ...whereContact,
-                ...dateWhereViews
-            }
+            where: { ...whereContact, ...dateWhereViews }
         });
 
-        console.log('👁️ Total views:', totalViews);
-
-        // Total clicks
         const totalClicks = await ContactCardClick.count({
-            where: {
-                ...whereContact,
-                ...dateWhereClicks
-            }
+            where: { ...whereContact, ...dateWhereClicks }
         });
 
-        console.log('🖱️ Total clicks:', totalClicks);
-
-        // Unique visitors (by IP)
         const uniqueVisitors = await ContactCardView.count({
-            where: {
-                ...whereContact,
-                ...dateWhereViews
-            },
+            where: { ...whereContact, ...dateWhereViews },
             distinct: true,
             col: 'ipAddress'
         });
 
-        console.log('👤 Unique visitors:', uniqueVisitors);
-
-        // Click breakdown with formatted labels
-        const clickBreakdownRaw = await ContactCardClick.findAll({
+        // ✅ VCF Downloads
+        const vcfDownloads = await ContactCardClick.count({
             where: {
                 ...whereContact,
-                ...dateWhereClicks
-            },
+                ...dateWhereClicks,
+                clickType: 'save_contact'
+            }
+        });
+
+        // Click breakdown
+        const clickBreakdownRaw = await ContactCardClick.findAll({
+            where: { ...whereContact, ...dateWhereClicks },
             attributes: [
                 'clickType',
                 [fn('COUNT', col('id')), 'count']
@@ -302,21 +266,17 @@ export const getDashboard = async (req, res) => {
             order: [[literal('count'), 'DESC']]
         });
 
-        // Format click breakdown with readable labels
         const clickBreakdown = clickBreakdownRaw.map(item => ({
             clickType: item.clickType,
             label: formatClickType(item.clickType),
             count: parseInt(item.dataValues.count)
         }));
 
-        console.log('🎯 Click breakdown:', clickBreakdown);
-
-        // Group social media clicks
+        // Enhanced click summary
         const socialClicks = clickBreakdown
             .filter(c => c.clickType.startsWith('social_'))
             .reduce((sum, c) => sum + c.count, 0);
 
-        // Create summary categories
         const clickSummary = {
             communication: clickBreakdown
                 .filter(c => ['phone', 'office_phone', 'email', 'whatsapp', 'whatsapp_channel'].includes(c.clickType))
@@ -328,22 +288,18 @@ export const getDashboard = async (req, res) => {
             navigation: clickBreakdown
                 .filter(c => ['website', 'location', 'review', 'google_review', 'tripadvisor_review'].includes(c.clickType))
                 .reduce((sum, c) => sum + c.count, 0),
+            conversion: vcfDownloads, // ✅ Added - VCF downloads as conversions
             other: clickBreakdown
-                .filter(c => !['phone', 'office_phone', 'email', 'whatsapp', 'whatsapp_channel', 'brochure', 'menu', 'shop_now', 'order_now', '360_view', 'website', 'location', 'review', 'google_review', 'tripadvisor_review'].includes(c.clickType) && !c.clickType.startsWith('social_'))
+                .filter(c => !['phone', 'office_phone', 'email', 'whatsapp', 'whatsapp_channel', 'brochure', 'menu', 'shop_now', 'order_now', '360_view', 'website', 'location', 'review', 'google_review', 'tripadvisor_review', 'save_contact'].includes(c.clickType) && !c.clickType.startsWith('social_'))
                 .reduce((sum, c) => sum + c.count, 0)
         };
-
-        console.log('📊 Click summary:', clickSummary);
 
         // Geographic distribution
         const geoDistribution = await ContactCardView.findAll({
             where: {
                 ...whereContact,
                 ...dateWhereViews,
-                country: {
-                    [Op.ne]: null,
-                    [Op.ne]: 'Unknown'
-                }
+                country: { [Op.ne]: null, [Op.ne]: 'Unknown' }
             },
             attributes: [
                 'country',
@@ -355,14 +311,9 @@ export const getDashboard = async (req, res) => {
             limit: 10
         });
 
-        console.log('🌍 Geo distribution:', geoDistribution.length, 'countries');
-
         // Device breakdown
         const deviceBreakdown = await ContactCardView.findAll({
-            where: {
-                ...whereContact,
-                ...dateWhereViews
-            },
+            where: { ...whereContact, ...dateWhereViews },
             attributes: [
                 'deviceType',
                 [fn('COUNT', col('id')), 'count']
@@ -371,12 +322,59 @@ export const getDashboard = async (req, res) => {
             order: [[literal('count'), 'DESC']]
         });
 
-        console.log('📱 Device breakdown:', deviceBreakdown);
+        // ✅ Browser breakdown
+        const browserBreakdown = await ContactCardView.findAll({
+            where: { ...whereContact, ...dateWhereViews },
+            attributes: [
+                'browser',
+                [fn('COUNT', col('id')), 'count']
+            ],
+            group: ['browser'],
+            order: [[literal('count'), 'DESC']],
+            limit: 5
+        });
 
-        // Timeline (daily aggregation) - Updated to handle single contact filter
+        // ✅ Top referrers
+        const topReferrers = await ContactCardView.findAll({
+            where: {
+                ...whereContact,
+                ...dateWhereViews,
+                referrer: { [Op.ne]: null, [Op.ne]: '', [Op.ne]: 'direct' }
+            },
+            attributes: [
+                'referrer',
+                [fn('COUNT', col('id')), 'count']
+            ],
+            group: ['referrer'],
+            order: [[literal('count'), 'DESC']],
+            limit: 5
+        });
+
+        // ✅ Peak hours analysis
+        const peakHoursQuery = contactId && contactId !== 'all'
+            ? `SELECT HOUR(viewedAt) as hour, COUNT(*) as count
+               FROM contact_card_views
+               WHERE contactId = :contactId
+                 AND viewedAt >= :startDate AND viewedAt <= :endDate
+               GROUP BY HOUR(viewedAt)
+               ORDER BY hour ASC`
+            : `SELECT HOUR(viewedAt) as hour, COUNT(*) as count
+               FROM contact_card_views
+               WHERE contactId IN (${contactIds.join(',')})
+                 AND viewedAt >= :startDate AND viewedAt <= :endDate
+               GROUP BY HOUR(viewedAt)
+               ORDER BY hour ASC`;
+
+        const peakHours = await sequelize.query(peakHoursQuery, {
+            replacements: contactId && contactId !== 'all'
+                ? { contactId: parseInt(contactId), startDate, endDate }
+                : { startDate, endDate },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        // Timeline
         let timeline;
         if (contactId && contactId !== 'all') {
-            // Single contact
             timeline = await sequelize.query(`
                 SELECT 
                     DATE(viewedAt) as date,
@@ -388,15 +386,10 @@ export const getDashboard = async (req, res) => {
                 GROUP BY DATE(viewedAt)
                 ORDER BY date ASC
             `, {
-                replacements: {
-                    contactId: parseInt(contactId),
-                    startDate,
-                    endDate
-                },
+                replacements: { contactId: parseInt(contactId), startDate, endDate },
                 type: sequelize.QueryTypes.SELECT
             });
         } else {
-            // All contacts
             timeline = await sequelize.query(`
                 SELECT 
                     DATE(viewedAt) as date,
@@ -413,12 +406,11 @@ export const getDashboard = async (req, res) => {
             });
         }
 
-        console.log('📈 Timeline:', timeline.length, 'days');
-
         const result = {
             totalViews,
             totalClicks,
             uniqueVisitors,
+            vcfDownloads, // ✅ Added
             clickBreakdown,
             clickSummary,
             geoDistribution: geoDistribution.map(g => ({
@@ -430,10 +422,18 @@ export const getDashboard = async (req, res) => {
                 deviceType: d.deviceType,
                 count: parseInt(d.dataValues.count)
             })),
+            browserBreakdown: browserBreakdown.map(b => ({ // ✅ Added
+                browser: b.browser,
+                count: parseInt(b.dataValues.count)
+            })),
+            topReferrers: topReferrers.map(r => ({ // ✅ Added
+                referrer: r.referrer,
+                count: parseInt(r.dataValues.count)
+            })),
+            peakHours, // ✅ Added
             timeline
         };
 
-        console.log('✅ Sending analytics result');
         res.json(result);
     } catch (error) {
         console.error('❌ Get dashboard error:', error);
@@ -455,7 +455,6 @@ export const getContactAnalytics = async (req, res) => {
         const contactId = req.params.contactId;
         let { startDate, endDate } = req.query;
 
-        // Verify contact belongs to user
         const contact = await Contact.findOne({
             where: { id: contactId, userId }
         });
@@ -464,14 +463,12 @@ export const getContactAnalytics = async (req, res) => {
             return res.status(404).json({ message: 'Contact not found' });
         }
 
-        // Default date range
         if (!startDate || !endDate) {
             endDate = new Date();
             startDate = new Date();
             startDate.setDate(startDate.getDate() - 30);
         }
 
-        // Get analytics for this specific contact
         const analytics = await getAnalyticsForContact(contactId, startDate, endDate);
 
         res.json(analytics);
@@ -502,13 +499,10 @@ async function updateDailySummary(contactId, type, ipAddress) {
         if (type === 'view') {
             await summary.increment('totalViews');
 
-            // Update unique visitors
             const uniqueToday = await ContactCardView.count({
                 where: {
                     contactId,
-                    viewedAt: {
-                        [Op.gte]: new Date(today)
-                    }
+                    viewedAt: { [Op.gte]: new Date(today) }
                 },
                 distinct: true,
                 col: 'ipAddress'

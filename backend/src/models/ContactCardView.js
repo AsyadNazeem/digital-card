@@ -72,6 +72,11 @@ const ContactCardView = sequelize.define('ContactCardView', {
     language: {
         type: DataTypes.STRING(20),
         allowNull: true
+    },
+    gaClientId: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        comment: 'Google Analytics Client ID for correlation'
     }
 }, {
     tableName: 'contact_card_views',
