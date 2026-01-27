@@ -1,4 +1,4 @@
-// models/User.js
+// models/user.js
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
@@ -98,11 +98,12 @@ const User = sequelize.define(
         },
 
         plan: {
-            type: DataTypes.ENUM("free", "premium", "enterprise"),
+            type: DataTypes.ENUM("free", "plus", "pro"),
             defaultValue: "free",
+            allowNull: false,
         },
 
-        // Add these fields to your User model definition
+        // Add these fields to your user model definition
         resetPasswordToken: {
             type: DataTypes.STRING,
             allowNull: true,

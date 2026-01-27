@@ -198,7 +198,7 @@ export const useAdminStore = defineStore("adminStore", {
             try {
                 await adminApi.delete(`/user/${userId}`);
                 this.users = this.users.filter(u => u.id !== userId);
-                console.log("✅ User deleted:", userId);
+                console.log("✅ user deleted:", userId);
                 return {success: true};
             } catch (err) {
                 console.error("❌ Error deleting user:", err);
@@ -254,7 +254,7 @@ export const useAdminStore = defineStore("adminStore", {
         async fetchUserPermissions(userId) {
             try {
                 const response = await adminApi.get(`/permissions/user/${userId}`);
-                console.log("✅ User permissions loaded:", response.data);
+                console.log("✅ user permissions loaded:", response.data);
                 return { success: true, data: response.data };
             } catch (err) {
                 console.error("❌ Error fetching user permissions:", err);

@@ -390,10 +390,26 @@ router.get("/companies", authenticate, async (req, res) => {
     }
 });
 
+router.get('/user/plan', authenticate, async (req, res) => {
+    try {
+        const user = await User.findByPk(req.userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({ plan: user.plan}); // Default to 'free' if null
+    } catch (err) {
+        console.error('❌ Error fetching user plan:', err);
+        res.status(500).json({ message: 'Failed to fetch user plan' });
+    }
+});
+
 // ============================================
 // CONTACT ROUTES
 // ============================================
 
+// ✅ Create a new contact
 // ✅ Create a new contact
 router.post(
     "/contact",
@@ -402,6 +418,7 @@ router.post(
     async (req, res) => {
         try {
             const {
+                type,              // ✅ NEW
                 firstName,
                 lastName,
                 telephone,
@@ -410,8 +427,15 @@ router.post(
                 designation,
                 companyId,
                 status,
-                whatsappChannel  // ✅ NEW
+                whatsappChannel
             } = req.body;
+
+            // ✅ Validate contact type
+            if (type && !['individual', 'group'].includes(type)) {
+                return res.status(400).json({
+                    message: "Type must be either 'individual' or 'group'"
+                });
+            }
 
             // Validate required fields
             if (!mobile) {
@@ -426,7 +450,7 @@ router.post(
                 });
             }
 
-            // Validate telephone if provided
+            // Validate telephone if provided (optional for groups, required for individuals)
             let validatedTelephone = null;
             if (telephone) {
                 const telValidation = validatePhoneNumber(telephone);
@@ -438,7 +462,7 @@ router.post(
                 validatedTelephone = telValidation.e164;
             }
 
-            // ✅ FIX: Validate WhatsApp if provided, otherwise use mobile
+            // ✅ Validate WhatsApp if provided, otherwise use mobile
             let validatedWhatsapp = mobileValidation.e164; // Default to mobile
             if (req.body.whatsapp && req.body.whatsapp !== mobile) {
                 const whatsappValidation = validatePhoneNumber(req.body.whatsapp);
@@ -450,6 +474,7 @@ router.post(
                 validatedWhatsapp = whatsappValidation.e164;
             }
 
+            // Validate WhatsApp Channel URL if provided
             if (whatsappChannel && whatsappChannel.trim()) {
                 const urlPattern = /^https?:\/\/.+/i;
                 if (!urlPattern.test(whatsappChannel.trim())) {
@@ -475,13 +500,15 @@ router.post(
 
             const photo = req.file ? `/uploads/photos/${req.file.filename}` : null;
 
+            // ✅ Create contact with type field
             const contact = await Contact.create({
+                type: type || 'individual',  // ✅ NEW - Default to 'individual'
                 firstName,
                 lastName,
                 telephone: validatedTelephone,
                 mobile: mobileValidation.e164,
-                whatsapp: validatedWhatsapp, // ✅ CHANGED: Use validated WhatsApp
-                whatsappChannel: whatsappChannel ? whatsappChannel.trim() : null,  // ✅ NEW
+                whatsapp: validatedWhatsapp,
+                whatsappChannel: whatsappChannel ? whatsappChannel.trim() : null,
                 email,
                 designation,
                 companyId: companyId || null,
@@ -502,13 +529,14 @@ router.post(
     }
 );
 
-// ✅ Update contact (ADDRESS FIELDS REMOVED)
+// ✅ Update contact
 router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res) => {
     try {
         const contact = await Contact.findByPk(req.params.id);
         if (!contact) return res.status(404).json({ message: "Contact not found" });
 
         const {
+            type,              // ✅ NEW
             firstName,
             lastName,
             telephone,
@@ -517,8 +545,15 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             designation,
             companyId,
             status,
-            whatsappChannel  // ✅ NEW
+            whatsappChannel
         } = req.body;
+
+        // ✅ Validate contact type if provided
+        if (type && !['individual', 'group'].includes(type)) {
+            return res.status(400).json({
+                message: "Type must be either 'individual' or 'group'"
+            });
+        }
 
         // Validate mobile number if provided
         let validatedMobile = contact.mobile;
@@ -559,6 +594,7 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             validatedTelephone = telValidation.e164;
         }
 
+        // Validate WhatsApp if provided
         let validatedWhatsApp = contact.whatsapp;
         if (req.body.whatsapp) {
             const whatsappValidation = validatePhoneNumber(req.body.whatsapp);
@@ -570,6 +606,7 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             validatedWhatsApp = whatsappValidation.e164;
         }
 
+        // Validate WhatsApp Channel URL if provided
         if (whatsappChannel && whatsappChannel.trim()) {
             const urlPattern = /^https?:\/\/.+/i;
             if (!urlPattern.test(whatsappChannel.trim())) {
@@ -579,14 +616,15 @@ router.put("/contact/:id", authenticate, upload.single("photo"), async (req, res
             }
         }
 
-
+        // ✅ Update contact with type field
         await contact.update({
+            type: type || contact.type,  // ✅ NEW - Keep existing if not provided
             firstName,
             lastName,
             telephone: validatedTelephone,
             mobile: validatedMobile,
             whatsapp: validatedWhatsApp,
-            whatsappChannel: whatsappChannel !== undefined ? (whatsappChannel ? whatsappChannel.trim() : null) : contact.whatsappChannel,  // ✅ NEW
+            whatsappChannel: whatsappChannel !== undefined ? (whatsappChannel ? whatsappChannel.trim() : null) : contact.whatsappChannel,
             email,
             designation,
             companyId: companyId || null,
@@ -679,12 +717,71 @@ router.get("/data", authenticate, async (req, res) => {
                     as: "Company",
                     attributes: ["companyName"]
                 }
-            ]
+            ],
+            order: [["type", "ASC"], ["firstName", "ASC"]]  // ✅ Optional: Order by type then name
         });
 
         res.json({ companies, contacts });
     } catch (err) {
         console.error("❌ Dashboard data error:", err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.get("/contacts/type/:type", authenticate, async (req, res) => {
+    try {
+        const { type } = req.params;
+
+        if (!['individual', 'group'].includes(type)) {
+            return res.status(400).json({
+                message: "Type must be either 'individual' or 'group'"
+            });
+        }
+
+        const contacts = await Contact.findAll({
+            where: {
+                userId: req.userId,
+                type: type
+            },
+            include: [
+                {
+                    model: Company,
+                    as: "Company",
+                    attributes: ["companyName"]
+                }
+            ],
+            order: [["firstName", "ASC"]]
+        });
+
+        res.json({ contacts });
+    } catch (err) {
+        console.error("❌ Filter contacts error:", err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// ✅ OPTIONAL: Get contact statistics by type
+router.get("/contacts/stats", authenticate, async (req, res) => {
+    try {
+        const [individualCount, groupCount, totalCount] = await Promise.all([
+            Contact.count({
+                where: { userId: req.userId, type: 'individual' }
+            }),
+            Contact.count({
+                where: { userId: req.userId, type: 'group' }
+            }),
+            Contact.count({
+                where: { userId: req.userId }
+            })
+        ]);
+
+        res.json({
+            total: totalCount,
+            individual: individualCount,
+            group: groupCount
+        });
+    } catch (err) {
+        console.error("❌ Contact stats error:", err);
         res.status(500).json({ message: err.message });
     }
 });
@@ -1057,6 +1154,5 @@ router.post('/reviews/:id/generate-share', authenticate, async (req, res) => {
         return res.status(500).json({ message: 'Failed to generate share link' });
     }
 });
-
 
 export default router;

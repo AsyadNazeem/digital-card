@@ -88,7 +88,7 @@ router.post("/change-password", authenticateToken, async (req, res) => {
         // 1️⃣ Find user
         const user = await User.findByPk(userId);
         if (!user) {
-            return res.status(404).json({ message: "User not found." });
+            return res.status(404).json({ message: "user not found." });
         }
 
         // 2️⃣ Compare current password
@@ -127,7 +127,7 @@ router.post("/change-username", authenticateToken, async (req, res) => {
 
         // 1️⃣ Find the user
         const user = await User.findByPk(userId);
-        if (!user) return res.status(404).json({ message: "User not found." });
+        if (!user) return res.status(404).json({ message: "user not found." });
 
         // 2️⃣ Check if the last name change was < 30 days ago
         const lastChange = user.lastUsernameChange;
@@ -171,7 +171,7 @@ router.post("/add-phone", authenticateToken, async (req, res) => {
 
         const user = await User.findByPk(req.user.id);
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "user not found" });
         }
 
         user.phone = validated.e164; // always store in E.164 format

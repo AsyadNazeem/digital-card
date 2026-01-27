@@ -33,6 +33,19 @@ const Contact = sequelize.define(
             onUpdate: "CASCADE",
             comment: "Associated company (optional)"
         },
+        // ✅ NEW FIELD - Contact Type
+        type: {
+            type: DataTypes.ENUM("individual", "group"),
+            defaultValue: "individual",
+            allowNull: false,
+            validate: {
+                isIn: {
+                    args: [["individual", "group"]],
+                    msg: "Type must be either 'individual' or 'group'"
+                }
+            },
+            comment: "Contact type: individual or group"
+        },
         firstName: {
             type: DataTypes.STRING(100),
             allowNull: false,
@@ -141,7 +154,6 @@ const Contact = sequelize.define(
             },
             comment: "WhatsApp number in E.164 format (defaults to mobile if not provided)"
         },
-        // ✅ NEW FIELD
         whatsappChannel: {
             type: DataTypes.STRING(500),
             allowNull: true,
@@ -191,6 +203,9 @@ const Contact = sequelize.define(
             },
             {
                 fields: ["firstName", "lastName"]
+            },
+            {
+                fields: ["type"] // ✅ NEW INDEX
             },
             {
                 name: "user_mobile_unique",

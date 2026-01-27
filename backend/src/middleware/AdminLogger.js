@@ -119,7 +119,7 @@ export const ADMIN_ACTIONS = {
     LOGIN: 'LOGIN',
     LOGOUT: 'LOGOUT',
 
-    // User Management
+    // user Management
     CREATE_USER: 'CREATE_USER',
     UPDATE_USER: 'UPDATE_USER',
     DELETE_USER: 'DELETE_USER',

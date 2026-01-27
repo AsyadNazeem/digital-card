@@ -334,7 +334,7 @@ onMounted(() => {
   align-items: center;
 }
 
-/* User Info */
+/* user Info */
 .request-user-info {
   display: flex;
   align-items: center;

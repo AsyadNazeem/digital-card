@@ -82,7 +82,7 @@
 import { ref } from "vue";
 
 // Dummy data (replace later with backend)
-const adminName = ref("Admin User");
+const adminName = ref("Admin user");
 const email = ref("admin@example.com");
 
 const currentPassword = ref("");

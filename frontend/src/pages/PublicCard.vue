@@ -1,4 +1,5 @@
 <template>
+
   <div v-if="!loaded" class="loading-screen">
     <div class="spinner"></div>
   </div>
@@ -9,15 +10,18 @@
       :dir="locale === 'ar' ? 'rtl' : 'ltr'"
   >
 
-    <!-- Inner Card -->
-    <div class="public-card">
+    <!-- INDIVIDUAL CARD -->
+    <template v-if="contactType === 'individual'">
 
-      <!-- Header Section -->
-      <div class="header-section">
+      <!-- Inner Card -->
+      <div class="public-card">
 
-        <button @click="toggleLanguage" class="language-button" :title="t('selectLanguage')">
-          <!-- Show Arabic with decorative icon -->
-          <span v-if="locale === 'en'" class="lang-switch">
+        <!-- Header Section -->
+        <div class="header-section">
+
+          <button @click="toggleLanguage" class="language-button" :title="t('selectLanguage')">
+            <!-- Show Arabic with decorative icon -->
+            <span v-if="locale === 'en'" class="lang-switch">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
       <path
           d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
@@ -25,398 +29,400 @@
     <span class="lang-text">عربي</span>
   </span>
 
-          <!-- Show English -->
-          <span v-else class="lang-switch">
+            <!-- Show English -->
+            <span v-else class="lang-switch">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
       <path
           d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
     </svg>
     <span class="lang-text">English</span>
   </span>
-        </button>
+          </button>
 
-        <!-- Share Button (Top Right) -->
-        <button @click="shareCard" class="share-button" :title="t('share')">
-          <!-- Add share SVG icon here -->
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="18" cy="5" r="3"></circle>
-            <circle cx="6" cy="12" r="3"></circle>
-            <circle cx="18" cy="19" r="3"></circle>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          <!-- Share Button (Top Right) -->
+          <button @click="shareCard" class="share-button" :title="t('share')">
+            <!-- Add share SVG icon here -->
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+          </button>
+
+          <!-- Company Logo as background -->
+          <div class="company-logo-container" v-if="company.logo">
+            <img
+                :src="`${VITE_IMAGE_UPLOAD_URL}${company.logo}`"
+                alt="Company Logo"
+                class="company-logo-bg"
+            />
+            <div class="logo-overlay"></div>
+          </div>
+
+          <!-- Centered Contact Photo -->
+          <div class="contact-photo-center" v-if="contacts.length && contacts[0].photo">
+            <img
+                :src="`${VITE_IMAGE_UPLOAD_URL}${contacts[0].photo}`"
+                alt="Contact Photo"
+                class="contact-photo-circle"
+            />
+          </div>
+        </div>
+
+        <!-- Company Info Section -->
+        <div class="company-info">
+
+          <h1 class="company-name" v-if="contacts.length">
+            {{ displayFirstName }} {{ displayLastName }}
+          </h1>
+          <p class="designation" v-if="displayDesignation">{{ displayDesignation }}</p>
+
+          <div class="company-bio" v-if="displayBio" v-html="displayBio"></div>
+        </div>
+
+        <!-- Action Buttons (3x2 Grid) -->
+        <div class="action-buttons">
+          <!-- Row 1: Personal Contact Actions -->
+          <a @click.prevent="handlePhoneClick(contacts[0].cardMobileNum)" class="action-btn call">
+            <span v-html="getIcon('phone_mobile')" class="action-icon"></span>
+            <span>{{ t('mobile') }}</span>
+          </a>
+
+          <a @click.prevent="handleWhatsAppClick" class="action-btn whatsapp">
+            <span v-html="getIcon('whatsapp')" class="action-icon"></span>
+            <span>{{ t('whatsapp') }}</span>
+          </a>
+
+          <a @click.prevent="handleEmailClick(contacts[0].email)" class="action-btn email">
+            <span v-html="getIcon('mail')" class="action-icon"></span>
+            <span>{{ t('email') }}</span>
+          </a>
+
+          <!-- Row 2: Company/General Actions -->
+          <a @click.prevent="handleOfficePhoneClick(contacts[0].telephone)" class="action-btn office-phone">
+            <span v-html="getIcon('phone-office')" class="action-icon"></span>
+            <span>{{ t('office') }}</span>
+          </a>
+
+          <a @click.prevent="handleWebsiteClick(company.website)" class="action-btn website">
+            <span v-html="getIcon('globe')" class="action-icon"></span>
+            <span>{{ t('website') }}</span>
+          </a>
+
+          <a @click.prevent="handleLocationClick(company.googleLocation)" class="action-btn maps">
+            <span v-html="getIcon('map')" class="action-icon"></span>
+            <span>{{ t('location') }}</span>
+          </a>
+        </div>
+
+        <!-- Save Contact Button -->
+        <button @click="saveContact" class="action-btn save">
+          <!-- Add save SVG icon here -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
           </svg>
+          {{ t('saveContact') }}
         </button>
 
-        <!-- Company Logo as background -->
-        <div class="company-logo-container" v-if="company.logo">
-          <img
-              :src="`${VITE_IMAGE_UPLOAD_URL}${company.logo}`"
-              alt="Company Logo"
-              class="company-logo-bg"
-          />
-          <div class="logo-overlay"></div>
+        <!-- Additional Action Buttons -->
+        <div
+            class="additional-actions"
+            v-if="company.view360 || hasReviewLinks() || shopNowLinks.length || orderNowLinks.length || brochureLinks.length || menuLinks.length"
+            :class="{'additional-actions--two-lines': additionalActionsCount > 3}"
+        >
+          <a
+              v-if="company.view360"
+              @click.prevent="handle360Click(company.view360)"
+              class="action-link-secondary"
+          >
+            <span v-html="getIcon('360')" class="action-icon"></span>
+            <span>{{ t('view360') }}</span>
+          </a>
+
+          <button
+              v-if="hasReviewLinks()"
+              @click="handleReviewClick"
+              class="action-link-secondary"
+          >
+            <span v-html="getIcon('review')" class="action-icon"></span>
+            <span>{{ t('reviews') }}</span>
+          </button>
+
+          <!-- Shop Now Links -->
+          <template v-for="(file, idx) in shopNowLinks" :key="'shop-' + idx">
+            <a
+                @click.prevent="handleFileClick(file, 'shop_now')"
+                class="action-link-secondary shop-now-btn"
+                :title="file.name"
+            >
+              <span v-html="getFileIcon(file)" class="action-icon"></span>
+              <span>{{ locale === 'ar' ? 'تسوق الآن' : 'Shop Now' }}</span>
+            </a>
+          </template>
+
+          <!-- Order Now Links -->
+          <template v-for="(file, idx) in orderNowLinks" :key="'order-' + idx">
+            <a
+                @click.prevent="handleFileClick(file, 'order_now')"
+                class="action-link-secondary order-now-btn"
+                :title="file.name"
+            >
+              <span v-html="getFileIcon(file)" class="action-icon"></span>
+              <span>{{ locale === 'ar' ? 'اطلب الآن' : 'Order Now' }}</span>
+            </a>
+          </template>
+
+          <!-- Brochure Links -->
+          <template v-for="(file, idx) in brochureLinks" :key="'brochure-' + idx">
+            <a
+                @click.prevent="handleFileClick(file, 'brochure')"
+                class="action-link-secondary brochure-btn"
+                :title="file.name"
+            >
+              <span v-html="getFileIcon(file)" class="action-icon"></span>
+              <span>{{ locale === 'ar' ? 'بروشور' : 'Brochure' }}</span>
+            </a>
+          </template>
+
+          <!-- Menu Links -->
+          <template v-for="(file, idx) in menuLinks" :key="'menu-' + idx">
+            <a
+                @click.prevent="handleFileClick(file, 'menu')"
+                class="action-link-secondary menu-btn"
+                :title="file.name"
+            >
+              <span v-html="getFileIcon(file)" class="action-icon"></span>
+              <span>{{ locale === 'ar' ? 'قائمة' : 'Menu' }}</span>
+            </a>
+          </template>
         </div>
 
-        <!-- Centered Contact Photo -->
-        <div class="contact-photo-center" v-if="contacts.length && contacts[0].photo">
-          <img
-              :src="`${VITE_IMAGE_UPLOAD_URL}${contacts[0].photo}`"
-              alt="Contact Photo"
-              class="contact-photo-circle"
-          />
+
+        <div class="company-details">
+          <h2 v-if="displayCompanyName">{{ displayCompanyName }}</h2>
+          <h2 v-if="company.website">{{ company.displayUrl }}</h2>
         </div>
+
+        <!-- Social Links -->
+        <div class="social-section" v-if="company.socialLinks && Object.keys(company.socialLinks).length > 0">
+          <div class="social-divider"></div>
+          <div class="social-links">
+            <a
+                v-for="(url, name) in company.socialLinks"
+                :key="name"
+                @click.prevent="handleSocialClick(name, url)"
+                class="social-icon-link"
+                :title="name"
+            >
+              <span v-html="getSocialIcon(name)"></span>
+            </a>
+          </div>
+          <div class="social-divider"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+          {{ t('poweredBy') }} <span>TapMyName</span>
+        </footer>
+
       </div>
 
-      <!-- Company Info Section -->
-      <div class="company-info">
-
-        <h1 class="company-name" v-if="contacts.length">
-          {{ displayFirstName }} {{ displayLastName }}
-        </h1>
-        <p class="designation" v-if="displayDesignation">{{ displayDesignation }}</p>
-
-        <div class="company-bio" v-if="displayBio" v-html="displayBio"></div>
-      </div>
-
-      <!-- Action Buttons (3x2 Grid) -->
-      <div class="action-buttons">
-        <!-- Row 1: Personal Contact Actions -->
-        <a @click.prevent="handlePhoneClick(contacts[0].cardMobileNum)" class="action-btn call">
-          <span v-html="getIcon('phone_mobile')" class="action-icon"></span>
-          <span>{{ t('mobile') }}</span>
-        </a>
-
-        <a @click.prevent="handleWhatsAppClick" class="action-btn whatsapp">
-          <span v-html="getIcon('whatsapp')" class="action-icon"></span>
-          <span>{{ t('whatsapp') }}</span>
-        </a>
-
-        <a @click.prevent="handleEmailClick(contacts[0].email)" class="action-btn email">
-          <span v-html="getIcon('mail')" class="action-icon"></span>
-          <span>{{ t('email') }}</span>
-        </a>
-
-        <!-- Row 2: Company/General Actions -->
-        <a @click.prevent="handleOfficePhoneClick(contacts[0].telephone)" class="action-btn office-phone">
-          <span v-html="getIcon('phone-office')" class="action-icon"></span>
-          <span>{{ t('office') }}</span>
-        </a>
-
-        <a @click.prevent="handleWebsiteClick(company.website)" class="action-btn website">
-          <span v-html="getIcon('globe')" class="action-icon"></span>
-          <span>{{ t('website') }}</span>
-        </a>
-
-        <a @click.prevent="handleLocationClick(company.googleLocation)" class="action-btn maps">
-          <span v-html="getIcon('map')" class="action-icon"></span>
-          <span>{{ t('location') }}</span>
-        </a>
-      </div>
-
-      <!-- Save Contact Button -->
-      <button @click="saveContact" class="action-btn save">
-        <!-- Add save SVG icon here -->
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-          <polyline points="17 21 17 13 7 13 7 21"></polyline>
-          <polyline points="7 3 7 8 15 8"></polyline>
+      <!-- Floating Contact Button -->
+      <button @click="showContactPopup = true" class="floating-contact-btn" :title="t('contactUs')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
-        {{ t('saveContact') }}
+        <span class="floating-btn-tooltip">{{ t('contactUs') }}</span>
       </button>
 
-      <!-- Additional Action Buttons -->
-      <div
-          class="additional-actions"
-          v-if="company.view360 || hasReviewLinks() || shopNowLinks.length || orderNowLinks.length || brochureLinks.length || menuLinks.length"
-          :class="{'additional-actions--two-lines': additionalActionsCount > 3}"
-      >
-        <a
-            v-if="company.view360"
-            @click.prevent="handle360Click(company.view360)"
-            class="action-link-secondary"
-        >
-          <span v-html="getIcon('360')" class="action-icon"></span>
-          <span>{{ t('view360') }}</span>
-        </a>
-
-        <button
-            v-if="hasReviewLinks()"
-            @click="handleReviewClick"
-            class="action-link-secondary"
-        >
-          <span v-html="getIcon('review')" class="action-icon"></span>
-          <span>{{ t('reviews') }}</span>
-        </button>
-
-        <!-- Shop Now Links -->
-        <template v-for="(file, idx) in shopNowLinks" :key="'shop-' + idx">
-          <a
-              @click.prevent="handleFileClick(file, 'shop_now')"
-              class="action-link-secondary shop-now-btn"
-              :title="file.name"
-          >
-            <span v-html="getFileIcon(file)" class="action-icon"></span>
-            <span>{{ locale === 'ar' ? 'تسوق الآن' : 'Shop Now' }}</span>
-          </a>
-        </template>
-
-        <!-- Order Now Links -->
-        <template v-for="(file, idx) in orderNowLinks" :key="'order-' + idx">
-          <a
-              @click.prevent="handleFileClick(file, 'order_now')"
-              class="action-link-secondary order-now-btn"
-              :title="file.name"
-          >
-            <span v-html="getFileIcon(file)" class="action-icon"></span>
-            <span>{{ locale === 'ar' ? 'اطلب الآن' : 'Order Now' }}</span>
-          </a>
-        </template>
-
-        <!-- Brochure Links -->
-        <template v-for="(file, idx) in brochureLinks" :key="'brochure-' + idx">
-          <a
-              @click.prevent="handleFileClick(file, 'brochure')"
-              class="action-link-secondary brochure-btn"
-              :title="file.name"
-          >
-            <span v-html="getFileIcon(file)" class="action-icon"></span>
-            <span>{{ locale === 'ar' ? 'بروشور' : 'Brochure' }}</span>
-          </a>
-        </template>
-
-        <!-- Menu Links -->
-        <template v-for="(file, idx) in menuLinks" :key="'menu-' + idx">
-          <a
-              @click.prevent="handleFileClick(file, 'menu')"
-              class="action-link-secondary menu-btn"
-              :title="file.name"
-          >
-            <span v-html="getFileIcon(file)" class="action-icon"></span>
-            <span>{{ locale === 'ar' ? 'قائمة' : 'Menu' }}</span>
-          </a>
-        </template>
-      </div>
-
-
-
-      <div class="company-details">
-        <h2 v-if="displayCompanyName">{{ displayCompanyName }}</h2>
-        <h2 v-if="company.website">{{ company.displayUrl }}</h2>
-      </div>
-
-      <!-- Social Links -->
-      <div class="social-section" v-if="company.socialLinks && Object.keys(company.socialLinks).length > 0">
-        <div class="social-divider"></div>
-        <div class="social-links">
-          <a
-              v-for="(url, name) in company.socialLinks"
-              :key="name"
-              @click.prevent="handleSocialClick(name, url)"
-              class="social-icon-link"
-              :title="name"
-          >
-            <span v-html="getSocialIcon(name)"></span>
-          </a>
+      <!-- Review Popup Modal -->
+      <div v-if="showReviewPopup" class="review-modal-overlay" @click="closeReviewPopup">
+        <div class="review-modal" @click.stop>
+          <button class="modal-close-btn" @click="closeReviewPopup">&times;</button>
+          <h3>{{ t('reviewUs') }}</h3>
+          <div style="display: flex; gap: 5px; margin-bottom: 20px; justify-content: center;">
+            <!-- Add star SVG icons here (5 stars) -->
+            <img v-for="i in 5" :key="i"
+                 src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADPklEQVR4nO3Z3UtTYRwH8ANREESEgVeFUESZ842UXiEyCypSe4EoZqaz1RYLuogIgopuuuo+6qZLZ1P3nJP/QrAzw5rbjjMMesGX57jyJjXm+cY5y83ppjtzz3GH9oVzuec8n/2ec55nv3FcMcUUs+7BiOMEfrw6ypk9CDRFQN/2c2YORhxH4KsAqAegpJ4zaxBoGoZvXxwiEy9n6mr4FiA8QPvqOLMFgWZJQyyGyHwvZ6bgi+tQohopFSEKqHCAM0sw1BxKIFIromI8nBmCYefBlGoshyiY4Ku5Qg8CLcEUxFJIHNPNFX41LMgCoiDqreIKNQi0BJYh0kE0DN/FFWIw7KyBWAkdkHlE31VyhRR8vrUnsYtnC4kvsR6MeUqNneyoswyS3Ypw2wuErvZrr9jBxin46+YzAlaDJC4yA8oHQYkbMnkOKtghC40YF3blNtmIaysijuOQ2p+lTPbD4T/wla882TVBVrgoiUIm/hRklBzDz95tmSHqty3uz33CLCByWpwCWXCtXJXwjadpX6GFAqHqMYc4s1tioY7HEC2FB6H8PGTSru95CXc8yhsmHxDKxyDzbboQycrYHmbcG4yEUD4GKlhzQiQr0+mCWKWsG4SqCHJtTYgERrLfgVitGA6h/Bxk/kJeEAlMpPN2zphcIJSfA/U25xWRwEg3W+GvUdhDyCwoOc8EkcTYrRBrFYaQ35C9p5giUjB6Nk09EOptMAShQYZsJbqOMroq0r/DOIj6rLBaWlPkjHGQUOtrZhBK7hsHCV4UGULeGAf5eFpm+NYaMA4yUBdjByEzgHsDe0TEtZv5hkj79rKHqIdIPYiB+hhoz6jOI8pl9pCQtSsrgLr7a7/7bSWAf6P2W5uS71mes56sT0s0BVClIHjpPUYcO5d9Fu5N8Q4JP77Km6ubPWSwYTo9ogJa1yV017LqGBPuLaDCA1DyKwNGYg8Rl5x+1aOKCgg7dP/vgume7VqLRzso8ouXVgxf3ZsZN6kXEOXAp3PfINlPrnncMU9pHERmE5jJvtr8zDpTd0VFqE07yXEl7+NHhTLI5OW/RsP1fI+fvJFku4ewTV87Jpf7TPEWTPJnWd+nmGL+l/wFaFDV+oS5VJ0AAAAASUVORK5CYII="
+                 alt="star">
+          </div>
+          <div class="review-options">
+            <button
+                v-if="company.googleReviews"
+                @click="redirectToReview(company.googleReviews)"
+                class="review-icon-btn google"
+                title="Google Reviews"
+            >
+              <!-- Add Google SVG icon here -->
+              <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0 0 48 48">
+                <path fill="#FFC107"
+                      d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
+                <path fill="#FF3D00"
+                      d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
+                <path fill="#4CAF50"
+                      d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
+                <path fill="#1976D2"
+                      d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
+              </svg>
+            </button>
+            <button
+                v-if="company.tripAdvisor"
+                @click="redirectToReview(company.tripAdvisor)"
+                class="review-icon-btn tripadvisor"
+                title="TripAdvisor"
+            >
+              <!-- Add TripAdvisor SVG icon here -->
+              <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="60" height="60" viewBox="0 0 50 50">
+                <path
+                    d="M 25 11 C 19.167969 11 13.84375 12.511719 9.789063 15 L 2 15 C 2 15 3.753906 17.152344 4.578125 19.578125 C 2.96875 21.621094 2 24.195313 2 27 C 2 33.628906 7.371094 39 14 39 C 17.496094 39 20.636719 37.492188 22.828125 35.105469 L 25 38 L 27.171875 35.105469 C 29.363281 37.492188 32.503906 39 36 39 C 42.628906 39 48 33.628906 48 27 C 48 24.195313 47.03125 21.621094 45.421875 19.578125 C 46.246094 17.152344 48 15 48 15 L 40.203125 15 C 36.148438 12.511719 30.828125 11 25 11 Z M 14 18 C 18.972656 18 23 22.027344 23 27 C 23 31.972656 18.972656 36 14 36 C 9.027344 36 5 31.972656 5 27 C 5 22.027344 9.027344 18 14 18 Z M 36 18 C 40.972656 18 45 22.027344 45 27 C 45 31.972656 40.972656 36 36 36 C 31.027344 36 27 31.972656 27 27 C 27 22.027344 31.027344 18 36 18 Z M 14 21 C 10.6875 21 8 23.6875 8 27 C 8 30.3125 10.6875 33 14 33 C 17.3125 33 20 30.3125 20 27 C 20 23.6875 17.3125 21 14 21 Z M 36 21 C 32.6875 21 30 23.6875 30 27 C 30 30.3125 32.6875 33 36 33 C 39.3125 33 42 30.3125 42 27 C 42 23.6875 39.3125 21 36 21 Z M 14 23 C 16.210938 23 18 24.789063 18 27 C 18 29.210938 16.210938 31 14 31 C 11.789063 31 10 29.210938 10 27 C 10 24.789063 11.789063 23 14 23 Z M 36 23 C 38.210938 23 40 24.789063 40 27 C 40 29.210938 38.210938 31 36 31 C 33.789063 31 32 29.210938 32 27 C 32 24.789063 33.789063 23 36 23 Z M 14 25 C 12.894531 25 12 25.894531 12 27 C 12 28.105469 12.894531 29 14 29 C 15.105469 29 16 28.105469 16 27 C 16 25.894531 15.105469 25 14 25 Z M 36 25 C 34.894531 25 34 25.894531 34 27 C 34 28.105469 34.894531 29 36 29 C 37.105469 29 38 28.105469 38 27 C 38 25.894531 37.105469 25 36 25 Z"
+                    fill="#26e07f"></path>
+              </svg>
+            </button>
+          </div>
         </div>
-        <div class="social-divider"></div>
       </div>
 
-      <!-- Footer -->
-      <footer class="footer">
-        {{ t('poweredBy') }} <span>TapMyName</span>
-      </footer>
+      <!-- WhatsApp Popup Modal - Replace your existing WhatsApp popup with this -->
+      <div v-if="showWhatsAppPopup" class="whatsapp-modal-overlay" @click="closeWhatsAppPopup">
+        <div class="whatsapp-modal" @click.stop>
+          <button class="modal-close-btn" @click="closeWhatsAppPopup">&times;</button>
 
-    </div>
+          <h3>{{ locale === 'ar' ? 'تواصل عبر واتساب' : 'Connect via WhatsApp' }}</h3>
 
-    <!-- Floating Contact Button -->
-    <button @click="showContactPopup = true" class="floating-contact-btn" :title="t('contactUs')">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-      </svg>
-      <span class="floating-btn-tooltip">{{ t('contactUs') }}</span>
-    </button>
-
-    <!-- Review Popup Modal -->
-    <div v-if="showReviewPopup" class="review-modal-overlay" @click="closeReviewPopup">
-      <div class="review-modal" @click.stop>
-        <button class="modal-close-btn" @click="closeReviewPopup">&times;</button>
-        <h3>{{ t('reviewUs') }}</h3>
-        <div style="display: flex; gap: 5px; margin-bottom: 20px; justify-content: center;">
-          <!-- Add star SVG icons here (5 stars) -->
-          <img v-for="i in 5" :key="i"
-               src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADPklEQVR4nO3Z3UtTYRwH8ANREESEgVeFUESZ842UXiEyCypSe4EoZqaz1RYLuogIgopuuuo+6qZLZ1P3nJP/QrAzw5rbjjMMesGX57jyJjXm+cY5y83ppjtzz3GH9oVzuec8n/2ec55nv3FcMcUUs+7BiOMEfrw6ypk9CDRFQN/2c2YORhxH4KsAqAegpJ4zaxBoGoZvXxwiEy9n6mr4FiA8QPvqOLMFgWZJQyyGyHwvZ6bgi+tQohopFSEKqHCAM0sw1BxKIFIromI8nBmCYefBlGoshyiY4Ku5Qg8CLcEUxFJIHNPNFX41LMgCoiDqreIKNQi0BJYh0kE0DN/FFWIw7KyBWAkdkHlE31VyhRR8vrUnsYtnC4kvsR6MeUqNneyoswyS3Ypw2wuErvZrr9jBxin46+YzAlaDJC4yA8oHQYkbMnkOKtghC40YF3blNtmIaysijuOQ2p+lTPbD4T/wla882TVBVrgoiUIm/hRklBzDz95tmSHqty3uz33CLCByWpwCWXCtXJXwjadpX6GFAqHqMYc4s1tioY7HEC2FB6H8PGTSru95CXc8yhsmHxDKxyDzbboQycrYHmbcG4yEUD4GKlhzQiQr0+mCWKWsG4SqCHJtTYgERrLfgVitGA6h/Bxk/kJeEAlMpPN2zphcIJSfA/U25xWRwEg3W+GvUdhDyCwoOc8EkcTYrRBrFYaQ35C9p5giUjB6Nk09EOptMAShQYZsJbqOMroq0r/DOIj6rLBaWlPkjHGQUOtrZhBK7hsHCV4UGULeGAf5eFpm+NYaMA4yUBdjByEzgHsDe0TEtZv5hkj79rKHqIdIPYiB+hhoz6jOI8pl9pCQtSsrgLr7a7/7bSWAf6P2W5uS71mes56sT0s0BVClIHjpPUYcO5d9Fu5N8Q4JP77Km6ubPWSwYTo9ogJa1yV017LqGBPuLaDCA1DyKwNGYg8Rl5x+1aOKCgg7dP/vgume7VqLRzso8ouXVgxf3ZsZN6kXEOXAp3PfINlPrnncMU9pHERmE5jJvtr8zDpTd0VFqE07yXEl7+NHhTLI5OW/RsP1fI+fvJFku4ewTV87Jpf7TPEWTPJnWd+nmGL+l/wFaFDV+oS5VJ0AAAAASUVORK5CYII="
-               alt="star">
-        </div>
-        <div class="review-options">
-          <button
-              v-if="company.googleReviews"
-              @click="redirectToReview(company.googleReviews)"
-              class="review-icon-btn google"
-              title="Google Reviews"
-          >
-            <!-- Add Google SVG icon here -->
-            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0 0 48 48">
-              <path fill="#FFC107"
-                    d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
-              <path fill="#FF3D00"
-                    d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
-              <path fill="#4CAF50"
-                    d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
-              <path fill="#1976D2"
-                    d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
-            </svg>
-          </button>
-          <button
-              v-if="company.tripAdvisor"
-              @click="redirectToReview(company.tripAdvisor)"
-              class="review-icon-btn tripadvisor"
-              title="TripAdvisor"
-          >
-            <!-- Add TripAdvisor SVG icon here -->
-            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="60" height="60" viewBox="0 0 50 50">
+          <div style="display: flex; gap: 5px; margin-bottom: 20px; justify-content: center;">
+            <!-- WhatsApp icon decoration -->
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="#25D366">
               <path
-                  d="M 25 11 C 19.167969 11 13.84375 12.511719 9.789063 15 L 2 15 C 2 15 3.753906 17.152344 4.578125 19.578125 C 2.96875 21.621094 2 24.195313 2 27 C 2 33.628906 7.371094 39 14 39 C 17.496094 39 20.636719 37.492188 22.828125 35.105469 L 25 38 L 27.171875 35.105469 C 29.363281 37.492188 32.503906 39 36 39 C 42.628906 39 48 33.628906 48 27 C 48 24.195313 47.03125 21.621094 45.421875 19.578125 C 46.246094 17.152344 48 15 48 15 L 40.203125 15 C 36.148438 12.511719 30.828125 11 25 11 Z M 14 18 C 18.972656 18 23 22.027344 23 27 C 23 31.972656 18.972656 36 14 36 C 9.027344 36 5 31.972656 5 27 C 5 22.027344 9.027344 18 14 18 Z M 36 18 C 40.972656 18 45 22.027344 45 27 C 45 31.972656 40.972656 36 36 36 C 31.027344 36 27 31.972656 27 27 C 27 22.027344 31.027344 18 36 18 Z M 14 21 C 10.6875 21 8 23.6875 8 27 C 8 30.3125 10.6875 33 14 33 C 17.3125 33 20 30.3125 20 27 C 20 23.6875 17.3125 21 14 21 Z M 36 21 C 32.6875 21 30 23.6875 30 27 C 30 30.3125 32.6875 33 36 33 C 39.3125 33 42 30.3125 42 27 C 42 23.6875 39.3125 21 36 21 Z M 14 23 C 16.210938 23 18 24.789063 18 27 C 18 29.210938 16.210938 31 14 31 C 11.789063 31 10 29.210938 10 27 C 10 24.789063 11.789063 23 14 23 Z M 36 23 C 38.210938 23 40 24.789063 40 27 C 40 29.210938 38.210938 31 36 31 C 33.789063 31 32 29.210938 32 27 C 32 24.789063 33.789063 23 36 23 Z M 14 25 C 12.894531 25 12 25.894531 12 27 C 12 28.105469 12.894531 29 14 29 C 15.105469 29 16 28.105469 16 27 C 16 25.894531 15.105469 25 14 25 Z M 36 25 C 34.894531 25 34 25.894531 34 27 C 34 28.105469 34.894531 29 36 29 C 37.105469 29 38 28.105469 38 27 C 38 25.894531 37.105469 25 36 25 Z"
-                  fill="#26e07f"></path>
+                  d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
             </svg>
-          </button>
-        </div>
-      </div>
-    </div>
+          </div>
 
-    <!-- WhatsApp Popup Modal - Replace your existing WhatsApp popup with this -->
-    <div v-if="showWhatsAppPopup" class="whatsapp-modal-overlay" @click="closeWhatsAppPopup">
-      <div class="whatsapp-modal" @click.stop>
-        <button class="modal-close-btn" @click="closeWhatsAppPopup">&times;</button>
+          <div class="whatsapp-options">
+            <!-- WhatsApp Personal Message Button -->
+            <button
+                v-if="contacts[0]?.whatsapp"
+                @click="redirectToWhatsApp(`https://wa.me/${contacts[0].whatsapp.replace(/[^0-9]/g, '')}`)"
+                class="whatsapp-icon-btn"
+                :title="locale === 'ar' ? 'واتساب شخصي' : 'Personal WhatsApp'"
+            >
+              <!-- Personal Chat Icon -->
+              <svg width="50" height="50" viewBox="0 0 24 24" fill="#25D366">
+                <path
+                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+              </svg>
+              <p>{{ locale === 'ar' ? 'رسالة شخصية' : 'Personal Message' }}</p>
+            </button>
 
-        <h3>{{ locale === 'ar' ? 'تواصل عبر واتساب' : 'Connect via WhatsApp' }}</h3>
-
-        <div style="display: flex; gap: 5px; margin-bottom: 20px; justify-content: center;">
-          <!-- WhatsApp icon decoration -->
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="#25D366">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-          </svg>
-        </div>
-
-        <div class="whatsapp-options">
-          <!-- WhatsApp Personal Message Button -->
-          <button
-              v-if="contacts[0]?.whatsapp"
-              @click="redirectToWhatsApp(`https://wa.me/${contacts[0].whatsapp.replace(/[^0-9]/g, '')}`)"
-              class="whatsapp-icon-btn"
-              :title="locale === 'ar' ? 'واتساب شخصي' : 'Personal WhatsApp'"
-          >
-            <!-- Personal Chat Icon -->
-            <svg width="50" height="50" viewBox="0 0 24 24" fill="#25D366">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-            </svg>
-            <p>{{ locale === 'ar' ? 'رسالة شخصية' : 'Personal Message' }}</p>
-          </button>
-
-          <!-- WhatsApp Channel Button -->
-          <button
-              v-if="contacts[0]?.whatsappChannel"
-              @click="redirectToWhatsApp(contacts[0].whatsappChannel)"
-              class="whatsapp-icon-btn"
-              :title="locale === 'ar' ? 'قناة واتساب' : 'WhatsApp Channel'"
-          >
-            <!-- Channel Icon (WhatsApp with broadcast symbol) -->
-            <svg width="50" height="50" viewBox="0 0 24 24" fill="none">
-              <!-- WhatsApp base -->
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"
+            <!-- WhatsApp Channel Button -->
+            <button
+                v-if="contacts[0]?.whatsappChannel"
+                @click="redirectToWhatsApp(contacts[0].whatsappChannel)"
+                class="whatsapp-icon-btn"
+                :title="locale === 'ar' ? 'قناة واتساب' : 'WhatsApp Channel'"
+            >
+              <!-- Channel Icon (WhatsApp with broadcast symbol) -->
+              <svg width="50" height="50" viewBox="0 0 24 24" fill="none">
+                <!-- WhatsApp base -->
+                <path
+                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"
                     fill="#075E54"/>
-              <!-- Broadcast/Channel indicator -->
-              <g transform="translate(14, 2)">
-                <circle cx="4" cy="4" r="3.5" fill="#25D366" stroke="white" stroke-width="1"/>
-                <path d="M 2 4 L 4 6 L 6.5 2.5" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-              </g>
-            </svg>
-            <p>{{ locale === 'ar' ? 'قناة واتساب' : 'WhatsApp Channel' }}</p>
-          </button>
+                <!-- Broadcast/Channel indicator -->
+                <g transform="translate(14, 2)">
+                  <circle cx="4" cy="4" r="3.5" fill="#25D366" stroke="white" stroke-width="1"/>
+                  <path d="M 2 4 L 4 6 L 6.5 2.5" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                </g>
+              </svg>
+              <p>{{ locale === 'ar' ? 'قناة واتساب' : 'WhatsApp Channel' }}</p>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
 
-    <!-- Contact Us Popup Modal -->
-    <div v-if="showContactPopup" class="contact-modal-overlay" @click="closeContactPopup">
-      <div class="contact-modal" @click.stop>
-        <button class="modal-close-btn" @click="closeContactPopup">&times;</button>
+      <!-- Contact Us Popup Modal -->
+      <div v-if="showContactPopup" class="contact-modal-overlay" @click="closeContactPopup">
+        <div class="contact-modal" @click.stop>
+          <button class="modal-close-btn" @click="closeContactPopup">&times;</button>
 
-        <div class="contact-modal-header">
-          <h3>{{ t('contactUs') }}</h3>
-          <p>{{ t('sendMessageTo') }} {{ displayFirstName }} {{ displayLastName }}</p>
-        </div>
+          <div class="contact-modal-header">
+            <h3>{{ t('contactUs') }}</h3>
+            <p>{{ t('sendMessageTo') }} {{ displayFirstName }} {{ displayLastName }}</p>
+          </div>
 
-        <form @submit.prevent="submitContactMessage" class="contact-modal-form">
-          <!-- Name Field -->
-          <div class="form-group">
-            <label for="sender-name">{{ t('yourName') }} *</label>
-            <input
-                id="sender-name"
-                v-model="contactMessageForm.name"
-                type="text"
-                :placeholder="t('enterYourName')"
-                maxlength="100"
-                required
+          <form @submit.prevent="submitContactMessage" class="contact-modal-form">
+            <!-- Name Field -->
+            <div class="form-group">
+              <label for="sender-name">{{ t('yourName') }} *</label>
+              <input
+                  id="sender-name"
+                  v-model="contactMessageForm.name"
+                  type="text"
+                  :placeholder="t('enterYourName')"
+                  maxlength="100"
+                  required
+                  :disabled="contactMessageLoading"
+              />
+            </div>
+
+            <!-- Email Field -->
+            <div class="form-group">
+              <label for="sender-email">{{ t('yourEmail') }} *</label>
+              <input
+                  id="sender-email"
+                  v-model="contactMessageForm.email"
+                  type="email"
+                  :placeholder="t('enterYourEmail')"
+                  maxlength="150"
+                  required
+                  :disabled="contactMessageLoading"
+              />
+            </div>
+
+            <!-- Subject Field -->
+            <div class="form-group">
+              <label for="message-subject">{{ t('subject') }} *</label>
+              <input
+                  id="message-subject"
+                  v-model="contactMessageForm.subject"
+                  type="text"
+                  :placeholder="t('messageSubject')"
+                  maxlength="200"
+                  required
+                  :disabled="contactMessageLoading"
+              />
+              <span class="char-count">{{ contactMessageForm.subject.length }}/200</span>
+            </div>
+
+            <!-- Message Field -->
+            <div class="form-group">
+              <label for="message-content">{{ t('message') }} *</label>
+              <textarea
+                  id="message-content"
+                  v-model="contactMessageForm.message"
+                  :placeholder="t('enterYourMessage')"
+                  rows="6"
+                  maxlength="1000"
+                  required
+                  :disabled="contactMessageLoading"
+              ></textarea>
+              <span class="char-count">{{ contactMessageForm.message.length }}/1000</span>
+            </div>
+
+            <!-- Status Message -->
+            <div v-if="contactMessageStatus.message"
+                 :class="['alert', contactMessageStatus.success ? 'alert-success' : 'alert-error']">
+              {{ contactMessageStatus.message }}
+            </div>
+
+            <button
+                type="submit"
+                class="submit-contact-btn"
                 :disabled="contactMessageLoading"
-            />
-          </div>
-
-          <!-- Email Field -->
-          <div class="form-group">
-            <label for="sender-email">{{ t('yourEmail') }} *</label>
-            <input
-                id="sender-email"
-                v-model="contactMessageForm.email"
-                type="email"
-                :placeholder="t('enterYourEmail')"
-                maxlength="150"
-                required
-                :disabled="contactMessageLoading"
-            />
-          </div>
-
-          <!-- Subject Field -->
-          <div class="form-group">
-            <label for="message-subject">{{ t('subject') }} *</label>
-            <input
-                id="message-subject"
-                v-model="contactMessageForm.subject"
-                type="text"
-                :placeholder="t('messageSubject')"
-                maxlength="200"
-                required
-                :disabled="contactMessageLoading"
-            />
-            <span class="char-count">{{ contactMessageForm.subject.length }}/200</span>
-          </div>
-
-          <!-- Message Field -->
-          <div class="form-group">
-            <label for="message-content">{{ t('message') }} *</label>
-            <textarea
-                id="message-content"
-                v-model="contactMessageForm.message"
-                :placeholder="t('enterYourMessage')"
-                rows="6"
-                maxlength="1000"
-                required
-                :disabled="contactMessageLoading"
-            ></textarea>
-            <span class="char-count">{{ contactMessageForm.message.length }}/1000</span>
-          </div>
-
-          <!-- Status Message -->
-          <div v-if="contactMessageStatus.message"
-               :class="['alert', contactMessageStatus.success ? 'alert-success' : 'alert-error']">
-            {{ contactMessageStatus.message }}
-          </div>
-
-          <button
-              type="submit"
-              class="submit-contact-btn"
-              :disabled="contactMessageLoading"
-          >
+            >
         <span v-if="contactMessageLoading">
           <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="12" cy="12" r="10" stroke-width="3" stroke-dasharray="32" stroke-dashoffset="32">
@@ -425,24 +431,281 @@
           </svg>
           {{ t('sending') }}
         </span>
-            <span v-else>
+              <span v-else>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
           </svg>
           {{ t('sendMessage') }}
         </span>
-          </button>
-        </form>
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
 
 
-    <div v-if="isTranslating" class="translation-loading">
-      <span>{{ locale === 'ar' ? 'جاري الترجمة...' : 'Translating...' }}</span>
-    </div>
+      <div v-if="isTranslating" class="translation-loading">
+        <span>{{ locale === 'ar' ? 'جاري الترجمة...' : 'Translating...' }}</span>
+      </div>
+    </template>
+
+
+    <template v-else-if="contactType === 'group'">
+      <!-- Inner Card -->
+      <div class="public-card">
+
+        <!-- Header Section with Gradient -->
+        <div class="header-section header-section-group">
+          <!-- Language Button -->
+          <button @click="toggleLanguage" class="language-button language-button-group" :title="t('selectLanguage')">
+        <span v-if="locale === 'en'" class="lang-switch lang-switch-group">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+          <span class="lang-text lang-text-group">عربي</span>
+        </span>
+            <span v-else class="lang-switch lang-switch-group">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+          <span class="lang-text lang-text-group">English</span>
+        </span>
+          </button>
+
+          <!-- Share Button -->
+          <button @click="shareCard" class="share-button share-button-group" :title="t('share')">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+          </button>
+
+          <!-- Company Logo as Background -->
+          <div class="company-logo-container company-logo-container-group" v-if="company.logo">
+            <img :src="`${VITE_IMAGE_UPLOAD_URL}${company.logo}`" alt="Company Logo" class="company-logo-bg company-logo-bg-group" />
+            <div class="logo-overlay logo-overlay-group"></div>
+          </div>
+
+          <!-- Centered Contact Photo -->
+          <div class="contact-photo-center contact-photo-center-group" v-if="contacts.length && contacts[0].photo">
+            <img :src="`${VITE_IMAGE_UPLOAD_URL}${contacts[0].photo}`" alt="Contact Photo" class="contact-photo-circle contact-photo-circle-group" />
+          </div>
+        </div>
+
+        <!-- Company Info Section -->
+        <div class="company-info">
+          <h1 class="company-name company-name-group" v-if="contacts.length">
+            {{ displayFirstName }} {{ displayLastName }}
+          </h1>
+          <p class="designation designation-group" v-if="displayDesignation">{{ displayDesignation }}</p>
+          <div class="company-bio company-bio-group" v-if="displayBio" v-html="displayBio"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div>
+          <!-- WhatsApp Channel Button - STANDALONE -->
+          <div v-if="contacts[0]?.whatsappChannel" class="whatsapp-standalone-container">
+            <button
+                @click="redirectToWhatsApp(contacts[0].whatsappChannel)"
+                class="action-link-secondary action-link-secondary-group whatsapp-channel-btn whatsapp-channel-standalone"
+            >
+          <span class="action-icon action-icon-group">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+          </span>
+              <span>{{ locale === 'ar' ? 'قناة واتساب' : 'WhatsApp Channel' }}</span>
+            </button>
+          </div>
+
+          <!-- Other Action Buttons - 2 COLUMN GRID -->
+          <div
+              class="additional-actions additional-actions-group"
+              v-if="company.view360 || hasReviewLinks() || shopNowLinks.length || orderNowLinks.length || brochureLinks.length || menuLinks.length"
+              :class="{'additional-actions--two-lines-group': additionalActionsCount > 2}"
+          >
+            <!-- 360 View -->
+
+            <a v-if="company.view360"
+            @click.prevent="handle360Click(company.view360)"
+            class="action-link-secondary action-link-secondary-group"
+            >
+            <span class="action-icon action-icon-group">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              <path d="M2 12h20"/>
+            </svg>
+          </span>
+            <span>{{ t('view360') }}</span>
+            </a>
+
+            <!-- Reviews -->
+            <button
+                v-if="hasReviewLinks()"
+                @click="handleReviewClick"
+                class="action-link-secondary action-link-secondary-group"
+            >
+          <span class="action-icon action-icon-group">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </span>
+              <span>{{ t('reviews') }}</span>
+            </button>
+
+            <!-- Shop Now Links -->
+            <template v-for="(file, idx) in shopNowLinks" :key="'shop-' + idx">
+
+              <a @click.prevent="handleFileClick(file, 'shop_now')"
+              class="action-link-secondary action-link-secondary-group shop-now-btn shop-now-btn-group"
+              :title="file.name"
+              >
+              <span class="action-icon action-icon-group">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </span>
+              <span>{{ locale === 'ar' ? 'تسوق الآن' : 'Shop Now' }}</span>
+              </a>
+            </template>
+
+            <!-- Order Now Links -->
+            <template v-for="(file, idx) in orderNowLinks" :key="'order-' + idx">
+
+              <a @click.prevent="handleFileClick(file, 'order_now')"
+              class="action-link-secondary action-link-secondary-group order-now-btn order-now-btn-group"
+              :title="file.name"
+              >
+              <span class="action-icon action-icon-group">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+            </span>
+              <span>{{ locale === 'ar' ? 'اطلب الآن' : 'Order Now' }}</span>
+              </a>
+            </template>
+
+            <!-- Brochure Links -->
+            <template v-for="(file, idx) in brochureLinks" :key="'brochure-' + idx">
+
+             <a @click.prevent="handleFileClick(file, 'brochure')"
+              class="action-link-secondary action-link-secondary-group brochure-btn brochure-btn-group"
+              :title="file.name"
+              >
+              <span class="action-icon action-icon-group">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </span>
+              <span>{{ locale === 'ar' ? 'بروشور' : 'Brochure' }}</span>
+              </a>
+            </template>
+
+            <!-- Menu Links -->
+            <template v-for="(file, idx) in menuLinks" :key="'menu-' + idx">
+
+              <a @click.prevent="handleFileClick(file, 'menu')"
+              class="action-link-secondary action-link-secondary-group menu-btn menu-btn-group"
+              :title="file.name"
+              >
+              <span class="action-icon action-icon-group">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"/>
+                <line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                <line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+            </span>
+              <span>{{ locale === 'ar' ? 'قائمة' : 'Menu' }}</span>
+              </a>
+            </template>
+          </div>
+
+          <!-- Company Details -->
+          <div class="company-details company-details-group">
+            <h2 v-if="displayCompanyName">{{ displayCompanyName }}</h2>
+            <h2 v-if="company.website">{{ company.displayUrl }}</h2>
+          </div>
+
+          <!-- Social Links -->
+          <div class="social-section social-section-group" v-if="company.socialLinks && Object.keys(company.socialLinks).length > 0">
+            <div class="social-divider social-divider-group"></div>
+            <div class="social-links social-links-group">
+
+              <a v-for="(url, name) in company.socialLinks"
+              :key="name"
+              @click.prevent="handleSocialClick(name, url)"
+              class="social-icon-link social-icon-link-group"
+              :title="name"
+              >
+              <span v-html="getSocialIcon(name)"></span>
+              </a>
+            </div>
+            <div class="social-divider social-divider-group"></div>
+          </div>
+
+          <!-- Footer -->
+          <footer class="footer footer-group">
+            {{ t('poweredBy') }} <span>TapMyName</span>
+          </footer>
+        </div>
+      </div>
+
+      <!-- Review Popup Modal -->
+      <div v-if="showReviewPopup" class="review-modal-overlay review-modal-overlay-group" @click="closeReviewPopup">
+        <div class="review-modal review-modal-group" @click.stop>
+          <button class="modal-close-btn modal-close-btn-group" @click="closeReviewPopup">&times;</button>
+          <h3>{{ t('reviewUs') }}</h3>
+          <div style="display: flex; gap: 5px; margin-bottom: 20px; justify-content: center;">
+            <img v-for="i in 5" :key="i"
+                 src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADPklEQVR4nO3Z3UtTYRwH8ANREESEgVeFUESZ842UXiEyCypSe4EoZqaz1RYLuogIgopuuuo+6qZLZ1P3nJP/QrAzw5rbjjMMesGX57jyJjXm+cY5y83ppjtzz3GH9oVzuec8n/2ec55nv3FcMcUUs+7BiOMEfrw6ypk9CDRFQN/2c2YORhxH4KsAqAegpJ4zaxBoGoZvXxwiEy9n6mr4FiA8QPvqOLMFgWZJQyyGyHwvZ6bgi+tQohopFSEKqHCAM0sw1BxKIFIromI8nBmCYefBlGoshyiY4Ku5Qg8CLcEUxFJIHNPNFX41LMgCoiDqreIKNQi0BJYh0kE0DN/FFWIw7KyBWAkdkHlE31VyhRR8vrUnsYtnC4kvsR6MeUqNneyoswyS3Ypw2wuErvZrr9jBxin46+YzAlaDJC4yA8oHQYkbMnkOKtghC40YF3blNtmIaysijuOQ2p+lTPbD4T/wla882TVBVrgoiUIm/hRklBzDz95tmSHqty3uz33CLCByWpwCWXCtXJXwjadpX6GFAqHqMYc4s1tioY7HEC2FB6H8PGTSru95CXc8yhsmHxDKxyDzbboQycrYHmbcG4yEUD4GKlhzQiQr0+mCWKWsG4SqCHJtTYgERrLfgVitGA6h/Bxk/kJeEAlMpPN2zphcIJSfA/U25xWRwEg3W+GvUdhDyCwoOc8EkcTYrRBrFYaQ35C9p5giUjB6Nk09EOptMAShQYZsJbqOMroq0r/DOIj6rLBaWlPkjHGQUOtrZhBK7hsHCV4UGULeGAf5eFpm+NYaMA4yUBdjByEzgHsDe0TEtZv5hkj79rKHqIdIPYiB+hhoz6jOI8pl9pCQtSsrgLr7a7/7bSWAf6P2W5uS71mes56sT0s0BVClIHjpPUYcO5d9Fu5N8Q4JP77Km6ubPWSwYTo9ogJa1yV017LqGBPuLaDCA1DyKwNGYg8Rl5x+1aOKCgg7dP/vgume7VqLRzso8ouXVgxf3ZsZN6kXEOXAp3PfINlPrnncMU9pHERmE5jJvtr8zDpTd0VFqE07yXEl7+NHhTLI5OW/RsP1fI+fvJFku4ewTV87Jpf7TPEWTPJnWd+nmGL+l/wFaFDV+oS5VJ0AAAAASUVORK5CYII="
+                 alt="star">
+          </div>
+          <div class="review-options review-options-group">
+            <button
+                v-if="company.googleReviews"
+                @click="redirectToReview(company.googleReviews)"
+                class="review-icon-btn review-icon-btn-group google-group"
+                title="Google Reviews"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0 0 48 48">
+                <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
+                <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
+                <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
+                <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
+              </svg>
+            </button>
+            <button
+                v-if="company.tripAdvisor"
+                @click="redirectToReview(company.tripAdvisor)"
+                class="review-icon-btn review-icon-btn-group tripadvisor-group"
+                title="TripAdvisor"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="60" height="60" viewBox="0 0 50 50">
+                <path d="M 25 11 C 19.167969 11 13.84375 12.511719 9.789063 15 L 2 15 C 2 15 3.753906 17.152344 4.578125 19.578125 C 2.96875 21.621094 2 24.195313 2 27 C 2 33.628906 7.371094 39 14 39 C 17.496094 39 20.636719 37.492188 22.828125 35.105469 L 25 38 L 27.171875 35.105469 C 29.363281 37.492188 32.503906 39 36 39 C 42.628906 39 48 33.628906 48 27 C 48 24.195313 47.03125 21.621094 45.421875 19.578125 C 46.246094 17.152344 48 15 48 15 L 40.203125 15 C 36.148438 12.511719 30.828125 11 25 11 Z M 14 18 C 18.972656 18 23 22.027344 23 27 C 23 31.972656 18.972656 36 14 36 C 9.027344 36 5 31.972656 5 27 C 5 22.027344 9.027344 18 14 18 Z M 36 18 C 40.972656 18 45 22.027344 45 27 C 45 31.972656 40.972656 36 36 36 C 31.027344 36 27 31.972656 27 27 C 27 22.027344 31.027344 18 36 18 Z M 14 21 C 10.6875 21 8 23.6875 8 27 C 8 30.3125 10.6875 33 14 33 C 17.3125 33 20 30.3125 20 27 C 20 23.6875 17.3125 21 14 21 Z M 36 21 C 32.6875 21 30 23.6875 30 27 C 30 30.3125 32.6875 33 36 33 C 39.3125 33 42 30.3125 42 27 C 42 23.6875 39.3125 21 36 21 Z M 14 23 C 16.210938 23 18 24.789063 18 27 C 18 29.210938 16.210938 31 14 31 C 11.789063 31 10 29.210938 10 27 C 10 24.789063 11.789063 23 14 23 Z M 36 23 C 38.210938 23 40 24.789063 40 27 C 40 29.210938 38.210938 31 36 31 C 33.789063 31 32 29.210938 32 27 C 32 24.789063 33.789063 23 36 23 Z M 14 25 C 12.894531 25 12 25.894531 12 27 C 12 28.105469 12.894531 29 14 29 C 15.105469 29 16 28.105469 16 27 C 16 25.894531 15.105469 25 14 25 Z M 36 25 C 34.894531 25 34 25.894531 34 27 C 34 28.105469 34.894531 29 36 29 C 37.105469 29 38 28.105469 38 27 C 38 25.894531 37.105469 25 36 25 Z" fill="#26e07f"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+
   </div>
-
 </template>
 
 <script setup>
@@ -467,6 +730,10 @@ const showWhatsAppPopup = ref(false);
 const hasWhatsAppLinks = () => {
   return !!(contacts.value[0]?.whatsapp || contacts.value[0]?.whatsappChannel);
 };
+
+const contactType = computed(() => {
+  return contacts.value[0]?.type || 'individual';
+});
 
 
 // Contact Message Form State
@@ -517,7 +784,7 @@ const closeContactPopup = () => {
 function getDeviceType() {
   const ua = navigator.userAgent || navigator.vendor || window.opera;
 
-  console.log('User Agent:', ua); // Debug log
+  console.log('user Agent:', ua); // Debug log
 
   // Windows Phone must come first because its UA also contains "Android"
   if (/windows phone/i.test(ua)) {
@@ -715,10 +982,10 @@ const handleWhatsAppClick = async () => {
 
   if (whatsapp && !whatsappChannel) {
     await trackClick('whatsapp', `https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`);
-    window.open(`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
+    window.location.href = `https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`; // CHANGED
   } else if (whatsappChannel && !whatsapp) {
     await trackClick('whatsapp_channel', whatsappChannel);
-    window.open(whatsappChannel, '_blank');
+    window.location.href = whatsappChannel; // CHANGED
   } else if (whatsapp && whatsappChannel) {
     showWhatsAppPopup.value = true;
   }
@@ -732,7 +999,7 @@ const closeWhatsAppPopup = () => {
 const redirectToWhatsApp = async (url) => {
   const isChannel = url.includes('whatsapp.com/channel') || url === contacts.value[0]?.whatsappChannel;
   await trackClick(isChannel ? 'whatsapp_channel' : 'whatsapp', url);
-  window.open(url, '_blank');
+  window.location.href = url; // CHANGED from window.open
   closeWhatsAppPopup();
 };
 
@@ -783,25 +1050,24 @@ const handleOfficePhoneClick = async (phone) => {
 // Website click
 const handleWebsiteClick = async (url) => {
   await trackClick('website', url);
-  window.open(formatUrl(url), '_blank');
+  window.location.href = formatUrl(url); // CHANGED from window.open
 };
 
 // Social media clicks
 const handleSocialClick = async (platform, url) => {
-  await trackClick(`social_${platform}`, url); // ✅ Already correct
-  window.open(formatUrl(url), '_blank');
+  await trackClick(`social_${platform}`, url);
+  window.location.href = formatUrl(url); // CHANGED from window.open
 };
 
-
 // 360 view tracking
-const handle360Click = async () => {
-  await trackClick('360_view', company.value.view360);
-  window.open(company.value.view360, '_blank');
+const handle360Click = async (url) => {
+  await trackClick('360_view', url);
+  window.location.href = url; // CHANGED from window.open
 };
 
 const handleLocationClick = async (url) => {
   await trackClick('location', url);
-  window.open(formatUrl(url), '_blank');
+  window.location.href = formatUrl(url); // CHANGED from window.open
 };
 
 // Brochure/Menu clicks
@@ -812,7 +1078,7 @@ const handleFileClick = async (file) => {
               file.isOrderNow ? 'order_now' : 'file';
 
   await trackClick(fileType, getFileUrl(file));
-  window.open(getFileUrl(file), '_blank');
+  window.location.href = getFileUrl(file); // CHANGED from window.open
 };
 
 // ✅ FIXED: Update the getFileUrl function (around line 40)
@@ -1121,14 +1387,13 @@ const handleReviewClick = async () => {
   const tripAdvisor = company.value.tripAdvisor;
 
   if (googleReviews && !tripAdvisor) {
-    window.open(googleReviews, '_blank');
+    window.location.href = googleReviews; // CHANGED from window.open
   } else if (tripAdvisor && !googleReviews) {
-    window.open(tripAdvisor, '_blank');
+    window.location.href = tripAdvisor; // CHANGED from window.open
   } else if (googleReviews && tripAdvisor) {
     showReviewPopup.value = true;
   }
 };
-
 // Close review popup
 const closeReviewPopup = () => {
   showReviewPopup.value = false;
@@ -1138,7 +1403,7 @@ const closeReviewPopup = () => {
 const redirectToReview = async (url) => {
   const platform = url.includes('google') ? 'google_review' : 'tripadvisor_review';
   await trackClick(platform, url);
-  window.open(url, '_blank');
+  window.location.href = url; // CHANGED from window.open
   closeReviewPopup();
 };
 
@@ -1253,7 +1518,7 @@ function updateMetaTags(contact, company) {
 onMounted(async () => {
   const deviceType = getDeviceType();
   console.log('🔍 Detected Device Type:', deviceType);
-  console.log('📱 User Agent:', navigator.userAgent);
+  console.log('📱 user Agent:', navigator.userAgent);
 
   // Wait a moment for GA to initialize
   await new Promise(resolve => setTimeout(resolve, 500));

@@ -80,6 +80,7 @@
             <th>Company Limit</th>
             <th>Contact Limit</th>
             <th>Joined</th>
+            <th>Plan</th>
             <th>Actions</th>
           </tr>
           </thead>
@@ -103,6 +104,11 @@
             <td class="text-center">{{ user.companyLimit }}</td>
             <td class="text-center">{{ user.contactLimit }}</td>
             <td class="text-muted">{{ formatDate(user.createdAt) }}</td>
+            <td>
+  <span class="plan-badge" :class="user.plan">
+    {{ user.plan?.toUpperCase()}}
+  </span>
+            </td>
             <td class="actions" @click.stop>
               <button
                   v-if="can(PERMISSIONS.DELETE_USER)"
@@ -242,7 +248,7 @@
       </div>
     </div>
 
-    <!-- User Details Modal -->
+    <!-- user Details Modal -->
     <Teleport to="body">
       <transition name="modal-fade">
         <div v-if="showModal" class="modal-overlay" @click="closeModal">
@@ -255,6 +261,12 @@
                   <h2 class="modal-title">{{ selectedUser?.name }}</h2>
                   <p class="modal-subtitle">{{ selectedUser?.email }}</p>
                 </div>
+                <span
+                    class="plan-badge small"
+                    :class="selectedUser?.plan"
+                >
+      {{ selectedUser?.plan?.toUpperCase() || 'FREE' }}
+    </span>
               </div>
               <button @click="closeModal" class="btn-close">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -266,6 +278,20 @@
 
             <!-- Limits Section -->
             <div class="limits-section">
+              <div class="plan-section">
+                <span class="plan-label">User Plan</span>
+
+                <select
+                    v-model="updatedPlan"
+                    class="plan-select"
+                    :disabled="!can(PERMISSIONS.EDIT_USER_LIMITS)"
+                >
+                  <option value="free">Free</option>
+                  <option value="plus">Plus</option>
+                  <option value="pro">Pro</option>
+                </select>
+              </div>
+
               <div class="limit-card">
                 <div class="limit-header">
                   <span class="limit-icon">🏢</span>
@@ -1009,6 +1035,9 @@ const router = useRouter()
 const showEditReviewModal = ref(false)
 const selectedReview = ref(null)
 
+const updatedPlan = ref('free')
+
+
 const showQrPopup = ref(false);
 const qrCanvas = ref(null);
 const qrUrl = ref("");
@@ -1334,9 +1363,13 @@ const filteredUsers = computed(() => {
 })
 
 const limitsChanged = computed(() => {
-  return updatedLimits.value.companyLimit !== originalLimits.value.companyLimit ||
-      updatedLimits.value.contactLimit !== originalLimits.value.contactLimit
+  return (
+      updatedLimits.value.companyLimit !== originalLimits.value.companyLimit ||
+      updatedLimits.value.contactLimit !== originalLimits.value.contactLimit ||
+      updatedPlan.value !== selectedUser.value?.plan
+  )
 })
+
 
 function getRegistrationTypeLabel(type) {
   const labels = {
@@ -1368,6 +1401,8 @@ async function openUserDetails(user) {
   showModal.value = true
   activeTab.value = 'companies'
   selectedCompanyFilter.value = 'all'
+  updatedPlan.value = user.plan || 'free'
+
 
   // Mobile scroll lock (only on screens <= 768px)
   if (window.innerWidth <= 768) {
@@ -1533,10 +1568,13 @@ async function saveLimits() {
   try {
     await adminApi.patch(`/user/${selectedUser.value.id}/limits`, {
       companyLimit: updatedLimits.value.companyLimit,
-      contactLimit: updatedLimits.value.contactLimit
+      contactLimit: updatedLimits.value.contactLimit,
+      plan: updatedPlan.value
     })
 
+
     originalLimits.value = {...updatedLimits.value}
+    selectedUser.value.plan = updatedPlan.value
     await adminStore.fetchUsers()
     alert('Limits updated successfully!')
   } catch (err) {
@@ -1580,7 +1618,7 @@ async function deleteUser(userId) {
   try {
     await adminApi.delete(`/user/${userId}`)
     await adminStore.fetchUsers()
-    alert('User deleted successfully')
+    alert('user deleted successfully')
   } catch (err) {
     console.error('Error deleting user:', err)
     alert(err.response?.data?.message || 'Failed to delete user')
@@ -1593,6 +1631,125 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Plan Badge */
+.plan-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: #FDF8F3;
+  color: #6B4423;
+  border: 1px solid #F5E6D3;
+}
+
+.plan-badge.free {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.plan-badge.plus {
+  background: linear-gradient(135deg, #8B5A3C 0%, #A67C52 100%);
+  color: white;
+  border: none;
+}
+
+.plan-badge.pro {
+  background: linear-gradient(135deg, #6B4423 0%, #D4AF37 100%);
+  color: white;
+  border: none;
+}
+
+.plan-badge.small {
+  font-size: 0.65rem;
+  padding: 0.25rem 0.65rem;
+}
+
+/* Header layout */
+.user-header-line {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Plan dropdown */
+/* PLAN SECTION CONTAINER */
+.plan-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
+  border: 1px solid #e5e1dc;
+  border-radius: 14px;
+  min-width: 260px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* LABEL */
+.plan-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #6b5d57;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* DROPDOWN */
+.plan-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  min-width: 120px;
+  padding: 8px 36px 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid #e5e1dc;
+  background:
+      linear-gradient(135deg, #ffffff 0%, #f8f6f4 100%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%235c4033' stroke-width='2'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E")
+      no-repeat right 12px center;
+
+  background-size: 16px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: #5c4033;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(92, 64, 51, 0.15);
+}
+
+/* HOVER */
+.plan-select:hover {
+  border-color: #5c4033;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(92, 64, 51, 0.25);
+}
+
+/* FOCUS */
+.plan-select:focus {
+  outline: none;
+  border-color: #5c4033;
+  box-shadow:
+      0 0 0 3px rgba(92, 64, 51, 0.15),
+      0 4px 14px rgba(92, 64, 51, 0.25);
+}
+
+/* MOBILE TUNING */
+@media (max-width: 768px) {
+  .plan-section {
+    width: 100%;
+  }
+
+  .plan-select {
+    min-width: 140px;
+  }
+}
 
 .desktop-data-view {
   display: block;
@@ -1602,7 +1759,7 @@ onMounted(() => {
   display: none;
 }
 
-.admin-role-banner{
+.admin-role-banner {
   width: 20%;
   display: flex;
 }
@@ -3096,7 +3253,7 @@ TABLET RESPONSIVE (769px - 1024px)
 MOBILE RESPONSIVE (≤ 768px)
 ======================================== */
 @media (max-width: 768px) {
-  .admin-role-banner{
+  .admin-role-banner {
     width: 200px;
   }
 
@@ -3206,6 +3363,7 @@ MOBILE RESPONSIVE (≤ 768px)
     padding: 16px 20px;
     flex-shrink: 0; /* Prevent header from shrinking */
   }
+
   .user-info {
     gap: 12px;
   }

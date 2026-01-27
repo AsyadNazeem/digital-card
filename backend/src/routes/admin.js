@@ -128,7 +128,7 @@ router.get("/users", authenticateAdmin, async (req, res) => {
                 "id", "name", "phone", "email", "provider",
                 "registrationType", "companyLimit", "contactLimit",
                 "reviewLimit",  // ADD THIS
-                "createdAt"
+                "createdAt", "plan"
             ],
             order: [["createdAt", "DESC"]],
         });
@@ -149,7 +149,7 @@ router.get("/users", authenticateAdmin, async (req, res) => {
     }
 });
 
-// ✅ GET: User's companies - ADD 'files' to attributes
+// ✅ GET: user's companies - ADD 'files' to attributes
 router.get("/user/:userId/companies", authenticateAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
@@ -189,7 +189,7 @@ router.get("/user/:userId/companies", authenticateAdmin, async (req, res) => {
 });
 
 
-// ✅ GET: User's contacts
+// ✅ GET: user's contacts
 router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
@@ -235,63 +235,73 @@ router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
 router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
-        const { companyLimit, contactLimit } = req.body;
+        const { companyLimit, contactLimit, plan } = req.body;
 
         if (!companyLimit || companyLimit < 1 || !contactLimit || contactLimit < 1) {
             return res.status(400).json({ message: "Limits must be at least 1" });
         }
 
-        const user = await User.findByPk(userId);
-        if (!user) return res.status(404).json({ message: "User not found" });
+        const allowedPlans = ["free", "plus", "pro"];
+        if (plan && !allowedPlans.includes(plan)) {
+            return res.status(400).json({ message: "Invalid plan value" });
+        }
 
-        const oldLimits = {
+        const user = await User.findByPk(userId);
+        if (!user) return res.status(404).json({ message: "user not found" });
+
+        const oldData = {
             companyLimit: user.companyLimit,
-            contactLimit: user.contactLimit
+            contactLimit: user.contactLimit,
+            plan: user.plan
         };
 
         await user.update({
             companyLimit: parseInt(companyLimit),
-            contactLimit: parseInt(contactLimit)
+            contactLimit: parseInt(contactLimit),
+            plan: plan || user.plan
         });
 
         await logAdminAction({
             adminId: req.admin.id,
             action: ADMIN_ACTIONS.UPDATE_USER_LIMITS,
-            targetType: 'user',
+            targetType: "user",
             targetId: userId,
             targetName: user.name || user.email,
-            description: `Updated limits for ${user.email}`,
+            description: `Updated limits/plan for ${user.email}`,
             changes: {
-                before: oldLimits,
+                before: oldData,
                 after: {
-                    companyLimit: parseInt(companyLimit),
-                    contactLimit: parseInt(contactLimit)
+                    companyLimit: user.companyLimit,
+                    contactLimit: user.contactLimit,
+                    plan: user.plan
                 }
             },
             ipAddress: getClientIp(req),
-            userAgent: req.headers['user-agent']
+            userAgent: req.headers["user-agent"]
         });
 
         res.json({
             success: true,
-            message: "Limits updated successfully",
+            message: "Limits and plan updated successfully",
             user: {
                 id: user.id,
                 companyLimit: user.companyLimit,
-                contactLimit: user.contactLimit
+                contactLimit: user.contactLimit,
+                plan: user.plan
             }
         });
     } catch (err) {
-        console.error("Error updating limits:", err);
-        res.status(500).json({ message: "Error updating limits" });
+        console.error("Error updating limits/plan:", err);
+        res.status(500).json({ message: "Error updating limits/plan" });
     }
 });
+
 
 // ✅ DELETE: Delete user
 router.delete("/user/:id", authenticateAdmin, async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) return res.status(404).json({ message: "user not found" });
 
         const userName = user.name || user.email;
         await user.destroy();
@@ -307,7 +317,7 @@ router.delete("/user/:id", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({ message: "User deleted successfully" });
+        res.json({ message: "user deleted successfully" });
     } catch (err) {
         console.error("Error deleting user:", err);
         res.status(500).json({ message: "Error deleting user" });
@@ -476,7 +486,7 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({
-                message: "User with this email already exists"
+                message: "user with this email already exists"
             });
         }
 
@@ -494,7 +504,7 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
         const existingPhone = await User.findOne({ where: { phone: formattedPhone } });
         if (existingPhone) {
             return res.status(400).json({
-                message: "User with this phone number already exists"
+                message: "user with this phone number already exists"
             });
         }
 
@@ -531,7 +541,7 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: "User created successfully",
+            message: "user created successfully",
             user: {
                 id: newUser.id,
                 name: newUser.name,
@@ -781,7 +791,7 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
             let formattedCardMobile = req.body.cardMobileNum;
 
             if (formattedCardMobile) {
-                // User typed a manual number
+                // user typed a manual number
                 formattedCardMobile = parsePhoneNumber(formattedCardMobile).format("E.164");
             } else {
                 // Checkbox ON → use mobile
@@ -887,7 +897,7 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
             const user = await User.findByPk(userId);
 
             if (!user) {
-                return res.status(404).json({ message: "User not found" });
+                return res.status(404).json({ message: "user not found" });
             }
 
             // Check company limit
@@ -1029,7 +1039,7 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
             const user = await User.findByPk(userId);
 
             if (!user) {
-                return res.status(404).json({ message: "User not found" });
+                return res.status(404).json({ message: "user not found" });
             }
 
             // Check contact limit
@@ -1218,7 +1228,7 @@ router.post("/user/:userId/review", authenticateAdmin, async (req, res) => {
         const user = await User.findByPk(userId);
 
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "user not found" });
         }
 
         // Check review limit

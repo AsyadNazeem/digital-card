@@ -14,7 +14,7 @@ const Request = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: "users",  // ✅ Changed from User to "users"
+                model: "users",  // ✅ Changed from user to "users"
                 key: "id",
             },
             onDelete: "CASCADE",

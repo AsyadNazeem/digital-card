@@ -1,11 +1,7 @@
-// ============================================
-// FILE 2: frontend/src/router/index.js (REPLACE ENTIRE FILE)
-// ============================================
-
 import { createRouter, createWebHistory } from "vue-router";
 import Login from "../pages/Login.vue";
 import Register from "../pages/Register.vue";
-import Dashboard from "../pages/Dashboard.vue";
+import UserLayout from "../components/user/UserLayout.vue";
 import PublicCard from "../pages/PublicCard.vue";
 import ResetPassword from "../pages/ResetPassword.vue";
 import AdminLogin from "../pages/admin/AdminLogin.vue";
@@ -31,7 +27,7 @@ const routes = [
     { path: "/login", component: Login },
     { path: "/register", component: Register },
     { path: "/reset-password", component: ResetPassword },
-    { path: "/dashboard", component: Dashboard, meta: { requiresAuth: true } },
+    { path: "/dashboard", component: UserLayout, meta: { requiresAuth: true } },
     { path: "/:phone", component: PublicCard },
 
     // ADMIN LOGIN

@@ -318,7 +318,7 @@ router.post("/login", async (req, res) => {
             user = await User.findOne({ where: { phone: phoneE164 } });
         }
 
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) return res.status(404).json({ message: "user not found" });
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch)
@@ -350,7 +350,7 @@ router.post("/login", async (req, res) => {
 router.get("/me", authenticateToken, async (req, res) => {
     try {
         console.log("🟢 /auth/me called");
-        console.log("User ID from token:", req.userId);
+        console.log("user ID from token:", req.userId);
 
         const user = await User.findByPk(req.userId, {
             attributes: [
@@ -370,11 +370,11 @@ router.get("/me", authenticateToken, async (req, res) => {
         });
 
         if (!user) {
-            console.error("❌ User not found for ID:", req.userId);
-            return res.status(404).json({ message: "User not found" });
+            console.error("❌ user not found for ID:", req.userId);
+            return res.status(404).json({ message: "user not found" });
         }
 
-        console.log("✅ User found:", user.email);
+        console.log("✅ user found:", user.email);
         res.json(user);
     } catch (err) {
         console.error("❌ /auth/me error:", err);
@@ -398,7 +398,7 @@ router.post("/google", async (req, res) => {
         );
 
         const { email, name, picture, sub: googleId } = googleRes.data;
-        console.log("✅ Google User Info:", googleRes.data);
+        console.log("✅ Google user Info:", googleRes.data);
 
         let user = await User.findOne({ where: { email } });
 
@@ -417,7 +417,7 @@ router.post("/google", async (req, res) => {
 
         res.json({
             success: true,
-            message: "User authenticated via Google",
+            message: "user authenticated via Google",
             token: jwtToken,
             user: { id: user.id, name: user.name, email: user.email },
         });
@@ -485,7 +485,7 @@ router.post("/google-register", async (req, res) => {
         let isNewUser = false;
 
         if (user) {
-            console.log("✅ User already exists:", user.id);
+            console.log("✅ user already exists:", user.id);
         } else {
             console.log("🔵 Creating new user...");
             isNewUser = true;
@@ -501,7 +501,7 @@ router.post("/google-register", async (req, res) => {
                 selectedThemeId: '1'
             });
 
-            console.log("✅ User created:", user.id);
+            console.log("✅ user created:", user.id);
 
             // ✅ Send welcome email for new users
             console.log("📧 Sending welcome email...");
@@ -576,14 +576,14 @@ router.post("/forgot-password", async (req, res) => {
         // ✅ Security: Always return success (don't reveal if email exists)
         // But only send email if user actually exists
         if (!user) {
-            console.log("⚠️ User not found, but returning success for security");
+            console.log("⚠️ user not found, but returning success for security");
             return res.status(200).json({
                 success: true,
                 message: "If an account exists with this email, a password reset link has been sent."
             });
         }
 
-        console.log("✅ User found:", user.id);
+        console.log("✅ user found:", user.id);
 
         // Generate secure random token
         const resetToken = crypto.randomBytes(32).toString("hex");

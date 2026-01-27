@@ -14,7 +14,7 @@
       </button>
     </div>
 
-    <!-- User Selector -->
+    <!-- user Selector -->
     <div class="user-selector-card">
       <label class="selector-label">Select Admin User:</label>
       <div v-if="loadingUsers" class="loading-inline">Loading users...</div>
@@ -31,7 +31,7 @@
       </select>
     </div>
 
-    <!-- Selected User Info -->
+    <!-- Selected user Info -->
     <div v-if="selectedUser" class="user-info-card">
       <div class="user-avatar">{{ selectedUser.username.charAt(0).toUpperCase() }}</div>
       <div class="user-details">
@@ -124,7 +124,7 @@
       </div>
     </div>
 
-    <!-- No User Selected State -->
+    <!-- No user Selected State -->
     <div v-else class="empty-state">
       <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>

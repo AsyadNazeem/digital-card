@@ -379,7 +379,7 @@ async function createUser() {
     const res = await adminApi.post('/create-user', payload)
 
     messageType.value = 'success'
-    message.value = res.data.message || 'User created successfully!'
+    message.value = res.data.message || 'user created successfully!'
 
     setTimeout(() => {
       alert(`User Created!\n\nEmail: ${form.value.email}\nPassword: ${form.value.password}\n\nPlease save these credentials securely.`)

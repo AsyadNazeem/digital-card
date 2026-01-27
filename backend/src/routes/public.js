@@ -46,7 +46,7 @@ router.get("/:mobile", async (req, res) => {
         });
 
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "user not found" });
         }
 
         // Return the data as JSON for Vue app
