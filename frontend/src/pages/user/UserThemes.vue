@@ -282,6 +282,7 @@ onMounted(() => {
   border: 1px solid #f3f4f6;
   padding: 0;
   min-height: calc(100vh - 260px);
+  width: 100%;
 }
 
 /* Theme Header */
@@ -292,7 +293,7 @@ onMounted(() => {
 }
 
 .theme-header-content {
-  max-width: 1400px;
+  max-width: 1300px;
   margin: 0 auto;
 }
 

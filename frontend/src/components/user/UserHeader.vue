@@ -55,7 +55,7 @@ defineEmits(['toggle-sidebar', 'logout', 'open-settings']);
   height: 64px;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
-  z-index: 1000;
+  z-index: 100; /* Changed from 1000 to 100 */
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 

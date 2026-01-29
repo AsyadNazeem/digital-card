@@ -58,7 +58,7 @@
           <path d="M3 7h18M3 12h18M3 17h18"></path>
         </svg>
         <p class="empty-text">No review entries found</p>
-        <button @click="openReviewForm" class="link-button">Add your first review</button>
+<!--        <button @click="openReviewForm" class="link-button">Add your first review</button>-->
       </div>
     </div>
 
@@ -485,7 +485,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #4f46e5;
+  background: #5c4033;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -496,7 +496,7 @@ onMounted(() => {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #4338ca;
+  background: #5c4033;
 }
 
 .btn-primary:disabled {
@@ -523,8 +523,8 @@ onMounted(() => {
 .btn-outline {
   padding: 0.5rem 1rem;
   background: white;
-  color: #4f46e5;
-  border: 1px solid #4f46e5;
+  color: #5c4033;
+  border: 1px solid #5c4033;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -568,7 +568,7 @@ onMounted(() => {
 .link-button {
   background: none;
   border: none;
-  color: #4f46e5;
+  color: #5c4033;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -576,7 +576,7 @@ onMounted(() => {
 }
 
 .link-button:hover {
-  color: #4338ca;
+  color: #5c4033;
 }
 
 /* Table */
@@ -620,7 +620,7 @@ onMounted(() => {
 }
 
 .link {
-  color: #4f46e5;
+  color: #5c4033;
   text-decoration: none;
   word-break: break-all;
 }
@@ -648,7 +648,7 @@ onMounted(() => {
 
 .btn-action.view {
   background: #dbeafe;
-  color: #1e40af;
+  color: #5c4033;
 }
 
 .btn-action.view:hover {
@@ -739,7 +739,7 @@ onMounted(() => {
 
 .form-input:focus {
   outline: none;
-  border-color: #4f46e5;
+  border-color: #5c4033;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 

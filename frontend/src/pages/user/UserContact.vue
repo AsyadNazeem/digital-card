@@ -129,7 +129,7 @@
           <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
         <p class="empty-text">No contact data found</p>
-        <button @click="showContactForm = true" class="link-button">Add your first contact</button>
+<!--        <button @click="showContactForm = true" class="link-button">Add your first contact</button>-->
       </div>
     </div>
 

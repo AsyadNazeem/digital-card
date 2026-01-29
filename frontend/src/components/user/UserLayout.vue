@@ -17,27 +17,33 @@
         @open-upgrade="showUpgrade = true"
     />
 
+    <!-- MOVE MODALS HERE - OUTSIDE MAIN CONTENT -->
+    <UserSettings
+        :open="showSettings"
+        @close="showSettings = false"
+    />
+
+    <UserUpgrade
+        :open="showUpgrade"
+        :current-plan="userPlan"
+        @close="showUpgrade = false"
+    />
+
+    <RequestLimitPopup
+        :company-count="companyCount"
+        :contact-count="contactCount"
+        :review-count="reviewCount"
+        :user-limits="userLimits"
+    />
+
+    <UserPhoneModal
+        :show-phone-popup="showPhonePopup"
+        @phone-added="handlePhoneAdded"
+        @close="showPhonePopup = false"
+    />
+
     <!-- Main Content Area -->
     <main :class="['main-content', { expanded: !sidebarExpanded }]">
-      <UserSettings
-          :open="showSettings"
-          @close="showSettings = false"
-      />
-
-      <UserUpgrade
-          :open="showUpgrade"
-          :current-plan="userPlan"
-          @close="showUpgrade = false"
-      />
-
-
-      <RequestLimitPopup
-          :company-count="companyCount"
-          :contact-count="contactCount"
-          :review-count="reviewCount"
-          :user-limits="userLimits"
-      />
-
       <UserCompanySection
           :active-tab="activeTab"
           :company-count="companyCount"
@@ -74,16 +80,9 @@
           @open-upgrade="showUpgrade = true"
       />
 
-
       <UserTheme
           v-if="activeTab === 'theme'"
           :active-tab="activeTab"
-      />
-
-      <UserPhoneModal
-          :show-phone-popup="showPhonePopup"
-          @phone-added="handlePhoneAdded"
-          @close="showPhonePopup = false"
       />
     </main>
   </div>
@@ -272,8 +271,10 @@ defineExpose({
   margin-top: 64px;
   flex: 1;
   padding: 2rem;
-  transition: margin-left 0.3s ease, margin-top 0.3s ease; /* Important for smooth animation */
+  transition: margin-left 0.3s ease, margin-top 0.3s ease;
   min-height: calc(100vh - 64px);
+  position: relative;
+  z-index: auto; /* Keep this at 1 or remove it */
 }
 
 .main-content.expanded {
@@ -285,6 +286,7 @@ defineExpose({
   .main-content {
     margin-left: 0;
     padding-bottom: 80px;
+    z-index: 1;
   }
 
   .main-content.expanded {

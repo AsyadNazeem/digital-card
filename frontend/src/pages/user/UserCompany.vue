@@ -113,7 +113,7 @@
               d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"></path>
         </svg>
         <p class="empty-text">No company data found</p>
-        <button @click="openCompanyForm" class="link-button">Add your first company</button>
+<!--        <button @click="openCompanyForm" class="link-button">Add your first company</button>-->
       </div>
     </div>
 
@@ -1098,7 +1098,7 @@ const saveCompany = async () => {
       }
     });
 
-    formData.append('socialMedia', JSON.stringify(socialMediaLinks));
+    formData.append('socialLinks', JSON.stringify(socialMediaLinks));
 
     let response;
     if (companyForm.value.id) {
@@ -1129,11 +1129,32 @@ const saveCompany = async () => {
 };
 
 // Edit company
-const editCompany = async (company) => {
+const editCompany = (company) => {
   try {
-    const response = await api.get(`/companies/${company.id}`);
-    const data = response.data;
+    console.log("📝 Editing company:", company); // Debug log
+    const data = company;
 
+    // Reset social state
+    mainSocialMedia.value.forEach(s => {
+      s.enabled = false;
+      s.url = '';
+    });
+    customSocialMedia.value = [];
+
+    // Parse files safely
+    let parsedFiles = [];
+    if (data.files) {
+      try {
+        parsedFiles = Array.isArray(data.files)
+            ? data.files
+            : JSON.parse(data.files);
+      } catch (e) {
+        console.error("Error parsing files:", e);
+        parsedFiles = [];
+      }
+    }
+
+    // Populate form
     companyForm.value = {
       id: data.id,
       companyName: data.companyName || '',
@@ -1147,7 +1168,7 @@ const editCompany = async (company) => {
       googleReviews: data.googleReviews || '',
       tripAdvisor: data.tripAdvisor || '',
       status: data.status || 'active',
-      files: data.files || [],
+      files: parsedFiles,
       existingLogoPath: data.logo || null,
       country: data.country || '',
       streetAddress: data.streetAddress || '',
@@ -1158,36 +1179,76 @@ const editCompany = async (company) => {
       label: data.label || ''
     };
 
-    // Set logo preview if exists
+    // Set logo preview
     if (data.logo) {
       logoPreview.value = `${VITE_IMAGE_UPLOAD_URL}${data.logo}`;
       logoFileName.value = data.logo.split('/').pop();
+    } else {
+      logoPreview.value = null;
+      logoFileName.value = '';
     }
 
-    // Load social media
-    if (data.socialMedia && Array.isArray(data.socialMedia)) {
-      data.socialMedia.forEach(social => {
-        const mainSocial = mainSocialMedia.value.find(s => s.name === social.name);
-        if (mainSocial) {
-          mainSocial.enabled = true;
-          mainSocial.url = social.url || '';
-        } else {
-          // Custom social media
-          customSocialMedia.value.push({
-            name: social.label || social.name,
-            url: social.url || '',
-            enabled: true
-          });
-        }
-      });
+    // Load social media safely with debugging
+    let parsedSocial = [];
+
+    // Try to get the raw social data
+    const rawSocial = data.socialLinks || data.socialMedia || [];
+
+    console.log("🔍 Raw social data:", rawSocial); // Debug log
+    console.log("🔍 Type of rawSocial:", typeof rawSocial); // Debug log
+
+    try {
+      // If it's already an array, use it
+      if (Array.isArray(rawSocial)) {
+        parsedSocial = rawSocial;
+      }
+      // If it's a string, try to parse it
+      else if (typeof rawSocial === 'string' && rawSocial.trim()) {
+        parsedSocial = JSON.parse(rawSocial);
+      }
+      // If it's an object but not an array, convert to array
+      else if (typeof rawSocial === 'object' && rawSocial !== null) {
+        parsedSocial = Object.entries(rawSocial).map(([key, value]) => ({
+          name: key,
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          url: value
+        }));
+      }
+    } catch (e) {
+      console.error("Error parsing social media:", e);
+      parsedSocial = [];
     }
+
+    console.log("✅ Parsed social media:", parsedSocial); // Debug log
+
+    // Map to UI
+    parsedSocial.forEach(social => {
+      const main = mainSocialMedia.value.find(
+          s => s.name.toLowerCase() === social.name.toLowerCase()
+      );
+
+      if (main) {
+        main.enabled = true;
+        main.url = social.url || '';
+        console.log(`✅ Mapped ${social.name} to main social`); // Debug log
+      } else {
+        customSocialMedia.value.push({
+          name: social.label || social.name,
+          url: social.url || '',
+          enabled: true
+        });
+        console.log(`✅ Added ${social.name} to custom social`); // Debug log
+      }
+    });
 
     showCompanyForm.value = true;
   } catch (error) {
-    console.error('Error loading company:', error);
+    console.error('❌ Error loading company:', error);
     alert('Failed to load company data');
   }
 };
+
+
 
 // Delete company
 const deleteCompany = async (id) => {
@@ -1242,7 +1303,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #4f46e5;
+  background: #5c4033;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -1253,7 +1314,7 @@ onMounted(async () => {
 }
 
 .btn-primary:hover {
-  background: #4338ca;
+  background: #5c4033;
 }
 
 .btn-secondary {
@@ -1288,7 +1349,7 @@ onMounted(async () => {
 .link-button {
   background: none;
   border: none;
-  color: #4f46e5;
+  color: #5c4033;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -1296,7 +1357,7 @@ onMounted(async () => {
 }
 
 .link-button:hover {
-  color: #4338ca;
+  color: #5c4033;
 }
 
 .btn-add-more {
@@ -1305,8 +1366,8 @@ onMounted(async () => {
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   background: white;
-  color: #4f46e5;
-  border: 1px solid #4f46e5;
+  color: #5c4033;
+  border: 1px solid #5c4033;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -1465,7 +1526,7 @@ onMounted(async () => {
 
 .form-input:focus {
   outline: none;
-  border-color: #4f46e5;
+  border-color: #5c4033;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 

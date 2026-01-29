@@ -13,17 +13,34 @@
               alt="Dashboard Logo"
               class="header-logo"
           />
-          <div v-else class="logo-icon">📊</div>
+          <div v-else class="logo-icon">
+            <img
+                src="../../assets/images/smallLogo.jpeg"
+                alt="Dashboard Logo"
+                class="header-smallLogo"
+            />
+          </div>
         </div>
-
-        <button
-            @click="toggleSidebar"
-            class="toggle-btn desktop-toggle"
-            :title="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-        >
-          <span class="toggle-icon">{{ isCollapsed ? '→' : '←' }}</span>
-        </button>
       </div>
+
+      <!-- Collapse/Expand Toggle Button -->
+      <button
+          @click="toggleSidebar"
+          class="sidebar-toggle-btn"
+          :title="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+      >
+        <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            :class="['toggle-icon', { rotated: isCollapsed }]"
+        >
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
 
       <nav class="sidebar-nav">
         <router-link
@@ -236,7 +253,7 @@ function handleLogout() {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   min-height: 88px;
 }
 
@@ -252,34 +269,58 @@ function handleLogout() {
   transition: opacity 0.2s ease;
 }
 
+.header-smallLogo {
+  width: 40px;
+  border-radius: 8px;
+}
+
 .logo-icon {
   font-size: 2rem;
 }
 
-.toggle-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
+/* Sidebar Toggle Button - Fixed Position */
+.sidebar-toggle-btn {
+  position: fixed;
+  top: 32px;
+  left: 248px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
   color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 9999;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
-.toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: scale(1.05);
+.sidebar.collapsed .sidebar-toggle-btn {
+  left: 68px;
 }
 
-.collapsed .toggle-btn {
-  position: absolute;
-  right: 8px;
-  top: 28px;
+.sidebar-toggle-btn:hover {
+  background: linear-gradient(135deg, #6b4d3e 0%, #4a3228 100%);
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.sidebar-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.toggle-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-icon.rotated {
+  transform: rotate(180deg);
 }
 
 .sidebar-nav {
@@ -625,6 +666,17 @@ function handleLogout() {
 @media (min-width: 769px) and (max-width: 1024px) {
   .sidebar {
     width: 80px;
+  }
+
+  .sidebar-toggle-btn {
+    left: 68px;
+  }
+}
+
+/* Hide toggle button on mobile */
+@media (max-width: 768px) {
+  .sidebar-toggle-btn {
+    display: none;
   }
 }
 </style>

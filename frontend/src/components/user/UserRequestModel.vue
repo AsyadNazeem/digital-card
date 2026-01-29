@@ -351,13 +351,13 @@ async function submitRequest() {
 /* Fixed Limit Banner - Stuck to Header */
 .limit-banner {
   position: fixed;
-  top: 64px; /* Below header */
+  top: 64px;
   left: 0;
   right: 0;
   background: linear-gradient(135deg, #FDF8F3 0%, #F5E6D3 100%);
   border-bottom: 2px solid #C19A6B;
   padding: 1rem 2rem;
-  z-index: 999;
+  z-index: 99; /* Changed from 999 to 99 */
   box-shadow: 0 4px 12px rgba(107, 68, 35, 0.15);
   animation: slideDown 0.3s ease-out;
 }
@@ -439,7 +439,7 @@ async function submitRequest() {
   transform: translateY(0);
 }
 
-/* Modal Overlay */
+   /* Modal Overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -448,7 +448,7 @@ async function submitRequest() {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 9999; /* Keep this high */
   padding: 1rem;
 }
 
@@ -460,7 +460,7 @@ async function submitRequest() {
   box-shadow: 0 20px 60px rgba(107, 68, 35, 0.3);
   max-width: 650px;
   width: 100%;
-  max-height: 90vh;
+  max-height: 80vh;
   overflow-y: auto;
   animation: modalSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1037,5 +1037,7 @@ async function submitRequest() {
     --banner-height: 60px;
   }
 }
+
+
 
 </style>

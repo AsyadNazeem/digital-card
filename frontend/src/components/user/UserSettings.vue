@@ -1,592 +1,560 @@
 <template>
-<transition name="modal">
-        <div v-if="open" class="modal-overlay" @click="closePopup">
-          <div class="modal-container" @click.stop>
-            <div class="modal-layout">
-              <!-- Sidebar -->
-              <aside class="settings-sidebar">
-                <div class="settings-sidebar-header">
-                  <h3 class="settings-sidebar-title">Account Settings</h3>
+  <transition name="modal">
+    <div v-if="open" class="modal-overlay-full" @click="closePopup">
+      <div class="modal-container" @click.stop>
+        <div class="modal-layout">
+          <!-- Sidebar -->
+          <aside class="settings-sidebar">
+            <div class="settings-sidebar-header">
+              <h3 class="settings-sidebar-title">Account Settings</h3>
+            </div>
+            <nav class="settings-nav">
+              <button
+                  @click="activeSetting = 'username'"
+                  :class="['settings-nav-item', { active: activeSetting === 'username' }]"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                Username
+              </button>
+              <button
+                  @click="activeSetting = 'email'"
+                  :class="['settings-nav-item', { active: activeSetting === 'email' }]"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                Email
+              </button>
+              <button
+                  @click="activeSetting = 'password'"
+                  :class="['settings-nav-item', { active: activeSetting === 'password' }]"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Password
+              </button>
+
+              <!-- NEW: Request Limits -->
+              <button
+                  @click="activeSetting = 'limits'"
+                  :class="['settings-nav-item', { active: activeSetting === 'limits' }]"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+                </svg>
+                Request Limits
+              </button>
+
+              <button
+                  @click="activeSetting = 'history'"
+                  :class="['settings-nav-item', { active: activeSetting === 'history' }]"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18"></path>
+                </svg>
+                Request History
+              </button>
+            </nav>
+          </aside>
+
+          <!-- Content -->
+          <section class="settings-content">
+            <button type="button" class="modal-close-btn" @click="closePopup">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+
+            <!-- Username Panel -->
+            <div v-if="activeSetting === 'username'" class="settings-panel">
+              <h2 class="settings-panel-title">Change Username</h2>
+              <p class="settings-panel-desc">Your username can be changed only once every 30 days.</p>
+
+              <div class="form-group">
+                <label class="form-label">New Username</label>
+                <input
+                    type="text"
+                    v-model="settingsForm.username"
+                    class="form-input"
+                    placeholder="Enter new username"
+                />
+              </div>
+
+              <button class="btn-primary" @click="updateUsername">Save Username</button>
+
+              <p v-if="usernameMessage" :class="['otp-message', usernameSuccess ? 'success' : 'error']">
+                {{ usernameMessage }}
+              </p>
+            </div>
+
+            <!-- Email Panel -->
+            <div v-if="activeSetting === 'email'" class="settings-panel">
+              <h2 class="settings-panel-title">Change Email</h2>
+              <p class="settings-panel-desc">
+                Enter your new email address. We'll send a verification OTP before applying changes.
+              </p>
+
+              <!-- Step 1️⃣ - Enter new email -->
+              <div class="form-group">
+                <label class="form-label">New Email</label>
+                <div class="input-wrapper">
+                  <input
+                      type="email"
+                      v-model="settingsForm.email"
+                      class="form-input"
+                      placeholder="Enter new email"
+                      :disabled="emailOtpSent || emailVerified"
+                  />
+                  <button
+                      v-if="!emailOtpSent"
+                      class="btn-primary"
+                      @click="sendEmailOtp"
+                      :disabled="emailLoading"
+                      style="margin-top: 20px"
+                  >
+                    <span v-if="!emailLoading">Send OTP</span>
+                    <span v-else>⏳ Sending...</span>
+                  </button>
                 </div>
-                <nav class="settings-nav">
-                  <button
-                      @click="activeSetting = 'username'"
-                      :class="['settings-nav-item', { active: activeSetting === 'username' }]"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                    Username
-                  </button>
-                  <button
-                      @click="activeSetting = 'email'"
-                      :class="['settings-nav-item', { active: activeSetting === 'email' }]"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                      <polyline points="22,6 12,13 2,6"></polyline>
-                    </svg>
-                    Email
-                  </button>
-                  <!--                  <button-->
-                  <!--                      @click="activeSetting = 'phone'"-->
-                  <!--                      :class="['settings-nav-item', { active: activeSetting === 'phone' }]"-->
-                  <!--                  >-->
-                  <!--                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">-->
-                  <!--                      <path-->
-                  <!--                          d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>-->
-                  <!--                    </svg>-->
-                  <!--                    Phone-->
-                  <!--                  </button>-->
-                  <button
-                      @click="activeSetting = 'password'"
-                      :class="['settings-nav-item', { active: activeSetting === 'password' }]"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    Password
-                  </button>
+              </div>
 
-                  <!-- NEW: Request Limits -->
+              <!-- Step 2️⃣ - OTP input -->
+              <div v-if="emailOtpSent && !emailVerified" class="form-group">
+                <label class="form-label">Enter OTP</label>
+                <div class="input-wrapper">
+                  <input
+                      type="text"
+                      v-model="emailOtp"
+                      class="form-input"
+                      placeholder="Enter OTP"
+                  />
                   <button
-                      @click="activeSetting = 'limits'"
-                      :class="['settings-nav-item', { active: activeSetting === 'limits' }]"
+                      class="btn-small"
+                      @click="verifyEmailOtp"
+                      :disabled="emailLoading"
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
-                    </svg>
-                    Request Limits
+                    <span v-if="!emailLoading">Verify OTP</span>
+                    <span v-else>⏳ Verifying...</span>
                   </button>
+                </div>
+              </div>
 
-                  <button
-                      @click="activeSetting = 'history'"
-                      :class="['settings-nav-item', { active: activeSetting === 'history' }]"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18"></path>
-                    </svg>
-                    Request History
-                  </button>
-                </nav>
-              </aside>
-
-              <!-- Content -->
-              <section class="settings-content">
-                <button type="button" class="modal-close-btn" @click="closePopup">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
+              <!-- Step 3️⃣ - Confirm change -->
+              <div v-if="emailVerified" class="form-group">
+                <button class="btn-primary" @click="confirmEmailChange" :disabled="emailLoading">
+                  <span v-if="!emailLoading">Confirm Change</span>
+                  <span v-else>⏳ Saving...</span>
                 </button>
+              </div>
 
-                <!-- Username Panel -->
-                <div v-if="activeSetting === 'username'" class="settings-panel">
-                  <h2 class="settings-panel-title">Change Username</h2>
-                  <p class="settings-panel-desc">Your username can be changed only once every 30 days.</p>
+              <p v-if="emailMessage" :class="['otp-message', emailVerified ? 'success' : 'error']">
+                {{ emailMessage }}
+              </p>
+            </div>
 
-                  <div class="form-group">
-                    <label class="form-label">New Username</label>
-                    <input
-                        type="text"
-                        v-model="settingsForm.username"
-                        class="form-input"
-                        placeholder="Enter new username"
-                    />
-                  </div>
+            <!-- Password Panel -->
+            <div v-if="activeSetting === 'password'" class="settings-panel">
+              <h2 class="settings-panel-title">Change Password</h2>
+              <p class="settings-panel-desc">Please enter your current password and choose a new one.</p>
 
-                  <button class="btn-primary" @click="updateUsername">Save Username</button>
-
-                  <p v-if="usernameMessage" :class="['otp-message', usernameSuccess ? 'success' : 'error']">
-                    {{ usernameMessage }}
-                  </p>
-                </div>
-
-                <!-- Email Panel -->
-                <div v-if="activeSetting === 'email'" class="settings-panel">
-                  <h2 class="settings-panel-title">Change Email</h2>
-                  <p class="settings-panel-desc">
-                    Enter your new email address. We'll send a verification OTP before applying changes.
-                  </p>
-
-                  <!-- Step 1️⃣ - Enter new email -->
-                  <div class="form-group">
-                    <label class="form-label">New Email</label>
-                    <div class="input-wrapper">
-                      <input
-                          type="email"
-                          v-model="settingsForm.email"
-                          class="form-input"
-                          placeholder="Enter new email"
-                          :disabled="emailOtpSent || emailVerified"
-                      />
-                      <button
-                          v-if="!emailOtpSent"
-                          class="btn-primary"
-                          @click="sendEmailOtp"
-                          :disabled="emailLoading"
-                          style="margin-top: 20px"
-                      >
-                        <span v-if="!emailLoading">Send OTP</span>
-                        <span v-else>⏳ Sending...</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Step 2️⃣ - OTP input -->
-                  <div v-if="emailOtpSent && !emailVerified" class="form-group">
-                    <label class="form-label">Enter OTP</label>
-                    <div class="input-wrapper">
-                      <input
-                          type="text"
-                          v-model="emailOtp"
-                          class="form-input"
-                          placeholder="Enter OTP"
-                      />
-                      <button
-                          class="btn-small"
-                          @click="verifyEmailOtp"
-                          :disabled="emailLoading"
-                      >
-                        <span v-if="!emailLoading">Verify OTP</span>
-                        <span v-else>⏳ Verifying...</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Step 3️⃣ - Confirm change -->
-                  <div v-if="emailVerified" class="form-group">
-                    <button class="btn-primary" @click="confirmEmailChange" :disabled="emailLoading">
-                      <span v-if="!emailLoading">Confirm Change</span>
-                      <span v-else>⏳ Saving...</span>
-                    </button>
-                  </div>
-
-                  <p v-if="emailMessage" :class="['otp-message', emailVerified ? 'success' : 'error']">
-                    {{ emailMessage }}
-                  </p>
-                </div>
-
-
-                <!-- Phone Panel -->
-                <!--                <div v-if="activeSetting === 'phone'" class="settings-panel">-->
-                <!--                  <h2 class="settings-panel-title">Change Phone Number</h2>-->
-                <!--                  <p class="settings-panel-desc">Enter your new phone number to receive an OTP for verification.</p>-->
-                <!--                  <div class="form-group">-->
-                <!--                    <label class="form-label">New Phone Number</label>-->
-                <!--                    <div class="phone-input-group">-->
-                <!--                      <CountryCodeDropdown v-model="countryCode"/>-->
-                <!--                      <input-->
-                <!--                          type="tel"-->
-                <!--                          v-model="settingsForm.phone"-->
-                <!--                          class="form-input"-->
-                <!--                          maxlength="15"-->
-                <!--                          placeholder="Enter 9-15 digits"-->
-                <!--                          @input="handleSettingsPhone"-->
-                <!--                      />-->
-                <!--                    </div>-->
-                <!--                  </div>-->
-                <!--                  <button class="btn-primary" @click="updatePhone">Send OTP</button>-->
-                <!--                </div>-->
-
-                <!-- Password Panel -->
-                <div v-if="activeSetting === 'password'" class="settings-panel">
-                  <h2 class="settings-panel-title">Change Password</h2>
-                  <p class="settings-panel-desc">Please enter your current password and choose a new one.</p>
-
-                  <div class="form-group">
-                    <label class="form-label">Current Password</label>
-                    <div class="password-input-wrapper">
-                      <input
-                          :type="showCurrentPassword ? 'text' : 'password'"
-                          v-model="passwordForm.current"
-                          class="form-input"
-                          placeholder="Enter current password"
-                      />
-                      <button
-                          type="button"
-                          @click="showCurrentPassword = !showCurrentPassword"
-                          class="password-toggle-btn"
-                      >
-                        <svg v-if="!showCurrentPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <path
-                              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                          <line x1="1" y1="1" x2="23" y2="23"></line>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">New Password</label>
-                    <div class="password-input-wrapper">
-                      <input
-                          :type="showNewPassword ? 'text' : 'password'"
-                          v-model="passwordForm.new"
-                          class="form-input"
-                          placeholder="Enter new password"
-                      />
-                      <button
-                          type="button"
-                          @click="showNewPassword = !showNewPassword"
-                          class="password-toggle-btn"
-                      >
-                        <svg v-if="!showNewPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <path
-                              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                          <line x1="1" y1="1" x2="23" y2="23"></line>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">Confirm New Password</label>
-                    <div class="password-input-wrapper">
-                      <input
-                          :type="showConfirmPassword ? 'text' : 'password'"
-                          v-model="passwordForm.confirm"
-                          class="form-input"
-                          placeholder="Re-enter new password"
-                      />
-                      <button
-                          type="button"
-                          @click="showConfirmPassword = !showConfirmPassword"
-                          class="password-toggle-btn"
-                      >
-                        <svg v-if="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <path
-                              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                          <line x1="1" y1="1" x2="23" y2="23"></line>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  <button class="btn-primary" @click="updatePassword">Update Password</button>
-
-                  <p v-if="passwordMessage" :class="['otp-message', passwordSuccess ? 'success' : 'error']">
-                    {{ passwordMessage }}
-                  </p>
-                </div>
-
-                <!-- Request Limits Panel -->
-                <div v-if="activeSetting === 'limits'" class="settings-panel">
-                  <h2 class="settings-panel-title">Request More Limits</h2>
-                  <p class="settings-panel-desc">
-                    Need more companies or contacts? Request an increase and our admin will review your request.
-                  </p>
-
-                  <!-- Current Limits Display -->
-                  <div class="settings-limits-display">
-                    <div class="settings-limit-card">
-                      <div class="settings-limit-icon company">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-                          <path
-                              d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"></path>
-                        </svg>
-                      </div>
-                      <div class="settings-limit-details">
-                        <span class="settings-limit-label">Companies</span>
-                        <div class="settings-limit-progress">
-                          <div class="settings-progress-bar">
-                            <div
-                                class="settings-progress-fill company"
-                                :style="{ width: `${(companyCount / userLimits.companyLimit) * 100}%` }"
-                            ></div>
-                          </div>
-                          <span class="settings-limit-text">{{ companyCount }} / {{ userLimits.companyLimit }}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="settings-limit-card">
-                      <div class="settings-limit-icon contact">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                          <circle cx="9" cy="7" r="4"></circle>
-                          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
-                      </div>
-                      <div class="settings-limit-details">
-                        <span class="settings-limit-label">Contacts</span>
-                        <div class="settings-limit-progress">
-                          <div class="settings-progress-bar">
-                            <div
-                                class="settings-progress-fill contact"
-                                :style="{ width: `${(contactCount / userLimits.contactLimit) * 100}%` }"
-                            ></div>
-                          </div>
-                          <span class="settings-limit-text">{{ contactCount }} / {{ userLimits.contactLimit }}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="settings-limit-card">
-                      <div class="settings-limit-icon review">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                          <circle cx="9" cy="7" r="4"></circle>
-                          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
-                      </div>
-                      <div class="settings-limit-details">
-                        <span class="settings-limit-label">Review</span>
-                        <div class="settings-limit-progress">
-                          <div class="settings-progress-bar">
-                            <div
-                                class="settings-progress-fill contact"
-                                :style="{ width: `${(reviewCount / userLimits.reviewLimit) * 100}%` }"
-                            ></div>
-                          </div>
-                          <span class="settings-limit-text">{{ reviewCount }} / {{ userLimits.reviewLimit }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Request Form -->
-                  <form @submit.prevent="submitSettingsRequest" class="settings-request-form">
-                    <div class="form-group">
-                      <label class="form-label">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-                        </svg>
-                        Additional Companies Needed
-                      </label>
-                      <div class="settings-quantity-selector">
-                        <button type="button" @click="decrementSettingsCompanies" class="settings-qty-btn">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                          </svg>
-                        </button>
-                        <input
-                            type="number"
-                            v-model.number="settingsRequestForm.companies"
-                            min="0"
-                            max="100"
-                            class="settings-qty-input"
-                        />
-                        <button type="button" @click="incrementSettingsCompanies" class="settings-qty-btn">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                          <circle cx="9" cy="7" r="4"></circle>
-                        </svg>
-                        Additional Contacts Needed
-                      </label>
-                      <div class="settings-quantity-selector">
-                        <button type="button" @click="decrementSettingsContacts" class="settings-qty-btn">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                          </svg>
-                        </button>
-                        <input
-                            type="number"
-                            v-model.number="settingsRequestForm.contacts"
-                            min="0"
-                            max="500"
-                            class="settings-qty-input"
-                        />
-                        <button type="button" @click="incrementSettingsContacts" class="settings-qty-btn">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                          <circle cx="9" cy="7" r="4"></circle>
-                        </svg>
-                        Additional Review Needed
-                      </label>
-                      <div class="settings-quantity-selector">
-                        <button type="button" @click="decrementSettingsReviews" class="settings-qty-btn">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                          </svg>
-                        </button>
-                        <input
-                            type="number"
-                            v-model.number="settingsRequestForm.reviews"
-                            min="0"
-                            max="500"
-                            class="settings-qty-input"
-                        />
-                        <button type="button" @click="incrementSettingsReviews" class="settings-qty-btn">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                        Reason for Request (Optional)
-                      </label>
-                      <textarea
-                          v-model="settingsRequestForm.reason"
-                          rows="3"
-                          class="form-input"
-                          placeholder="Tell us why you need more limits..."
-                      ></textarea>
-                    </div>
-
-                    <button
-                        type="submit"
-                        class="btn-primary"
-                        :disabled="settingsRequestLoading || (settingsRequestForm.companies === 0 && settingsRequestForm.contacts === 0 && settingsRequestForm.reviews === 0)"
-                    >
-                      <svg v-if="!settingsRequestLoading" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                           stroke="currentColor" stroke-width="2">
-                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
-                      </svg>
-                      <span v-if="!settingsRequestLoading">Submit Request</span>
-                      <span v-else>⏳ Submitting...</span>
-                    </button>
-
-                    <p v-if="settingsRequestMessage"
-                       :class="['otp-message', settingsRequestSuccess ? 'success' : 'error']">
-                      {{ settingsRequestMessage }}
-                    </p>
-                  </form>
-                </div>
-
-                <!-- Request History Panel -->
-                <div v-if="activeSetting === 'history'" class="settings-panel">
-                  <h2 class="settings-panel-title">Request History</h2>
-                  <p class="settings-panel-desc">
-                    View all your limit increase requests and their current status.
-                  </p>
-
-                  <!-- Loading State -->
-                  <div v-if="historyLoading" class="history-loading">
-                    <div class="spinner"></div>
-                    <p>Loading your requests...</p>
-                  </div>
-
-                  <!-- Error State -->
-                  <div v-else-if="historyError" class="history-error">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="12" y1="8" x2="12" y2="12"></line>
-                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <div class="password-input-wrapper">
+                  <input
+                      :type="showCurrentPassword ? 'text' : 'password'"
+                      v-model="passwordForm.current"
+                      class="form-input"
+                      placeholder="Enter current password"
+                  />
+                  <button
+                      type="button"
+                      @click="showCurrentPassword = !showCurrentPassword"
+                      class="password-toggle-btn"
+                  >
+                    <svg v-if="!showCurrentPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
                     </svg>
-                    <p>{{ historyError }}</p>
-                    <button @click="loadRequestHistory" class="btn-retry">Try Again</button>
-                  </div>
-
-                  <!-- Empty State -->
-                  <div v-else-if="!requestHistory || requestHistory.length === 0" class="history-empty">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18"></path>
+                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2">
+                      <path
+                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
                     </svg>
-                    <h3>No Requests Yet</h3>
-                    <p>You haven't submitted any limit increase requests.</p>
-                    <button @click="activeSetting = 'limits'" class="btn-make-request">
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">New Password</label>
+                <div class="password-input-wrapper">
+                  <input
+                      :type="showNewPassword ? 'text' : 'password'"
+                      v-model="passwordForm.new"
+                      class="form-input"
+                      placeholder="Enter new password"
+                  />
+                  <button
+                      type="button"
+                      @click="showNewPassword = !showNewPassword"
+                      class="password-toggle-btn"
+                  >
+                    <svg v-if="!showNewPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2">
+                      <path
+                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <div class="password-input-wrapper">
+                  <input
+                      :type="showConfirmPassword ? 'text' : 'password'"
+                      v-model="passwordForm.confirm"
+                      class="form-input"
+                      placeholder="Re-enter new password"
+                  />
+                  <button
+                      type="button"
+                      @click="showConfirmPassword = !showConfirmPassword"
+                      class="password-toggle-btn"
+                  >
+                    <svg v-if="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2">
+                      <path
+                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <button class="btn-primary" @click="updatePassword">Update Password</button>
+
+              <p v-if="passwordMessage" :class="['otp-message', passwordSuccess ? 'success' : 'error']">
+                {{ passwordMessage }}
+              </p>
+            </div>
+
+            <!-- Request Limits Panel -->
+            <div v-if="activeSetting === 'limits'" class="settings-panel">
+              <h2 class="settings-panel-title">Request More Limits</h2>
+              <p class="settings-panel-desc">
+                Need more companies or contacts? Request an increase and our admin will review your request.
+              </p>
+
+              <!-- Current Limits Display -->
+              <div class="settings-limits-display">
+                <div class="settings-limit-card">
+                  <div class="settings-limit-icon company">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2">
+                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                      <path
+                          d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"></path>
+                    </svg>
+                  </div>
+                  <div class="settings-limit-details">
+                    <span class="settings-limit-label">Companies</span>
+                    <div class="settings-limit-progress">
+                      <div class="settings-progress-bar">
+                        <div
+                            class="settings-progress-fill company"
+                            :style="{ width: `${(companyCount / userLimits.companyLimit) * 100}%` }"
+                        ></div>
+                      </div>
+                      <span class="settings-limit-text">{{ companyCount }} / {{ userLimits.companyLimit }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-limit-card">
+                  <div class="settings-limit-icon contact">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                  </div>
+                  <div class="settings-limit-details">
+                    <span class="settings-limit-label">Contacts</span>
+                    <div class="settings-limit-progress">
+                      <div class="settings-progress-bar">
+                        <div
+                            class="settings-progress-fill contact"
+                            :style="{ width: `${(contactCount / userLimits.contactLimit) * 100}%` }"
+                        ></div>
+                      </div>
+                      <span class="settings-limit-text">{{ contactCount }} / {{ userLimits.contactLimit }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-limit-card">
+                  <div class="settings-limit-icon review">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                  </div>
+                  <div class="settings-limit-details">
+                    <span class="settings-limit-label">Review</span>
+                    <div class="settings-limit-progress">
+                      <div class="settings-progress-bar">
+                        <div
+                            class="settings-progress-fill contact"
+                            :style="{ width: `${(reviewCount / userLimits.reviewLimit) * 100}%` }"
+                        ></div>
+                      </div>
+                      <span class="settings-limit-text">{{ reviewCount }} / {{ userLimits.reviewLimit }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Request Form -->
+              <form @submit.prevent="submitSettingsRequest" class="settings-request-form">
+                <div class="form-group">
+                  <label class="form-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2">
+                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                    </svg>
+                    Additional Companies Needed
+                  </label>
+                  <div class="settings-quantity-selector">
+                    <button type="button" @click="decrementSettingsCompanies" class="settings-qty-btn">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                            stroke-width="2">
-                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
                       </svg>
-                      Make Your First Request
+                    </button>
+                    <input
+                        type="number"
+                        v-model.number="settingsRequestForm.companies"
+                        min="0"
+                        max="100"
+                        class="settings-qty-input"
+                    />
+                    <button type="button" @click="incrementSettingsCompanies" class="settings-qty-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
                     </button>
                   </div>
+                </div>
 
-                  <!-- Request List -->
-                  <div v-else class="history-list">
-                    <!-- Filter Tabs -->
-                    <div class="history-filters">
-                      <button
-                          @click="historyFilter = 'all'"
-                          :class="['filter-btn', { active: historyFilter === 'all' }]"
-                      >
-                        All ({{ requestHistory.length }})
-                      </button>
-                      <button
-                          @click="historyFilter = 'pending'"
-                          :class="['filter-btn', { active: historyFilter === 'pending' }]"
-                      >
-                        Pending ({{ filteredHistory('pending').length }})
-                      </button>
-                      <button
-                          @click="historyFilter = 'approved'"
-                          :class="['filter-btn', { active: historyFilter === 'approved' }]"
-                      >
-                        Approved ({{ filteredHistory('approved').length }})
-                      </button>
-                      <button
-                          @click="historyFilter = 'rejected'"
-                          :class="['filter-btn', { active: historyFilter === 'rejected' }]"
-                      >
-                        Rejected ({{ filteredHistory('rejected').length }})
-                      </button>
-                    </div>
+                <div class="form-group">
+                  <label class="form-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                    </svg>
+                    Additional Contacts Needed
+                  </label>
+                  <div class="settings-quantity-selector">
+                    <button type="button" @click="decrementSettingsContacts" class="settings-qty-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <input
+                        type="number"
+                        v-model.number="settingsRequestForm.contacts"
+                        min="0"
+                        max="500"
+                        class="settings-qty-input"
+                    />
+                    <button type="button" @click="incrementSettingsContacts" class="settings-qty-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
 
-                    <!-- Request Cards -->
-                    <div class="history-cards">
-                      <div
-                          v-for="request in displayedHistory"
-                          :key="request.id"
-                          class="history-card"
-                      >
-                        <!-- Card Header -->
-                        <div class="history-card-header">
-                          <div class="history-card-title">
-                            <span class="request-id">#{{ request.id }}</span>
-                            <span :class="['status-pill', request.status]">
+                <div class="form-group">
+                  <label class="form-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                    </svg>
+                    Additional Review Needed
+                  </label>
+                  <div class="settings-quantity-selector">
+                    <button type="button" @click="decrementSettingsReviews" class="settings-qty-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <input
+                        type="number"
+                        v-model.number="settingsRequestForm.reviews"
+                        min="0"
+                        max="500"
+                        class="settings-qty-input"
+                    />
+                    <button type="button" @click="incrementSettingsReviews" class="settings-qty-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Reason for Request (Optional)
+                  </label>
+                  <textarea
+                      v-model="settingsRequestForm.reason"
+                      rows="3"
+                      class="form-input"
+                      placeholder="Tell us why you need more limits..."
+                  ></textarea>
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn-primary"
+                    :disabled="settingsRequestLoading || (settingsRequestForm.companies === 0 && settingsRequestForm.contacts === 0 && settingsRequestForm.reviews === 0)"
+                >
+                  <svg v-if="!settingsRequestLoading" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+                  </svg>
+                  <span v-if="!settingsRequestLoading">Submit Request</span>
+                  <span v-else>⏳ Submitting...</span>
+                </button>
+
+                <p v-if="settingsRequestMessage"
+                   :class="['otp-message', settingsRequestSuccess ? 'success' : 'error']">
+                  {{ settingsRequestMessage }}
+                </p>
+              </form>
+            </div>
+
+            <!-- Request History Panel -->
+            <div v-if="activeSetting === 'history'" class="settings-panel">
+              <h2 class="settings-panel-title">Request History</h2>
+              <p class="settings-panel-desc">
+                View all your limit increase requests and their current status.
+              </p>
+
+              <!-- Loading State -->
+              <div v-if="historyLoading" class="history-loading">
+                <div class="spinner"></div>
+                <p>Loading your requests...</p>
+              </div>
+
+              <!-- Error State -->
+              <div v-else-if="historyError" class="history-error">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p>{{ historyError }}</p>
+                <button @click="loadRequestHistory" class="btn-retry">Try Again</button>
+              </div>
+
+              <!-- Empty State -->
+              <div v-else-if="!requestHistory || requestHistory.length === 0" class="history-empty">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18"></path>
+                </svg>
+                <h3>No Requests Yet</h3>
+                <p>You haven't submitted any limit increase requests.</p>
+                <button @click="activeSetting = 'limits'" class="btn-make-request">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+                  </svg>
+                  Make Your First Request
+                </button>
+              </div>
+
+              <!-- Request List -->
+              <div v-else class="history-list">
+                <!-- Filter Tabs -->
+                <div class="history-filters">
+                  <button
+                      @click="historyFilter = 'all'"
+                      :class="['filter-btn', { active: historyFilter === 'all' }]"
+                  >
+                    All ({{ requestHistory.length }})
+                  </button>
+                  <button
+                      @click="historyFilter = 'pending'"
+                      :class="['filter-btn', { active: historyFilter === 'pending' }]"
+                  >
+                    Pending ({{ filteredHistory('pending').length }})
+                  </button>
+                  <button
+                      @click="historyFilter = 'approved'"
+                      :class="['filter-btn', { active: historyFilter === 'approved' }]"
+                  >
+                    Approved ({{ filteredHistory('approved').length }})
+                  </button>
+                  <button
+                      @click="historyFilter = 'rejected'"
+                      :class="['filter-btn', { active: historyFilter === 'rejected' }]"
+                  >
+                    Rejected ({{ filteredHistory('rejected').length }})
+                  </button>
+                </div>
+
+                <!-- Request Cards -->
+                <div class="history-cards">
+                  <div
+                      v-for="request in displayedHistory"
+                      :key="request.id"
+                      class="history-card"
+                  >
+                    <!-- Card Header -->
+                    <div class="history-card-header">
+                      <div class="history-card-title">
+                        <span class="request-id">#{{ request.id }}</span>
+                        <span :class="['status-pill', request.status]">
               <svg v-if="request.status === 'pending'" width="12" height="12" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -603,83 +571,83 @@
               </svg>
               {{ request.status.charAt(0).toUpperCase() + request.status.slice(1) }}
             </span>
-                          </div>
-                          <div class="request-date">
-                            {{ formatDate(request.createdAt) }}
-                          </div>
-                        </div>
-
-                        <!-- Card Body -->
-                        <div class="history-card-body">
-                          <div class="request-details">
-                            <div class="detail-item" v-if="request.requestedCompanies > 0">
-                              <div class="detail-icon company">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="2">
-                                  <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-                                </svg>
-                              </div>
-                              <div class="detail-content">
-                                <span class="detail-label">Companies Requested</span>
-                                <span class="detail-value">{{ request.requestedCompanies }}</span>
-                              </div>
-                            </div>
-
-                            <div class="detail-item" v-if="request.requestedContacts > 0">
-                              <div class="detail-icon contact">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="2">
-                                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                  <circle cx="9" cy="7" r="4"></circle>
-                                </svg>
-                              </div>
-                              <div class="detail-content">
-                                <span class="detail-label">Contacts Requested</span>
-                                <span class="detail-value">{{ request.requestedContacts }}</span>
-                              </div>
-                            </div>
-
-                            <!-- After the contacts detail-item div -->
-                            <div class="detail-item" v-if="request.requestedReviews > 0">
-                              <div class="detail-icon review">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="2">
-                                  <path d="M3 7h18M3 12h18M3 17h18"></path>
-                                </svg>
-                              </div>
-                              <div class="detail-content">
-                                <span class="detail-label">Reviews Requested</span>
-                                <span class="detail-value">{{ request.requestedReviews }}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div v-if="request.reason" class="request-reason">
-                            <div class="reason-header">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                   stroke-width="2">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                              </svg>
-                              <span>Reason</span>
-                            </div>
-                            <p class="reason-text">{{ request.reason }}</p>
-                          </div>
-                        </div>
+                      </div>
+                      <div class="request-date">
+                        {{ formatDate(request.createdAt) }}
                       </div>
                     </div>
 
-                    <!-- Pagination (if needed) -->
-                    <div v-if="displayedHistory.length === 0 && historyFilter !== 'all'" class="no-filtered-results">
-                      <p>No {{ historyFilter }} requests found.</p>
+                    <!-- Card Body -->
+                    <div class="history-card-body">
+                      <div class="request-details">
+                        <div class="detail-item" v-if="request.requestedCompanies > 0">
+                          <div class="detail-icon company">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2">
+                              <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                            </svg>
+                          </div>
+                          <div class="detail-content">
+                            <span class="detail-label">Companies Requested</span>
+                            <span class="detail-value">{{ request.requestedCompanies }}</span>
+                          </div>
+                        </div>
+
+                        <div class="detail-item" v-if="request.requestedContacts > 0">
+                          <div class="detail-icon contact">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2">
+                              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                              <circle cx="9" cy="7" r="4"></circle>
+                            </svg>
+                          </div>
+                          <div class="detail-content">
+                            <span class="detail-label">Contacts Requested</span>
+                            <span class="detail-value">{{ request.requestedContacts }}</span>
+                          </div>
+                        </div>
+
+                        <!-- After the contacts detail-item div -->
+                        <div class="detail-item" v-if="request.requestedReviews > 0">
+                          <div class="detail-icon review">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2">
+                              <path d="M3 7h18M3 12h18M3 17h18"></path>
+                            </svg>
+                          </div>
+                          <div class="detail-content">
+                            <span class="detail-label">Reviews Requested</span>
+                            <span class="detail-value">{{ request.requestedReviews }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div v-if="request.reason" class="request-reason">
+                        <div class="reason-header">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                          </svg>
+                          <span>Reason</span>
+                        </div>
+                        <p class="reason-text">{{ request.reason }}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-              </section>
+                <!-- Pagination (if needed) -->
+                <div v-if="displayedHistory.length === 0 && historyFilter !== 'all'" class="no-filtered-results">
+                  <p>No {{ historyFilter }} requests found.</p>
+                </div>
+              </div>
             </div>
-          </div>
+
+          </section>
         </div>
-      </transition>
+      </div>
+    </div>
+  </transition>
 </template>
 
 <script setup>
@@ -984,7 +952,7 @@ function formatDate(dateString) {
 
 // Auto-load history when tab opens
 watch(activeSetting, val => {
-  if (val === "history" && requestHistory.value.length === 0) {
+  if (val === 'history' && requestHistory.value.length === 0) {
     loadRequestHistory();
   }
 });
@@ -1011,16 +979,20 @@ watch(
 </script>
 
 <style scoped>
-/* Modal Overlay */
-.modal-overlay {
+/* Modal Overlay - COVERS EVERYTHING INCLUDING HEADER AND SIDEBAR */
+.modal-overlay-full {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.6); /* Increase from 0.5 to 0.6 for darker tint */
   backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: 10000 !important;
   padding: 20px;
 }
 
@@ -1033,6 +1005,8 @@ watch(
   max-height: 90vh;
   overflow: hidden;
   animation: modalSlideUp 0.3s ease-out;
+  position: relative;
+  z-index: 10001;
 }
 
 @keyframes modalSlideUp {
@@ -1079,6 +1053,7 @@ watch(
   flex-direction: column;
   gap: 0.5rem;
   flex: 1;
+  overflow-y: auto;
 }
 
 .settings-nav-item {
@@ -1104,7 +1079,7 @@ watch(
 }
 
 .settings-nav-item.active {
-  background: #4f46e5;
+  background: #78350f;
   color: white;
 }
 
@@ -1131,6 +1106,7 @@ watch(
   color: #64748b;
   cursor: pointer;
   transition: all 0.2s;
+  z-index: 10;
 }
 
 .modal-close-btn:hover {
@@ -1162,7 +1138,9 @@ watch(
 }
 
 .form-label {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: #475569;
@@ -1183,16 +1161,27 @@ watch(
 
 .form-input:focus {
   outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  border-color: #78350f;
+  box-shadow: 0 0 0 3px rgba(120, 53, 15, 0.1);
+}
+
+.form-input:disabled {
+  background: #f1f5f9;
+  cursor: not-allowed;
+}
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
 }
 
 .btn-primary {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  background: #4f46e5;
+  background: #78350f;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -1201,10 +1190,44 @@ watch(
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
+  width: 100%;
 }
 
-.btn-primary:hover {
-  background: #4338ca;
+.btn-primary:hover:not(:disabled) {
+  background: #92400e;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  background: #78350f;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-small:hover:not(:disabled) {
+  background: #92400e;
+}
+
+.btn-small:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .password-input-wrapper {
@@ -1234,16 +1257,36 @@ watch(
 }
 
 .password-toggle-btn:hover {
-  color: #334155;
+  color: #78350f;
 }
 
 .password-toggle-btn:focus {
   outline: none;
-  color: #0ea5e9;
+  color: #78350f;
 }
 
 .password-toggle-btn svg {
   flex-shrink: 0;
+}
+
+.otp-message {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.otp-message.success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.otp-message.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
 }
 
 /* Settings Limits Display */
@@ -1279,8 +1322,8 @@ watch(
 }
 
 .settings-limit-icon.company {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #fef3c7;
+  color: #78350f;
 }
 
 .settings-limit-icon.contact {
@@ -1288,11 +1331,17 @@ watch(
   color: #166534;
 }
 
+.settings-limit-icon.review {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
 .settings-limit-details {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .settings-limit-label {
@@ -1313,6 +1362,7 @@ watch(
   background: #e2e8f0;
   border-radius: 9999px;
   overflow: hidden;
+  min-width: 60px;
 }
 
 .settings-progress-fill {
@@ -1322,7 +1372,7 @@ watch(
 }
 
 .settings-progress-fill.company {
-  background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
+  background: linear-gradient(90deg, #d97706 0%, #78350f 100%);
 }
 
 .settings-progress-fill.contact {
@@ -1370,8 +1420,8 @@ watch(
 }
 
 .settings-qty-btn:hover {
-  background: #4f46e5;
-  border-color: #4f46e5;
+  background: #78350f;
+  border-color: #78350f;
   color: white;
   transform: scale(1.05);
 }
@@ -1390,6 +1440,7 @@ watch(
   border: none;
   outline: none;
   padding: 0.25rem;
+  min-width: 40px;
 }
 
 .settings-qty-input::-webkit-inner-spin-button,
@@ -1412,7 +1463,7 @@ watch(
   width: 2.5rem;
   height: 2.5rem;
   border: 3px solid #e2e8f0;
-  border-top-color: #4f46e5;
+  border-top-color: #78350f;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -1451,7 +1502,7 @@ watch(
 
 .btn-retry {
   padding: 0.5rem 1.25rem;
-  background: #4f46e5;
+  background: #78350f;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -1463,7 +1514,7 @@ watch(
 }
 
 .btn-retry:hover {
-  background: #4338ca;
+  background: #92400e;
 }
 
 /* History Empty State */
@@ -1500,7 +1551,7 @@ watch(
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  background: #4f46e5;
+  background: #78350f;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -1512,7 +1563,7 @@ watch(
 }
 
 .btn-make-request:hover {
-  background: #4338ca;
+  background: #92400e;
   transform: translateY(-1px);
 }
 
@@ -1555,8 +1606,8 @@ watch(
 }
 
 .filter-btn.active {
-  background: white;
-  color: #4f46e5;
+  background: #78350f;
+  color: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -1588,12 +1639,15 @@ watch(
   padding: 1rem 1.25rem;
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .history-card-title {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .request-id {
@@ -1644,7 +1698,7 @@ watch(
 
 .request-details {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
 }
 
@@ -1669,8 +1723,8 @@ watch(
 }
 
 .detail-icon.company {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #fef3c7;
+  color: #78350f;
 }
 
 .detail-icon.contact {
@@ -1678,10 +1732,16 @@ watch(
   color: #166534;
 }
 
+.detail-icon.review {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
 .detail-content {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
 }
 
 .detail-label {
@@ -1721,6 +1781,460 @@ watch(
   font-size: 0.875rem;
   color: #713f12;
   line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.no-filtered-results {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablets and below (768px) */
+@media (max-width: 768px) {
+  .modal-overlay-full {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-container {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 1rem 1rem 0 0;
+    margin: 0;
+  }
+
+  .modal-layout {
+    flex-direction: column;
+    height: auto;
+    min-height: 500px;
+    max-height: 95vh;
+  }
+
+  /* Sidebar becomes horizontal tabs */
+  .settings-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    max-height: none;
+  }
+
+  .settings-sidebar-header {
+    padding: 1rem;
+  }
+
+  .settings-sidebar-title {
+    font-size: 0.9rem;
+  }
+
+  .settings-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.75rem;
+    gap: 0.5rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .settings-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .settings-nav-item {
+    flex-shrink: 0;
+    min-width: fit-content;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .settings-nav-item svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Content area */
+  .settings-content {
+    padding: 1.25rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .modal-close-btn {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .settings-panel {
+    max-width: 100%;
+  }
+
+  .settings-panel-title {
+    font-size: 1.25rem;
+    padding-right: 2.5rem;
+  }
+
+  .settings-panel-desc {
+    font-size: 0.8rem;
+  }
+
+  /* Form adjustments */
+  .form-label {
+    font-size: 0.8rem;
+  }
+
+  .form-input {
+    font-size: 0.875rem;
+    padding: 0.625rem;
+  }
+
+  .btn-primary {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Limits display */
+  .settings-limits-display {
+    padding: 1rem;
+  }
+
+  .settings-limit-card {
+    padding: 0.875rem;
+    gap: 0.75rem;
+  }
+
+  .settings-limit-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .settings-limit-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .settings-limit-label {
+    font-size: 0.8rem;
+  }
+
+  .settings-limit-text {
+    font-size: 0.75rem;
+  }
+
+  /* Quantity selector */
+  .settings-quantity-selector {
+    padding: 0.625rem 0.875rem;
+  }
+
+  .settings-qty-input {
+    font-size: 1rem;
+  }
+
+  /* History filters */
+  .history-filters {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+
+  .history-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-btn {
+    flex-shrink: 0;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8rem;
+  }
+
+  /* History cards */
+  .history-card-header {
+    padding: 0.875rem 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .history-card-body {
+    padding: 1rem;
+  }
+
+  .request-details {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .detail-item {
+    padding: 0.75rem;
+  }
+
+  .detail-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .detail-value {
+    font-size: 1rem;
+  }
+
+  /* Empty states */
+  .history-empty,
+  .history-loading,
+  .history-error {
+    padding: 2rem 1rem;
+  }
+
+  .history-empty svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .history-empty h3 {
+    font-size: 1.1rem;
+  }
+}
+
+/* Small mobile devices (480px and below) */
+@media (max-width: 480px) {
+  .modal-overlay-full {
+    padding: 0;
+  }
+
+  .modal-container {
+    border-radius: 0;
+    max-height: 100vh;
+  }
+
+  .modal-layout {
+    min-height: 100vh;
+    max-height: 100vh;
+  }
+
+  .settings-sidebar-header {
+    padding: 0.875rem;
+  }
+
+  .settings-sidebar-title {
+    font-size: 0.85rem;
+  }
+
+  .settings-nav {
+    padding: 0.625rem;
+  }
+
+  .settings-nav-item {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .settings-nav-item svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .settings-content {
+    padding: 1rem;
+  }
+
+  .settings-panel-title {
+    font-size: 1.125rem;
+  }
+
+  .settings-panel-desc {
+    font-size: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-label {
+    font-size: 0.75rem;
+    margin-bottom: 0.375rem;
+  }
+
+  .form-input {
+    padding: 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .btn-primary,
+  .btn-small {
+    padding: 0.625rem 1rem;
+    font-size: 0.8125rem;
+  }
+
+  .settings-limits-display {
+    padding: 0.875rem;
+    gap: 0.75rem;
+  }
+
+  .settings-limit-card {
+    padding: 0.75rem;
+    gap: 0.625rem;
+  }
+
+  .settings-limit-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .settings-limit-label {
+    font-size: 0.75rem;
+  }
+
+  .settings-progress-bar {
+    height: 0.375rem;
+  }
+
+  .settings-limit-text {
+    font-size: 0.7rem;
+  }
+
+  .settings-quantity-selector {
+    padding: 0.5rem 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .settings-qty-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .settings-qty-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .settings-qty-input {
+    font-size: 0.9rem;
+  }
+
+  .filter-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .history-card-header {
+    padding: 0.75rem;
+  }
+
+  .history-card-body {
+    padding: 0.875rem;
+  }
+
+  .request-id {
+    font-size: 0.75rem;
+  }
+
+  .status-pill {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.7rem;
+  }
+
+  .status-pill svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .request-date {
+    font-size: 0.7rem;
+  }
+
+  .detail-item {
+    padding: 0.625rem;
+  }
+
+  .detail-label {
+    font-size: 0.7rem;
+  }
+
+  .detail-value {
+    font-size: 0.9rem;
+  }
+
+  .request-reason {
+    padding: 0.875rem;
+  }
+
+  .reason-header {
+    font-size: 0.7rem;
+  }
+
+  .reason-text {
+    font-size: 0.8rem;
+  }
+
+  .otp-message {
+    padding: 0.625rem;
+    font-size: 0.8rem;
+  }
+
+  .history-empty,
+  .history-loading,
+  .history-error {
+    padding: 1.5rem 1rem;
+  }
+
+  .history-empty svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .history-empty h3 {
+    font-size: 1rem;
+  }
+
+  .history-empty p,
+  .history-loading p,
+  .history-error p {
+    font-size: 0.8rem;
+  }
+}
+
+/* Landscape phones */
+@media (max-width: 768px) and (orientation: landscape) {
+  .modal-layout {
+    max-height: 90vh;
+  }
+
+  .settings-sidebar {
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .settings-content {
+    max-height: calc(90vh - 60px);
+  }
+}
+
+/* Modal Transitions */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .modal-container,
+.modal-leave-active .modal-container {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-enter-from .modal-container,
+.modal-leave-to .modal-container {
+  transform: translateY(30px) scale(0.95);
 }
 </style>
-

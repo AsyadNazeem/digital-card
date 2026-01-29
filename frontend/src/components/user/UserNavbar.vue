@@ -1,6 +1,25 @@
 <template>
   <!-- Desktop Sidebar -->
   <aside :class="['desktop-sidebar', { collapsed: !sidebarExpanded }]">
+    <!-- Collapse/Expand Toggle Button -->
+    <button
+        class="sidebar-toggle-btn"
+        @click="$emit('toggle-sidebar')"
+        :title="sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'"
+    >
+      <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          :class="['toggle-icon', { rotated: !sidebarExpanded }]"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+
     <nav class="sidebar-nav">
       <button
           v-for="tab in tabs"
@@ -269,20 +288,20 @@ const profileMenuItems = [
   },
 ];
 
-// const mobileProfileItems = [
-//   {
-//     id: 'settings',
-//     label: 'Settings',
-//     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H1m18.2 5.2l-4.2-4.2m0-6l4.2-4.2"></path></svg>',
-//     hasChevron: true
-//   },
-//   {
-//     id: 'upgrade',
-//     label: 'Upgrade plan',
-//     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>',
-//     hasChevron: false
-//   }
-// ];
+const mobileProfileItems = [
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H1m18.2 5.2l-4.2-4.2m0-6l4.2-4.2"></path></svg>',
+    hasChevron: true
+  },
+  {
+    id: 'upgrade',
+    label: 'Upgrade plan',
+    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>',
+    hasChevron: false
+  }
+];
 
 function selectTab(tabId) {
   emit('update:modelValue', tabId);
@@ -364,17 +383,60 @@ function handleMobileProfileAction(actionId) {
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease, top 0.3s ease;
-  z-index: 900;
+  z-index: 100; /* Changed from 1000 to 100 */
   overflow: hidden;
+}
+
+.sidebar-toggle-btn {
+  position: fixed;
+  top: calc(64px + 1rem);
+  left: 248px;
+  width: 28px;
+  height: 28px;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 101; /* Changed from 9999 to 101 */
+  transition: top 0.3s ease, left 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .desktop-sidebar.collapsed {
   width: 72px;
 }
 
+/* Sidebar Toggle Button */
+
+.desktop-sidebar.collapsed .sidebar-toggle-btn {
+  left: 60px;
+}
+
+.sidebar-toggle-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  transform: scale(1.1);
+}
+
+.sidebar-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.toggle-icon {
+  transition: transform 0.3s ease;
+  color: #6B4423;
+}
+
+.toggle-icon.rotated {
+  transform: rotate(180deg);
+}
+
 .sidebar-nav {
   flex: 1;
-  padding: 1rem 0.5rem;
+  padding: 3rem 0.5rem 1rem 0.5rem;
   overflow-y: auto;
 }
 
@@ -420,10 +482,13 @@ function handleMobileProfileAction(actionId) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  opacity: 1;
+  transition: opacity 0.2s ease;
 }
 
 .desktop-sidebar.collapsed .nav-label {
-  display: none;
+  opacity: 0;
+  width: 0;
 }
 
 .desktop-sidebar.collapsed .nav-item {
@@ -471,6 +536,8 @@ function handleMobileProfileAction(actionId) {
   flex: 1;
   min-width: 0;
   overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.2s ease;
 }
 
 .user-name {
@@ -488,7 +555,8 @@ function handleMobileProfileAction(actionId) {
 }
 
 .desktop-sidebar.collapsed .user-info {
-  display: none;
+  opacity: 0;
+  width: 0;
 }
 
 .desktop-sidebar.collapsed .user-profile {
@@ -503,8 +571,8 @@ function handleMobileProfileAction(actionId) {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 1100;
+  background: rgba(0, 0, 0, 0.6); /* Increase from 0.4 to 0.6 */
+  z-index: 10000; /* Changed from 1100 to 10000 */
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
@@ -513,20 +581,21 @@ function handleMobileProfileAction(actionId) {
 /* Desktop Profile Popup */
 .profile-popup.desktop-popup {
   position: absolute;
-  left: 20px;
+  left: 5px;
   bottom: 90px;
-  width: 280px;
-  background: #2b2b2b;
+  width: 247px;
+  background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   overflow: hidden;
-  color: #e5e5e5;
+  border: 1px solid #e5e7eb;
+  z-index: 10001; /* Add this line */
 }
-
 /* Profile Header */
 .profile-header {
   padding: 1rem;
-  border-bottom: 1px solid #404040;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fafaf8;
 }
 
 .profile-user-info {
@@ -556,7 +625,7 @@ function handleMobileProfileAction(actionId) {
 .profile-name {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #ffffff;
+  color: #1f2937;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -564,7 +633,7 @@ function handleMobileProfileAction(actionId) {
 
 .profile-plan {
   font-size: 0.75rem;
-  color: #a0a0a0;
+  color: #6b7280;
 }
 
 /* Profile Menu */
@@ -581,7 +650,7 @@ function handleMobileProfileAction(actionId) {
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: #e5e5e5;
+  color: #1f2937;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -589,7 +658,8 @@ function handleMobileProfileAction(actionId) {
 }
 
 .profile-menu-item:hover {
-  background: #383838;
+  background: #FDF8F3;
+  color: #8B5A3C;
 }
 
 .profile-item-icon {
@@ -599,7 +669,11 @@ function handleMobileProfileAction(actionId) {
   justify-content: center;
   width: 18px;
   height: 18px;
-  color: #a0a0a0;
+  color: #6b7280;
+}
+
+.profile-menu-item:hover .profile-item-icon {
+  color: #8B5A3C;
 }
 
 .profile-item-label {
@@ -608,12 +682,16 @@ function handleMobileProfileAction(actionId) {
 
 .chevron-icon {
   flex-shrink: 0;
-  color: #606060;
+  color: #9ca3af;
+}
+
+.profile-menu-item:hover .chevron-icon {
+  color: #8B5A3C;
 }
 
 .profile-divider {
   height: 1px;
-  background: #404040;
+  background: #e5e7eb;
   margin: 0.5rem 0;
 }
 
@@ -626,7 +704,12 @@ function handleMobileProfileAction(actionId) {
 }
 
 .logout-item:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.logout-item:hover .profile-item-icon {
+  color: #dc2626;
 }
 
 /* Mobile Bottom Navigation */
@@ -639,9 +722,10 @@ function handleMobileProfileAction(actionId) {
   height: 65px;
   background: #ffffff;
   border-top: 1px solid #e5e7eb;
-  z-index: 1000;
+  z-index: 100; /* Changed from 1000 to 100 */
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 }
+
 
 .mobile-nav-item {
   display: flex;
@@ -684,10 +768,15 @@ function handleMobileProfileAction(actionId) {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1001;
+  background: rgba(0, 0, 0, 0.6); /* Increase from 0.5 to 0.6 */
+  z-index: 10000; /* Changed from 1001 to 10000 */
   display: flex;
   align-items: flex-end;
+}
+
+.more-menu-popup {
+  width: 100%;
+  z-index: 10001; /* Add this line */
 }
 
 /* More Menu Popup */
@@ -904,8 +993,24 @@ function handleMobileProfileAction(actionId) {
   }
 }
 
-:global(body.banner-active) .desktop-sidebar {
-  top: 140px;
+/* CRITICAL: Banner active adjustments - moved to end for specificity */
+body.banner-active .desktop-sidebar {
+  top: 140px !important;
 }
 
+body.banner-active .sidebar-toggle-btn {
+  top: calc(140px + 1rem) !important;
+}
+
+@media (max-width: 768px) {
+  body.banner-active .sidebar-toggle-btn {
+    top: calc(130px + 1rem) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body.banner-active .sidebar-toggle-btn {
+    top: calc(120px + 1rem) !important;
+  }
+}
 </style>
