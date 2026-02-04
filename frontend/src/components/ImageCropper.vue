@@ -1,6 +1,6 @@
 <template>
   <transition name="modal">
-    <div v-if="show" class="cropper-modal-overlay" @click.self="$emit('close')">
+    <div v-if="show" class="cropper-modal-overlay" :class="{ 'dark-mode': isDarkMode }" @click.self="$emit('close')">
       <div class="cropper-modal-container" @click.stop>
         <!-- Header -->
         <div class="cropper-header">
@@ -34,7 +34,6 @@
           </div>
 
           <!-- Zoom Controls -->
-          <!-- Zoom Controls (Buttons Only) -->
           <div class="zoom-controls">
             <button @click="zoomOut" class="zoom-btn" title="Zoom Out">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -53,7 +52,6 @@
               Zoom In
             </button>
           </div>
-
 
           <!-- Rotation Controls -->
           <div class="rotation-controls">
@@ -90,7 +88,6 @@
             </button>
           </div>
 
-          <!-- Preview Card -->
           <!-- Preview Card -->
           <div v-if="previewMode" class="preview-section">
             <h3 class="preview-title">Preview</h3>
@@ -142,9 +139,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, inject } from 'vue';
 import { Cropper } from 'vue-advanced-cropper';
 import 'vue-advanced-cropper/dist/style.css';
+
+// Inject dark mode state
+const isDarkMode = inject('isDarkMode', ref(false));
 
 const props = defineProps({
   show: Boolean,
@@ -177,9 +177,7 @@ const aspectRatio = computed(() => {
   return 1; // Square for contact photos
 });
 
-
-/// Zoom buttons - increment/decrement by fixed amount
-// Zoom buttons only — no slider, no zoomLevel
+// Zoom buttons - increment/decrement by fixed amount
 const zoomIn = () => {
   if (cropper.value) {
     cropper.value.zoom(1.1); // Zoom in
@@ -219,7 +217,6 @@ const resetCrop = () => {
   }
 };
 
-
 // Handle crop change
 const onChange = ({ canvas }) => {
   if (canvas && previewMode.value) {
@@ -256,7 +253,6 @@ watch(() => props.imageSrc, () => {
   previewMode.value = false;
   flipped.value = false;
 });
-
 </script>
 
 <style scoped>
@@ -380,8 +376,8 @@ watch(() => props.imageSrc, () => {
 }
 
 .zoom-btn:hover {
-  background: #4f46e5;
-  border-color: #4f46e5;
+  background: #5c4033;
+  border-color: #5c4033;
   color: white;
   transform: scale(1.05);
 }
@@ -415,8 +411,8 @@ watch(() => props.imageSrc, () => {
 
 .rotate-btn:hover {
   background: #f8fafc;
-  border-color: #4f46e5;
-  color: #4f46e5;
+  border-color: #5c4033;
+  color: #5c4033;
   transform: translateY(-1px);
 }
 
@@ -516,8 +512,8 @@ watch(() => props.imageSrc, () => {
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
   background: white;
-  color: #4f46e5;
-  border: 1px solid #4f46e5;
+  color: #5c4033;
+  border: 1px solid #5c4033;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -527,7 +523,7 @@ watch(() => props.imageSrc, () => {
 }
 
 .btn-preview:hover {
-  background: #eef2ff;
+  background: #f5f3f0;
 }
 
 .btn-cancel {
@@ -553,7 +549,7 @@ watch(() => props.imageSrc, () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.5rem;
-  background: #4f46e5;
+  background: #5c4033;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -565,9 +561,9 @@ watch(() => props.imageSrc, () => {
 }
 
 .btn-crop:hover {
-  background: #4338ca;
+  background: #7d5a4f;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.3);
 }
 
 /* Modal Transitions */
@@ -613,6 +609,121 @@ watch(() => props.imageSrc, () => {
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
+}
+
+/* Dark Mode Styles */
+.dark-mode .cropper-modal-overlay {
+  background: rgba(0, 0, 0, 0.92);
+}
+
+.dark-mode .cropper-modal-container {
+  background: #0f0d1a;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
+}
+
+.dark-mode .cropper-header {
+  border-bottom-color: #2d2640;
+}
+
+.dark-mode .cropper-title {
+  color: #e5e7eb;
+}
+
+.dark-mode .btn-close-cropper {
+  background: #1a1626;
+  color: #9ca3af;
+}
+
+.dark-mode .btn-close-cropper:hover {
+  background: #2d2640;
+  color: #e5e7eb;
+}
+
+.dark-mode .cropper-wrapper {
+  background: #1a1626;
+  border-color: #2d2640;
+}
+
+.dark-mode .zoom-controls {
+  background: #1a1626;
+  border-color: #2d2640;
+}
+
+.dark-mode .zoom-btn {
+  background: #0f0d1a;
+  border-color: #2d2640;
+  color: #9ca3af;
+}
+
+.dark-mode .zoom-btn:hover {
+  background: #D4A574;
+  border-color: #D4A574;
+  color: #0f0d1a;
+}
+
+.dark-mode .rotate-btn {
+  background: #0f0d1a;
+  border-color: #2d2640;
+  color: #9ca3af;
+}
+
+.dark-mode .rotate-btn:hover {
+  background: #1a1626;
+  border-color: #D4A574;
+  color: #D4A574;
+}
+
+.dark-mode .preview-section {
+  background: #1a1626;
+  border-color: #2d2640;
+}
+
+.dark-mode .preview-title {
+  color: #e5e7eb;
+}
+
+.dark-mode .preview-card {
+  background: #0f0d1a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .preview-info p {
+  color: #9ca3af;
+}
+
+.dark-mode .cropper-footer {
+  border-top-color: #2d2640;
+}
+
+.dark-mode .btn-preview {
+  background: #0f0d1a;
+  color: #D4A574;
+  border-color: #D4A574;
+}
+
+.dark-mode .btn-preview:hover {
+  background: #1a1626;
+}
+
+.dark-mode .btn-cancel {
+  background: #0f0d1a;
+  color: #9ca3af;
+  border-color: #2d2640;
+}
+
+.dark-mode .btn-cancel:hover {
+  background: #1a1626;
+  border-color: #3d3555;
+}
+
+.dark-mode .btn-crop {
+  background: #D4A574;
+  color: #0f0d1a;
+}
+
+.dark-mode .btn-crop:hover {
+  background: #E5C4A0;
+  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
 }
 
 /* Responsive */

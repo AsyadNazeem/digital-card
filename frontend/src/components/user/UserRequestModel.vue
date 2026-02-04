@@ -2,7 +2,7 @@
   <!-- Request Limit Increase Banner - Fixed to header -->
   <div
       v-if="showBanner"
-      class="limit-banner">
+      :class="['limit-banner', { 'dark-mode': isDarkMode }]">
     <div class="limit-banner-content">
       <div class="limit-banner-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -27,7 +27,7 @@
   <!-- Request Limit Increase Modal -->
   <transition name="modal">
     <div v-if="showRequestModal" class="modal-overlay" @click="showRequestModal = false">
-      <div class="request-modal-container" @click.stop>
+      <div :class="['request-modal-container', { 'dark-mode': isDarkMode }]" @click.stop>
         <div class="request-modal-header">
           <h2 class="request-modal-title">Request Additional Limits</h2>
           <button @click="showRequestModal = false" class="btn-close">
@@ -210,7 +210,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onUnmounted } from "vue";
+import { ref, computed, watch, onUnmounted, inject } from "vue";
 import api from "@/services/api";
 
 const props = defineProps({
@@ -233,6 +233,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['banner-visibility']);
+
+// Inject dark mode state
+const isDarkMode = inject('isDarkMode', ref(false));
 
 const showRequestModal = ref(false);
 
@@ -357,9 +360,17 @@ async function submitRequest() {
   background: linear-gradient(135deg, #FDF8F3 0%, #F5E6D3 100%);
   border-bottom: 2px solid #C19A6B;
   padding: 1rem 2rem;
-  z-index: 99; /* Changed from 999 to 99 */
+  z-index: 99;
   box-shadow: 0 4px 12px rgba(107, 68, 35, 0.15);
   animation: slideDown 0.3s ease-out;
+  transition: all 0.3s ease;
+}
+
+/* Dark Mode for Banner - Professional Dark Purple-Blue */
+.limit-banner.dark-mode {
+  background: linear-gradient(135deg, #2d2640 0%, #1a1626 100%);
+  border-bottom: 2px solid #3d3555;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 @keyframes slideDown {
@@ -374,7 +385,7 @@ async function submitRequest() {
 }
 
 .limit-banner-content {
-  max-width: 1400px;
+  max-width: 1700px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -406,10 +417,18 @@ async function submitRequest() {
   letter-spacing: -0.01em;
 }
 
+.dark-mode .limit-banner-text h3 {
+  color: #E5C4A0;
+}
+
 .limit-banner-text p {
   margin: 0;
   font-size: 0.875rem;
   color: #8B5A3C;
+}
+
+.dark-mode .limit-banner-text p {
+  color: #D4A574;
 }
 
 .btn-request {
@@ -439,7 +458,7 @@ async function submitRequest() {
   transform: translateY(0);
 }
 
-   /* Modal Overlay */
+/* Modal Overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -448,10 +467,9 @@ async function submitRequest() {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999; /* Keep this high */
+  z-index: 9999;
   padding: 1rem;
 }
-
 
 /* Request Modal */
 .request-modal-container {
@@ -463,6 +481,13 @@ async function submitRequest() {
   max-height: 80vh;
   overflow-y: auto;
   animation: modalSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
+}
+
+/* Dark Mode for Modal - Professional Dark Purple-Blue */
+.request-modal-container.dark-mode {
+  background: #1a1626;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
 @keyframes modalSlideUp {
@@ -486,12 +511,21 @@ async function submitRequest() {
   border-radius: 16px 16px 0 0;
 }
 
+.dark-mode .request-modal-header {
+  border-bottom: 1px solid #2d2640;
+  background: linear-gradient(135deg, #2d2640 0%, #1a1626 100%);
+}
+
 .request-modal-title {
   font-size: 1.5rem;
   font-weight: 700;
   color: #1f2937;
   margin: 0;
   letter-spacing: -0.02em;
+}
+
+.dark-mode .request-modal-title {
+  color: #e5e7eb;
 }
 
 .btn-close {
@@ -507,9 +541,18 @@ async function submitRequest() {
   transition: all 0.2s;
 }
 
+.dark-mode .btn-close {
+  color: #9ca3af;
+}
+
 .btn-close:hover {
   background: #FDF8F3;
   color: #6B4423;
+}
+
+.dark-mode .btn-close:hover {
+  background: #2d2640;
+  color: #E5C4A0;
 }
 
 .request-modal-body {
@@ -525,11 +568,20 @@ async function submitRequest() {
   border: 1px solid #F5E6D3;
 }
 
+.dark-mode .current-limits {
+  background: linear-gradient(135deg, #2d2640 0%, #1a1626 100%);
+  border: 1px solid #3d3555;
+}
+
 .current-limits h3 {
   margin: 0 0 1.25rem 0;
   font-size: 1.0625rem;
   font-weight: 600;
   color: #6B4423;
+}
+
+.dark-mode .current-limits h3 {
+  color: #E5C4A0;
 }
 
 .limits-grid {
@@ -550,9 +602,19 @@ async function submitRequest() {
   box-shadow: 0 2px 4px rgba(107, 68, 35, 0.05);
 }
 
+.dark-mode .limit-card {
+  background: #0f0d1a;
+  border: 1px solid #2d2640;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 .limit-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(107, 68, 35, 0.1);
+}
+
+.dark-mode .limit-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .limit-icon {
@@ -595,10 +657,18 @@ async function submitRequest() {
   letter-spacing: 0.05em;
 }
 
+.dark-mode .limit-label {
+  color: #9ca3af;
+}
+
 .limit-value {
   font-size: 1.25rem;
   font-weight: 700;
   color: #1f2937;
+}
+
+.dark-mode .limit-value {
+  color: #e5e7eb;
 }
 
 /* Request Form */
@@ -623,8 +693,16 @@ async function submitRequest() {
   color: #1f2937;
 }
 
+.dark-mode .request-label {
+  color: #e5e7eb;
+}
+
 .request-label svg {
   color: #6B4423;
+}
+
+.dark-mode .request-label svg {
+  color: #D4A574;
 }
 
 /* Quantity Selector */
@@ -639,9 +717,19 @@ async function submitRequest() {
   transition: all 0.2s;
 }
 
+.dark-mode .quantity-selector {
+  background: #0f0d1a;
+  border: 2px solid #2d2640;
+}
+
 .quantity-selector:focus-within {
   border-color: #8B5A3C;
   box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.1);
+}
+
+.dark-mode .quantity-selector:focus-within {
+  border-color: #D4A574;
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
 }
 
 .qty-btn {
@@ -659,11 +747,22 @@ async function submitRequest() {
   flex-shrink: 0;
 }
 
+.dark-mode .qty-btn {
+  background: #1a1626;
+  border: 1px solid #3d3555;
+  color: #D4A574;
+}
+
 .qty-btn:hover {
   background: linear-gradient(135deg, #6B4423 0%, #8B5A3C 100%);
   border-color: #6B4423;
   color: white;
   transform: scale(1.05);
+}
+
+.dark-mode .qty-btn:hover {
+  background: linear-gradient(135deg, #D4A574 0%, #E5C4A0 100%);
+  border-color: #D4A574;
 }
 
 .qty-btn:active {
@@ -680,6 +779,10 @@ async function submitRequest() {
   border: none;
   outline: none;
   padding: 0.25rem;
+}
+
+.dark-mode .qty-input {
+  color: #e5e7eb;
 }
 
 .qty-input::-webkit-inner-spin-button,
@@ -701,14 +804,29 @@ async function submitRequest() {
   color: #1f2937;
 }
 
+.dark-mode .request-textarea {
+  background: #0f0d1a;
+  border: 2px solid #2d2640;
+  color: #e5e7eb;
+}
+
 .request-textarea:focus {
   outline: none;
   border-color: #8B5A3C;
   box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.1);
 }
 
+.dark-mode .request-textarea:focus {
+  border-color: #D4A574;
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
+}
+
 .request-textarea::placeholder {
   color: #9ca3af;
+}
+
+.dark-mode .request-textarea::placeholder {
+  color: #6b7280;
 }
 
 /* Request Actions */
@@ -717,6 +835,10 @@ async function submitRequest() {
   gap: 1rem;
   padding-top: 1.5rem;
   border-top: 1px solid #F5E6D3;
+}
+
+.dark-mode .request-actions {
+  border-top: 1px solid #2d2640;
 }
 
 .btn-submit-request {
@@ -755,6 +877,11 @@ async function submitRequest() {
   box-shadow: none;
 }
 
+.dark-mode .btn-submit-request:disabled {
+  background: #2d2640;
+  color: #6b7280;
+}
+
 .btn-cancel-request {
   padding: 0.875rem 1.75rem;
   background: white;
@@ -768,10 +895,22 @@ async function submitRequest() {
   font-family: inherit;
 }
 
+.dark-mode .btn-cancel-request {
+  background: #0f0d1a;
+  color: #9ca3af;
+  border: 2px solid #2d2640;
+}
+
 .btn-cancel-request:hover {
   background: #FDF8F3;
   border-color: #F5E6D3;
   color: #6B4423;
+}
+
+.dark-mode .btn-cancel-request:hover {
+  background: #2d2640;
+  border-color: #3d3555;
+  color: #E5C4A0;
 }
 
 .request-message {
@@ -800,10 +939,22 @@ async function submitRequest() {
   border: 2px solid #86efac;
 }
 
+.dark-mode .request-message.success {
+  background: linear-gradient(135deg, #1a3a23 0%, #1e4f2a 100%);
+  color: #86efac;
+  border: 2px solid #166534;
+}
+
 .request-message.error {
   background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
   color: #991b1b;
   border: 2px solid #fca5a5;
+}
+
+.dark-mode .request-message.error {
+  background: linear-gradient(135deg, #3a1a1a 0%, #4f1e1e 100%);
+  color: #fca5a5;
+  border: 2px solid #991b1b;
 }
 
 /* Modal Transitions */
@@ -827,7 +978,6 @@ async function submitRequest() {
   transform: translateY(30px) scale(0.95);
 }
 
-
 /* Responsive Design */
 @media (max-width: 1024px) {
   .limit-banner {
@@ -841,7 +991,7 @@ async function submitRequest() {
 
 @media (max-width: 768px) {
   .limit-banner {
-    top: 60px; /* Mobile header height */
+    top: 60px;
     padding: 0.875rem 1rem;
   }
 
@@ -948,7 +1098,7 @@ async function submitRequest() {
 
   .limit-banner-text p {
     font-size: 0.75rem;
-    display: none; /* Hide description on very small screens */
+    display: none;
   }
 
   .btn-request {
@@ -1004,20 +1154,19 @@ async function submitRequest() {
 }
 
 /* Adjust main content when banner is visible */
-/* Add this class to your main content wrapper when the banner is shown */
 .main-content-with-banner {
-  margin-top: 130px !important; /* 70px header + 60px banner */
+  margin-top: 130px !important;
 }
 
 @media (max-width: 768px) {
   .main-content-with-banner {
-    margin-top: 120px !important; /* 60px header + 60px banner */
+    margin-top: 120px !important;
   }
 }
 
 @media (max-width: 480px) {
   .main-content-with-banner {
-    margin-top: 110px !important; /* 60px header + 50px banner */
+    margin-top: 110px !important;
   }
 }
 
@@ -1037,7 +1186,4 @@ async function submitRequest() {
     --banner-height: 60px;
   }
 }
-
-
-
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="activeTab === 'review'" class="content-card">
+  <div v-if="activeTab === 'review'" :class="['content-card', { 'dark-mode': isDarkMode }]">
     <div v-if="!showReviewForm">
       <div class="card-header">
         <h2 class="card-title">Reviews / Branch Links</h2>
@@ -144,8 +144,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, inject } from 'vue'; // Add inject
 import api from '@/services/api.js';
+
+// Inject dark mode state
+const isDarkMode = inject('isDarkMode', ref(false));
 
 const props = defineProps({
   activeTab: {
@@ -457,12 +460,20 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
 .content-card {
   background: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
   padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.dark-mode.content-card {
+  background: #1a1626;
+  border-color: #2d2640;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .card-header {
@@ -477,6 +488,10 @@ onMounted(() => {
   font-weight: 600;
   color: #0f172a;
   margin: 0;
+}
+
+.dark-mode .card-title {
+  color: #e5e7eb;
 }
 
 /* Buttons */
@@ -496,12 +511,17 @@ onMounted(() => {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #5c4033;
+  background: #7d5a4f;
 }
 
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.dark-mode .btn-primary:disabled {
+  background: #2d2640;
+  color: #6b7280;
 }
 
 .btn-secondary {
@@ -516,8 +536,19 @@ onMounted(() => {
   transition: background 0.2s;
 }
 
+.dark-mode .btn-secondary {
+  background: #0f0d1a;
+  color: #9ca3af;
+  border: 1px solid #2d2640;
+}
+
 .btn-secondary:hover {
   background: #e2e8f0;
+}
+
+.dark-mode .btn-secondary:hover {
+  background: #2d2640;
+  color: #e5e7eb;
 }
 
 .btn-outline {
@@ -532,8 +563,19 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
+.dark-mode .btn-outline {
+  background: #0f0d1a;
+  color: #D4A574;
+  border-color: #3d3555;
+}
+
 .btn-outline:hover {
   background: #eef2ff;
+}
+
+.dark-mode .btn-outline:hover {
+  background: #2d2640;
+  color: #E5C4A0;
 }
 
 .btn-danger {
@@ -548,8 +590,18 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
+.dark-mode .btn-danger {
+  background: #2a1a1a;
+  color: #fca5a5;
+  border-color: #3a1a1a;
+}
+
 .btn-danger:hover {
   background: #fecaca;
+}
+
+.dark-mode .btn-danger:hover {
+  background: #3a1a1a;
 }
 
 .btn-close {
@@ -561,8 +613,16 @@ onMounted(() => {
   transition: color 0.2s;
 }
 
+.dark-mode .btn-close {
+  color: #6b7280;
+}
+
 .btn-close:hover {
   color: #64748b;
+}
+
+.dark-mode .btn-close:hover {
+  color: #9ca3af;
 }
 
 .link-button {
@@ -575,8 +635,16 @@ onMounted(() => {
   transition: color 0.2s;
 }
 
+.dark-mode .link-button {
+  color: #D4A574;
+}
+
 .link-button:hover {
-  color: #5c4033;
+  color: #7d5a4f;
+}
+
+.dark-mode .link-button:hover {
+  color: #E5C4A0;
 }
 
 /* Table */
@@ -594,6 +662,11 @@ onMounted(() => {
   background: #f8fafc;
 }
 
+.dark-mode .data-table thead tr {
+  border-bottom: 1px solid #2d2640;
+  background: #0f0d1a;
+}
+
 .data-table th {
   padding: 0.75rem 1rem;
   text-align: left;
@@ -604,13 +677,25 @@ onMounted(() => {
   letter-spacing: 0.05em;
 }
 
+.dark-mode .data-table th {
+  color: #9ca3af;
+}
+
 .data-table tbody tr {
   border-bottom: 1px solid #f1f5f9;
   transition: background 0.2s;
 }
 
+.dark-mode .data-table tbody tr {
+  border-bottom: 1px solid #2d2640;
+}
+
 .data-table tbody tr:hover {
   background: #f8fafc;
+}
+
+.dark-mode .data-table tbody tr:hover {
+  background: #2d2640;
 }
 
 .data-table td {
@@ -619,14 +704,26 @@ onMounted(() => {
   color: #0f172a;
 }
 
+.dark-mode .data-table td {
+  color: #e5e7eb;
+}
+
 .link {
   color: #5c4033;
   text-decoration: none;
   word-break: break-all;
 }
 
+.dark-mode .link {
+  color: #D4A574;
+}
+
 .link:hover {
   text-decoration: underline;
+}
+
+.dark-mode .link:hover {
+  color: #E5C4A0;
 }
 
 .action-buttons {
@@ -651,8 +748,17 @@ onMounted(() => {
   color: #5c4033;
 }
 
+.dark-mode .btn-action.view {
+  background: #1e2a3a;
+  color: #93c5fd;
+}
+
 .btn-action.view:hover {
   background: #bfdbfe;
+}
+
+.dark-mode .btn-action.view:hover {
+  background: #2d2640;
 }
 
 .btn-action.edit {
@@ -660,8 +766,17 @@ onMounted(() => {
   color: #92400e;
 }
 
+.dark-mode .btn-action.edit {
+  background: #3a2a1a;
+  color: #fde68a;
+}
+
 .btn-action.edit:hover {
   background: #fde68a;
+}
+
+.dark-mode .btn-action.edit:hover {
+  background: #4a3a2a;
 }
 
 .btn-action.delete {
@@ -669,8 +784,17 @@ onMounted(() => {
   color: #991b1b;
 }
 
+.dark-mode .btn-action.delete {
+  background: #2a1a1a;
+  color: #fca5a5;
+}
+
 .btn-action.delete:hover {
   background: #fecaca;
+}
+
+.dark-mode .btn-action.delete:hover {
+  background: #3a1a1a;
 }
 
 /* Empty State */
@@ -684,9 +808,17 @@ onMounted(() => {
   color: #cbd5e1;
 }
 
+.dark-mode .empty-icon {
+  color: #4b5563;
+}
+
 .empty-text {
   color: #64748b;
   margin-bottom: 1rem;
+}
+
+.dark-mode .empty-text {
+  color: #9ca3af;
 }
 
 /* Form */
@@ -701,6 +833,12 @@ onMounted(() => {
   background: #f8fafc;
   border-radius: 0.5rem;
   border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .review-row {
+  background: #0f0d1a;
+  border-color: #2d2640;
 }
 
 .form-grid {
@@ -723,6 +861,10 @@ onMounted(() => {
   text-align: left;
 }
 
+.dark-mode .form-label {
+  color: #9ca3af;
+}
+
 .required {
   color: #ef4444;
 }
@@ -735,18 +877,38 @@ onMounted(() => {
   font-size: 0.875rem;
   transition: all 0.2s;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  color: #0f172a;
+}
+
+.dark-mode .form-input {
+  background: #0f0d1a;
+  border-color: #2d2640;
+  color: #e5e7eb;
+}
+
+.dark-mode .form-input::placeholder {
+  color: #6b7280;
 }
 
 .form-input:focus {
   outline: none;
   border-color: #5c4033;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
+}
+
+.dark-mode .form-input:focus {
+  border-color: #D4A574;
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
 }
 
 .field-error {
   color: #ef4444;
   font-size: 0.75rem;
   margin-top: 0.25rem;
+}
+
+.dark-mode .field-error {
+  color: #fca5a5;
 }
 
 .form-actions {
@@ -756,16 +918,22 @@ onMounted(() => {
   border-top: 1px solid #e2e8f0;
 }
 
+.dark-mode .form-actions {
+  border-top-color: #2d2640;
+}
+
 hr {
   margin: 1rem 0;
   border: none;
   border-top: 1px solid #e2e8f0;
 }
 
+.dark-mode hr {
+  border-top-color: #2d2640;
+}
+
 /* Small tablets (768px and below) */
 @media (max-width: 768px) {
-
-  /* Content Cards */
   .content-card {
     padding: 1rem;
     border-radius: 0.75rem;
@@ -783,22 +951,11 @@ hr {
     justify-content: center;
   }
 
-  /* Forms */
   .form-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
 
-  .custom-social-item {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .custom-social-item .checkbox-input {
-    grid-column: 1 / -1;
-  }
-
-  /* Form Actions */
   .form-actions {
     flex-direction: column;
     gap: 0.75rem;
@@ -808,17 +965,6 @@ hr {
     width: 100%;
   }
 
-  /* Upload Areas */
-  .upload-label {
-    padding: 1.5rem 1rem;
-  }
-
-  .image-preview {
-    width: 120px;
-    height: 120px;
-  }
-
-  /* Table Controls */
   .table-controls {
     margin-bottom: 1rem;
   }
@@ -828,15 +974,11 @@ hr {
     max-width: none;
   }
 
-  /* ============================================
-     MOBILE TABLE CARDS - COMPANY TABLE
-     ============================================ */
-  /* Hide table headers on mobile */
+  /* Mobile Table Cards */
   .data-table thead {
     display: none;
   }
 
-  /* Reset table display */
   .data-table,
   .data-table tbody,
   .data-table tr,
@@ -850,14 +992,12 @@ hr {
     font-size: 0.875rem;
   }
 
-  /* Table body - card container */
   .data-table tbody {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
   }
 
-  /* Individual card row */
   .data-table tr {
     background: #ffffff;
     border: 1px solid #e5e1dc;
@@ -871,12 +1011,21 @@ hr {
     flex-direction: column;
   }
 
+  .dark-mode .data-table tr {
+    background: #0f0d1a;
+    border-color: #2d2640;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
   .data-table tr:hover {
     box-shadow: 0 4px 16px rgba(92, 64, 51, 0.12);
     transform: translateY(-2px);
   }
 
-  /* Card header (first cell - Company #) */
+  .dark-mode .data-table tr:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+
   .data-table td:first-child {
     background: linear-gradient(135deg, #5c4033 0%, #7d5a4f 100%);
     color: white;
@@ -902,7 +1051,6 @@ hr {
     margin-right: 0.5rem;
   }
 
-  /* Regular data cells */
   .data-table td {
     border: none;
     padding: 1rem 1.25rem;
@@ -916,11 +1064,14 @@ hr {
     border-bottom: 1px solid #f5f3f0;
   }
 
+  .dark-mode .data-table td {
+    border-bottom-color: #2d2640;
+  }
+
   .data-table td:last-child {
     border-bottom: none;
   }
 
-  /* Data labels */
   .data-table td:before {
     content: attr(data-label);
     font-weight: 600;
@@ -931,24 +1082,14 @@ hr {
     grid-column: 1;
   }
 
-  /* Data values */
+  .dark-mode .data-table td:before {
+    color: #9ca3af;
+  }
+
   .data-table td > * {
     grid-column: 2;
   }
 
-  /* Logo thumbnail */
-  .logo-thumb {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-    object-fit: contain;
-    background: #f8f6f4;
-    padding: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    justify-self: start;
-  }
-
-  /* Links */
   .data-table td .link {
     color: #5c4033;
     text-decoration: none;
@@ -960,32 +1101,19 @@ hr {
     word-break: break-all;
   }
 
+  .dark-mode .data-table td .link {
+    color: #D4A574;
+  }
+
   .data-table td .link:hover {
     color: #7d5a4f;
     text-decoration: underline;
   }
 
-  /* Status badges */
-  .status-badge {
-    display: inline-flex;
-    padding: 0.375rem 0.875rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    justify-self: start;
+  .dark-mode .data-table td .link:hover {
+    color: #E5C4A0;
   }
 
-  .status-badge.active {
-    background: #dcfce7;
-    color: #166534;
-  }
-
-  .status-badge.inactive {
-    background: #fee2e2;
-    color: #991b1b;
-  }
-
-  /* Action buttons section */
   .data-table td.action-buttons {
     grid-template-columns: 1fr;
     gap: 0.75rem;
@@ -994,6 +1122,10 @@ hr {
     margin-top: 0;
     display: flex;
     flex-direction: column;
+  }
+
+  .dark-mode .data-table td.action-buttons {
+    background: #0a0a0a;
   }
 
   .data-table td.action-buttons:before {
@@ -1008,12 +1140,17 @@ hr {
     display: block;
   }
 
+  .dark-mode .data-table td.action-buttons:before {
+    color: #D4A574;
+    border-bottom-color: #2d2640;
+  }
+
   .data-table td.action-buttons > * {
     grid-column: auto;
   }
 
   .data-table td.action-buttons .btn-action {
-    width: 60%;
+    width: 100%;
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
     border-radius: 8px;
@@ -1025,6 +1162,17 @@ hr {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+  }
+
+  .btn-action.view {
+    background: #3498db;
+    color: white;
+  }
+
+  .btn-action.view:hover {
+    background: #2980b9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
   }
 
   .btn-action.edit {
@@ -1049,7 +1197,6 @@ hr {
     box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
   }
 
-  /* Table container adjustments */
   .table-container {
     overflow-x: visible;
     margin: 0;
@@ -1057,7 +1204,6 @@ hr {
     border-radius: 0;
   }
 
-  /* Pagination */
   .pagination {
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -1071,7 +1217,6 @@ hr {
     min-width: 40px;
   }
 
-  /* Empty State */
   .empty-state {
     padding: 3rem 1.5rem;
     text-align: center;
@@ -1084,10 +1229,18 @@ hr {
     color: #94a3b8;
   }
 
+  .dark-mode .empty-icon {
+    color: #4b5563;
+  }
+
   .empty-text {
     font-size: 1rem;
     color: #64748b;
     margin-bottom: 1rem;
+  }
+
+  .dark-mode .empty-text {
+    color: #9ca3af;
   }
 
   .link-button {
@@ -1098,24 +1251,22 @@ hr {
     transition: all 0.2s;
   }
 
+  .dark-mode .link-button {
+    color: #D4A574;
+    border-bottom-color: #D4A574;
+  }
+
   .link-button:hover {
     color: #7d5a4f;
   }
 
-  /* Social Media Section */
-  .social-links-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .btn-add-more {
-    width: 100%;
+  .dark-mode .link-button:hover {
+    color: #E5C4A0;
   }
 }
 
 /* Mobile phones (480px and below) */
 @media (max-width: 480px) {
-
-  /* Cards */
   .content-card {
     padding: 0.875rem;
   }
@@ -1124,7 +1275,6 @@ hr {
     font-size: 1rem;
   }
 
-  /* Enhanced Mobile Card Styling */
   .data-table tbody {
     gap: 1rem;
   }
@@ -1153,11 +1303,6 @@ hr {
     font-size: 0.75rem;
   }
 
-  .logo-thumb {
-    width: 50px;
-    height: 50px;
-  }
-
   .data-table td.action-buttons {
     padding: 1rem;
     gap: 0.625rem;
@@ -1168,34 +1313,20 @@ hr {
     font-size: 0.8rem;
   }
 
-  /* Forms */
   .form-label {
     font-size: 0.8rem;
   }
 
-  /* Buttons */
   .btn-primary,
   .btn-secondary,
-  .btn-add-more {
+  .btn-outline,
+  .btn-danger {
     padding: 0.625rem 1rem;
     font-size: 0.875rem;
   }
 
-  /* Upload Areas */
-  .upload-label {
-    padding: 1.25rem 0.75rem;
-    font-size: 0.875rem;
-  }
-
-  .image-preview {
-    width: 100px;
-    height: 100px;
-  }
-
-  /* Status Badges */
-  .status-badge {
-    font-size: 0.7rem;
-    padding: 0.3rem 0.625rem;
+  .review-row {
+    padding: 0.875rem;
   }
 }
 
@@ -1220,21 +1351,16 @@ hr {
 
 /* Touch-friendly improvements */
 @media (hover: none) and (pointer: coarse) {
-  /* Increase tap targets */
   .btn-action,
-  .btn-close,
-  .btn-remove,
-  .remove-image {
+  .btn-close {
     min-width: 44px;
     min-height: 44px;
   }
 
-  /* Improve scroll behavior */
   .table-container {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Prevent zoom on input focus */
   input,
   select,
   textarea {

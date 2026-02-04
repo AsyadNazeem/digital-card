@@ -1,6 +1,6 @@
 <template>
   <!-- ANALYTICS TAB -->
-  <div v-if="activeTab === 'analytics'" class="content-card analytics-tab">
+  <div v-if="activeTab === 'analytics'" :class="['content-card', 'analytics-tab', { 'dark-mode': isDarkMode }]">
     <!-- Header -->
     <div class="analytics-header">
       <div class="header-left">
@@ -346,7 +346,10 @@
 </template>
 
 <script setup>
-import {computed, nextTick, onMounted, ref, watch} from 'vue';
+import { ref, computed, onMounted, nextTick, watch, inject } from 'vue'; // Add inject
+
+// Add this line after your imports
+const isDarkMode = inject('isDarkMode', ref(false));
 import api from '@/services/api.js';
 import Chart from 'chart.js/auto';
 
@@ -789,6 +792,11 @@ watch(() => props.userPlan, (val) => {
 .analytics-tab {
   background: transparent;
   padding: 0;
+  transition: all 0.3s ease;
+}
+
+.dark-mode.analytics-tab {
+  background: transparent;
 }
 
 .analytics-header {
@@ -803,6 +811,13 @@ watch(() => props.userPlan, (val) => {
   flex-wrap: wrap;
   gap: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.dark-mode .analytics-header {
+  background: #1a1626;
+  border-color: #2d2640;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .header-left {
@@ -816,12 +831,22 @@ watch(() => props.userPlan, (val) => {
   color: #1f2937;
   margin: 0 0 0.5rem 0;
   letter-spacing: -0.02em;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .card-title {
+  color: #e5e7eb;
 }
 
 .analytics-subtitle {
   color: #6b7280;
   font-size: 0.9375rem;
   margin: 0;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .analytics-subtitle {
+  color: #9ca3af;
 }
 
 .analytics-filters {
@@ -842,6 +867,11 @@ watch(() => props.userPlan, (val) => {
   color: #6B4423;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .filter-group label {
+  color: #a78bfa;
 }
 
 .form-input {
@@ -855,10 +885,25 @@ watch(() => props.userPlan, (val) => {
   transition: all 0.2s;
 }
 
+.dark-mode .form-input {
+  background: #0f0d1a;
+  border-color: #2d2640;
+  color: #e5e7eb;
+}
+
+.dark-mode .form-input::placeholder {
+  color: #6b7280;
+}
+
 .form-input:focus {
   outline: none;
   border-color: #8B5A3C;
   box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.1);
+}
+
+.dark-mode .form-input:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
 }
 
 .active-filter-badge {
@@ -871,16 +916,33 @@ watch(() => props.userPlan, (val) => {
   align-items: center;
   gap: 0.75rem;
   box-shadow: 0 2px 4px rgba(107, 68, 35, 0.05);
+  transition: all 0.3s ease;
+}
+
+.dark-mode .active-filter-badge {
+  background: #1a1626;
+  border-color: #2d2640;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .filter-label {
   font-size: 0.875rem;
   color: #6b7280;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .filter-label {
+  color: #9ca3af;
 }
 
 .filter-value {
   font-weight: 600;
   color: #6B4423;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .filter-value {
+  color: #a78bfa;
 }
 
 .clear-filter-btn {
@@ -895,10 +957,22 @@ watch(() => props.userPlan, (val) => {
   transition: all 0.2s;
 }
 
+.dark-mode .clear-filter-btn {
+  background: #0f0d1a;
+  border-color: #2d2640;
+  color: #9ca3af;
+}
+
 .clear-filter-btn:hover {
   background: #fef2f2;
   color: #dc2626;
   border-color: #fecaca;
+}
+
+.dark-mode .clear-filter-btn:hover {
+  background: #2a1a26;
+  color: #fca5a5;
+  border-color: #3a1a2a;
 }
 
 .analytics-loading {
@@ -911,6 +985,12 @@ watch(() => props.userPlan, (val) => {
   background: #ffffff;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .analytics-loading {
+  background: #1a1626;
+  border-color: #2d2640;
 }
 
 .spinner {
@@ -922,6 +1002,11 @@ watch(() => props.userPlan, (val) => {
   animation: spin 0.8s linear infinite;
 }
 
+.dark-mode .spinner {
+  border-color: #2d2640;
+  border-top-color: #a78bfa;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -931,6 +1016,11 @@ watch(() => props.userPlan, (val) => {
 .analytics-loading p {
   color: #6b7280;
   font-size: 0.9375rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .analytics-loading p {
+  color: #9ca3af;
 }
 
 .analytics-content {
@@ -958,10 +1048,21 @@ watch(() => props.userPlan, (val) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
+.dark-mode .stat-card {
+  background: #1a1626;
+  border-color: #2d2640;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
 .stat-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(107, 68, 35, 0.12);
   border-color: #FDF8F3;
+}
+
+.dark-mode .stat-card:hover {
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+  border-color: #3d3555;
 }
 
 .stat-icon {
@@ -975,9 +1076,17 @@ watch(() => props.userPlan, (val) => {
   box-shadow: 0 4px 12px rgba(107, 68, 35, 0.15);
 }
 
+.dark-mode .stat-icon {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
 .stat-card.views .stat-icon {
   background: linear-gradient(135deg, #6B4423 0%, #8B5A3C 100%);
   color: white;
+}
+
+.dark-mode .stat-card.views .stat-icon {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
 }
 
 .stat-card.clicks .stat-icon {
@@ -985,9 +1094,17 @@ watch(() => props.userPlan, (val) => {
   color: white;
 }
 
+.dark-mode .stat-card.clicks .stat-icon {
+  background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+}
+
 .stat-card.visitors .stat-icon {
   background: linear-gradient(135deg, #A67C52 0%, #C19A6B 100%);
   color: white;
+}
+
+.dark-mode .stat-card.visitors .stat-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #c4b5fd 100%);
 }
 
 .stat-card.engagement .stat-icon {
@@ -995,14 +1112,26 @@ watch(() => props.userPlan, (val) => {
   color: white;
 }
 
+.dark-mode .stat-card.engagement .stat-icon {
+  background: linear-gradient(135deg, #a78bfa 0%, #ddd6fe 100%);
+}
+
 .stat-card.conversions .stat-icon {
   background: linear-gradient(135deg, #D4AF37 0%, #DEB887 100%);
   color: white;
 }
 
+.dark-mode .stat-card.conversions .stat-icon {
+  background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+}
+
 .stat-card.conversion-rate .stat-icon {
   background: linear-gradient(135deg, #6B4423 0%, #D4AF37 100%);
   color: white;
+}
+
+.dark-mode .stat-card.conversion-rate .stat-icon {
+  background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
 }
 
 .stat-content {
@@ -1014,6 +1143,11 @@ watch(() => props.userPlan, (val) => {
   color: #6b7280;
   margin: 0 0 0.5rem 0;
   font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .stat-label {
+  color: #9ca3af;
 }
 
 .stat-value {
@@ -1022,6 +1156,11 @@ watch(() => props.userPlan, (val) => {
   color: #1f2937;
   margin: 0;
   line-height: 1;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .stat-value {
+  color: #e5e7eb;
 }
 
 .stat-sublabel {
@@ -1029,6 +1168,11 @@ watch(() => props.userPlan, (val) => {
   color: #9ca3af;
   margin-top: 0.375rem;
   display: block;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .stat-sublabel {
+  color: #6b7280;
 }
 
 /* Charts Section */
@@ -1047,8 +1191,18 @@ watch(() => props.userPlan, (val) => {
   transition: all 0.2s;
 }
 
+.dark-mode .chart-container {
+  background: #1a1626;
+  border-color: #2d2640;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
 .chart-container:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.dark-mode .chart-container:hover {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .chart-container.full-width {
@@ -1061,6 +1215,11 @@ watch(() => props.userPlan, (val) => {
   color: #1f2937;
   margin: 0 0 1.5rem 0;
   letter-spacing: -0.01em;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .chart-container h3 {
+  color: #e5e7eb;
 }
 
 .chart-wrapper {
@@ -1093,15 +1252,28 @@ watch(() => props.userPlan, (val) => {
   transition: all 0.2s;
 }
 
+.dark-mode .summary-card {
+  background: #1a1626;
+  border-color: #2d2640;
+}
+
 .summary-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(107, 68, 35, 0.1);
+}
+
+.dark-mode .summary-card:hover {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .summary-card.conversion-highlight {
   background: linear-gradient(135deg, #6B4423 0%, #8B5A3C 100%);
   color: white;
   border: none;
+}
+
+.dark-mode .summary-card.conversion-highlight {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
 }
 
 .summary-icon {
@@ -1112,6 +1284,11 @@ watch(() => props.userPlan, (val) => {
   font-size: 0.75rem;
   color: #6b7280;
   font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .summary-label {
+  color: #9ca3af;
 }
 
 .summary-card.conversion-highlight .summary-label {
@@ -1122,6 +1299,11 @@ watch(() => props.userPlan, (val) => {
   font-size: 1.75rem;
   font-weight: 700;
   color: #1f2937;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .summary-value {
+  color: #e5e7eb;
 }
 
 .summary-card.conversion-highlight .summary-value {
@@ -1142,6 +1324,12 @@ watch(() => props.userPlan, (val) => {
 .analytics-table thead tr {
   background: #FDF8F3;
   border-bottom: 2px solid #F5E6D3;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .analytics-table thead tr {
+  background: #0f0d1a;
+  border-bottom-color: #2d2640;
 }
 
 .analytics-table th {
@@ -1152,6 +1340,11 @@ watch(() => props.userPlan, (val) => {
   color: #6B4423;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .analytics-table th {
+  color: #a78bfa;
 }
 
 .analytics-table tbody tr {
@@ -1159,14 +1352,27 @@ watch(() => props.userPlan, (val) => {
   transition: background 0.15s;
 }
 
+.dark-mode .analytics-table tbody tr {
+  border-bottom-color: #2d2640;
+}
+
 .analytics-table tbody tr:hover {
   background: #FDF8F3;
+}
+
+.dark-mode .analytics-table tbody tr:hover {
+  background: #2d2640;
 }
 
 .analytics-table td {
   padding: 1rem 1.25rem;
   font-size: 0.875rem;
   color: #1f2937;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .analytics-table td {
+  color: #e5e7eb;
 }
 
 .click-type-badge {
@@ -1177,6 +1383,12 @@ watch(() => props.userPlan, (val) => {
   font-size: 0.8125rem;
   font-weight: 500;
   color: #4b5563;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .click-type-badge {
+  background: #2d2640;
+  color: #9ca3af;
 }
 
 .click-type-badge.vcf-badge {
@@ -1184,10 +1396,19 @@ watch(() => props.userPlan, (val) => {
   color: white;
 }
 
+.dark-mode .click-type-badge.vcf-badge {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+}
+
 .click-count {
   font-weight: 600;
   font-size: 1rem;
   color: #1f2937;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .click-count {
+  color: #e5e7eb;
 }
 
 .progress-bar-wrapper {
@@ -1207,6 +1428,10 @@ watch(() => props.userPlan, (val) => {
   overflow: hidden;
 }
 
+.dark-mode .progress-bar {
+  background: #2d2640;
+}
+
 .progress-bar::after {
   content: '';
   position: absolute;
@@ -1218,8 +1443,16 @@ watch(() => props.userPlan, (val) => {
   width: 100%;
 }
 
+.dark-mode .progress-bar::after {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+}
+
 .progress-bar.vcf-progress::after {
   background: linear-gradient(135deg, #6B4423 0%, #D4AF37 100%);
+}
+
+.dark-mode .progress-bar.vcf-progress::after {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
 }
 
 .progress-text {
@@ -1228,6 +1461,11 @@ watch(() => props.userPlan, (val) => {
   color: #6b7280;
   min-width: 3.5rem;
   text-align: right;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .progress-text {
+  color: #9ca3af;
 }
 
 /* Country List */
@@ -1249,10 +1487,20 @@ watch(() => props.userPlan, (val) => {
   border: 1px solid #F5E6D3;
 }
 
+.dark-mode .country-item {
+  background: #1a1626;
+  border-color: #2d2640;
+}
+
 .country-item:hover {
   background: #F5E6D3;
   transform: translateX(4px);
   box-shadow: 0 4px 12px rgba(107, 68, 35, 0.1);
+}
+
+.dark-mode .country-item:hover {
+  background: #2d2640;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .country-rank {
@@ -1260,6 +1508,11 @@ watch(() => props.userPlan, (val) => {
   color: #6B4423;
   text-align: center;
   font-size: 1.125rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .country-rank {
+  color: #a78bfa;
 }
 
 .country-flag {
@@ -1277,6 +1530,11 @@ watch(() => props.userPlan, (val) => {
   display: block;
   margin-bottom: 0.625rem;
   font-size: 0.9375rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .country-name {
+  color: #e5e7eb;
 }
 
 .country-bar-wrapper {
@@ -1287,6 +1545,10 @@ watch(() => props.userPlan, (val) => {
   overflow: hidden;
 }
 
+.dark-mode .country-bar-wrapper {
+  background: #2d2640;
+}
+
 .country-bar {
   height: 100%;
   background: linear-gradient(90deg, #6B4423 0%, #D4AF37 100%);
@@ -1294,11 +1556,20 @@ watch(() => props.userPlan, (val) => {
   transition: width 0.3s ease;
 }
 
+.dark-mode .country-bar {
+  background: linear-gradient(90deg, #6366f1 0%, #a78bfa 100%);
+}
+
 .country-count {
   font-weight: 700;
   color: #1f2937;
   text-align: right;
   font-size: 1.125rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .country-count {
+  color: #e5e7eb;
 }
 
 /* Referrers List */
@@ -1320,9 +1591,18 @@ watch(() => props.userPlan, (val) => {
   transition: all 0.2s;
 }
 
+.dark-mode .referrer-item {
+  background: #1a1626;
+  border-color: #2d2640;
+}
+
 .referrer-item:hover {
   background: #F5E6D3;
   transform: translateX(4px);
+}
+
+.dark-mode .referrer-item:hover {
+  background: #2d2640;
 }
 
 .referrer-rank {
@@ -1330,6 +1610,11 @@ watch(() => props.userPlan, (val) => {
   color: #6B4423;
   text-align: center;
   font-size: 1.125rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .referrer-rank {
+  color: #a78bfa;
 }
 
 .referrer-info {
@@ -1343,6 +1628,11 @@ watch(() => props.userPlan, (val) => {
   margin-bottom: 0.625rem;
   word-break: break-all;
   font-size: 0.875rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .referrer-url {
+  color: #a78bfa;
 }
 
 .referrer-bar-wrapper {
@@ -1353,10 +1643,18 @@ watch(() => props.userPlan, (val) => {
   overflow: hidden;
 }
 
+.dark-mode .referrer-bar-wrapper {
+  background: #2d2640;
+}
+
 .referrer-bar {
   height: 100%;
   background: linear-gradient(90deg, #A67C52 0%, #D4AF37 100%);
   border-radius: 9999px;
+}
+
+.dark-mode .referrer-bar {
+  background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 100%);
 }
 
 .referrer-count {
@@ -1364,6 +1662,11 @@ watch(() => props.userPlan, (val) => {
   color: #6b7280;
   text-align: right;
   font-size: 0.9375rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .referrer-count {
+  color: #9ca3af;
 }
 
 .empty-chart {
@@ -1371,6 +1674,11 @@ watch(() => props.userPlan, (val) => {
   padding: 4rem 2rem;
   color: #9ca3af;
   font-size: 0.9375rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .empty-chart {
+  color: #6b7280;
 }
 
 .analytics-content-wrapper {
@@ -1393,6 +1701,11 @@ watch(() => props.userPlan, (val) => {
   justify-content: center;
   z-index: 10;
   border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .upgrade-overlay-analytics {
+  background: rgba(26, 22, 38, 0.85);
 }
 
 .upgrade-box {
@@ -1403,6 +1716,13 @@ watch(() => props.userPlan, (val) => {
   max-width: 400px;
   box-shadow: 0 10px 30px rgba(107, 68, 35, 0.25);
   border: 1px solid #F5E6D3;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .upgrade-box {
+  background: #1a1626;
+  border-color: #2d2640;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
 }
 
 .upgrade-box h3 {
@@ -1410,12 +1730,22 @@ watch(() => props.userPlan, (val) => {
   font-weight: 700;
   color: #6B4423;
   margin-bottom: 0.75rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .upgrade-box h3 {
+  color: #a78bfa;
 }
 
 .upgrade-box p {
   font-size: 0.95rem;
   color: #6b7280;
   margin-bottom: 1.5rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .upgrade-box p {
+  color: #9ca3af;
 }
 
 .upgrade-btn {
@@ -1429,9 +1759,17 @@ watch(() => props.userPlan, (val) => {
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
+.dark-mode .upgrade-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+}
+
 .upgrade-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(107, 68, 35, 0.3);
+}
+
+.dark-mode .upgrade-btn:hover {
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
 }
 
 
@@ -1610,4 +1948,12 @@ watch(() => props.userPlan, (val) => {
   }
 }
 
+/* Accessibility improvements for mobile */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 </style>

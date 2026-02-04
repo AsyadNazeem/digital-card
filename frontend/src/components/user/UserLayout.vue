@@ -1,10 +1,10 @@
 <template>
-  <div class="dashboard-wrapper">
+  <div :class="['dashboard-wrapper', { 'dark-mode': isDarkMode }]">
     <!-- Top Header -->
     <UserHeader
-        @logout="logout"
         @toggle-sidebar="toggleSidebar"
         @open-settings="showSettings = true"
+        @toggle-dark-mode="toggleDarkMode"
     />
 
     <UserNavbar
@@ -15,6 +15,7 @@
         @toggle-sidebar="toggleSidebar"
         @open-settings="showSettings = true"
         @open-upgrade="showUpgrade = true"
+        @logout="logout"
     />
 
     <!-- MOVE MODALS HERE - OUTSIDE MAIN CONTENT -->
@@ -89,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, provide } from 'vue';
+import {onMounted, provide, ref, watch} from 'vue';
 import api from '@/services/api.js';
 import UserSettings from '@/components/user/UserSettings.vue';
 import RequestLimitPopup from '@/components/user/UserRequestModel.vue';
@@ -102,7 +103,7 @@ import UserPhoneModal from '@/components/user/UserPhoneModel.vue';
 import UserHeader from "@/components/user/UserHeader.vue";
 import UserNavbar from "@/components/user/UserNavbar.vue";
 import UserUpgrade from '@/pages/user/UserUpgrade.vue';
-import { useRouter } from 'vue-router';
+import {useRouter} from 'vue-router';
 
 const router = useRouter();
 
@@ -115,8 +116,10 @@ const contacts = ref([]);
 const sidebarExpanded = ref(true);
 const userName = ref('John Doe');
 const userRole = ref('User');
-const userPlan = ref('free')
+const userPlan = ref('free');
 
+// Load dark mode from localStorage (default to false if not set)
+const isDarkMode = ref(localStorage.getItem('darkMode') === 'true');
 
 // Counts
 const companyCount = ref(0);
@@ -131,21 +134,29 @@ const userLimits = ref({
   role: 'user'
 });
 
-// Provide activeTab to child components
+// Provide activeTab and isDarkMode to child components
 provide('activeTab', activeTab);
+provide('isDarkMode', isDarkMode);
+
+// Watch for dark mode changes and save to localStorage
+watch(isDarkMode, (newValue) => {
+  localStorage.setItem('darkMode', newValue.toString());
+}, {immediate: true});
 
 function toggleSidebar() {
   sidebarExpanded.value = !sidebarExpanded.value;
 }
 
+function toggleDarkMode() {
+  isDarkMode.value = !isDarkMode.value;
+}
+
 const token = localStorage.getItem('token');
 
 function logout() {
-  if (confirm('Are you sure you want to log out?')) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/login');
-  }
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  router.push('/login');
 }
 
 async function checkUserPhone() {
@@ -156,7 +167,7 @@ async function checkUserPhone() {
 
   try {
     const res = await api.get('/auth/me', {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {Authorization: `Bearer ${token}`}
     });
 
     if (res.data.name) userName.value = res.data.name;
@@ -176,7 +187,6 @@ async function checkUserPhone() {
 function handlePhoneAdded(phone) {
   console.log('Phone added:', phone);
   showPhonePopup.value = false;
-  // Reload data instead of full page reload
   loadData();
 }
 
@@ -188,7 +198,7 @@ async function loadData() {
 
   try {
     const res = await api.get('/dashboard/data', {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {Authorization: `Bearer ${token}`}
     });
 
     contacts.value = res.data.contacts || [];
@@ -196,7 +206,7 @@ async function loadData() {
     contactCount.value = res.data.contacts?.length || 0;
 
     const userRes = await api.get('/auth/me', {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {Authorization: `Bearer ${token}`}
     });
 
     const userData = userRes.data;
@@ -208,7 +218,7 @@ async function loadData() {
     };
 
     const reviewRes = await api.get('/dashboard/reviews', {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {Authorization: `Bearer ${token}`}
     });
     reviewCount.value = reviewRes.data.reviews?.length || 0;
 
@@ -229,7 +239,7 @@ async function loadUserPlan() {
   try {
     const token = localStorage.getItem('token')
     const res = await api.get('/dashboard/user/plan', {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {Authorization: `Bearer ${token}`}
     })
 
     userPlan.value = (res.data.plan || 'free').toLowerCase()
@@ -241,12 +251,10 @@ async function loadUserPlan() {
   }
 }
 
-
-
 onMounted(() => {
   checkUserPhone();
   loadData();
-  loadUserPlan()
+  loadUserPlan();
 });
 
 defineExpose({
@@ -263,23 +271,34 @@ defineExpose({
   display: flex;
   min-height: 100vh;
   background: #f8f9fa;
+  transition: background 0.3s ease;
+}
+
+/* Dark Mode - Professional Dark Purple-Blue */
+.dashboard-wrapper.dark-mode {
+  background: #0f0d1a;
 }
 
 /* Main Content */
 .main-content {
-  margin-left: 260px;
   margin-top: 64px;
-  flex: 1;
   padding: 2rem;
-  transition: margin-left 0.3s ease, margin-top 0.3s ease;
   min-height: calc(100vh - 64px);
   position: relative;
-  z-index: auto; /* Keep this at 1 or remove it */
+  z-index: auto;
+
+  /* KEY FIX */
+  width: calc(100vw - 260px);
+  margin-left: 260px;
+  overflow-x: hidden;
 }
 
+
 .main-content.expanded {
+  width: calc(100vw - 72px);
   margin-left: 72px;
 }
+
 
 /* Responsive */
 @media (max-width: 1024px) {

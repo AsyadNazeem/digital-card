@@ -1,7 +1,7 @@
 <template>
   <!-- Force Phone Modal -->
   <transition name="modal">
-    <div v-if="showPhonePopup" class="phone-popup-overlay">
+    <div v-if="showPhonePopup" :class="['phone-popup-overlay', { 'dark-mode': isDarkMode }]">
       <div class="phone-popup-container">
         <div class="phone-popup-header">
           <h2 class="phone-popup-title">Add Your Phone Number</h2>
@@ -42,10 +42,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, inject } from 'vue'; // Add inject
 import CountryCodeDropdown from '@/components/CountryCodeDropdown.vue';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import api from '@/services/api';
+
+// Add this line after your imports
+const isDarkMode = inject('isDarkMode', ref(false));
 
 const props = defineProps({
   showPhonePopup: {
@@ -170,6 +173,11 @@ async function submitPhone() {
   z-index: 99999;
   padding: 1rem;
   animation: fadeIn 0.3s ease-out;
+  transition: all 0.3s ease;
+}
+
+.dark-mode.phone-popup-overlay {
+  background: rgba(0, 0, 0, 0.85);
 }
 
 @keyframes fadeIn {
@@ -191,6 +199,13 @@ async function submitPhone() {
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
   animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
+  transition: all 0.3s ease;
+  scale: none;
+}
+
+.dark-mode .phone-popup-container {
+  background: #1a1626;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
 }
 
 @keyframes modalSlideUp {
@@ -216,6 +231,11 @@ async function submitPhone() {
   color: #0f172a;
   margin: 0 0 0.75rem 0;
   line-height: 1.2;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .phone-popup-title {
+  color: #e5e7eb;
 }
 
 .phone-popup-description {
@@ -223,6 +243,11 @@ async function submitPhone() {
   color: #64748b;
   margin: 0;
   line-height: 1.6;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .phone-popup-description {
+  color: #9ca3af;
 }
 
 /* Form */
@@ -243,6 +268,11 @@ async function submitPhone() {
   font-weight: 600;
   color: #475569;
   text-align: left;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .phone-form-label {
+  color: #9ca3af;
 }
 
 .phone-input-group {
@@ -263,14 +293,29 @@ async function submitPhone() {
   font-family: inherit;
 }
 
+.dark-mode .phone-form-input {
+  background: #0f0d1a;
+  border-color: #2d2640;
+  color: #e5e7eb;
+}
+
 .phone-form-input:focus {
   outline: none;
   border-color: #4f46e5;
   box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
 
+.dark-mode .phone-form-input:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.2);
+}
+
 .phone-form-input::placeholder {
   color: #94a3b8;
+}
+
+.dark-mode .phone-form-input::placeholder {
+  color: #6b7280;
 }
 
 /* Submit Button */
@@ -317,6 +362,13 @@ async function submitPhone() {
   font-size: 0.875rem;
   text-align: center;
   animation: shake 0.4s ease-in-out;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .phone-error-message {
+  background: #2a1a26;
+  border-color: #3a1a2a;
+  color: #fca5a5;
 }
 
 @keyframes shake {
@@ -373,8 +425,16 @@ async function submitPhone() {
   border-color: #22c55e;
 }
 
+.dark-mode .phone-form-input:valid {
+  border-color: #10b981;
+}
+
 .phone-form-input:invalid:not(:placeholder-shown) {
   border-color: #ef4444;
+}
+
+.dark-mode .phone-form-input:invalid:not(:placeholder-shown) {
+  border-color: #f87171;
 }
 
 /* Mobile Responsive */
@@ -431,49 +491,23 @@ async function submitPhone() {
   outline-offset: 2px;
 }
 
+.dark-mode .phone-form-input:focus-visible,
+.dark-mode .phone-submit-btn:focus-visible {
+  outline-color: #818cf8;
+}
+
 /* High Contrast Mode Support */
 @media (prefers-contrast: high) {
   .phone-popup-container {
     border: 2px solid #0f172a;
   }
 
+  .dark-mode .phone-popup-container {
+    border-color: #e5e7eb;
+  }
+
   .phone-form-input {
     border-width: 3px;
-  }
-}
-
-/* Dark Mode Support (Optional) */
-@media (prefers-color-scheme: dark) {
-  .phone-popup-container {
-    background: #1e293b;
-    color: #f1f5f9;
-  }
-
-  .phone-popup-title {
-    color: #f1f5f9;
-  }
-
-  .phone-popup-description {
-    color: #cbd5e1;
-  }
-
-  .phone-form-label {
-    color: #cbd5e1;
-  }
-
-  .phone-form-input {
-    background: #334155;
-    border-color: #475569;
-    color: #f1f5f9;
-  }
-
-  .phone-form-input::placeholder {
-    color: #64748b;
-  }
-
-  .phone-form-input:focus {
-    border-color: #6366f1;
-    background: #334155;
   }
 }
 

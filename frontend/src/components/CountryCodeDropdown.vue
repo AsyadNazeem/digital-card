@@ -1,5 +1,5 @@
 <template>
-  <div class="country-dropdown-wrapper" ref="dropdownRef">
+  <div class="country-dropdown-wrapper" :class="{ 'dark-mode': isDarkMode }" ref="dropdownRef">
     <div class="country-trigger" @click="toggleDropdown">
       <span class="selected-country">{{ selectedCountry?.name || '+94' }}</span>
       <svg
@@ -67,8 +67,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, inject } from 'vue'
 import countriesData from '../assets/country_code.json'
+
+// Inject dark mode state
+const isDarkMode = inject('isDarkMode', ref(false))
 
 // Props
 const props = defineProps({
@@ -135,6 +138,91 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
 <style scoped>
+
+/* Dark Mode for Country Dropdown */
+.dark-mode .country-trigger {
+  background: #0f0d1a;
+  border-color: #2d2640;
+}
+
+.dark-mode .country-trigger:hover {
+  border-color: #3d3555;
+  background: #1a1626;
+}
+
+.dark-mode .selected-country {
+  color: #e5e7eb;
+}
+
+.dark-mode .dropdown-arrow {
+  color: #9ca3af;
+}
+
+.dark-mode .country-dropdown-menu {
+  background: #0f0d1a;
+  border-color: #2d2640;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.dark-mode .search-box {
+  border-bottom-color: #2d2640;
+}
+
+.dark-mode .search-icon {
+  color: #6b7280;
+}
+
+.dark-mode .search-input {
+  background: #1a1626;
+  border-color: #2d2640;
+  color: #e5e7eb;
+}
+
+.dark-mode .search-input::placeholder {
+  color: #6b7280;
+}
+
+.dark-mode .search-input:focus {
+  border-color: #D4A574;
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
+}
+
+.dark-mode .country-item {
+  border-bottom-color: #2d2640;
+}
+
+.dark-mode .country-item:hover {
+  background: #2d2640;
+}
+
+.dark-mode .country-item.active {
+  background: #2d2640;
+  border-left-color: #D4A574;
+}
+
+.dark-mode .country-name {
+  color: #e5e7eb;
+}
+
+.dark-mode .country-code {
+  color: #9ca3af;
+}
+
+.dark-mode .no-results {
+  color: #6b7280;
+}
+
+.dark-mode .country-list::-webkit-scrollbar-track {
+  background: #1a1626;
+}
+
+.dark-mode .country-list::-webkit-scrollbar-thumb {
+  background: #3d3555;
+}
+
+.dark-mode .country-list::-webkit-scrollbar-thumb:hover {
+  background: #4b4563;
+}
 
 /* Country Dropdown Styles */
 .country-dropdown-wrapper {

@@ -1,5 +1,5 @@
 <template>
-  <div class="country-dropdown-wrapper" ref="dropdownRef">
+  <div class="country-dropdown-wrapper" :class="{ 'dark-mode': isDarkMode }" ref="dropdownRef">
 
     <!-- Trigger -->
     <div class="country-trigger" @click="toggleDropdown">
@@ -57,8 +57,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick, inject } from "vue";
 import countriesRaw from "../assets/complete_country_list.json";
+
+// Inject dark mode state
+const isDarkMode = inject('isDarkMode', ref(false));
 
 const props = defineProps({
   modelValue: { type: String, default: "" }
@@ -133,6 +136,12 @@ onUnmounted(() => document.removeEventListener("click", handleOutsideClick));
   border: 1px solid #d1d5db;
   border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.country-trigger:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
 }
 
 .selected-country {
@@ -140,10 +149,12 @@ onUnmounted(() => document.removeEventListener("click", handleOutsideClick));
   display: flex;
   align-items: center;
   gap: 6px;
+  color: #0f172a;
 }
 
 .dropdown-arrow {
   transition: 0.2s;
+  color: #64748b;
 }
 
 .dropdown-arrow.rotate {
@@ -160,6 +171,7 @@ onUnmounted(() => document.removeEventListener("click", handleOutsideClick));
   max-height: 300px;
   overflow-y: auto;
   z-index: 50;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
 .search-box {
@@ -172,6 +184,18 @@ onUnmounted(() => document.removeEventListener("click", handleOutsideClick));
   padding: 8px;
   border-radius: 6px;
   border: 1px solid #d1d5db;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  border-color: #5c4033;
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.1);
+}
+
+.country-list {
+  max-height: 250px;
+  overflow-y: auto;
 }
 
 .country-item {
@@ -180,6 +204,12 @@ onUnmounted(() => document.removeEventListener("click", handleOutsideClick));
   gap: 10px;
   padding: 10px;
   cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.country-item:last-child {
+  border-bottom: none;
 }
 
 .country-item:hover {
@@ -188,15 +218,132 @@ onUnmounted(() => document.removeEventListener("click", handleOutsideClick));
 
 .country-item.active {
   background: #eef2ff;
+  border-left: 3px solid #5c4033;
 }
 
 .country-flag {
   font-size: 20px;
 }
 
+.country-name {
+  color: #0f172a;
+  font-size: 14px;
+}
+
 .no-results {
   padding: 15px;
   text-align: center;
   color: #6b7280;
+}
+
+/* Dark Mode Styles */
+.dark-mode .country-trigger {
+  background: #0f0d1a;
+  border-color: #2d2640;
+}
+
+.dark-mode .country-trigger:hover {
+  border-color: #3d3555;
+  background: #1a1626;
+}
+
+.dark-mode .selected-country {
+  color: #e5e7eb;
+}
+
+.dark-mode .dropdown-arrow {
+  color: #9ca3af;
+}
+
+.dark-mode .country-dropdown-menu {
+  background: #0f0d1a;
+  border-color: #2d2640;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.dark-mode .search-box {
+  border-bottom-color: #2d2640;
+}
+
+.dark-mode .search-input {
+  background: #1a1626;
+  border-color: #2d2640;
+  color: #e5e7eb;
+}
+
+.dark-mode .search-input::placeholder {
+  color: #6b7280;
+}
+
+.dark-mode .search-input:focus {
+  border-color: #D4A574;
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
+}
+
+.dark-mode .country-item {
+  border-bottom-color: #2d2640;
+}
+
+.dark-mode .country-item:hover {
+  background: #2d2640;
+}
+
+.dark-mode .country-item.active {
+  background: #2d2640;
+  border-left-color: #D4A574;
+}
+
+.dark-mode .country-name {
+  color: #e5e7eb;
+}
+
+.dark-mode .no-results {
+  color: #6b7280;
+}
+
+/* Scrollbar styling */
+.country-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.country-list::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.country-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.country-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark-mode .country-list::-webkit-scrollbar-track {
+  background: #1a1626;
+}
+
+.dark-mode .country-list::-webkit-scrollbar-thumb {
+  background: #3d3555;
+}
+
+.dark-mode .country-list::-webkit-scrollbar-thumb:hover {
+  background: #4b4563;
+}
+
+/* Dropdown transition */
+.dropdown-slide-enter-active,
+.dropdown-slide-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-slide-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.dropdown-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
 }
 </style>

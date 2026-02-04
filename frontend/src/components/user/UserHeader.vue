@@ -1,5 +1,5 @@
 <template>
-  <header class="top-header">
+  <header class="top-header" :class="{ 'dark-mode': isDarkMode }">
     <div class="header-content">
       <img
           src="../../assets/images/logo.jpeg"
@@ -8,6 +8,25 @@
       />
 
       <div class="header-right">
+        <!-- Dark Mode Toggle Button -->
+        <button class="icon-button" title="Toggle Dark Mode" @click="$emit('toggle-dark-mode')">
+          <!-- Sun icon (shown in dark mode) -->
+          <svg v-if="isDarkMode" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon icon (shown in light mode) -->
+          <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
 
         <!-- Settings Button -->
         <button class="icon-button" title="Settings" @click="$emit('open-settings')">
@@ -25,24 +44,21 @@
           </svg>
           <span class="notification-badge">3</span>
         </button>
-
-        <!-- Logout Button -->
-        <button class="icon-button" @click="$emit('logout')" title="Logout">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-            <polyline points="16 17 21 12 16 7"></polyline>
-            <line x1="21" y1="12" x2="9" y2="12"></line>
-          </svg>
-        </button>
-
       </div>
-
     </div>
+
   </header>
 </template>
 
 <script setup>
-defineEmits(['toggle-sidebar', 'logout', 'open-settings']);
+import { ref, inject } from 'vue';
+
+const isDarkMode = inject('isDarkMode', ref(false));
+const showLogoutModal = ref(false);
+
+// Single defineEmits with all events
+const emit = defineEmits(['toggle-sidebar', 'open-settings', 'toggle-dark-mode']);
+
 </script>
 
 <style scoped>
@@ -55,8 +71,16 @@ defineEmits(['toggle-sidebar', 'logout', 'open-settings']);
   height: 64px;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
-  z-index: 100; /* Changed from 1000 to 100 */
+  z-index: 100;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* Dark Mode Styles - Professional Dark Purple-Blue */
+.top-header.dark-mode {
+  background: #1a1626;
+  border-bottom: 1px solid #2d2640;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .header-content {
@@ -84,6 +108,14 @@ defineEmits(['toggle-sidebar', 'logout', 'open-settings']);
 
 .menu-toggle:hover {
   background: #f3f4f6;
+}
+
+.dark-mode .menu-toggle {
+  color: #D4A574;
+}
+
+.dark-mode .menu-toggle:hover {
+  background: #2d2640;
 }
 
 .header-logo {
@@ -115,6 +147,15 @@ defineEmits(['toggle-sidebar', 'logout', 'open-settings']);
 .icon-button:hover {
   background: #f3f4f6;
   color: #8B5A3C;
+}
+
+.dark-mode .icon-button {
+  color: #D4A574;
+}
+
+.dark-mode .icon-button:hover {
+  background: #2d2640;
+  color: #E5C4A0;
 }
 
 .notification-badge {

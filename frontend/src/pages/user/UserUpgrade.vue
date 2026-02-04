@@ -1,6 +1,6 @@
 <template>
   <transition name="fade">
-    <div v-if="open" class="upgrade-overlay">
+    <div v-if="open" :class="['upgrade-overlay', { 'dark-mode': isDarkMode }]">
       <div class="upgrade-container">
 
         <div class="upgrade-header">
@@ -62,6 +62,11 @@
 </template>
 
 <script setup>
+import { inject, ref } from 'vue';
+
+// Add this line after your imports
+const isDarkMode = inject('isDarkMode', ref(false));
+
 defineProps({
   open: Boolean,
   currentPlan: {
@@ -69,7 +74,6 @@ defineProps({
     default: 'free'
   }
 })
-
 
 defineEmits(['close'])
 </script>
@@ -84,6 +88,11 @@ defineEmits(['close'])
   display: flex;
   align-items: stretch;
   justify-content: stretch;
+  transition: background 0.3s ease;
+}
+
+.dark-mode.upgrade-overlay {
+  background: rgba(0, 0, 0, 0.85);
 }
 
 /* Full Screen Container */
@@ -95,6 +104,11 @@ defineEmits(['close'])
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .upgrade-container {
+  background: #0f0d1a;
 }
 
 /* Header */
@@ -105,12 +119,22 @@ defineEmits(['close'])
   margin-bottom: 3rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #e5e7eb;
+  transition: border-color 0.3s ease;
+}
+
+.dark-mode .upgrade-header {
+  border-bottom-color: #2d2640;
 }
 
 .upgrade-header h2 {
   font-size: 2rem;
   font-weight: 700;
   color: #6B4423;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .upgrade-header h2 {
+  color: #a78bfa;
 }
 
 /* Close Button */
@@ -124,10 +148,22 @@ defineEmits(['close'])
   transition: all 0.2s ease;
 }
 
+.dark-mode .close-btn {
+  background: #1a1626;
+  border-color: #2d2640;
+  color: #a78bfa;
+}
+
 .close-btn:hover {
   background: #6B4423;
   color: white;
   border-color: #6B4423;
+}
+
+.dark-mode .close-btn:hover {
+  background: #6366f1;
+  color: white;
+  border-color: #6366f1;
 }
 
 /* Plans Layout */
@@ -149,12 +185,22 @@ defineEmits(['close'])
   flex-direction: column;
   border: 1px solid #e5e7eb;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .plan-card {
+  background: #1a1626;
+  border-color: #2d2640;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .plan-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .plan-card:hover {
+  box-shadow: 0 20px 50px rgba(99, 102, 241, 0.3);
 }
 
 /* Highlighted Plan */
@@ -164,12 +210,22 @@ defineEmits(['close'])
   transform: scale(1.03);
 }
 
+.dark-mode .plan-card.highlight {
+  border-color: #6366f1;
+  background: #2d2640;
+}
+
 /* Title */
 .plan-title {
   font-size: 1.6rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
   color: #6B4423;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .plan-title {
+  color: #a78bfa;
 }
 
 /* Price */
@@ -178,6 +234,11 @@ defineEmits(['close'])
   font-weight: 600;
   color: #8B5A3C;
   margin-bottom: 1.75rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .plan-price {
+  color: #c4b5fd;
 }
 
 /* Features */
@@ -195,12 +256,22 @@ defineEmits(['close'])
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .plan-features li {
+  color: #e5e7eb;
 }
 
 .plan-features li::before {
   content: "✓";
   color: #8B5A3C;
   font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .plan-features li::before {
+  color: #a78bfa;
 }
 
 .plan-features li.disabled {
@@ -208,9 +279,17 @@ defineEmits(['close'])
   text-decoration: line-through;
 }
 
+.dark-mode .plan-features li.disabled {
+  color: #6b7280;
+}
+
 .plan-features li.disabled::before {
   content: "✕";
   color: #9ca3af;
+}
+
+.dark-mode .plan-features li.disabled::before {
+  color: #6b7280;
 }
 
 /* Buttons */
@@ -226,9 +305,21 @@ defineEmits(['close'])
   transition: all 0.2s ease;
 }
 
+.dark-mode .choose-btn {
+  background: #0f0d1a;
+  border-color: #6366f1;
+  color: #a78bfa;
+}
+
 .choose-btn:hover {
   background: #8B5A3C;
   color: white;
+}
+
+.dark-mode .choose-btn:hover {
+  background: #6366f1;
+  color: white;
+  border-color: #6366f1;
 }
 
 /* Primary Button */
@@ -238,9 +329,20 @@ defineEmits(['close'])
   border-color: #6B4423;
 }
 
+.dark-mode .choose-btn.primary {
+  background: #6366f1;
+  color: white;
+  border-color: #6366f1;
+}
+
 .choose-btn.primary:hover {
   background: #8B5A3C;
   border-color: #8B5A3C;
+}
+
+.dark-mode .choose-btn.primary:hover {
+  background: #818cf8;
+  border-color: #818cf8;
 }
 
 .choose-btn:disabled {
@@ -250,6 +352,41 @@ defineEmits(['close'])
   cursor: not-allowed;
 }
 
+.dark-mode .choose-btn:disabled {
+  background: #1a1626;
+  border-color: #2d2640;
+  color: #6b7280;
+}
+
+/* Scrollbar Styling */
+.upgrade-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.upgrade-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.dark-mode .upgrade-container::-webkit-scrollbar-track {
+  background: #1a1626;
+}
+
+.upgrade-container::-webkit-scrollbar-thumb {
+  background: #8B5A3C;
+  border-radius: 5px;
+}
+
+.dark-mode .upgrade-container::-webkit-scrollbar-thumb {
+  background: #6366f1;
+}
+
+.upgrade-container::-webkit-scrollbar-thumb:hover {
+  background: #6B4423;
+}
+
+.dark-mode .upgrade-container::-webkit-scrollbar-thumb:hover {
+  background: #818cf8;
+}
 
 /* Fade Animation */
 .fade-enter-active,
@@ -268,17 +405,127 @@ defineEmits(['close'])
     padding: 2rem 1.25rem;
   }
 
+  .upgrade-header {
+    margin-bottom: 2rem;
+  }
+
   .upgrade-header h2 {
     font-size: 1.5rem;
   }
 
   .plans-grid {
     gap: 1.5rem;
+    grid-template-columns: 1fr;
+  }
+
+  .plan-card {
+    padding: 2rem 1.5rem;
   }
 
   .plan-card.highlight {
     transform: none;
   }
+
+  .plan-card:hover {
+    transform: none;
+  }
+
+  .plan-title {
+    font-size: 1.4rem;
+  }
+
+  .plan-price {
+    font-size: 0.9375rem;
+  }
+
+  .plan-features li {
+    font-size: 0.875rem;
+    padding: 0.5rem 0;
+  }
+
+  .choose-btn {
+    padding: 0.75rem;
+    font-size: 0.9375rem;
+  }
 }
 
+/* Small Mobile */
+@media (max-width: 480px) {
+  .upgrade-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .upgrade-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.875rem;
+  }
+
+  .upgrade-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .close-btn {
+    padding: 0.5rem;
+  }
+
+  .close-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .plans-grid {
+    gap: 1.25rem;
+  }
+
+  .plan-card {
+    padding: 1.5rem 1.25rem;
+    border-radius: 14px;
+  }
+
+  .plan-title {
+    font-size: 1.25rem;
+  }
+
+  .plan-price {
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .plan-features li {
+    font-size: 0.8125rem;
+    padding: 0.4rem 0;
+  }
+
+  .choose-btn {
+    padding: 0.7rem;
+    font-size: 0.875rem;
+    margin-top: 1.5rem;
+    border-radius: 10px;
+  }
+}
+
+/* Accessibility */
+.choose-btn:focus-visible,
+.close-btn:focus-visible {
+  outline: 3px solid #8B5A3C;
+  outline-offset: 2px;
+}
+
+.dark-mode .choose-btn:focus-visible,
+.dark-mode .close-btn:focus-visible {
+  outline-color: #6366f1;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .plan-card:hover {
+    transform: none;
+  }
+}
 </style>

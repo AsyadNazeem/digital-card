@@ -1,6 +1,6 @@
 <template>
   <!-- Desktop Sidebar -->
-  <aside :class="['desktop-sidebar', { collapsed: !sidebarExpanded }]">
+  <aside :class="['desktop-sidebar', { collapsed: !sidebarExpanded, 'dark-mode': isDarkMode }]">
     <!-- Collapse/Expand Toggle Button -->
     <button
         class="sidebar-toggle-btn"
@@ -54,7 +54,7 @@
   <transition name="fade">
     <div v-if="showProfilePopup" class="profile-overlay" @click="showProfilePopup = false">
       <transition name="scale">
-        <div v-if="showProfilePopup" class="profile-popup desktop-popup" @click.stop>
+        <div v-if="showProfilePopup" :class="['profile-popup desktop-popup', { 'dark-mode': isDarkMode }]" @click.stop>
           <!-- User Header -->
           <div class="profile-header">
             <div class="profile-user-info">
@@ -103,7 +103,7 @@
   </transition>
 
   <!-- Mobile Bottom Navigation -->
-  <nav class="mobile-bottom-nav">
+  <nav :class="['mobile-bottom-nav', { 'dark-mode': isDarkMode }]">
     <button
         v-for="tab in tabs.slice(0, 4)"
         :key="tab.id"
@@ -136,7 +136,7 @@
     <div v-if="showMoreMenu" class="more-menu-overlay" @click="showMoreMenu = false">
       <transition name="slide-up">
         <div v-if="showMoreMenu" class="more-menu-popup" @click.stop>
-          <div class="more-menu-content">
+          <div :class="['more-menu-content', { 'dark-mode': isDarkMode }]">
             <div class="more-menu-header">
               <span>More Options</span>
               <button @click="showMoreMenu = false" class="close-btn">
@@ -207,10 +207,19 @@
       </transition>
     </div>
   </transition>
+
+  <LogoutConfirmModal
+      :show="showLogoutModal"
+      @close="showLogoutModal = false"
+      @confirm="handleLogout"
+  />
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, inject } from 'vue';
+import LogoutConfirmModal from './LogoutModal.vue';
+
+const showLogoutModal = ref(false);
 
 const props = defineProps({
   modelValue: {
@@ -231,7 +240,10 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update:modelValue', 'toggle-sidebar', 'open-settings', 'open-upgrade']);
+const emit = defineEmits(['update:modelValue', 'toggle-sidebar', 'open-settings', 'open-upgrade', 'logout']);
+
+// Inject dark mode state from parent
+const isDarkMode = inject('isDarkMode', ref(false));
 
 const showMoreMenu = ref(false);
 const showProfilePopup = ref(false);
@@ -324,9 +336,14 @@ function handleProfileAction(actionId) {
   }
 
   if (actionId === 'logout') {
-    emit('logout');
+    showLogoutModal.value = true;
   }
+}
 
+function handleLogout() {
+  showLogoutModal.value = false;
+  emit('logout');
+  console.log('LOGOUT EVENT EMITTED');
 }
 
 
@@ -341,6 +358,8 @@ function handleMobileProfileAction(actionId) {
     emit('open-settings');
   }
 }
+
+
 
 </script>
 
@@ -382,9 +401,15 @@ function handleMobileProfileAction(actionId) {
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease, top 0.3s ease;
-  z-index: 100; /* Changed from 1000 to 100 */
+  transition: all 0.3s ease;
+  z-index: 100;
   overflow: hidden;
+}
+
+/* Dark Mode for Desktop Sidebar - Professional Dark Purple-Blue */
+.desktop-sidebar.dark-mode {
+  background: #1a1626;
+  border-right: 1px solid #2d2640;
 }
 
 .sidebar-toggle-btn {
@@ -400,16 +425,20 @@ function handleMobileProfileAction(actionId) {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 101; /* Changed from 9999 to 101 */
-  transition: top 0.3s ease, left 0.3s ease, transform 0.2s ease;
+  z-index: 101;
+  transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.desktop-sidebar.dark-mode ~ .sidebar-toggle-btn,
+.desktop-sidebar.dark-mode .sidebar-toggle-btn {
+  background: #2d2640;
+  border-color: #3d3555;
 }
 
 .desktop-sidebar.collapsed {
   width: 72px;
 }
-
-/* Sidebar Toggle Button */
 
 .desktop-sidebar.collapsed .sidebar-toggle-btn {
   left: 60px;
@@ -421,6 +450,11 @@ function handleMobileProfileAction(actionId) {
   transform: scale(1.1);
 }
 
+.desktop-sidebar.dark-mode .sidebar-toggle-btn:hover {
+  background: #3d3555;
+  border-color: #4d4565;
+}
+
 .sidebar-toggle-btn:active {
   transform: scale(0.95);
 }
@@ -428,6 +462,10 @@ function handleMobileProfileAction(actionId) {
 .toggle-icon {
   transition: transform 0.3s ease;
   color: #6B4423;
+}
+
+.desktop-sidebar.dark-mode .toggle-icon {
+  color: #D4A574;
 }
 
 .toggle-icon.rotated {
@@ -458,15 +496,29 @@ function handleMobileProfileAction(actionId) {
   gap: 0.75rem;
 }
 
+.desktop-sidebar.dark-mode .nav-item {
+  color: #D4A574;
+}
+
 .nav-item:hover {
   background: #f3f4f6;
   color: #8B5A3C;
+}
+
+.desktop-sidebar.dark-mode .nav-item:hover {
+  background: #2d2640;
+  color: #E5C4A0;
 }
 
 .nav-item.active {
   background: #FDF8F3;
   color: #8B5A3C;
   font-weight: 600;
+}
+
+.desktop-sidebar.dark-mode .nav-item.active {
+  background: #2d2640;
+  color: #E5C4A0;
 }
 
 .nav-icon {
@@ -502,6 +554,10 @@ function handleMobileProfileAction(actionId) {
   border-top: 1px solid #e5e7eb;
 }
 
+.desktop-sidebar.dark-mode .sidebar-footer {
+  border-top: 1px solid #2d2640;
+}
+
 .user-profile {
   display: flex;
   align-items: center;
@@ -518,6 +574,10 @@ function handleMobileProfileAction(actionId) {
 
 .user-profile:hover {
   background: #f3f4f6;
+}
+
+.desktop-sidebar.dark-mode .user-profile:hover {
+  background: #2d2640;
 }
 
 .user-avatar {
@@ -549,9 +609,17 @@ function handleMobileProfileAction(actionId) {
   text-overflow: ellipsis;
 }
 
+.desktop-sidebar.dark-mode .user-name {
+  color: #e5e7eb;
+}
+
 .user-role {
   font-size: 0.75rem;
   color: #6b7280;
+}
+
+.desktop-sidebar.dark-mode .user-role {
+  color: #9ca3af;
 }
 
 .desktop-sidebar.collapsed .user-info {
@@ -571,8 +639,8 @@ function handleMobileProfileAction(actionId) {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6); /* Increase from 0.4 to 0.6 */
-  z-index: 10000; /* Changed from 1100 to 10000 */
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 10000;
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
@@ -589,13 +657,26 @@ function handleMobileProfileAction(actionId) {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   border: 1px solid #e5e7eb;
-  z-index: 10001; /* Add this line */
+  z-index: 10001;
+  transition: all 0.3s ease;
 }
+
+.profile-popup.desktop-popup.dark-mode {
+  background: #1a1626;
+  border-color: #2d2640;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
 /* Profile Header */
 .profile-header {
   padding: 1rem;
   border-bottom: 1px solid #e5e7eb;
   background: #fafaf8;
+}
+
+.dark-mode .profile-header {
+  background: #0f0d1a;
+  border-bottom: 1px solid #2d2640;
 }
 
 .profile-user-info {
@@ -631,9 +712,17 @@ function handleMobileProfileAction(actionId) {
   text-overflow: ellipsis;
 }
 
+.dark-mode .profile-name {
+  color: #e5e7eb;
+}
+
 .profile-plan {
   font-size: 0.75rem;
   color: #6b7280;
+}
+
+.dark-mode .profile-plan {
+  color: #9ca3af;
 }
 
 /* Profile Menu */
@@ -657,9 +746,18 @@ function handleMobileProfileAction(actionId) {
   text-align: left;
 }
 
+.dark-mode .profile-menu-item {
+  color: #e5e7eb;
+}
+
 .profile-menu-item:hover {
   background: #FDF8F3;
   color: #8B5A3C;
+}
+
+.dark-mode .profile-menu-item:hover {
+  background: #2d2640;
+  color: #E5C4A0;
 }
 
 .profile-item-icon {
@@ -672,8 +770,16 @@ function handleMobileProfileAction(actionId) {
   color: #6b7280;
 }
 
+.dark-mode .profile-item-icon {
+  color: #9ca3af;
+}
+
 .profile-menu-item:hover .profile-item-icon {
   color: #8B5A3C;
+}
+
+.dark-mode .profile-menu-item:hover .profile-item-icon {
+  color: #E5C4A0;
 }
 
 .profile-item-label {
@@ -689,10 +795,18 @@ function handleMobileProfileAction(actionId) {
   color: #8B5A3C;
 }
 
+.dark-mode .profile-menu-item:hover .chevron-icon {
+  color: #E5C4A0;
+}
+
 .profile-divider {
   height: 1px;
   background: #e5e7eb;
   margin: 0.5rem 0;
+}
+
+.dark-mode .profile-divider {
+  background: #2d2640;
 }
 
 .logout-item {
@@ -706,6 +820,10 @@ function handleMobileProfileAction(actionId) {
 .logout-item:hover {
   background: #fef2f2;
   color: #dc2626;
+}
+
+.dark-mode .logout-item:hover {
+  background: #2a1a1a;
 }
 
 .logout-item:hover .profile-item-icon {
@@ -722,10 +840,16 @@ function handleMobileProfileAction(actionId) {
   height: 65px;
   background: #ffffff;
   border-top: 1px solid #e5e7eb;
-  z-index: 100; /* Changed from 1000 to 100 */
+  z-index: 100;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
 
+.mobile-bottom-nav.dark-mode {
+  background: #1a1626;
+  border-top: 1px solid #2d2640;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+}
 
 .mobile-nav-item {
   display: flex;
@@ -742,8 +866,16 @@ function handleMobileProfileAction(actionId) {
   gap: 0.3rem;
 }
 
+.dark-mode .mobile-nav-item {
+  color: #9ca3af;
+}
+
 .mobile-nav-item.active {
   color: #000;
+}
+
+.dark-mode .mobile-nav-item.active {
+  color: #E5C4A0;
 }
 
 .mobile-icon {
@@ -761,6 +893,10 @@ function handleMobileProfileAction(actionId) {
   color: #000;
 }
 
+.dark-mode .mobile-label {
+  color: #e5e7eb;
+}
+
 /* More Menu Overlay */
 .more-menu-overlay {
   position: fixed;
@@ -768,22 +904,18 @@ function handleMobileProfileAction(actionId) {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6); /* Increase from 0.5 to 0.6 */
-  z-index: 10000; /* Changed from 1001 to 10000 */
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 10000;
   display: flex;
   align-items: flex-end;
 }
 
 .more-menu-popup {
   width: 100%;
-  z-index: 10001; /* Add this line */
+  z-index: 10001;
 }
 
-/* More Menu Popup */
-.more-menu-popup {
-  width: 100%;
-}
-
+/* More Menu Content */
 .more-menu-content {
   background: #ffffff;
   border-radius: 20px 20px 0 0;
@@ -792,6 +924,12 @@ function handleMobileProfileAction(actionId) {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.more-menu-content.dark-mode {
+  background: #1a1626;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .more-menu-header {
@@ -804,6 +942,11 @@ function handleMobileProfileAction(actionId) {
   font-size: 1.125rem;
   color: #1f2937;
   flex-shrink: 0;
+}
+
+.dark-mode .more-menu-header {
+  border-bottom: 1px solid #2d2640;
+  color: #e5e7eb;
 }
 
 .close-btn {
@@ -820,9 +963,18 @@ function handleMobileProfileAction(actionId) {
   transition: all 0.2s;
 }
 
+.dark-mode .close-btn {
+  color: #9ca3af;
+}
+
 .close-btn:hover {
   background: #f3f4f6;
   color: #1f2937;
+}
+
+.dark-mode .close-btn:hover {
+  background: #2d2640;
+  color: #e5e7eb;
 }
 
 .more-menu-items {
@@ -849,12 +1001,24 @@ function handleMobileProfileAction(actionId) {
   margin-bottom: 0.25rem;
 }
 
+.dark-mode .more-menu-item {
+  color: #e5e7eb;
+}
+
 .more-menu-item:hover {
   background: #f9fafb;
 }
 
+.dark-mode .more-menu-item:hover {
+  background: #2d2640;
+}
+
 .more-menu-item.active {
   background: #f0f0f0;
+}
+
+.dark-mode .more-menu-item.active {
+  background: #2d2640;
 }
 
 .more-menu-item.profile-item {
@@ -862,8 +1026,17 @@ function handleMobileProfileAction(actionId) {
   border: 1px solid #e5e7eb;
 }
 
+.dark-mode .more-menu-item.profile-item {
+  background: #0f0d1a;
+  border: 1px solid #2d2640;
+}
+
 .more-menu-item.profile-item:hover {
   background: #f3f4f6;
+}
+
+.dark-mode .more-menu-item.profile-item:hover {
+  background: #2d2640;
 }
 
 .menu-item-icon {
@@ -879,10 +1052,18 @@ function handleMobileProfileAction(actionId) {
   color: #1f2937;
 }
 
+.dark-mode .menu-item-label {
+  color: #e5e7eb;
+}
+
 .mobile-divider {
   height: 1px;
   background: #e5e7eb;
   margin: 1rem 0;
+}
+
+.dark-mode .mobile-divider {
+  background: #2d2640;
 }
 
 /* Mobile User Section */
@@ -892,6 +1073,10 @@ function handleMobileProfileAction(actionId) {
   border-top: 1px solid #e5e7eb;
 }
 
+.dark-mode .mobile-user-section {
+  border-top: 1px solid #2d2640;
+}
+
 .mobile-user-profile {
   display: flex;
   align-items: center;
@@ -899,6 +1084,10 @@ function handleMobileProfileAction(actionId) {
   padding: 0.75rem 1rem;
   background: #f9fafb;
   border-radius: 12px;
+}
+
+.dark-mode .mobile-user-profile {
+  background: #0f0d1a;
 }
 
 .mobile-user-avatar {
@@ -924,9 +1113,17 @@ function handleMobileProfileAction(actionId) {
   color: #1f2937;
 }
 
+.dark-mode .mobile-user-name {
+  color: #e5e7eb;
+}
+
 .mobile-user-role {
   font-size: 0.8rem;
   color: #6b7280;
+}
+
+.dark-mode .mobile-user-role {
+  color: #9ca3af;
 }
 
 /* Fade Animation */
