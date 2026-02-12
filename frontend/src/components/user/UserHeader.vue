@@ -30,35 +30,69 @@
 
         <!-- Settings Button -->
         <button class="icon-button" title="Settings" @click="$emit('open-settings')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 5 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 5 8.51a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.51 5a1.65 1.65 0 0 0 1.51-1V4a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15.49 5a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19 8.51c.06.32.06.66 0 .98"></path>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19.14 12.94a7.48 7.48 0 0 0 .05-.94
+           7.48 7.48 0 0 0-.05-.94l2.03-1.58
+           a.5.5 0 0 0 .12-.65l-1.92-3.32
+           a.5.5 0 0 0-.6-.22l-2.39.96
+           a7.28 7.28 0 0 0-1.63-.94l-.36-2.54
+           a.5.5 0 0 0-.5-.42h-3.84
+           a.5.5 0 0 0-.5.42l-.36 2.54
+           a7.28 7.28 0 0 0-1.63.94l-2.39-.96
+           a.5.5 0 0 0-.6.22L2.71 8.83
+           a.5.5 0 0 0 .12.65l2.03 1.58
+           a7.48 7.48 0 0 0-.05.94
+           7.48 7.48 0 0 0 .05.94l-2.03 1.58
+           a.5.5 0 0 0-.12.65l1.92 3.32
+           a.5.5 0 0 0 .6.22l2.39-.96
+           a7.28 7.28 0 0 0 1.63.94l.36 2.54
+           a.5.5 0 0 0 .5.42h3.84
+           a.5.5 0 0 0 .5-.42l.36-2.54
+           a7.28 7.28 0 0 0 1.63-.94l2.39.96
+           a.5.5 0 0 0 .6-.22l1.92-3.32
+           a.5.5 0 0 0-.12-.65l-2.03-1.58z"/>
+            <circle cx="12" cy="12" r="3"/>
           </svg>
         </button>
 
-        <!-- Notification Button -->
-        <button class="icon-button" title="Notifications">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-          <span class="notification-badge">3</span>
-        </button>
+        <!-- User Notification Component -->
+        <UserNotification
+            :notifications="notifications"
+            @notification-click="handleNotificationClick"
+            @view-all-notifications="handleViewAllNotifications"
+        />
       </div>
     </div>
-
   </header>
 </template>
 
 <script setup>
 import { ref, inject } from 'vue';
+import UserNotification from './UserNotification.vue';
 
 const isDarkMode = inject('isDarkMode', ref(false));
-const showLogoutModal = ref(false);
 
-// Single defineEmits with all events
-const emit = defineEmits(['toggle-sidebar', 'open-settings', 'toggle-dark-mode']);
+// Props
+const props = defineProps({
+  notifications: {
+    type: Array,
+    default: () => []
+  }
+});
 
+// Emits
+const emit = defineEmits(['toggle-sidebar', 'open-settings', 'toggle-dark-mode', 'notification-click', 'view-all-notifications']);
+
+// Methods
+function handleNotificationClick(notification) {
+  emit('notification-click', notification);
+}
+
+function handleViewAllNotifications() {
+  emit('view-all-notifications');
+}
 </script>
 
 <style scoped>
@@ -76,7 +110,7 @@ const emit = defineEmits(['toggle-sidebar', 'open-settings', 'toggle-dark-mode']
   transition: all 0.3s ease;
 }
 
-/* Dark Mode Styles - Professional Dark Purple-Blue */
+/* Dark Mode Styles */
 .top-header.dark-mode {
   background: #1a1626;
   border-bottom: 1px solid #2d2640;
@@ -90,32 +124,6 @@ const emit = defineEmits(['toggle-sidebar', 'open-settings', 'toggle-dark-mode']
   height: 100%;
   padding: 0 1.5rem;
   max-width: 100%;
-}
-
-.menu-toggle {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: transparent;
-  border: none;
-  color: #6B4423;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background 0.2s;
-}
-
-.menu-toggle:hover {
-  background: #f3f4f6;
-}
-
-.dark-mode .menu-toggle {
-  color: #D4A574;
-}
-
-.dark-mode .menu-toggle:hover {
-  background: #2d2640;
 }
 
 .header-logo {
@@ -158,29 +166,7 @@ const emit = defineEmits(['toggle-sidebar', 'open-settings', 'toggle-dark-mode']
   color: #E5C4A0;
 }
 
-.notification-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 18px;
-  height: 18px;
-  background: #ef4444;
-  color: white;
-  font-size: 10px;
-  font-weight: 600;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 /* Responsive */
-@media (max-width: 1024px) {
-  .menu-toggle {
-    display: flex;
-  }
-}
-
 @media (max-width: 768px) {
   .header-content {
     padding: 0 1rem;

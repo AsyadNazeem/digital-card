@@ -12,11 +12,13 @@ const router = express.Router();
 const emailOtpStore = new Map();
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.zoho.com",
+    port: 587,
+    secure: false,
     auth: {
         user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-    },
+        pass: process.env.MAIL_PASS
+    }
 });
 
 // Check if email already exists

@@ -57,15 +57,17 @@
                   v-if="c.whatsappChannel"
                   :href="c.whatsappChannel"
                   target="_blank"
-                  class="link"
-                  style="display: inline-flex; align-items: center; gap: 4px;"
+                  class="btn-action whatsapp"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path
-                      d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 11.5a8.5 8.5 0 1 1-3-6.5"/>
+                  <path d="M16 8c-1.5-1.5-4-1-5 1s1 4 2 5 3 3 5 2 2.5-3.5 1-5"/>
                 </svg>
-                View Channel
+                Channel
               </a>
+
               <span v-else>-</span>
             </td>
             <td data-label="Status">
@@ -77,7 +79,16 @@
               <span v-else>-</span>
             </td>
             <td data-label="Wallet">
-              <button class="btn-primary" @click="saveToGoogleWallet(c)">Save</button>
+              <button class="btn-action wallet" @click="saveToGoogleWallet(c)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="6" width="20" height="12" rx="2"/>
+                  <path d="M16 12h4"/>
+                  <circle cx="16" cy="12" r="1"/>
+                </svg>
+                Save
+              </button>
             </td>
             <td class="action-buttons">
               <a
@@ -86,11 +97,25 @@
                   rel="noopener"
                   class="btn-action view"
               >
-                👁 View
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg> View
               </a>
-              <button class="btn-action qr" @click="openQrPopup(c)">🔳 QR</button>
-              <button class="btn-action edit" @click="editContact(c)">✏️ Edit</button>
-              <button class="btn-action delete" @click="deleteContact(c.id)">🗑️ Delete</button>
+              <button class="btn-action qr" @click="openQrPopup(c)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="5" height="5"/>
+                <rect x="16" y="3" width="5" height="5"/>
+                <rect x="3" y="16" width="5" height="5"/>
+                <path d="M16 16h2v2h-2zM20 16h1v5h-5v-1"/>
+              </svg> QR</button>
+              <button class="btn-action edit" @click="editContact(c)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5l4 4L7 21H3v-4z"/>
+              </svg> Edit</button>
+              <button class="btn-action delete" @click="deleteContact(c.id)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-2 14H7L5 6"/>
+              </svg> Delete</button>
             </td>
           </tr>
           </tbody>
@@ -1658,26 +1683,98 @@ onMounted(() => {
   border-color: #3d3555;
 }
 
-.btn-action {
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin: 0 4px;
-  font-size: 14px;
-  transition: 0.2s;
-  color: #0f172a;
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.dark-mode .btn-action {
-  color: #e5e7eb;
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.btn-action.view {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.dark-mode .btn-action.view {
+  background: #1e2a3a;
+  color: #93c5fd;
+}
+
+.btn-action.view:hover {
+  background: #bfdbfe;
+}
+
+.dark-mode .btn-action.view:hover {
+  background: #2d2640;
+}
+
+.btn-action.edit {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.dark-mode .btn-action.edit {
+  background: #3a2a1a;
+  color: #fde68a;
 }
 
 .btn-action.edit:hover {
-  color: #007bff;
+  background: #fde68a;
+}
+
+.dark-mode .btn-action.edit:hover {
+  background: #4a3a2a;
+}
+
+.btn-action.delete {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dark-mode .btn-action.delete {
+  background: #2a1a1a;
+  color: #fca5a5;
 }
 
 .btn-action.delete:hover {
-  color: #dc3545;
+  background: #fecaca;
+}
+
+.dark-mode .btn-action.delete:hover {
+  background: #3a1a1a;
+}
+
+.btn-action.qr {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.dark-mode .btn-action.qr {
+  background: #2d2640;
+  color: #d1d5db;
+}
+
+.btn-action.qr:hover {
+  background: #d1d5db;
+}
+
+.dark-mode .btn-action.qr:hover {
+  background: #3d3555;
 }
 
 .search-input {
@@ -1802,6 +1899,42 @@ onMounted(() => {
 .dark-mode .btn-primary:disabled {
   background: #2d2640;
   color: #6b7280;
+}
+
+.btn-action.wallet {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.dark-mode .btn-action.wallet {
+  background: #1a2a36;
+  color: #7dd3fc;
+}
+
+.btn-action.wallet:hover {
+  background: #bae6fd;
+}
+
+.dark-mode .btn-action.wallet:hover {
+  background: #22384a;
+}
+
+.btn-action.whatsapp {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.dark-mode .btn-action.whatsapp {
+  background: #1a3a23;
+  color: #86efac;
+}
+
+.btn-action.whatsapp:hover {
+  background: #bbf7d0;
+}
+
+.dark-mode .btn-action.whatsapp:hover {
+  background: #224a33;
 }
 
 /* Content Card */

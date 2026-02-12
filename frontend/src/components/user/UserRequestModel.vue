@@ -5,10 +5,12 @@
       :class="['limit-banner', { 'dark-mode': isDarkMode }]">
     <div class="limit-banner-content">
       <div class="limit-banner-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 9v4"/>
+          <path d="M12 17h.01"/>
+          <path d="M10.3 3.86l-7.18 12.42A2 2 0 0 0 4.82 19h14.36a2 2 0 0 0 1.7-2.72L13.7 3.86a2 2 0 0 0-3.4 0z"/>
         </svg>
       </div>
       <div class="limit-banner-text">

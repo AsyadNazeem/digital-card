@@ -72,8 +72,14 @@
               <span :class="['status-badge', c.status]">{{ c.status }}</span>
             </td>
             <td class="action-buttons">
-              <button class="btn-action edit" @click="editCompany(c)">✏️ Edit</button>
-              <button class="btn-action delete" @click="deleteCompany(c.id)">🗑️ Delete</button>
+              <button class="btn-action edit" @click="editCompany(c)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5l4 4L7 21H3v-4z"/>
+              </svg> Edit</button>
+              <button class="btn-action delete" @click="deleteCompany(c.id)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-2 14H7L5 6"/>
+              </svg> Delete</button>
             </td>
           </tr>
           </tbody>
@@ -1985,25 +1991,70 @@ onMounted(async () => {
 }
 
 .btn-action {
-  background: none;
+  padding: 0.375rem 0.75rem;
   border: none;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
   cursor: pointer;
-  margin: 0 4px;
-  font-size: 14px;
-  transition: 0.2s;
-  color: #0f172a;
+  transition: all 0.2s;
+  white-space: nowrap;
+  margin-left: 10px;
 }
 
-.dark-mode .btn-action {
-  color: #e5e7eb;
+.btn-action.view {
+  background: #dbeafe;
+  color: #5c4033;
 }
+
+.dark-mode .btn-action.view {
+  background: #1e2a3a;
+  color: #93c5fd;
+}
+
+.btn-action.view:hover {
+  background: #bfdbfe;
+}
+
+.dark-mode .btn-action.view:hover {
+  background: #2d2640;
+}
+
+.btn-action.edit {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.dark-mode .btn-action.edit {
+  background: #3a2a1a;
+  color: #fde68a;
+}
+
 
 .btn-action.edit:hover {
-  color: #007bff;
+  background: #fde68a;
+}
+
+.dark-mode .btn-action.edit:hover {
+  background: #4a3a2a;
+}
+
+.btn-action.delete {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dark-mode .btn-action.delete {
+  background: #2a1a1a;
+  color: #fca5a5;
 }
 
 .btn-action.delete:hover {
-  color: #dc3545;
+  background: #fecaca;
+}
+
+.dark-mode .btn-action.delete:hover {
+  background: #3a1a1a;
 }
 
 /* Field Hint */

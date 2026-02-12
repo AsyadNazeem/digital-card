@@ -17,10 +17,29 @@
     <div class="users-table-card">
       <div class="admin-role-banner">
         <div v-if="isSuperAdmin" class="role-indicator super">
-          🌟 Super Admin Access
+          <svg xmlns="http://www.w3.org/2000/svg"
+               width="16" height="16"
+               viewBox="0 0 24 24"
+               fill="currentColor">
+            <path d="M12 2l2.9 6 6.6.9-4.8 4.7 1.1 6.6L12 17l-5.8 3.2 1.1-6.6L2.5 8.9l6.6-.9z"/>
+          </svg>
+          Super Admin Access
         </div>
+
         <div v-else class="role-indicator normal">
-          👤 Standard Admin
+          <svg xmlns="http://www.w3.org/2000/svg"
+               width="16" height="16"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-3-3.9"/>
+            <path d="M4 21v-2a4 4 0 0 1 3-3.9"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          Standard Admin
         </div>
       </div>
       <div class="table-controls">
@@ -92,9 +111,37 @@
             <td class="user-email">{{ user.email }}</td>
             <td class="text-muted">{{ user.phone || 'N/A' }}</td>
             <td>
-        <span class="badge" :class="user.provider">
-          {{ user.provider === 'google' ? '🔗 Google' : '📧 Local' }}
-        </span>
+      <span class="badge" :class="user.provider">
+  <template v-if="user.provider === 'google'">
+    <svg xmlns="http://www.w3.org/2000/svg"
+         width="16" height="16"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+      <path d="M21 12a9 9 0 1 1-3-6.7"/>
+      <line x1="21" y1="3" x2="12" y2="12"/>
+    </svg>
+    Google
+  </template>
+
+  <template v-else>
+    <svg xmlns="http://www.w3.org/2000/svg"
+         width="16" height="16"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2"/>
+      <polyline points="3 7 12 13 21 7"/>
+    </svg>
+    Local
+  </template>
+</span>
             </td>
             <td>
         <span class="badge" :class="user.registrationType">
@@ -106,7 +153,7 @@
             <td class="text-muted">{{ formatDate(user.createdAt) }}</td>
             <td>
   <span class="plan-badge" :class="user.plan">
-    {{ user.plan?.toUpperCase()}}
+    {{ user.plan?.toUpperCase() }}
   </span>
             </td>
             <td class="actions" @click.stop>
@@ -155,34 +202,129 @@
                   <div class="user-email">{{ user.email }}</div>
                 </div>
                 <span class="provider-badge-mobile" :class="user.provider">
-            {{ user.provider === 'google' ? '🔗' : '📧' }}
-          </span>
+  <template v-if="user.provider === 'google'">
+    <svg xmlns="http://www.w3.org/2000/svg"
+         width="14" height="14"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+      <path d="M21 12a9 9 0 1 1-3-6.7"/>
+      <line x1="21" y1="3" x2="12" y2="12"/>
+    </svg>
+  </template>
+
+  <template v-else>
+    <svg xmlns="http://www.w3.org/2000/svg"
+         width="14" height="14"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2"/>
+      <polyline points="3 7 12 13 21 7"/>
+    </svg>
+  </template>
+</span>
               </div>
 
               <!-- Card Body -->
               <div class="card-body">
                 <div class="detail-row">
                   <div class="detail-item">
-                    <span class="detail-label">📞 Phone</span>
+      <span class="detail-label">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="16" height="16"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+          <path d="M22 16.9v3a2 2 0 0 1-2.2 2
+                   19.8 19.8 0 0 1-8.6-3.1
+                   19.5 19.5 0 0 1-6-6
+                   19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3
+                   a2 2 0 0 1 2 1.7
+                   12.7 12.7 0 0 0 .7 2.8
+                   2 2 0 0 1-.5 2.1L8 9.9
+                   a16 16 0 0 0 6 6l1.3-1.3
+                   a2 2 0 0 1 2.1-.5
+                   12.7 12.7 0 0 0 2.8.7
+                   2 2 0 0 1 1.7 2z"/>
+        </svg>
+        Phone
+      </span>
                     <span class="detail-value">{{ user.phone || 'N/A' }}</span>
                   </div>
+
                   <div class="detail-item">
-                    <span class="detail-label">📋 Type</span>
+      <span class="detail-label">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="16" height="16"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="2"/>
+          <line x1="7" y1="8" x2="17" y2="8"/>
+          <line x1="7" y1="12" x2="17" y2="12"/>
+        </svg>
+        Type
+      </span>
                     <span class="badge-small" :class="user.registrationType">
-                {{
-                        getRegistrationTypeLabel(user.registrationType).replace('👤 ', '').replace('⚡ ', '').replace('🔗 ', '')
+        {{
+                        getRegistrationTypeLabel(user.registrationType)
+                            .replace('👤 ', '')
+                            .replace('⚡ ', '')
+                            .replace('🔗 ', '')
                       }}
-              </span>
+      </span>
                   </div>
                 </div>
 
                 <div class="detail-row">
                   <div class="detail-item">
-                    <span class="detail-label">🏢 Companies</span>
+      <span class="detail-label">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="16" height="16"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+          <rect x="3" y="7" width="18" height="13" rx="2"/>
+          <path d="M16 3h-8v4h8z"/>
+        </svg>
+        Companies
+      </span>
                     <span class="limit-badge">{{ user.companyLimit }}</span>
                   </div>
+
                   <div class="detail-item">
-                    <span class="detail-label">👥 Contacts</span>
+      <span class="detail-label">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="16" height="16"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M17 11a4 4 0 1 0 0-8"/>
+          <path d="M3 21v-2a6 6 0 0 1 12 0v2"/>
+          <path d="M21 21v-2a4 4 0 0 0-3-3.9"/>
+        </svg>
+        Contacts
+      </span>
                     <span class="limit-badge">{{ user.contactLimit }}</span>
                   </div>
                 </div>
@@ -294,7 +436,19 @@
 
               <div class="limit-card">
                 <div class="limit-header">
-                  <span class="limit-icon">🏢</span>
+                <span class="limit-icon">
+  <svg xmlns="http://www.w3.org/2000/svg"
+       width="16" height="16"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round">
+    <rect x="3" y="7" width="18" height="13" rx="2"/>
+    <path d="M16 3h-8v4h8z"/>
+  </svg>
+</span>
                   <span class="limit-label">Company Limit</span>
                 </div>
                 <div class="limit-controls">
@@ -320,7 +474,21 @@
 
               <div class="limit-card">
                 <div class="limit-header">
-                  <span class="limit-icon">👥</span>
+                  <span class="limit-icon">
+  <svg xmlns="http://www.w3.org/2000/svg"
+       width="16" height="16"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round">
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M17 11a4 4 0 1 0 0-8"/>
+    <path d="M3 21v-2a6 6 0 0 1 12 0v2"/>
+    <path d="M21 21v-2a4 4 0 0 0-3-3.9"/>
+  </svg>
+</span>
                   <span class="limit-label">Contact Limit</span>
                 </div>
                 <div class="limit-controls">
@@ -355,7 +523,14 @@
                   <line x1="12" y1="2" x2="12" y2="6"></line>
                   <line x1="12" y1="18" x2="12" y2="22"></line>
                 </svg>
-                <span v-else>💾 Save Changes</span>
+                <span v-else class="btn-save-content">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+    <polyline points="7 3 7 8 15 8"></polyline>
+  </svg>
+  Save Changes
+</span>
               </button>
             </div>
 
@@ -459,7 +634,18 @@
                         <td>{{ index + 1 }}</td>
                         <td class="td-name">
                           <div class="name-cell">
-                            <span class="cell-icon">🏢</span>
+                            <span class="cell-icon">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+    <line x1="9" y1="6" x2="9" y2="6.01"></line>
+    <line x1="15" y1="6" x2="15" y2="6.01"></line>
+    <line x1="9" y1="10" x2="9" y2="10.01"></line>
+    <line x1="15" y1="10" x2="15" y2="10.01"></line>
+    <line x1="9" y1="14" x2="9" y2="14.01"></line>
+    <line x1="15" y1="14" x2="15" y2="14.01"></line>
+    <line x1="9" y1="18" x2="15" y2="18"></line>
+  </svg>
+</span>
                             <span>{{ company.companyName || 'Unnamed Company' }}</span>
                           </div>
                         </td>
@@ -508,7 +694,18 @@
                   <div v-for="(company, index) in companies" :key="company.id" class="data-card">
                     <div class="data-card-header">
                       <div class="data-card-title">
-                        <span class="data-card-icon">🏢</span>
+                    <span class="data-card-icon">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+    <line x1="9" y1="6" x2="9" y2="6.01"></line>
+    <line x1="15" y1="6" x2="15" y2="6.01"></line>
+    <line x1="9" y1="10" x2="9" y2="10.01"></line>
+    <line x1="15" y1="10" x2="15" y2="10.01"></line>
+    <line x1="9" y1="14" x2="9" y2="14.01"></line>
+    <line x1="15" y1="14" x2="15" y2="14.01"></line>
+    <line x1="9" y1="18" x2="15" y2="18"></line>
+  </svg>
+</span>
                         <span class="data-card-name">{{ company.companyName || 'Unnamed Company' }}</span>
                       </div>
                       <span class="status-badge" :class="company.status || 'active'">
@@ -517,7 +714,14 @@
                     </div>
                     <div class="data-card-body">
                       <div class="data-card-row">
-                        <span class="data-card-label">🌐 Website</span>
+                        <span class="data-card-label">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="2" y1="12" x2="22" y2="12"></line>
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+  </svg>
+  Website
+</span>
                         <a v-if="company.website" :href="company.website" target="_blank" class="data-card-value link">
                           {{ company.displayUrl || 'View' }}
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -530,7 +734,13 @@
                         <span v-else class="data-card-value" style="color: #8a7b75;">No website</span>
                       </div>
                       <div class="data-card-row">
-                        <span class="data-card-label">📧 Email</span>
+                       <span class="data-card-label">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+  </svg>
+  Email
+</span>
                         <span class="data-card-value">{{ company.email || '-' }}</span>
                       </div>
                     </div>
@@ -618,7 +828,12 @@
                         <td>{{ index + 1 }}</td>
                         <td class="td-name">
                           <div class="name-cell">
-                            <span class="cell-icon">👤</span>
+                           <span class="cell-icon">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+    <circle cx="12" cy="7" r="4"></circle>
+  </svg>
+</span>
                             <span>{{ contact.firstName }} {{ contact.lastName }}</span>
                           </div>
                         </td>
@@ -679,25 +894,56 @@
                   <div v-for="(contact, index) in filteredContacts" :key="contact.id" class="data-card">
                     <div class="data-card-header">
                       <div class="data-card-title">
-                        <span class="data-card-icon">👤</span>
+                       <span class="data-card-icon">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+    <circle cx="12" cy="7" r="4"></circle>
+  </svg>
+</span>
                         <span class="data-card-name">{{ contact.firstName }} {{ contact.lastName }}</span>
                       </div>
                     </div>
                     <div class="data-card-body">
                       <div class="data-card-row">
-                        <span class="data-card-label">📧 Email</span>
+                        <span class="data-card-label">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+  </svg>
+  Email
+</span>
                         <span class="data-card-value">{{ contact.email || '-' }}</span>
                       </div>
                       <div class="data-card-row">
-                        <span class="data-card-label">📞 Mobile</span>
+                    <span class="data-card-label">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+  </svg>
+  Mobile
+</span>
                         <span class="data-card-value">{{ contact.mobile || '-' }}</span>
                       </div>
                       <div class="data-card-row">
-                        <span class="data-card-label">🏢 Company</span>
+                 <span class="data-card-label">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+    <line x1="9" y1="6" x2="9" y2="6.01"></line>
+    <line x1="15" y1="6" x2="15" y2="6.01"></line>
+    <line x1="9" y1="10" x2="9" y2="10.01"></line>
+    <line x1="15" y1="10" x2="15" y2="10.01"></line>
+  </svg>
+  Company
+</span>
                         <span class="data-card-value">{{ getCompanyName(contact.companyId) }}</span>
                       </div>
                       <div class="data-card-row">
-                        <span class="data-card-label">💼 Designation</span>
+       <span class="data-card-label">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+  </svg>
+  Designation
+</span>
                         <span class="data-card-value">{{ contact.designation || '-' }}</span>
                       </div>
                     </div>
@@ -793,7 +1039,18 @@
                         <td class="td-company">{{ item.Company?.companyName || '-' }}</td>
                         <td class="td-name">
                           <div class="name-cell">
-                            <span class="cell-icon">🏢</span>
+                      <span class="cell-icon">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+    <line x1="9" y1="6" x2="9" y2="6.01"></line>
+    <line x1="15" y1="6" x2="15" y2="6.01"></line>
+    <line x1="9" y1="10" x2="9" y2="10.01"></line>
+    <line x1="15" y1="10" x2="15" y2="10.01"></line>
+    <line x1="9" y1="14" x2="9" y2="14.01"></line>
+    <line x1="15" y1="14" x2="15" y2="14.01"></line>
+    <line x1="9" y1="18" x2="15" y2="18"></line>
+  </svg>
+</span>
                             <span>{{ item.branchName }}</span>
                           </div>
                         </td>
@@ -866,17 +1123,36 @@
                   <div v-for="(item, index) in review" :key="item.id" class="data-card">
                     <div class="data-card-header">
                       <div class="data-card-title">
-                        <span class="data-card-icon">⭐</span>
+                    <span class="data-card-icon">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+  </svg>
+</span>
                         <span class="data-card-name">{{ item.branchName }}</span>
                       </div>
                     </div>
                     <div class="data-card-body">
                       <div class="data-card-row">
-                        <span class="data-card-label">🏢 Company</span>
+    <span class="data-card-label">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+    <line x1="9" y1="6" x2="9" y2="6.01"></line>
+    <line x1="15" y1="6" x2="15" y2="6.01"></line>
+    <line x1="9" y1="10" x2="9" y2="10.01"></line>
+    <line x1="15" y1="10" x2="15" y2="10.01"></line>
+  </svg>
+  Company
+</span>
                         <span class="data-card-value">{{ item.Company?.companyName || '-' }}</span>
                       </div>
                       <div class="data-card-row">
-                        <span class="data-card-label">📍 Location</span>
+            <span class="data-card-label">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+    <circle cx="12" cy="10" r="3"></circle>
+  </svg>
+  Location
+</span>
                         <span class="data-card-value">{{ item.location || '-' }}</span>
                       </div>
                       <div class="data-card-row">
@@ -971,8 +1247,24 @@
             </div>
 
             <div class="qr-actions">
-              <button class="btn-download" @click="downloadQr">⬇️ Download</button>
-              <button class="btn-share" @click="sharePoster">📤 Share Poster</button>
+              <button class="btn-download" @click="downloadQr">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download
+              </button>
+              <button class="btn-share" @click="sharePoster">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="18" cy="5" r="3"></circle>
+                  <circle cx="6" cy="12" r="3"></circle>
+                  <circle cx="18" cy="19" r="3"></circle>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                Share Poster
+              </button>
             </div>
           </div>
         </div>
@@ -1631,6 +1923,118 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
+/* ========================================
+   SVG ICON STYLING
+======================================== */
+
+/* Save button content */
+.btn-save-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-save-content svg {
+  flex-shrink: 0;
+}
+
+/* Cell icons in tables */
+.cell-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #5c4033;
+}
+
+.cell-icon svg {
+  flex-shrink: 0;
+}
+
+/* Data card icons (mobile) */
+.data-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #5c4033;
+}
+
+.data-card-icon svg {
+  flex-shrink: 0;
+}
+
+/* Data card labels with icons */
+.data-card-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.data-card-label svg {
+  flex-shrink: 0;
+  color: #8a7b75;
+}
+
+/* QR popup buttons */
+.btn-download,
+.btn-share {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-download svg,
+.btn-share svg {
+  flex-shrink: 0;
+}
+
+/* Detail labels with icons */
+.detail-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detail-label svg {
+  flex-shrink: 0;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .cell-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .data-card-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .data-card-label svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .detail-label svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .data-card-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .btn-download svg,
+  .btn-share svg {
+    width: 14px;
+    height: 14px;
+  }
+}
 /* Plan Badge */
 .plan-badge {
   display: inline-block;
@@ -1709,10 +2113,8 @@ onMounted(() => {
   padding: 8px 36px 8px 16px;
   border-radius: 9999px;
   border: 1px solid #e5e1dc;
-  background:
-      linear-gradient(135deg, #ffffff 0%, #f8f6f4 100%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%235c4033' stroke-width='2'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E")
-      no-repeat right 12px center;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f6f4 100%),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%235c4033' stroke-width='2'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") no-repeat right 12px center;
 
   background-size: 16px;
   font-weight: 700;
@@ -1735,9 +2137,8 @@ onMounted(() => {
 .plan-select:focus {
   outline: none;
   border-color: #5c4033;
-  box-shadow:
-      0 0 0 3px rgba(92, 64, 51, 0.15),
-      0 4px 14px rgba(92, 64, 51, 0.25);
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.15),
+  0 4px 14px rgba(92, 64, 51, 0.25);
 }
 
 /* MOBILE TUNING */

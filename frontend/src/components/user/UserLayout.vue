@@ -279,44 +279,49 @@ defineExpose({
   background: #0f0d1a;
 }
 
-/* Main Content */
+/* Main Content - FIXED */
 .main-content {
   margin-top: 64px;
   padding: 2rem;
   min-height: calc(100vh - 64px);
   position: relative;
   z-index: auto;
-
-  /* KEY FIX */
-  width: calc(100vw - 260px);
-  margin-left: 260px;
   overflow-x: hidden;
 }
 
+/* Desktop with sidebar - ONLY apply sidebar margins on desktop */
+@media (min-width: 1025px) {
+  .main-content {
+    width: calc(100vw - 260px);
+    margin-left: 260px;
+  }
 
-.main-content.expanded {
-  width: calc(100vw - 72px);
-  margin-left: 72px;
+  .main-content.expanded {
+    width: calc(100vw - 72px);
+    margin-left: 72px;
+  }
 }
 
-
-/* Responsive */
+/* Tablet and Mobile - NO sidebar margins */
 @media (max-width: 1024px) {
   .main-content {
-    margin-left: 0;
-    padding-bottom: 80px;
+    width: 100vw;
+    margin-left: 0 !important;
+    /* Add safe area padding for notched devices + bottom nav */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
     z-index: 1;
   }
 
   .main-content.expanded {
-    margin-left: 0;
+    width: 100vw;
+    margin-left: 0 !important;
   }
 }
 
 @media (max-width: 768px) {
   .main-content {
     padding: 1rem;
-    padding-bottom: 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 }
 </style>

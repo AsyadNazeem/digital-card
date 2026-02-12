@@ -29,7 +29,7 @@ console.log("🔍 ENV TEST:", {
 
 // ✅ Email Transporter Configuration
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host: "smtp.zoho.com",
     port: 587,
     secure: false, // MUST be false for port 587
     auth: {

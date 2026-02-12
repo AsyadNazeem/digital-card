@@ -261,41 +261,38 @@ const tabs = [
   {
     id: 'company',
     label: 'Company',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"></path></svg>'
-  },
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 21v-6h6v6"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01"/></svg>'  },
   {
     id: 'contact',
     label: 'Contacts',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>'
-  },
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>'  },
   {
     id: 'review',
     label: 'Review',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>'
-  },
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>'  },
   {
     id: 'analytics',
     label: 'Analytics',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>'
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="5"/><rect x="12" y="9" width="3" height="9"/><rect x="17" y="5" width="3" height="13"/></svg>'
   },
   {
     id: 'theme',
     label: 'Themes',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>'
-  },
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9c0-1.5-1.2-2.5-2.7-2.5H16a2 2 0 0 1-2-2V5.7C14 4.2 13 3 12 3z"/></svg>'
+  }
 ];
 
 const profileMenuItems = [
   {
     id: 'settings',
     label: 'Settings',
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H1m18.2 5.2l-4.2-4.2m0-6l4.2-4.2"></path></svg>',
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c0 .6.4 1 1 1h.1a2 2 0 1 1 0 4h-.1c-.6 0-1 .4-1 1z"/></svg>',
     hasChevron: true
   },
   {
     id: 'upgrade',
     label: 'Upgrade plan',
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>',
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l10 5-10 5-10-5 10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>',
     hasChevron: false
   },
 ];
@@ -304,13 +301,13 @@ const mobileProfileItems = [
   {
     id: 'settings',
     label: 'Settings',
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H1m18.2 5.2l-4.2-4.2m0-6l4.2-4.2"></path></svg>',
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c0 .6.4 1 1 1h.1a2 2 0 1 1 0 4h-.1c-.6 0-1 .4-1 1z"/></svg>',
     hasChevron: true
   },
   {
     id: 'upgrade',
     label: 'Upgrade plan',
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>',
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l10 5-10 5-10-5 10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>',
     hasChevron: false
   }
 ];
@@ -364,6 +361,13 @@ function handleMobileProfileAction(actionId) {
 </script>
 
 <style scoped>
+/* ===================================
+   MOBILE SAFE AREA SUPPORT
+   =================================== */
+:root {
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 .mobile-user-profile {
   display: flex;
   align-items: center;
@@ -830,7 +834,9 @@ function handleMobileProfileAction(actionId) {
   color: #dc2626;
 }
 
-/* Mobile Bottom Navigation */
+/* ===================================
+   MOBILE BOTTOM NAVIGATION (UPDATED)
+   =================================== */
 .mobile-bottom-nav {
   display: none;
   position: fixed;
@@ -838,6 +844,8 @@ function handleMobileProfileAction(actionId) {
   left: 0;
   right: 0;
   height: 65px;
+  /* Add safe area padding for mobile browser controls */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   background: #ffffff;
   border-top: 1px solid #e5e7eb;
   z-index: 100;
@@ -913,6 +921,8 @@ function handleMobileProfileAction(actionId) {
 .more-menu-popup {
   width: 100%;
   z-index: 10001;
+  /* Add safe area padding at bottom */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* More Menu Content */
@@ -981,6 +991,8 @@ function handleMobileProfileAction(actionId) {
   padding: 0.75rem;
   overflow-y: auto;
   flex: 1;
+  /* Add safe area padding at bottom for scrollable content */
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 .more-menu-item {
@@ -1160,7 +1172,9 @@ function handleMobileProfileAction(actionId) {
   transform: translateY(100%);
 }
 
-/* Responsive */
+/* ===================================
+   RESPONSIVE BREAKPOINTS
+   =================================== */
 @media (max-width: 1024px) {
   .desktop-sidebar {
     display: none;
@@ -1172,6 +1186,11 @@ function handleMobileProfileAction(actionId) {
 
   .profile-overlay {
     display: none;
+  }
+
+  /* Add body padding to prevent content from going under the nav */
+  body {
+    padding-bottom: calc(65px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -1188,9 +1207,15 @@ function handleMobileProfileAction(actionId) {
   .mobile-label {
     font-size: 0.6rem;
   }
+
+  body {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
-/* CRITICAL: Banner active adjustments - moved to end for specificity */
+/* ===================================
+   CRITICAL: Banner active adjustments
+   =================================== */
 body.banner-active .desktop-sidebar {
   top: 140px !important;
 }

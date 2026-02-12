@@ -10,9 +10,9 @@ const otpStore = new Map(); // key: email, value: { otp, expires }
 
 // ✅ CRITICAL FIX: Correct Gmail configuration
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // use SSL
+    host: "smtp.zoho.com",
+    port: 587,
+    secure: false, // use SSL
     auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,

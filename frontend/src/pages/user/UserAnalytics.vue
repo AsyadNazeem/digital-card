@@ -4,10 +4,18 @@
     <!-- Header -->
     <div class="analytics-header">
       <div class="header-left">
-        <h2 class="card-title">📊 Analytics Dashboard</h2>
+        <h2 class="card-title" style="display:flex;align-items:center;gap:8px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          Analytics Dashboard
+        </h2>
         <p class="analytics-subtitle">Track your contact card performance</p>
       </div>
-
       <div class="analytics-filters">
         <!-- Contact Filter -->
         <div class="filter-group">
@@ -167,7 +175,15 @@
         <div v-if="hasAnalyticsAccess" class="analytics-charts">
           <!-- Timeline Chart -->
           <div class="chart-container timeline-chart full-width">
-            <h3>📈 Views Over Time</h3>
+            <h3 style="display:flex;align-items:center;gap:8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 17 9 11 13 15 21 7"/>
+                <polyline points="14 7 21 7 21 14"/>
+              </svg>
+              Views Over Time
+            </h3>
             <div class="chart-wrapper">
               <canvas ref="timelineChart"></canvas>
             </div>
@@ -175,7 +191,16 @@
 
           <!-- Click Distribution -->
           <div class="chart-container clicks-chart">
-            <h3>🎯 Click Distribution</h3>
+            <h3 style="display:flex;align-items:center;gap:8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="6"/>
+                <circle cx="12" cy="12" r="2"/>
+              </svg>
+              Click Distribution
+            </h3>
             <div class="chart-wrapper">
               <canvas ref="clicksChart"></canvas>
             </div>
@@ -183,7 +208,15 @@
 
           <!-- Peak Hours Chart -->
           <div class="chart-container peak-hours-chart">
-            <h3>⏰ Peak Activity Hours</h3>
+            <h3 style="display:flex;align-items:center;gap:8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Peak Activity Hours
+            </h3>
             <div class="chart-wrapper">
               <canvas ref="peakHoursChart"></canvas>
             </div>
@@ -191,35 +224,90 @@
 
           <!-- Detailed Clicks Breakdown Table -->
           <div class="chart-container clicks-table full-width">
-            <h3>📊 Detailed Click Analysis</h3>
+            <h3 style="display:flex;align-items:center;gap:8px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+              Detailed Click Analysis
+            </h3>
 
             <!-- Summary Cards -->
             <div class="click-summary-grid">
+
               <div class="summary-card">
-                <span class="summary-icon">📞</span>
+    <span class="summary-icon">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <path d="M22 16.92V19a2 2 0 0 1-2.18 2
+                 19.79 19.79 0 0 1-8.63-3.07
+                 19.5 19.5 0 0 1-6-6
+                 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4 2h2.09a2 2 0 0 1 2 1.72
+                 12.84 12.84 0 0 0 .7 2.81
+                 2 2 0 0 1-.45 2.11L7.09 9.91
+                 a16 16 0 0 0 6 6l1.27-1.27
+                 a2 2 0 0 1 2.11-.45
+                 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+      </svg>
+    </span>
                 <span class="summary-label">Communication</span>
                 <span class="summary-value">{{ analyticsData.clickSummary?.communication || 0 }}</span>
               </div>
+
               <div class="summary-card">
-                <span class="summary-icon">📱</span>
+    <span class="summary-icon">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M2 12h20"/>
+        <path d="M12 2a15 15 0 0 1 0 20"/>
+      </svg>
+    </span>
                 <span class="summary-label">Social Media</span>
                 <span class="summary-value">{{ analyticsData.clickSummary?.social || 0 }}</span>
               </div>
+
               <div class="summary-card">
-                <span class="summary-icon">📄</span>
+    <span class="summary-icon">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <rect x="4" y="2" width="16" height="20" rx="2"/>
+        <line x1="8" y1="6" x2="16" y2="6"/>
+        <line x1="8" y1="10" x2="16" y2="10"/>
+      </svg>
+    </span>
                 <span class="summary-label">Content</span>
                 <span class="summary-value">{{ analyticsData.clickSummary?.content || 0 }}</span>
               </div>
+
               <div class="summary-card">
-                <span class="summary-icon">🧭</span>
+    <span class="summary-icon">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <path d="M12 2C8 6 4 8 4 12a8 8 0 0 0 16 0c0-4-4-6-8-10z"/>
+        <circle cx="12" cy="12" r="2"/>
+      </svg>
+    </span>
                 <span class="summary-label">Navigation</span>
                 <span class="summary-value">{{ analyticsData.clickSummary?.navigation || 0 }}</span>
               </div>
+
               <div class="summary-card conversion-highlight">
-                <span class="summary-icon">💾</span>
+    <span class="summary-icon">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <rect x="2" y="6" width="20" height="12" rx="2"/>
+        <path d="M16 12h4"/>
+        <circle cx="16" cy="12" r="1"/>
+      </svg>
+    </span>
                 <span class="summary-label">Conversions</span>
                 <span class="summary-value">{{ analyticsData.clickSummary?.conversion || 0 }}</span>
               </div>
+
             </div>
 
             <!-- Detailed Table -->
@@ -260,7 +348,14 @@
 
           <!-- Device Breakdown -->
           <div class="chart-container device-chart">
-            <h3>📱 Views by Device</h3>
+            <h3 style="display:flex;align-items:center;gap:8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2">
+                <rect x="7" y="2" width="10" height="20" rx="2"/>
+                <line x1="11" y1="18" x2="13" y2="18"/>
+              </svg>
+              Views by Device
+            </h3>
             <div class="chart-wrapper">
               <canvas ref="deviceChart"></canvas>
             </div>
@@ -268,7 +363,18 @@
 
           <!-- Browser Breakdown -->
           <div class="chart-container browser-chart">
-            <h3>🌐 Browser Distribution</h3>
+            <h3 style="display:flex;align-items:center;gap:8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15 15 0 0 1 0 20"/>
+                <path d="M12 2a15 15 0 0 0 0 20"/>
+              </svg>
+              Browser Distribution
+            </h3>
+
             <div class="chart-wrapper">
               <canvas ref="browserChart"></canvas>
             </div>
@@ -276,7 +382,17 @@
 
           <!-- Geographic Distribution -->
           <div class="chart-container geo-chart full-width">
-            <h3>🌍 Views by Country</h3>
+            <h3 style="display:flex;align-items:center;gap:8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M2 12h20"/>
+                <path d="M12 2c3 3 3 17 0 20"/>
+                <path d="M12 2c-3 3-3 17 0 20"/>
+              </svg>
+              Views by Country
+            </h3>
             <div v-if="analyticsData.geoDistribution.length > 0" class="country-list">
               <div
                   v-for="(country, index) in analyticsData.geoDistribution"
@@ -307,7 +423,15 @@
           <!-- Top Referrers -->
           <div v-if="analyticsData.topReferrers && analyticsData.topReferrers.length > 0"
                class="chart-container referrers-chart full-width">
-            <h3>🔗 Top Referrers</h3>
+            <h3 style="display:flex;align-items:center;gap:8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 1 0-7l2-2a5 5 0 1 1 7 7l-1.5 1.5"/>
+                <path d="M14 11a5 5 0 0 1 0 7l-2 2a5 5 0 1 1-7-7L6.5 12.5"/>
+              </svg>
+              Top Referrers
+            </h3>
             <div class="referrers-list">
               <div
                   v-for="(referrer, index) in analyticsData.topReferrers"
@@ -346,12 +470,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch, inject } from 'vue'; // Add inject
+import {computed, inject, nextTick, ref, watch} from 'vue'; // Add inject
+import api from '@/services/api.js';
+import Chart from 'chart.js/auto';
 
 // Add this line after your imports
 const isDarkMode = inject('isDarkMode', ref(false));
-import api from '@/services/api.js';
-import Chart from 'chart.js/auto';
 
 const props = defineProps({
   activeTab: {
@@ -769,7 +893,7 @@ watch(
         loadAnalytics()
       }
     },
-    { immediate: true }
+    {immediate: true}
 )
 
 watch(() => props.userPlan, (val) => {
@@ -781,9 +905,6 @@ watch(() => props.userPlan, (val) => {
     loadAnalytics()
   }
 })
-
-
-
 
 
 </script>
@@ -1270,6 +1391,12 @@ watch(() => props.userPlan, (val) => {
   background: linear-gradient(135deg, #6B4423 0%, #8B5A3C 100%);
   color: white;
   border: none;
+}
+
+.summary-icon svg {
+  vertical-align: middle;
+  color: aliceblue;
+  width: 35px;
 }
 
 .dark-mode .summary-card.conversion-highlight {

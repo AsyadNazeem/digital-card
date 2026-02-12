@@ -50,7 +50,7 @@
             class="nav-item"
             active-class="active"
         >
-          <span class="nav-icon" :title="isCollapsed ? page.name : ''">{{ page.icon }}</span>
+          <span class="nav-icon" :title="isCollapsed ? page.name : ''" v-html="page.icon"></span>
           <span v-if="!isCollapsed" class="nav-text">{{ page.name }}</span>
 
           <span
@@ -68,8 +68,8 @@
       </nav>
 
       <div class="sidebar-footer">
-        <button @click="logout" class="logout-btn" :title="isCollapsed ? 'Logout' : ''">
-          <span class="nav-icon">🚪</span>
+        <button @click="showLogoutConfirm = true" class="logout-btn" :title="isCollapsed ? 'Logout' : ''">
+          <span class="nav-icon" v-html="logoutIcon"></span>
           <span v-if="!isCollapsed">Logout</span>
         </button>
       </div>
@@ -87,7 +87,7 @@
         active-class="active"
     >
       <div class="nav-icon-wrapper">
-        <span class="nav-icon">{{ page.icon }}</span>
+        <span class="nav-icon" v-html="page.icon"></span>
         <span
             v-if="page.showBadge && getBadgeCount(page.showBadge) > 0"
             class="nav-badge-dot"
@@ -103,7 +103,7 @@
         :class="{ active: moreMenuOpen }"
     >
       <div class="nav-icon-wrapper">
-        <span class="nav-icon">☰</span>
+        <span class="nav-icon" v-html="menuIcon"></span>
         <span
             v-if="hasMoreNotifications"
             class="nav-badge-dot"
@@ -118,7 +118,8 @@
         <div class="more-menu-content" @click.stop>
           <div class="more-menu-header">
             <h3>More Options</h3>
-            <button @click="closeMoreMenu" class="close-btn">✕</button>
+            <button @click="closeMoreMenu" class="close-btn" v-html="closeIcon">
+            </button>
           </div>
 
           <div class="more-menu-items">
@@ -130,7 +131,7 @@
                 active-class="active"
                 @click="closeMoreMenu"
             >
-              <span class="nav-icon">{{ page.icon }}</span>
+              <span class="nav-icon" v-html="page.icon"></span>
               <span class="nav-text">{{ page.name }}</span>
               <span
                   v-if="page.showBadge && getBadgeCount(page.showBadge) > 0"
@@ -140,8 +141,8 @@
               </span>
             </router-link>
 
-            <button @click="handleLogout" class="more-menu-item logout-item">
-              <span class="nav-icon">🚪</span>
+            <button @click="handleLogoutClick" class="more-menu-item logout-item">
+              <span class="nav-icon" v-html="logoutIcon"></span>
               <span class="nav-text">Logout</span>
             </button>
           </div>
@@ -149,6 +150,26 @@
       </div>
     </transition>
   </nav>
+
+  <!-- Logout Confirmation Modal -->
+  <transition name="fade">
+    <div v-if="showLogoutConfirm" class="modal-overlay" @click="showLogoutConfirm = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-icon" v-html="logoutIcon">
+        </div>
+        <h3 class="modal-title">Confirm Logout</h3>
+        <p class="modal-message">Are you sure you want to logout? You will need to login again to access your account.</p>
+        <div class="modal-actions">
+          <button @click="showLogoutConfirm = false" class="modal-btn cancel-btn">
+            Cancel
+          </button>
+          <button @click="confirmLogout" class="modal-btn confirm-btn">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </transition>
 </template>
 
 <script setup>
@@ -166,6 +187,12 @@ const adminStore = useAdminStore()
 const { isCollapsed, isMobile, toggleSidebar, initialize, cleanup } = useSidebar()
 
 const moreMenuOpen = ref(false)
+const showLogoutConfirm = ref(false)
+
+// System icons (not from pages)
+const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+const menuIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>'
+const closeIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
 
 onMounted(() => {
   initialize()
@@ -218,9 +245,14 @@ function logout() {
   router.push("/admin/login")
 }
 
-function handleLogout() {
-  closeMoreMenu()
+function confirmLogout() {
+  showLogoutConfirm.value = false
   logout()
+}
+
+function handleLogoutClick() {
+  closeMoreMenu()
+  showLogoutConfirm.value = true
 }
 </script>
 
@@ -376,13 +408,20 @@ function handleLogout() {
   box-shadow: 0 4px 12px rgba(92, 64, 51, 0.3);
 }
 
+/* CRITICAL: Consistent icon sizing for sidebar navigation */
 .nav-icon {
-  font-size: 1.25rem;
-  width: 24px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.nav-icon :deep(svg) {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
 }
 
 .nav-text {
@@ -501,9 +540,19 @@ function handleLogout() {
   justify-content: center;
 }
 
+/* CRITICAL: Mobile bottom nav icon sizing */
 .bottom-nav-item .nav-icon {
-  font-size: 1.5rem;
-  width: auto;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bottom-nav-item .nav-icon :deep(svg) {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2;
 }
 
 .bottom-nav-item.active .nav-icon {
@@ -576,12 +625,17 @@ function handleLogout() {
   border: none;
   background: #fafaf8;
   color: #6b5d57;
-  font-size: 1.25rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+}
+
+.close-btn :deep(svg) {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
 }
 
 .close-btn:hover {
@@ -623,8 +677,20 @@ function handleLogout() {
   color: white;
 }
 
+/* CRITICAL: More menu icon sizing */
 .more-menu-item .nav-icon {
-  font-size: 1.5rem;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.more-menu-item .nav-icon :deep(svg) {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2;
 }
 
 .more-menu-item .nav-text {
@@ -646,6 +712,112 @@ function handleLogout() {
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* Logout Confirmation Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  transform: scale(1);
+  transition: transform 0.2s ease;
+}
+
+.modal-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #fef3f2 0%, #fee2e2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+}
+
+/* CRITICAL: Modal logout icon sizing - smaller than before */
+.modal-icon :deep(svg) {
+  width: 28px;
+  height: 28px;
+  stroke-width: 2;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d1f1a;
+  text-align: center;
+  margin: 0 0 12px 0;
+}
+
+.modal-message {
+  font-size: 0.95rem;
+  color: #6b5d57;
+  text-align: center;
+  line-height: 1.6;
+  margin: 0 0 28px 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-family: inherit;
+}
+
+.cancel-btn {
+  background: #fafaf8;
+  color: #2d1f1a;
+  border: 1px solid #e5e1dc;
+}
+
+.cancel-btn:hover {
+  background: #f5f5f0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.confirm-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+.modal-btn:active {
+  transform: translateY(0);
+}
+
 /* Slide up animation */
 .slide-up-enter-active,
 .slide-up-leave-active {
@@ -662,6 +834,47 @@ function handleLogout() {
   opacity: 0;
 }
 
+/* Fade animation for modal */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active .modal-content {
+  animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-leave-active .modal-content {
+  animation: modalSlideOut 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: scale(0.95) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideOut {
+  from {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.95) translateY(20px);
+    opacity: 0;
+  }
+}
+
 /* Tablet Styles */
 @media (min-width: 769px) and (max-width: 1024px) {
   .sidebar {
@@ -673,10 +886,42 @@ function handleLogout() {
   }
 }
 
-/* Hide toggle button on mobile */
+/* Mobile Modal Adjustments */
 @media (max-width: 768px) {
   .sidebar-toggle-btn {
     display: none;
+  }
+
+  .modal-content {
+    padding: 24px;
+    max-width: 360px;
+  }
+
+  .modal-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  /* Smaller icon on mobile */
+  .modal-icon :deep(svg) {
+    width: 24px;
+    height: 24px;
+  }
+
+  .modal-title {
+    font-size: 1.25rem;
+  }
+
+  .modal-message {
+    font-size: 0.9rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-btn {
+    width: 100%;
   }
 }
 </style>

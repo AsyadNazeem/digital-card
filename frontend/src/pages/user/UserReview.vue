@@ -43,9 +43,18 @@
               <span v-else>-</span>
             </td>
             <td class="action-buttons">
-              <button class="btn-action view" @click="openReviewShareModal(r)">View</button>
-              <button class="btn-action edit" @click="editReview(idx)">✏️ Edit</button>
-              <button class="btn-action delete" @click="removeReview(idx)">🗑️ Delete</button>
+              <button class="btn-action view" @click="openReviewShareModal(r)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg> View</button>
+              <button class="btn-action edit" @click="editReview(idx)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5l4 4L7 21H3v-4z"/>
+              </svg> Edit</button>
+              <button class="btn-action delete" @click="removeReview(idx)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-2 14H7L5 6"/>
+              </svg> Delete</button>
             </td>
           </tr>
           </tbody>

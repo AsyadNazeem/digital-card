@@ -3,7 +3,17 @@
     <!-- Page Header -->
     <div class="page-header">
       <button @click="showAddForm = true" class="btn-primary">
-        <span class="icon">➕</span>
+        <span class="icon"><svg xmlns="http://www.w3.org/2000/svg"
+                                width="20" height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round">
+  <line x1="12" y1="5" x2="12" y2="19"></line>
+  <line x1="5" y1="12" x2="19" y2="12"></line>
+</svg></span>
         Add New Theme
       </button>
     </div>
@@ -24,14 +34,34 @@
               :alt="theme.name"
               class="preview-image"
           />
+
           <div v-else class="preview-placeholder">
-            <span>🎨</span>
+            <!-- Palette SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 width="24" height="24"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+              <path d="M12 22a10 10 0 1 1 10-10c0 2-1.5 3-3 3h-1.5a1.5 1.5 0 0 0-1.5 1.5c0 1 .5 1.5.5 2.5S15 22 12 22z"/>
+              <circle cx="7.5" cy="10.5" r=".5"/>
+              <circle cx="12" cy="7.5" r=".5"/>
+              <circle cx="16.5" cy="10.5" r=".5"/>
+            </svg>
             <p>No Preview</p>
           </div>
 
           <!-- Premium Badge -->
           <div v-if="theme.isPremium" class="premium-badge">
-            <span>⭐</span>
+            <!-- Star SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 width="16" height="16"
+                 viewBox="0 0 24 24"
+                 fill="currentColor">
+              <path d="M12 2l2.9 6 6.6.9-4.8 4.7 1.1 6.6L12 17l-5.8 3.2 1.1-6.6L2.5 8.9l6.6-.9z"/>
+            </svg>
             Premium
           </div>
         </div>
@@ -42,24 +72,75 @@
           <p class="theme-description">{{ theme.description || 'No description' }}</p>
 
           <div class="theme-meta">
+    <span class="meta-item">
+      <!-- File SVG -->
+      <svg xmlns="http://www.w3.org/2000/svg"
+           width="16" height="16"
+           viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="2"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      {{ theme.cssFile }}
+    </span>
+
             <span class="meta-item">
-              <span class="icon">📄</span>
-              {{ theme.cssFile }}
-            </span>
-            <span class="meta-item">
-              <span class="icon">📅</span>
-              {{ formatDate(theme.createdAt) }}
-            </span>
+      <!-- Calendar SVG -->
+      <svg xmlns="http://www.w3.org/2000/svg"
+           width="16" height="16"
+           viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="2"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      {{ formatDate(theme.createdAt) }}
+    </span>
           </div>
 
           <!-- Actions -->
           <div class="theme-actions">
             <button @click="editTheme(theme)" class="btn-edit">
-              <span class="icon">✏️</span>
+              <!-- Edit SVG -->
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   width="16" height="16"
+                   viewBox="0 0 24 24"
+                   fill="none"
+                   stroke="currentColor"
+                   stroke-width="2"
+                   stroke-linecap="round"
+                   stroke-linejoin="round">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+              </svg>
               Edit
             </button>
+
             <button @click="confirmDelete(theme)" class="btn-delete">
-              <span class="icon">🗑️</span>
+              <!-- Trash SVG -->
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   width="16" height="16"
+                   viewBox="0 0 24 24"
+                   fill="none"
+                   stroke="currentColor"
+                   stroke-width="2"
+                   stroke-linecap="round"
+                   stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14H6L5 6"/>
+                <path d="M10 11v6"/>
+                <path d="M14 11v6"/>
+                <path d="M9 6V4h6v2"/>
+              </svg>
               Delete
             </button>
           </div>
@@ -68,7 +149,21 @@
 
       <!-- Empty State -->
       <div v-if="themes.length === 0 && !loading" class="empty-state">
-        <span class="empty-icon">🎨</span>
+  <span class="empty-icon">
+    <svg xmlns="http://www.w3.org/2000/svg"
+         width="32" height="32"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+      <path d="M12 22a10 10 0 1 1 10-10c0 2-1.5 3-3 3h-1.5a1.5 1.5 0 0 0-1.5 1.5c0 1 .5 1.5.5 2.5S15 22 12 22z"/>
+      <circle cx="7.5" cy="10.5" r=".5"/>
+      <circle cx="12" cy="7.5" r=".5"/>
+      <circle cx="16.5" cy="10.5" r=".5"/>
+    </svg>
+  </span>
         <h3>No Themes Yet</h3>
         <p>Add your first theme to get started</p>
       </div>
@@ -126,8 +221,19 @@
                 />
                 <div class="file-info">
                   <span v-if="formData.cssFileName" class="file-name">
-                    📄 {{ formData.cssFileName }}
-                  </span>
+  <svg xmlns="http://www.w3.org/2000/svg"
+       width="16" height="16"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+  </svg>
+  {{ formData.cssFileName }}
+</span>
                   <span v-else class="file-placeholder">
                     Choose CSS file...
                   </span>
@@ -148,9 +254,21 @@
                     ref="previewImageInput"
                 />
                 <div class="file-info">
-                  <span v-if="formData.previewImageName" class="file-name">
-                    🖼️ {{ formData.previewImageName }}
-                  </span>
+                 <span v-if="formData.previewImageName" class="file-name">
+  <svg xmlns="http://www.w3.org/2000/svg"
+       width="16" height="16"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+    <circle cx="8.5" cy="8.5" r="1.5"/>
+    <polyline points="21 15 16 10 5 21"/>
+  </svg>
+  {{ formData.previewImageName }}
+</span>
                   <span v-else class="file-placeholder">
                     Choose preview image...
                   </span>
@@ -171,10 +289,15 @@
                     type="checkbox"
                     v-model="formData.isPremium"
                 />
-                <span class="checkbox-text">
-                  <span class="checkbox-icon">⭐</span>
-                  Mark as Premium Theme
-                </span>
+                <span class="checkbox-icon">
+  <svg xmlns="http://www.w3.org/2000/svg"
+       width="16" height="16"
+       viewBox="0 0 24 24"
+       fill="currentColor">
+    <path d="M12 2l2.9 6 6.6.9-4.8 4.7 1.1 6.6L12 17l-5.8 3.2 1.1-6.6L2.5 8.9l6.6-.9z"/>
+  </svg>
+  Mark as Premium Theme
+</span>
               </label>
             </div>
 
@@ -197,7 +320,20 @@
     <transition name="modal">
       <div v-if="showDeleteConfirm" class="modal-overlay" @click="showDeleteConfirm = false">
         <div class="modal-content modal-confirm" @click.stop>
-          <div class="confirm-icon">⚠️</div>
+          <div class="confirm-icon">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 width="20" height="20"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+              <path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
           <h3>Delete Theme?</h3>
           <p>Are you sure you want to delete <strong>{{ themeToDelete?.name }}</strong>?</p>
           <p class="warning-text">This action cannot be undone.</p>
