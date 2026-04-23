@@ -1,4 +1,4 @@
-// models/user.js
+// models/User.js
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
@@ -103,7 +103,7 @@ const User = sequelize.define(
             allowNull: false,
         },
 
-        // Add these fields to your user model definition
+        // Add these fields to your User model definition
         resetPasswordToken: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -112,6 +112,11 @@ const User = sequelize.define(
         resetPasswordExpires: {
             type: DataTypes.DATE,
             allowNull: true,
+        },
+        appleId: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            unique: true,
         },
     },
     {

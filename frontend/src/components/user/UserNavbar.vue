@@ -260,7 +260,7 @@ const userInitials = computed(() => {
 const tabs = [
   {
     id: 'company',
-    label: 'Company',
+    label: 'Companies',
     icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 21v-6h6v6"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01"/></svg>'  },
   {
     id: 'contact',

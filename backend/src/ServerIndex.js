@@ -1,3 +1,5 @@
+// server.js
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -32,7 +34,6 @@ import adminThemeRoutes from "./routes/adminTheme.js";
 import adminPermissionRoutes from './routes/adminPermissionRoutes.js';
 import walletRoutes from "./routes/wallet.js";
 import analyticsRoutes from "./routes/analytics.js";
-import appleRoutes from "./routes/appleAuth.js";
 
 // PATH
 import path from "path";
@@ -421,7 +422,6 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/themes", themeRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use("/api/auth", appleRoutes);
 
 // HOME
 app.get("/", (req, res) => {

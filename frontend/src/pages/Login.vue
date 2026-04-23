@@ -53,6 +53,9 @@
             <span>Continue with Google</span>
           </button>
 
+          <Applesigninbutton/>
+
+
           <div class="divider">
             <span>or sign in with email</span>
           </div>
@@ -233,6 +236,8 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
+import Applesigninbutton from "@/components/user/Applesigninbutton.vue";
+
 
 const router = useRouter()
 const identifier = ref('')

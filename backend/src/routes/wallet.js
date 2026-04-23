@@ -1,98 +1,139 @@
-// routes/wallet.js - WITH ANALYTICS TRACKING
 import express from "express";
 import fs from "fs";
 import path from "path";
 import jwt from "jsonwebtoken";
+import https from "https";
+import http from "http";
 import { fileURLToPath } from "url";
 import { authenticateToken } from "../middleware/authMiddleware.js";
+import { PKPass } from "passkit-generator";
 
 const router = express.Router();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const serviceAccountPath = path.join(__dirname, "../config/tapmyname-06b39e405c92.json");
+/* -------------------------------------------------------
+   PROJECT PATHS
+------------------------------------------------------- */
+
+const PROJECT_ROOT = path.resolve(__dirname, "../../../");
+
+const APPLE_CERTS_PATH = path.join(PROJECT_ROOT, "certs");
+const APPLE_TEMPLATE_PATH = path.join(PROJECT_ROOT, "pass-template.pass");
+
+const wwdrPath = path.join(APPLE_CERTS_PATH, "wwdr.pem");
+const signerCertPath = path.join(APPLE_CERTS_PATH, "signerCert.pem");
+const signerKeyPath = path.join(APPLE_CERTS_PATH, "signerKey.pem");
+
+/* -------------------------------------------------------
+   APPLE WALLET CONFIG
+------------------------------------------------------- */
+
+const PASS_TYPE_ID = process.env.PASS_TYPE_ID;
+const TEAM_ID = process.env.APPLE_TEAM_ID;
+
+const APPLE_CONFIGURED =
+    !!PASS_TYPE_ID &&
+    !!TEAM_ID &&
+    fs.existsSync(wwdrPath) &&
+    fs.existsSync(signerCertPath) &&
+    fs.existsSync(signerKeyPath);
+
+/* -------------------------------------------------------
+   GOOGLE WALLET CONFIG
+------------------------------------------------------- */
+
+const serviceAccountPath = path.join(
+    __dirname,
+    "../config/tapmyname-06b39e405c92.json"
+);
+
 const SERVICE_ACCOUNT = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
 
 const ISSUER_ID = process.env.GW_ISSUER_ID;
 const CLASS_SUFFIX = process.env.GW_WALLET_CLASS_ID;
 const ORIGINS = (process.env.GW_ORIGINS || "").split(",").filter(Boolean);
-const IMAGE_BASE_URL = process.env.IMAGE_UPLOAD_URL || "https://tapmy.name";
-const IS_DEVELOPMENT = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'local';
+
+const IMAGE_BASE_URL =
+    process.env.IMAGE_UPLOAD_URL || "https://tapmy.name";
+
+/* -------------------------------------------------------
+   HELPER: IMAGE LOADER
+------------------------------------------------------- */
+
+async function loadImageBuffer(imagePath) {
+    try {
+        if (!imagePath) return null;
+
+        if (imagePath.startsWith("http")) {
+            const client = imagePath.startsWith("https") ? https : http;
+
+            return await new Promise((resolve, reject) => {
+                client.get(imagePath, res => {
+                    const data = [];
+
+                    res.on("data", chunk => data.push(chunk));
+
+                    res.on("end", () => resolve(Buffer.concat(data)));
+
+                    res.on("error", reject);
+                });
+            });
+        }
+
+        const safePath = imagePath.replace(/^\/+/, "");
+        const localPath = path.join(PROJECT_ROOT, safePath);
+
+        if (fs.existsSync(localPath)) {
+            return fs.readFileSync(localPath);
+        }
+
+        return null;
+
+    } catch {
+        return null;
+    }
+}
+
+/* -------------------------------------------------------
+   GOOGLE WALLET JWT
+------------------------------------------------------- */
 
 function createSaveJwtForContact({ objectIdSuffix, contact }) {
-    if (!SERVICE_ACCOUNT?.private_key) throw new Error("Missing service account private key");
-    if (!ISSUER_ID) throw new Error("ISSUER_ID missing");
-    if (!CLASS_SUFFIX) throw new Error("GW_WALLET_CLASS_ID missing");
-    if (!ORIGINS.length) throw new Error("GW_ORIGINS missing");
 
     const now = Math.floor(Date.now() / 1000);
+
     const classId = `${ISSUER_ID}.${CLASS_SUFFIX}`;
     const objectId = `${ISSUER_ID}.${objectIdSuffix}_${Date.now()}`;
 
-    console.log("🎫 Creating wallet object:", { classId, objectId });
-
-    // Build image URLs
     let logoUrl = null;
     let heroImageUrl = null;
 
-    if (contact.companyLogo && contact.companyLogo.trim()) {
-        logoUrl = contact.companyLogo.startsWith('http')
+    // COMPANY LOGO
+    if (contact.companyLogo?.trim()) {
+
+        logoUrl = contact.companyLogo.startsWith("http")
             ? contact.companyLogo
             : `${IMAGE_BASE_URL}${contact.companyLogo}`;
-    } else if (contact.photo && contact.photo.trim()) {
-        logoUrl = contact.photo.startsWith('http')
+
+    }
+    // FALLBACK TO PROFILE PHOTO
+    else if (contact.photo?.trim()) {
+
+        logoUrl = contact.photo.startsWith("http")
             ? contact.photo
             : `${IMAGE_BASE_URL}${contact.photo}`;
+
     }
 
-    if (contact.photo && contact.photo.trim()) {
-        heroImageUrl = contact.photo.startsWith('http')
+    // HERO IMAGE
+    if (contact.photo?.trim()) {
+
+        heroImageUrl = contact.photo.startsWith("http")
             ? contact.photo
             : `${IMAGE_BASE_URL}${contact.photo}`;
-    }
 
-    console.log("📸 Image URLs:", {
-        logoUrl,
-        heroImageUrl,
-        IMAGE_BASE_URL,
-        IS_DEVELOPMENT,
-        companyLogo: contact.companyLogo,
-        photo: contact.photo
-    });
-
-    const isValidUrl = (url) => {
-        try {
-            const parsed = new URL(url);
-            if (IS_DEVELOPMENT) {
-                return parsed.protocol === 'https:' || parsed.protocol === 'http:';
-            } else {
-                return parsed.protocol === 'https:';
-            }
-        } catch {
-            return false;
-        }
-    };
-
-    if (logoUrl && !isValidUrl(logoUrl)) {
-        console.warn("⚠️ Invalid logo URL, removing:", logoUrl);
-        logoUrl = null;
-    }
-
-    if (heroImageUrl && !isValidUrl(heroImageUrl)) {
-        console.warn("⚠️ Invalid hero image URL, removing:", heroImageUrl);
-        heroImageUrl = null;
-    }
-
-    if (!IS_DEVELOPMENT) {
-        if (logoUrl && !logoUrl.startsWith('https://')) {
-            console.warn("🚫 Production requires HTTPS for logo, removing:", logoUrl);
-            logoUrl = null;
-        }
-        if (heroImageUrl && !heroImageUrl.startsWith('https://')) {
-            console.warn("🚫 Production requires HTTPS for hero image, removing:", heroImageUrl);
-            heroImageUrl = null;
-        }
     }
 
     const jwtPayload = {
@@ -106,168 +147,351 @@ function createSaveJwtForContact({ objectIdSuffix, contact }) {
             genericObjects: [
                 {
                     id: objectId,
-                    classId: classId,
+                    classId,
                     state: "ACTIVE",
 
-                    ...(logoUrl ? {
+                    ...(logoUrl && {
                         logo: {
                             sourceUri: { uri: logoUrl },
                             contentDescription: {
                                 defaultValue: {
                                     language: "en-US",
-                                    value: "Company Logo"
-                                }
-                            }
-                        }
-                    } : {}),
+                                    value: "Company Logo",
+                                },
+                            },
+                        },
+                    }),
 
-                    ...(heroImageUrl ? {
+                    ...(heroImageUrl && {
                         heroImage: {
                             sourceUri: { uri: heroImageUrl },
                             contentDescription: {
                                 defaultValue: {
                                     language: "en-US",
-                                    value: "Profile Photo"
-                                }
-                            }
-                        }
-                    } : {}),
+                                    value: "Profile Photo",
+                                },
+                            },
+                        },
+                    }),
 
                     cardTitle: {
                         defaultValue: {
                             language: "en-US",
-                            value: contact.name ||
-                                `${contact.firstName || ""} ${contact.lastName || ""}`.trim() ||
-                                "Contact Card"
-                        }
+                            value: contact.name || "Contact Card",
+                        },
                     },
 
                     header: {
                         defaultValue: {
                             language: "en-US",
-                            value: contact.designation || "Digital Business Card"
-                        }
+                            value: contact.designation || "Digital Business Card",
+                        },
                     },
 
-                    subheader: contact.companyName ? {
-                        defaultValue: {
-                            language: "en-US",
-                            value: contact.companyName
+                    subheader: contact.companyName
+                        ? {
+                            defaultValue: {
+                                language: "en-US",
+                                value: contact.companyName,
+                            },
                         }
-                    } : undefined,
+                        : undefined,
 
-                    barcode: contact.shareUrl ? {
-                        type: "QR_CODE",
-                        value: contact.shareUrl,
-                        alternateText: "Scan to view card"
-                    } : undefined,
+                    barcode: contact.shareUrl
+                        ? {
+                            type: "QR_CODE",
+                            value: contact.shareUrl,
+                        }
+                        : undefined,
 
                     textModulesData: [
-                        contact.phone ? {
-                            id: "phone",
-                            header: "Phone",
-                            body: contact.phone
-                        } : null,
-                        contact.email ? {
-                            id: "email",
-                            header: "Email",
-                            body: contact.email
-                        } : null,
-                    ].filter(Boolean),
+                        contact.phone
+                            ? {
+                                id: "phone",
+                                header: "Phone",
+                                body: contact.phone,
+                            }
+                            : null,
 
-                    linksModuleData: {
-                        uris: [
-                            contact.shareUrl ? {
-                                id: "view_card",
-                                uri: contact.shareUrl,
-                                description: "View Digital Card"
-                            } : null,
-                            contact.phone ? {
-                                id: "call",
-                                uri: `tel:${contact.phone.replace(/\D/g, '')}`,
-                                description: "Call Now"
-                            } : null,
-                        ].filter(Boolean)
-                    }
-                }
-            ]
-        }
+                        contact.email
+                            ? {
+                                id: "email",
+                                header: "Email",
+                                body: contact.email,
+                            }
+                            : null,
+                    ].filter(Boolean),
+                },
+            ],
+        },
     };
 
-    try {
-        const signedJwt = jwt.sign(jwtPayload, SERVICE_ACCOUNT.private_key, {
-            algorithm: "RS256",
-            keyid: SERVICE_ACCOUNT.private_key_id
-        });
+    const signedJwt = jwt.sign(jwtPayload, SERVICE_ACCOUNT.private_key, {
+        algorithm: "RS256",
+        keyid: SERVICE_ACCOUNT.private_key_id,
+    });
 
-        console.log("✅ JWT created successfully");
-        return { saveUrl: `https://pay.google.com/gp/v/save/${signedJwt}` };
-    } catch (err) {
-        console.error("❌ JWT signing failed:", err);
-        throw err;
-    }
+    return {
+        saveUrl: `https://pay.google.com/gp/v/save/${signedJwt}`,
+    };
 }
+
+/* -------------------------------------------------------
+   GOOGLE ROUTE
+------------------------------------------------------- */
 
 router.post("/google/save-url", authenticateToken, async (req, res) => {
     try {
+
         const { contact, objectIdSuffix } = req.body;
 
-        if (!contact) return res.status(400).json({ message: "contact object required" });
-        if (!contact.shareUrl) return res.status(400).json({ message: "contact.shareUrl required" });
-
-        console.log("📱 Processing wallet request:", {
-            userId: req.userId,
-            contactName: contact.name,
-            shareUrl: contact.shareUrl,
-            hasLogo: !!contact.companyLogo,
-            hasPhoto: !!contact.photo,
-            environment: IS_DEVELOPMENT ? 'development' : 'production'
-        });
+        if (!contact) {
+            return res.status(400).json({ message: "contact required" });
+        }
 
         const suffix = objectIdSuffix || `contact_${req.userId}`;
-        const { saveUrl } = createSaveJwtForContact({ objectIdSuffix: suffix, contact });
 
-        console.log("✅ Save URL generated");
-        return res.json({ saveUrl });
+        const { saveUrl } = createSaveJwtForContact({
+            objectIdSuffix: suffix,
+            contact,
+        });
+
+        res.json({ saveUrl });
 
     } catch (err) {
-        console.error("❌ Wallet error:", {
-            message: err.message,
-            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+
+        console.error("Google Wallet error:", err);
+
+        res.status(500).json({
+            message: "Failed to generate Google Wallet URL",
+            error: err.message,
         });
 
-        return res.status(500).json({
-            message: "Failed to generate Google Wallet URL",
-            error: err.message
-        });
     }
 });
 
-// NEW: Track Google Wallet clicks (public endpoint - no auth required)
-router.post("/google/track/:phone", async (req, res) => {
+/* -------------------------------------------------------
+   APPLE WALLET STATUS
+------------------------------------------------------- */
+
+router.get("/apple/status", (req, res) => {
+
+    res.json({
+        success: true,
+        configured: APPLE_CONFIGURED,
+        message: APPLE_CONFIGURED
+            ? "Apple Wallet is ready"
+            : "Apple Wallet credentials missing",
+    });
+
+});
+
+router.post("/apple/pass", authenticateToken, async (req, res) => {
     try {
-        const phone = req.params.phone;
-        const { userAgent } = req.body;
 
-        console.log("👛 Google Wallet click tracked:", {
-            phone,
-            userAgent: userAgent || req.headers['user-agent']
+        if (!APPLE_CONFIGURED) {
+            return res.status(503).json({ message: "Apple Wallet not configured" });
+        }
+
+        const { contact } = req.body;
+
+        if (!contact) {
+            return res.status(400).json({ message: "contact required" });
+        }
+
+        const pass = await PKPass.from(
+            {
+                model: APPLE_TEMPLATE_PATH,
+                certificates: {
+                    wwdr: fs.readFileSync(wwdrPath),
+                    signerCert: fs.readFileSync(signerCertPath),
+                    signerKey: fs.readFileSync(signerKeyPath),
+                    ...(process.env.CERT_PASSWORD
+                        ? { signerKeyPassphrase: process.env.CERT_PASSWORD }
+                        : {}),
+                },
+            },
+            {
+                serialNumber: `contact-${Date.now()}`,
+                description: "Digital Business Card",
+                organizationName: contact.companyName || "TapMyName",
+                passTypeIdentifier: PASS_TYPE_ID,
+                teamIdentifier: TEAM_ID,
+
+                foregroundColor: "rgb(255,255,255)",
+                backgroundColor: "rgb(0,0,0)",
+                labelColor: "rgb(180,180,180)",
+
+                logoText: contact.companyName || contact.name,
+            }
+        );
+
+        pass.type = "generic";
+
+        /* ---------------------------
+           CARD FRONT
+        --------------------------- */
+
+        pass.primaryFields.push({
+            key: "name",
+            label: "",
+            value: contact.name || "",
         });
 
-        // Import analytics tracking function
-        const { trackWalletClick } = await import("../controllers/analyticsController.js");
+        pass.secondaryFields.push(
+            {
+                key: "title",
+                label: "TITLE",
+                value: contact.designation || "",
+            },
+            {
+                key: "company",
+                label: "COMPANY",
+                value: contact.companyName || "",
+            }
+        );
 
-        // Use the analytics tracking
-        await trackWalletClick(phone, {
-            userAgent: userAgent || req.headers['user-agent'],
-            ip: req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress
+        if (contact.phone) {
+            pass.auxiliaryFields.push({
+                key: "phone",
+                label: "PHONE",
+                value: contact.phone,
+            });
+        }
+
+        if (contact.email) {
+            pass.auxiliaryFields.push({
+                key: "email",
+                label: "EMAIL",
+                value: contact.email,
+            });
+        }
+
+        /* ---------------------------
+           BACK OF CARD
+        --------------------------- */
+
+        if (contact.phone) {
+            pass.backFields.push({
+                key: "phone",
+                label: "Call",
+                value: contact.phone,
+                attributedValue: `<a href="tel:${contact.phone}">${contact.phone}</a>`,
+            });
+        }
+
+        if (contact.email) {
+            pass.backFields.push({
+                key: "email",
+                label: "Email",
+                value: contact.email,
+                attributedValue: `<a href="mailto:${contact.email}">${contact.email}</a>`,
+            });
+        }
+
+        if (contact.website) {
+            pass.backFields.push({
+                key: "website",
+                label: "Website",
+                value: contact.website,
+                attributedValue: `<a href="${contact.website}">${contact.website}</a>`,
+            });
+        }
+
+        if (contact.shareUrl) {
+            pass.backFields.push({
+                key: "card",
+                label: "Digital Card",
+                value: contact.shareUrl,
+                attributedValue: `<a href="${contact.shareUrl}">Open Digital Card</a>`,
+            });
+        }
+
+        /* ---------------------------
+           QR CODE
+        --------------------------- */
+
+        if (contact.shareUrl) {
+            pass.setBarcodes({
+                message: contact.shareUrl,
+                format: "PKBarcodeFormatQR",
+                messageEncoding: "iso-8859-1",
+                altText: "Scan to open digital card",
+            });
+        }
+
+        /* ---------------------------
+           PROFILE PHOTO
+        --------------------------- */
+
+        if (contact.photo) {
+
+            const photo = await loadImageBuffer(contact.photo);
+
+            if (photo) {
+                pass.addBuffer("thumbnail.png", photo);
+                pass.addBuffer("thumbnail@2x.png", photo);
+                pass.addBuffer("thumbnail@3x.png", photo);
+            }
+
+        }
+
+        /* ---------------------------
+           COMPANY LOGO
+        --------------------------- */
+
+        if (contact.companyLogo) {
+
+            const logo = await loadImageBuffer(contact.companyLogo);
+
+            if (logo) {
+                pass.addBuffer("logo.png", logo);
+                pass.addBuffer("logo@2x.png", logo);
+            }
+
+        }
+
+        /* ---------------------------
+           STRIP BANNER
+        --------------------------- */
+
+        const bannerSource = contact.companyLogo || contact.photo;
+
+        if (bannerSource) {
+
+            const banner = await loadImageBuffer(bannerSource);
+
+            if (banner) {
+                pass.addBuffer("strip.png", banner);
+                pass.addBuffer("strip@2x.png", banner);
+                pass.addBuffer("strip@3x.png", banner);
+            }
+
+        }
+
+        /* ---------------------------
+           GENERATE PASS
+        --------------------------- */
+
+        const buffer = pass.getAsBuffer();
+
+        res.set({
+            "Content-Type": "application/vnd.apple.pkpass",
+            "Content-Disposition": "attachment; filename=contact.pkpass",
+            "Content-Length": buffer.length,
         });
 
-        res.status(200).json({ success: true });
+        res.send(buffer);
+
     } catch (err) {
-        console.error("❌ Wallet tracking error:", err);
-        // Don't fail the request if tracking fails
-        res.status(200).json({ success: true, warning: "Tracking failed" });
+
+        console.error("Apple Wallet error:", err);
+
+        res.status(500).json({
+            message: "Failed to generate Apple Wallet pass",
+            error: err.message,
+        });
+
     }
 });
 

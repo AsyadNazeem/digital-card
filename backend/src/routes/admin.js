@@ -1,6 +1,6 @@
 import express from "express";
 import { authenticateAdmin } from "../middleware/adminAuth.js";
-import { logAdminAction, getClientIp, ADMIN_ACTIONS } from "../middleware/adminLogger.js";
+import { ADMIN_ACTIONS, getClientIp, logAdminAction } from "../middleware/adminLogger.js";
 import User from "../models/User.js";
 import Request from "../models/Request.js";
 import Company from "../models/Company.js";
@@ -8,14 +8,34 @@ import Contact from "../models/Contact.js";
 import Review from "../models/Review.js";
 import { Op } from "sequelize";
 import bcrypt from "bcryptjs";
-import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
+import { isValidPhoneNumber, parsePhoneNumber } from 'libphonenumber-js';
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { PKPass } from "passkit-generator";
+import jwt from "jsonwebtoken";
+import https from "https";
+import http from "http";
 
+// ── MUST BE FIRST before any path.join(__dirname, ...) ──
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// ── Wallet config (now __dirname is defined) ──────────────
+const SERVICE_ACCOUNT = JSON.parse(
+    fs.readFileSync(path.join(__dirname, "../config/tapmyname-06b39e405c92.json"), "utf8")
+);
+const ISSUER_ID    = process.env.GW_ISSUER_ID;
+const CLASS_SUFFIX = process.env.GW_WALLET_CLASS_ID;
+const ORIGINS      = (process.env.GW_ORIGINS || "").split(",").filter(Boolean);
+
+const PROJECT_ROOT      = path.resolve(__dirname, "../../../");
+const APPLE_TEMPLATE_PATH = path.join(PROJECT_ROOT, "pass-template.pass");
+const wwdrPath          = path.join(PROJECT_ROOT, "certs/wwdr.pem");
+const signerCertPath    = path.join(PROJECT_ROOT, "certs/signerCert.pem");
+const signerKeyPath     = path.join(PROJECT_ROOT, "certs/signerKey.pem");
+
 const router = express.Router();
 
 // [Keep all your existing multer and directory setup code here]
@@ -25,7 +45,7 @@ const photosDir = path.join(uploadsDir, "photos");
 
 [uploadsDir, logosDir, photosDir].forEach(dir => {
     if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dir, {recursive: true});
     }
 });
 
@@ -60,13 +80,13 @@ const imageFilter = (req, file, cb) => {
 
 const uploadCompanyLogo = multer({
     storage: logoStorage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: {fileSize: 5 * 1024 * 1024},
     fileFilter: imageFilter
 }).single("logo");
 
 const uploadPhoto = multer({
     storage: photoStorage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: {fileSize: 5 * 1024 * 1024},
     fileFilter: imageFilter
 }).single("photo");
 
@@ -80,14 +100,13 @@ function isValidUrl(string) {
 }
 
 
-
 // ✅ GET: Overview stats
 router.get("/stats/overview", authenticateAdmin, async (req, res) => {
     try {
         const total = await User.count();
         const today = await User.count({
             where: {
-                createdAt: { [Op.gte]: new Date().setHours(0, 0, 0, 0) },
+                createdAt: {[Op.gte]: new Date().setHours(0, 0, 0, 0)},
             },
         });
 
@@ -96,11 +115,11 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
         monthStart.setHours(0, 0, 0, 0);
 
         const month = await User.count({
-            where: { createdAt: { [Op.gte]: monthStart } },
+            where: {createdAt: {[Op.gte]: monthStart}},
         });
 
-        const google = await User.count({ where: { provider: "google" } });
-        const local = await User.count({ where: { provider: "local" } });
+        const google = await User.count({where: {provider: "google"}});
+        const local = await User.count({where: {provider: "local"}});
 
         // Log the action
         await logAdminAction({
@@ -112,10 +131,10 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({ total, today, month, google, local });
+        res.json({total, today, month, google, local});
     } catch (err) {
         console.error("❌ Error in stats route:", err);
-        res.status(500).json({ message: "Error fetching stats" });
+        res.status(500).json({message: "Error fetching stats"});
     }
 });
 
@@ -142,19 +161,19 @@ router.get("/users", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({ users });
+        res.json({users});
     } catch (err) {
         console.error("Error fetching users:", err);
-        res.status(500).json({ message: "Error fetching users" });
+        res.status(500).json({message: "Error fetching users"});
     }
 });
 
 // ✅ GET: user's companies - ADD 'files' to attributes
 router.get("/user/:userId/companies", authenticateAdmin, async (req, res) => {
     try {
-        const { userId } = req.params;
+        const {userId} = req.params;
         const companies = await Company.findAll({
-            where: { userId },
+            where: {userId},
             attributes: [
                 'id', 'companyName', 'website', 'displayUrl', 'email',
                 'logo', 'bio', 'view360', 'googleLocation', 'googleReviews',
@@ -178,7 +197,7 @@ router.get("/user/:userId/companies", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({ success: true, companies });
+        res.json({success: true, companies});
     } catch (err) {
         console.error("❌ Error fetching user companies:", err);
         res.status(500).json({
@@ -192,9 +211,9 @@ router.get("/user/:userId/companies", authenticateAdmin, async (req, res) => {
 // ✅ GET: user's contacts
 router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
     try {
-        const { userId } = req.params;
+        const {userId} = req.params;
         const contacts = await Contact.findAll({
-            where: { userId },
+            where: {userId},
             include: [{
                 model: Company,
                 as: "Company",
@@ -221,7 +240,7 @@ router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({ success: true, contacts });
+        res.json({success: true, contacts});
     } catch (err) {
         console.error("❌ Error fetching user contacts:", err);
         res.status(500).json({
@@ -234,20 +253,20 @@ router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
 // ✅ PATCH: Update user limits
 router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
     try {
-        const { userId } = req.params;
-        const { companyLimit, contactLimit, plan } = req.body;
+        const {userId} = req.params;
+        const {companyLimit, contactLimit, plan} = req.body;
 
         if (!companyLimit || companyLimit < 1 || !contactLimit || contactLimit < 1) {
-            return res.status(400).json({ message: "Limits must be at least 1" });
+            return res.status(400).json({message: "Limits must be at least 1"});
         }
 
         const allowedPlans = ["free", "plus", "pro"];
         if (plan && !allowedPlans.includes(plan)) {
-            return res.status(400).json({ message: "Invalid plan value" });
+            return res.status(400).json({message: "Invalid plan value"});
         }
 
         const user = await User.findByPk(userId);
-        if (!user) return res.status(404).json({ message: "user not found" });
+        if (!user) return res.status(404).json({message: "user not found"});
 
         const oldData = {
             companyLimit: user.companyLimit,
@@ -292,7 +311,7 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
         });
     } catch (err) {
         console.error("Error updating limits/plan:", err);
-        res.status(500).json({ message: "Error updating limits/plan" });
+        res.status(500).json({message: "Error updating limits/plan"});
     }
 });
 
@@ -301,7 +320,7 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
 router.delete("/user/:id", authenticateAdmin, async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
-        if (!user) return res.status(404).json({ message: "user not found" });
+        if (!user) return res.status(404).json({message: "user not found"});
 
         const userName = user.name || user.email;
         await user.destroy();
@@ -317,10 +336,10 @@ router.delete("/user/:id", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({ message: "user deleted successfully" });
+        res.json({message: "user deleted successfully"});
     } catch (err) {
         console.error("Error deleting user:", err);
-        res.status(500).json({ message: "Error deleting user" });
+        res.status(500).json({message: "Error deleting user"});
     }
 });
 
@@ -344,10 +363,10 @@ router.get("/requests", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({ requests });
+        res.json({requests});
     } catch (err) {
         console.error("Error fetching requests:", err);
-        res.status(500).json({ message: "Error fetching requests" });
+        res.status(500).json({message: "Error fetching requests"});
     }
 });
 
@@ -360,11 +379,11 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
         });
 
         if (!request) {
-            return res.status(404).json({ message: "Request not found" });
+            return res.status(404).json({message: "Request not found"});
         }
 
         if (request.status !== "pending") {
-            return res.status(400).json({ message: "Request already processed" });
+            return res.status(400).json({message: "Request already processed"});
         }
 
         const user = request.User;
@@ -381,7 +400,7 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
             reviewLimit: user.reviewLimit + request.requestedReviews,  // ADD THIS
         });
 
-        await request.update({ status: "approved" });
+        await request.update({status: "approved"});
 
         await logAdminAction({
             adminId: req.admin.id,
@@ -418,7 +437,7 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
         });
     } catch (err) {
         console.error("Error approving request:", err);
-        res.status(500).json({ message: "Error approving request" });
+        res.status(500).json({message: "Error approving request"});
     }
 });
 
@@ -430,11 +449,11 @@ router.post("/request/:id/reject", authenticateAdmin, async (req, res) => {
         });
 
         if (!request) {
-            return res.status(404).json({ message: "Request not found" });
+            return res.status(404).json({message: "Request not found"});
         }
 
         if (request.status !== "pending") {
-            return res.status(400).json({ message: "Request already processed" });
+            return res.status(400).json({message: "Request already processed"});
         }
 
         await request.update({
@@ -456,10 +475,10 @@ router.post("/request/:id/reject", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({ message: "Request rejected", request });
+        res.json({message: "Request rejected", request});
     } catch (err) {
         console.error("Error rejecting request:", err);
-        res.status(500).json({ message: "Error rejecting request" });
+        res.status(500).json({message: "Error rejecting request"});
     }
 });
 
@@ -483,7 +502,7 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
             });
         }
 
-        const existingUser = await User.findOne({ where: { email } });
+        const existingUser = await User.findOne({where: {email}});
         if (existingUser) {
             return res.status(400).json({
                 message: "user with this email already exists"
@@ -501,7 +520,7 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
         const parsedPhone = parsePhoneNumber(fullPhoneNumber);
         const formattedPhone = parsedPhone.format('E.164');
 
-        const existingPhone = await User.findOne({ where: { phone: formattedPhone } });
+        const existingPhone = await User.findOne({where: {phone: formattedPhone}});
         if (existingPhone) {
             return res.status(400).json({
                 message: "user with this phone number already exists"
@@ -582,10 +601,10 @@ router.put("/user/:userId/company/:companyId", authenticateAdmin, (req, res) => 
             });
 
             if (!company) {
-                return res.status(404).json({ message: "Company not found" });
+                return res.status(404).json({message: "Company not found"});
             }
 
-            const oldData = { ...company.dataValues };
+            const oldData = {...company.dataValues};
 
             let socialLinks = company.socialLinks || {};
             if (req.body.socialLinks) {
@@ -746,17 +765,17 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
             });
 
             if (!contact) {
-                return res.status(404).json({ message: "Contact not found" });
+                return res.status(404).json({message: "Contact not found"});
             }
 
-            const oldData = { ...contact.dataValues };
+            const oldData = {...contact.dataValues};
 
             // -------------------------
             // FORMAT MOBILE
             // -------------------------
             let formattedMobile = req.body.mobile;
             if (!isValidPhoneNumber(formattedMobile)) {
-                return res.status(400).json({ message: "Invalid mobile number" });
+                return res.status(400).json({message: "Invalid mobile number"});
             }
             formattedMobile = parsePhoneNumber(formattedMobile).format("E.164");
 
@@ -766,7 +785,7 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
             let formattedTelephone = null;
             if (req.body.telephone) {
                 if (!isValidPhoneNumber(req.body.telephone)) {
-                    return res.status(400).json({ message: "Invalid telephone number" });
+                    return res.status(400).json({message: "Invalid telephone number"});
                 }
                 formattedTelephone = parsePhoneNumber(req.body.telephone).format("E.164");
             }
@@ -897,11 +916,11 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
             const user = await User.findByPk(userId);
 
             if (!user) {
-                return res.status(404).json({ message: "user not found" });
+                return res.status(404).json({message: "user not found"});
             }
 
             // Check company limit
-            const companyCount = await Company.count({ where: { userId } });
+            const companyCount = await Company.count({where: {userId}});
             if (companyCount >= user.companyLimit) {
                 return res.status(400).json({
                     message: "Company limit reached for this user"
@@ -1039,11 +1058,11 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
             const user = await User.findByPk(userId);
 
             if (!user) {
-                return res.status(404).json({ message: "user not found" });
+                return res.status(404).json({message: "user not found"});
             }
 
             // Check contact limit
-            const contactCount = await Contact.count({ where: { userId } });
+            const contactCount = await Contact.count({where: {userId}});
             if (contactCount >= user.contactLimit) {
                 return res.status(400).json({
                     message: "Contact limit reached for this user"
@@ -1157,9 +1176,9 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
 
 router.get("/user/:userId/reviews", authenticateAdmin, async (req, res) => {
     try {
-        const { userId } = req.params;
+        const {userId} = req.params;
         const reviews = await Review.findAll({
-            where: { userId },
+            where: {userId},
             include: [{
                 model: Company,
                 as: "Company",
@@ -1185,7 +1204,7 @@ router.get("/user/:userId/reviews", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({ success: true, reviews });
+        res.json({success: true, reviews});
     } catch (err) {
         console.error("❌ Error fetching user reviews:", err);
         res.status(500).json({
@@ -1198,7 +1217,7 @@ router.get("/user/:userId/reviews", authenticateAdmin, async (req, res) => {
 // ✅ GET: Single review by ID
 router.get("/user/:userId/review/:reviewId", authenticateAdmin, async (req, res) => {
     try {
-        const { userId, reviewId } = req.params;
+        const {userId, reviewId} = req.params;
 
         const review = await Review.findOne({
             where: {
@@ -1208,10 +1227,10 @@ router.get("/user/:userId/review/:reviewId", authenticateAdmin, async (req, res)
         });
 
         if (!review) {
-            return res.status(404).json({ message: "Review not found" });
+            return res.status(404).json({message: "Review not found"});
         }
 
-        res.json({ success: true, review });
+        res.json({success: true, review});
     } catch (err) {
         console.error("❌ Error fetching review:", err);
         res.status(500).json({
@@ -1228,11 +1247,11 @@ router.post("/user/:userId/review", authenticateAdmin, async (req, res) => {
         const user = await User.findByPk(userId);
 
         if (!user) {
-            return res.status(404).json({ message: "user not found" });
+            return res.status(404).json({message: "user not found"});
         }
 
         // Check review limit
-        const reviewCount = await Review.count({ where: { userId } });
+        const reviewCount = await Review.count({where: {userId}});
         if (reviewCount >= user.reviewLimit) {
             return res.status(400).json({
                 message: "Review limit reached for this user"
@@ -1241,20 +1260,20 @@ router.post("/user/:userId/review", authenticateAdmin, async (req, res) => {
 
         // Validate required fields
         if (!req.body.companyId) {
-            return res.status(400).json({ message: "Company is required" });
+            return res.status(400).json({message: "Company is required"});
         }
 
         if (!req.body.branchName || !req.body.branchName.trim()) {
-            return res.status(400).json({ message: "Branch name is required" });
+            return res.status(400).json({message: "Branch name is required"});
         }
 
         // Validate URLs if provided
         if (req.body.googleLink && !isValidUrl(req.body.googleLink)) {
-            return res.status(400).json({ message: "Invalid Google Review URL" });
+            return res.status(400).json({message: "Invalid Google Review URL"});
         }
 
         if (req.body.tripadvisorLink && !isValidUrl(req.body.tripadvisorLink)) {
-            return res.status(400).json({ message: "Invalid Tripadvisor URL" });
+            return res.status(400).json({message: "Invalid Tripadvisor URL"});
         }
 
         const reviewData = {
@@ -1313,27 +1332,27 @@ router.put("/user/:userId/review/:reviewId", authenticateAdmin, async (req, res)
         });
 
         if (!review) {
-            return res.status(404).json({ message: "Review not found" });
+            return res.status(404).json({message: "Review not found"});
         }
 
-        const oldData = { ...review.dataValues };
+        const oldData = {...review.dataValues};
 
         // Validate required fields
         if (!req.body.companyId) {
-            return res.status(400).json({ message: "Company is required" });
+            return res.status(400).json({message: "Company is required"});
         }
 
         if (!req.body.branchName || !req.body.branchName.trim()) {
-            return res.status(400).json({ message: "Branch name is required" });
+            return res.status(400).json({message: "Branch name is required"});
         }
 
         // Validate URLs if provided
         if (req.body.googleLink && !isValidUrl(req.body.googleLink)) {
-            return res.status(400).json({ message: "Invalid Google Review URL" });
+            return res.status(400).json({message: "Invalid Google Review URL"});
         }
 
         if (req.body.tripadvisorLink && !isValidUrl(req.body.tripadvisorLink)) {
-            return res.status(400).json({ message: "Invalid Tripadvisor URL" });
+            return res.status(400).json({message: "Invalid Tripadvisor URL"});
         }
 
         const updateData = {
@@ -1401,7 +1420,7 @@ router.delete("/user/:userId/review/:reviewId", authenticateAdmin, async (req, r
         });
 
         if (!review) {
-            return res.status(404).json({ message: "Review not found" });
+            return res.status(404).json({message: "Review not found"});
         }
 
         const reviewName = review.branchName;
@@ -1429,6 +1448,221 @@ router.delete("/user/:userId/review/:reviewId", authenticateAdmin, async (req, r
             message: "Failed to delete review",
             error: err.message
         });
+    }
+});
+
+// ── GOOGLE WALLET: generate save URL (admin) ──────────────────
+// POST /api/admin/google-wallet/save-url
+router.post("/google-wallet/save-url", authenticateAdmin, async (req, res) => {
+    try {
+        const {contact, objectIdSuffix} = req.body;
+        if (!contact) return res.status(400).json({message: "contact required"});
+
+        const now = Math.floor(Date.now() / 1000);
+        const classId = `${ISSUER_ID}.${CLASS_SUFFIX}`;
+        const objectId = `${ISSUER_ID}.${objectIdSuffix || `contact_admin_${Date.now()}`}_${Date.now()}`;
+        const IMAGE_BASE_URL = process.env.IMAGE_UPLOAD_URL || "https://tapmy.name";
+
+        let logoUrl = contact.companyLogo?.trim()
+            ? contact.companyLogo
+            : contact.photo?.trim()
+                ? contact.photo
+                : null;
+
+        const heroImageUrl = contact.photo?.trim() ? contact.photo : null;
+
+        const jwtPayload = {
+            iss: SERVICE_ACCOUNT.client_email,
+            aud: "google",
+            typ: "savetowallet",
+            iat: now,
+            exp: now + 3600,
+            origins: ORIGINS,
+            payload: {
+                genericObjects: [{
+                    id: objectId,
+                    classId,
+                    state: "ACTIVE",
+                    ...(logoUrl && {
+                        logo: {
+                            sourceUri: {uri: logoUrl},
+                            contentDescription: {defaultValue: {language: "en-US", value: "Logo"}},
+                        },
+                    }),
+                    ...(heroImageUrl && {
+                        heroImage: {
+                            sourceUri: {uri: heroImageUrl},
+                            contentDescription: {defaultValue: {language: "en-US", value: "Photo"}},
+                        },
+                    }),
+                    cardTitle: {defaultValue: {language: "en-US", value: contact.name || "Contact Card"}},
+                    header: {defaultValue: {language: "en-US", value: contact.designation || "Digital Business Card"}},
+                    ...(contact.companyName && {
+                        subheader: {defaultValue: {language: "en-US", value: contact.companyName}},
+                    }),
+                    ...(contact.shareUrl && {barcode: {type: "QR_CODE", value: contact.shareUrl}}),
+                    textModulesData: [
+                        contact.phone ? {id: "phone", header: "Phone", body: contact.phone} : null,
+                        contact.email ? {id: "email", header: "Email", body: contact.email} : null,
+                    ].filter(Boolean),
+                }],
+            },
+        };
+
+        const signedJwt = jwt.sign(jwtPayload, SERVICE_ACCOUNT.private_key, {
+            algorithm: "RS256",
+            keyid: SERVICE_ACCOUNT.private_key_id,
+        });
+
+        res.json({saveUrl: `https://pay.google.com/gp/v/save/${signedJwt}`});
+
+    } catch (err) {
+        console.error("Admin Google Wallet error:", err);
+        res.status(500).json({message: "Failed to generate Google Wallet URL", error: err.message});
+    }
+});
+
+
+// ── APPLE WALLET: download pkpass (admin) ─────────────────────
+// POST /api/admin/apple-wallet/pass
+router.post("/apple-wallet/pass", authenticateAdmin, async (req, res) => {
+    try {
+
+        const APPLE_CONFIGURED =
+            !!process.env.PASS_TYPE_ID &&
+            !!process.env.APPLE_TEAM_ID &&
+            fs.existsSync(path.join(PROJECT_ROOT, "certs/wwdr.pem")) &&
+            fs.existsSync(path.join(PROJECT_ROOT, "certs/signerCert.pem")) &&
+            fs.existsSync(path.join(PROJECT_ROOT, "certs/signerKey.pem"));
+
+        if (!APPLE_CONFIGURED) {
+            return res.status(503).json({message: "Apple Wallet not configured"});
+        }
+
+        const {contact} = req.body;
+        if (!contact) return res.status(400).json({message: "contact required"});
+
+        const ROOT = path.resolve(__dirname, "../../../");
+        const certsDir = path.join(ROOT, "certs");
+        const templateDir = path.join(ROOT, "pass-template.pass");
+
+        const pass = await PKPass.from(
+            {
+                model: templateDir,
+                certificates: {
+                    wwdr: fs.readFileSync(path.join(certsDir, "wwdr.pem")),
+                    signerCert: fs.readFileSync(path.join(certsDir, "signerCert.pem")),
+                    signerKey: fs.readFileSync(path.join(certsDir, "signerKey.pem")),
+                    ...(process.env.CERT_PASSWORD
+                        ? {signerKeyPassphrase: process.env.CERT_PASSWORD}
+                        : {}),
+                },
+            },
+            {
+                serialNumber: `admin-contact-${Date.now()}`,
+                description: "Digital Business Card",
+                organizationName: contact.companyName || "TapMyName",
+                passTypeIdentifier: process.env.PASS_TYPE_ID,
+                teamIdentifier: process.env.APPLE_TEAM_ID,
+                foregroundColor: "rgb(255,255,255)",
+                backgroundColor: "rgb(0,0,0)",
+                labelColor: "rgb(180,180,180)",
+                logoText: contact.companyName || contact.name,
+            }
+        );
+
+        pass.type = "generic";
+
+        pass.primaryFields.push({key: "name", label: "", value: contact.name || ""});
+        pass.secondaryFields.push(
+            {key: "title", label: "TITLE", value: contact.designation || ""},
+            {key: "company", label: "COMPANY", value: contact.companyName || ""}
+        );
+        if (contact.phone) pass.auxiliaryFields.push({key: "phone", label: "PHONE", value: contact.phone});
+        if (contact.email) pass.auxiliaryFields.push({key: "email", label: "EMAIL", value: contact.email});
+
+        // Back fields
+        if (contact.shareUrl) pass.backFields.push({
+            key: "card", label: "Digital Card", value: contact.shareUrl,
+            attributedValue: `<a href="${contact.shareUrl}">Open Digital Card</a>`,
+        });
+        if (contact.phone) pass.backFields.push({
+            key: "phone", label: "Call", value: contact.phone,
+            attributedValue: `<a href="tel:${contact.phone}">${contact.phone}</a>`,
+        });
+        if (contact.email) pass.backFields.push({
+            key: "email", label: "Email", value: contact.email,
+            attributedValue: `<a href="mailto:${contact.email}">${contact.email}</a>`,
+        });
+        if (contact.whatsapp) {
+            const waNum = contact.whatsapp.replace(/\D/g, "");
+            pass.backFields.push({
+                key: "whatsapp", label: "WhatsApp", value: contact.whatsapp,
+                attributedValue: `<a href="https://wa.me/${waNum}">Message on WhatsApp</a>`,
+            });
+        }
+
+        // QR
+        if (contact.shareUrl) pass.setBarcodes({
+            message: contact.shareUrl,
+            format: "PKBarcodeFormatQR",
+            messageEncoding: "iso-8859-1",
+            altText: "Scan to open digital card",
+        });
+
+        // Images — reuse loadImageBuffer from top of file or inline fetch
+        const fetchBuf = async (url) => {
+            if (!url) return null;
+            try {
+                if (url.startsWith("http")) {
+                    const client = url.startsWith("https") ? (await import("https")).default : (await import("http")).default;
+                    return await new Promise((resolve, reject) => {
+                        client.get(url, (r) => {
+                            const chunks = [];
+                            r.on("data", (c) => chunks.push(c));
+                            r.on("end", () => resolve(Buffer.concat(chunks)));
+                            r.on("error", reject);
+                        });
+                    });
+                }
+                const local = path.join(ROOT, url.replace(/^\/+/, ""));
+                return fs.existsSync(local) ? fs.readFileSync(local) : null;
+            } catch {
+                return null;
+            }
+        };
+
+        const [photoBuf, logoBuf] = await Promise.all([
+            fetchBuf(contact.photo),
+            fetchBuf(contact.companyLogo),
+        ]);
+
+        if (logoBuf) {
+            pass.addBuffer("logo.png", logoBuf);
+            pass.addBuffer("logo@2x.png", logoBuf);
+        }
+        if (photoBuf) {
+            pass.addBuffer("thumbnail.png", photoBuf);
+            pass.addBuffer("thumbnail@2x.png", photoBuf);
+            pass.addBuffer("thumbnail@3x.png", photoBuf);
+            pass.addBuffer("strip.png", photoBuf);
+            pass.addBuffer("strip@2x.png", photoBuf);
+            pass.addBuffer("strip@3x.png", photoBuf);
+        }
+
+        const buffer = pass.getAsBuffer();
+        const safeName = (contact.name || "card").replace(/[^a-z0-9]/gi, "_");
+
+        res.set({
+            "Content-Type": "application/vnd.apple.pkpass",
+            "Content-Disposition": `attachment; filename=${safeName}.pkpass`,
+            "Content-Length": buffer.length,
+        });
+        res.send(buffer);
+
+    } catch (err) {
+        console.error("Admin Apple Wallet error:", err);
+        res.status(500).json({message: "Failed to generate Apple Wallet pass", error: err.message});
     }
 });
 

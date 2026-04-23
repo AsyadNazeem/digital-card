@@ -843,46 +843,76 @@
                         <td class="td-company">{{ getCompanyName(contact.companyId) }}</td>
                         <td class="td-date">{{ formatDate(contact.createdAt) }}</td>
                         <td class="td-actions">
-                          <div style="display: flex; align-items: center; justify-content: center; gap: 5px">
-                            <button
-                                @click="editContact(contact)"
-                                class="btn-view-card"
-                                title="Edit Contact"
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                   stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                              </svg>
-                              Edit
-                            </button>
-                            <a
-                                :href="getContactCardUrl(contact.mobile)"
-                                target="_blank"
-                                class="btn-view-card"
-                                title="View Contact Card"
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                   stroke-width="2">
-                                <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
-                                <polyline points="22 7 13 13 2 7"></polyline>
-                              </svg>
-                              View Card
-                            </a>
-                            <button
-                                @click="openQrPopup1(contact)"
-                                class="btn-view-card"
-                                title="View Contact QR Code"
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                   stroke-width="2">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
-                              </svg>
-                              View QR
-                            </button>
+                          <div style="display: block; align-items: center; justify-content: center; gap: 5px;">
+                            <div
+                                style="display: flex; margin-bottom: 10px; align-items: center; justify-content: center; gap: 5px;">
+                              <button
+                                  @click="editContact(contact)"
+                                  class="btn-view-card"
+                                  title="Edit Contact"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                                Edit
+                              </button>
+                              <a
+                                  :href="getContactCardUrl(contact.mobile)"
+                                  target="_blank"
+                                  class="btn-view-card"
+                                  title="View Contact Card"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2">
+                                  <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                                  <polyline points="22 7 13 13 2 7"></polyline>
+                                </svg>
+                                View Card
+                              </a>
+                              <button
+                                  @click="openQrPopup1(contact)"
+                                  class="btn-view-card"
+                                  title="View Contact QR Code"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2">
+                                  <rect x="3" y="3" width="7" height="7"></rect>
+                                  <rect x="14" y="3" width="7" height="7"></rect>
+                                  <rect x="14" y="14" width="7" height="7"></rect>
+                                  <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                                View QR
+                              </button>
+                            </div>
+                            <!-- Replace the two wallet buttons in the desktop table td -->
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                              <button
+                                  @click="copyGoogleWallet(contact)"
+                                  class="btn-view-card"
+                                  title="Copy Google Wallet link"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                  <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                G-Wallet
+                              </button>
+
+                              <button
+                                  @click="downloadAppleWallet(contact)"
+                                  class="btn-view-card"
+                                  title="Download Apple Wallet .pkpass file"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                  <polyline points="7 10 12 15 17 10"></polyline>
+                                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                A-Wallet
+                              </button>
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -917,7 +947,8 @@
                       <div class="data-card-row">
                     <span class="data-card-label">
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+    <path
+        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
   </svg>
   Mobile
 </span>
@@ -1125,7 +1156,8 @@
                       <div class="data-card-title">
                     <span class="data-card-icon">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+    <polygon
+        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
   </svg>
 </span>
                         <span class="data-card-name">{{ item.branchName }}</span>
@@ -1489,6 +1521,119 @@ function editCompany(company) {
     userId: selectedUser.value.id
   }
   showEditCompanyModal.value = true
+}
+
+// Replace these two broken functions in your script setup
+
+async function copyGoogleWallet(contact) {
+  try {
+    // Build the wallet contact object same way as user dashboard
+    const cleanedPhone = contact.cardMobileNum || contact.mobile;
+    const shareUrl = `${VITE_FRONTEND_URL}/${cleanedPhone.replace(/\D/g, '')}`;
+
+    const companyLogo = contact.Company?.logo
+        ? (contact.Company.logo.startsWith('http')
+            ? contact.Company.logo
+            : `${import.meta.env.VITE_IMAGE_UPLOAD_URL}${contact.Company.logo}`)
+        : '';
+
+    const photo = contact.photo
+        ? (contact.photo.startsWith('http')
+            ? contact.photo
+            : `${import.meta.env.VITE_IMAGE_UPLOAD_URL}${contact.photo}`)
+        : '';
+
+    const walletContact = {
+      name: `${contact.firstName} ${contact.lastName}`,
+      phone: cleanedPhone,
+      email: contact.email,
+      designation: contact.designation || '',
+      companyName: contact.Company?.companyName || '',
+      companyLogo,
+      photo,
+      website: contact.Company?.website || '',
+      whatsapp: contact.whatsapp || '',
+      shareUrl,
+    };
+
+    const res = await adminApi.post('/google-wallet/save-url', {
+      contact: walletContact,
+      objectIdSuffix: `contact_${contact.id}`,
+    });
+
+    if (res.data.saveUrl) {
+      await navigator.clipboard.writeText(res.data.saveUrl);
+      alert('✅ Google Wallet link copied! Send it to the user — they tap to add to their wallet.');
+    } else {
+      alert('❌ Could not generate Google Wallet link.');
+    }
+  } catch (err) {
+    console.error('Google Wallet error:', err);
+    alert(err.response?.data?.message || '❌ Failed to generate Google Wallet link');
+  }
+}
+
+async function downloadAppleWallet(contact) {
+  try {
+    const cleanedPhone = contact.cardMobileNum || contact.mobile;
+    const shareUrl = `${VITE_FRONTEND_URL}/${cleanedPhone.replace(/\D/g, '')}`;
+
+    const companyLogo = contact.Company?.logo
+        ? (contact.Company.logo.startsWith('http')
+            ? contact.Company.logo
+            : `${import.meta.env.VITE_IMAGE_UPLOAD_URL}${contact.Company.logo}`)
+        : '';
+
+    const photo = contact.photo
+        ? (contact.photo.startsWith('http')
+            ? contact.photo
+            : `${import.meta.env.VITE_IMAGE_UPLOAD_URL}${contact.photo}`)
+        : '';
+
+    const walletContact = {
+      name: `${contact.firstName} ${contact.lastName}`,
+      phone: cleanedPhone,
+      email: contact.email,
+      designation: contact.designation || '',
+      companyName: contact.Company?.companyName || '',
+      companyLogo,
+      photo,
+      website: contact.Company?.website || '',
+      whatsapp: contact.whatsapp || '',
+      shareUrl,
+    };
+
+    const response = await adminApi.post(
+        '/apple-wallet/pass',
+        { contact: walletContact },
+        { responseType: 'blob' }
+    );
+
+    const blob = new Blob([response.data], { type: 'application/vnd.apple.pkpass' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${contact.firstName}_${contact.lastName}_wallet.pkpass`.replace(/\s+/g, '_');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error('Apple Wallet error:', err);
+
+    if (err.response?.data instanceof Blob) {
+      try {
+        const text = await err.response.data.text();
+        const json = JSON.parse(text);
+        alert(`❌ ${json.message || 'Failed to download pass'}`);
+      } catch {
+        alert('❌ Failed to download Apple Wallet pass');
+      }
+    } else {
+      alert(`❌ ${err.response?.data?.message || err.message}`);
+    }
+  }
 }
 
 function editContact(contact) {
@@ -2035,6 +2180,7 @@ onMounted(() => {
     height: 14px;
   }
 }
+
 /* Plan Badge */
 .plan-badge {
   display: inline-block;

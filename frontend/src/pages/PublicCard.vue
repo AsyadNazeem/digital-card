@@ -1,7 +1,44 @@
 <template>
 
+  <!-- REPLACE your existing loading screen div with this -->
   <div v-if="!loaded" class="loading-screen">
-    <div class="spinner"></div>
+    <div class="loading-card">
+      <div class="loading-logo">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="3" width="7" height="7" rx="1" fill="#6366f1" opacity="0.9"/>
+          <rect x="14" y="3" width="7" height="7" rx="1" fill="#6366f1" opacity="0.6"/>
+          <rect x="3" y="14" width="7" height="7" rx="1" fill="#6366f1" opacity="0.6"/>
+          <rect x="14" y="14" width="7" height="7" rx="1" fill="#6366f1" opacity="0.3"/>
+        </svg>
+      </div>
+      <div class="loading-spinner">
+        <svg width="40" height="40" viewBox="0 0 40 40">
+          <circle cx="20" cy="20" r="16"
+                  fill="none"
+                  stroke="#e0e0e0"
+                  stroke-width="3"/>
+          <circle cx="20" cy="20" r="16"
+                  fill="none"
+                  stroke="#6366f1"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-dasharray="25 75"
+                  transform="rotate(-90 20 20)">
+            <animateTransform
+                attributeName="transform"
+                type="rotate"
+                from="0 20 20"
+                to="360 20 20"
+                dur="0.9s"
+                repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+      <p class="loading-text">Loading your card...</p>
+      <div class="loading-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
   </div>
 
   <div
@@ -57,6 +94,7 @@
                 :src="`${VITE_IMAGE_UPLOAD_URL}${company.logo}`"
                 alt="Company Logo"
                 class="company-logo-bg"
+                loading="lazy"
             />
             <div class="logo-overlay"></div>
           </div>
@@ -67,6 +105,7 @@
                 :src="`${VITE_IMAGE_UPLOAD_URL}${contacts[0].photo}`"
                 alt="Contact Photo"
                 class="contact-photo-circle"
+                loading="lazy"
             />
           </div>
         </div>
@@ -530,8 +569,8 @@
             <!-- 360 View -->
 
             <a v-if="company.view360"
-            @click.prevent="handle360Click(company.view360)"
-            class="action-link-secondary action-link-secondary-group"
+               @click.prevent="handle360Click(company.view360)"
+               class="action-link-secondary action-link-secondary-group"
             >
             <span class="action-icon action-icon-group">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -540,7 +579,7 @@
               <path d="M2 12h20"/>
             </svg>
           </span>
-            <span>{{ t('view360') }}</span>
+              <span>{{ t('view360') }}</span>
             </a>
 
             <!-- Reviews -->
@@ -561,8 +600,8 @@
             <template v-for="(file, idx) in shopNowLinks" :key="'shop-' + idx">
 
               <a @click.prevent="handleFileClick(file, 'shop_now')"
-              class="action-link-secondary action-link-secondary-group shop-now-btn shop-now-btn-group"
-              :title="file.name"
+                 class="action-link-secondary action-link-secondary-group shop-now-btn shop-now-btn-group"
+                 :title="file.name"
               >
               <span class="action-icon action-icon-group">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -571,7 +610,7 @@
                 <path d="M16 10a4 4 0 0 1-8 0"/>
               </svg>
             </span>
-              <span>{{ locale === 'ar' ? 'تسوق الآن' : 'Shop Now' }}</span>
+                <span>{{ locale === 'ar' ? 'تسوق الآن' : 'Shop Now' }}</span>
               </a>
             </template>
 
@@ -579,8 +618,8 @@
             <template v-for="(file, idx) in orderNowLinks" :key="'order-' + idx">
 
               <a @click.prevent="handleFileClick(file, 'order_now')"
-              class="action-link-secondary action-link-secondary-group order-now-btn order-now-btn-group"
-              :title="file.name"
+                 class="action-link-secondary action-link-secondary-group order-now-btn order-now-btn-group"
+                 :title="file.name"
               >
               <span class="action-icon action-icon-group">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -589,16 +628,16 @@
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
               </svg>
             </span>
-              <span>{{ locale === 'ar' ? 'اطلب الآن' : 'Order Now' }}</span>
+                <span>{{ locale === 'ar' ? 'اطلب الآن' : 'Order Now' }}</span>
               </a>
             </template>
 
             <!-- Brochure Links -->
             <template v-for="(file, idx) in brochureLinks" :key="'brochure-' + idx">
 
-             <a @click.prevent="handleFileClick(file, 'brochure')"
-              class="action-link-secondary action-link-secondary-group brochure-btn brochure-btn-group"
-              :title="file.name"
+              <a @click.prevent="handleFileClick(file, 'brochure')"
+                 class="action-link-secondary action-link-secondary-group brochure-btn brochure-btn-group"
+                 :title="file.name"
               >
               <span class="action-icon action-icon-group">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -609,7 +648,7 @@
                 <polyline points="10 9 9 9 8 9"/>
               </svg>
             </span>
-              <span>{{ locale === 'ar' ? 'بروشور' : 'Brochure' }}</span>
+                <span>{{ locale === 'ar' ? 'بروشور' : 'Brochure' }}</span>
               </a>
             </template>
 
@@ -617,8 +656,8 @@
             <template v-for="(file, idx) in menuLinks" :key="'menu-' + idx">
 
               <a @click.prevent="handleFileClick(file, 'menu')"
-              class="action-link-secondary action-link-secondary-group menu-btn menu-btn-group"
-              :title="file.name"
+                 class="action-link-secondary action-link-secondary-group menu-btn menu-btn-group"
+                 :title="file.name"
               >
               <span class="action-icon action-icon-group">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -630,7 +669,7 @@
                 <line x1="3" y1="18" x2="3.01" y2="18"/>
               </svg>
             </span>
-              <span>{{ locale === 'ar' ? 'قائمة' : 'Menu' }}</span>
+                <span>{{ locale === 'ar' ? 'قائمة' : 'Menu' }}</span>
               </a>
             </template>
           </div>
@@ -647,12 +686,12 @@
             <div class="social-links social-links-group">
 
               <a v-for="(url, name) in company.socialLinks"
-              :key="name"
-              @click.prevent="handleSocialClick(name, url)"
-              class="social-icon-link social-icon-link-group"
-              :title="name"
+                 :key="name"
+                 @click.prevent="handleSocialClick(name, url)"
+                 class="social-icon-link social-icon-link-group"
+                 :title="name"
               >
-              <span v-html="getSocialIcon(name)"></span>
+                <span v-html="getSocialIcon(name)"></span>
               </a>
             </div>
             <div class="social-divider social-divider-group"></div>
@@ -754,15 +793,16 @@ const contactMessageStatus = ref({
 // Add this helper function to get GA Client ID
 const getGAClientId = () => {
   return new Promise((resolve) => {
-    if (window.gtag) {
-      window.gtag('get', 'G-Z9X7JZZVQF', 'client_id', (clientId) => {
-        resolve(clientId);
-      });
-    } else {
-      resolve(null);
-    }
+    if (!window.gtag) return resolve(null); // ← already there but make sure
+    // add a timeout fallback
+    const timeout = setTimeout(() => resolve(null), 1000);
+    window.gtag('get', 'G-Z9X7JZZVQF', 'client_id', (clientId) => {
+      clearTimeout(timeout);
+      resolve(clientId);
+    });
   });
 };
+
 
 // Close contact popup
 const closeContactPopup = () => {
@@ -1019,16 +1059,15 @@ const additionalActionsCount = computed(() => {
 
 
 const filesList = computed(() => {
-  if (!company.value || !company.value.files) return [];
+  if (!company.value?.files) return [];
   if (Array.isArray(company.value.files)) return company.value.files;
-  try {
-    const parsed = JSON.parse(company.value.files);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    console.warn('Could not parse company.files', e);
-    return [];
-  }
+  try { return JSON.parse(company.value.files); } catch { return []; }
 });
+
+const shopNowLinks  = computed(() => filesList.value.filter(f => f.isShopNow));
+const orderNowLinks = computed(() => filesList.value.filter(f => f.isOrderNow));
+const brochureLinks = computed(() => filesList.value.filter(f => f.isBrochure));
+const menuLinks     = computed(() => filesList.value.filter(f => f.isMenu));
 
 // Phone click
 const handlePhoneClick = async (phoneNumber) => {
@@ -1222,61 +1261,61 @@ async function submitContactMessage() {
   }
 }
 
-const shopNowLinks = computed(() => {
-  if (!company.value || !company.value.files) return [];
-  const files = Array.isArray(company.value.files)
-      ? company.value.files
-      : (() => {
-        try {
-          return JSON.parse(company.value.files);
-        } catch {
-          return [];
-        }
-      })();
-  return files.filter(file => file.isShopNow);
-});
-
-const orderNowLinks = computed(() => {
-  if (!company.value || !company.value.files) return [];
-  const files = Array.isArray(company.value.files)
-      ? company.value.files
-      : (() => {
-        try {
-          return JSON.parse(company.value.files);
-        } catch {
-          return [];
-        }
-      })();
-  return files.filter(file => file.isOrderNow);
-});
-
-const brochureLinks = computed(() => {
-  if (!company.value || !company.value.files) return [];
-  const files = Array.isArray(company.value.files)
-      ? company.value.files
-      : (() => {
-        try {
-          return JSON.parse(company.value.files);
-        } catch {
-          return [];
-        }
-      })();
-  return files.filter(file => file.isBrochure);
-});
-
-const menuLinks = computed(() => {
-  if (!company.value || !company.value.files) return [];
-  const files = Array.isArray(company.value.files)
-      ? company.value.files
-      : (() => {
-        try {
-          return JSON.parse(company.value.files);
-        } catch {
-          return [];
-        }
-      })();
-  return files.filter(file => file.isMenu);
-});
+// const shopNowLinks = computed(() => {
+//   if (!company.value || !company.value.files) return [];
+//   const files = Array.isArray(company.value.files)
+//       ? company.value.files
+//       : (() => {
+//         try {
+//           return JSON.parse(company.value.files);
+//         } catch {
+//           return [];
+//         }
+//       })();
+//   return files.filter(file => file.isShopNow);
+// });
+//
+// const orderNowLinks = computed(() => {
+//   if (!company.value || !company.value.files) return [];
+//   const files = Array.isArray(company.value.files)
+//       ? company.value.files
+//       : (() => {
+//         try {
+//           return JSON.parse(company.value.files);
+//         } catch {
+//           return [];
+//         }
+//       })();
+//   return files.filter(file => file.isOrderNow);
+// });
+//
+// const brochureLinks = computed(() => {
+//   if (!company.value || !company.value.files) return [];
+//   const files = Array.isArray(company.value.files)
+//       ? company.value.files
+//       : (() => {
+//         try {
+//           return JSON.parse(company.value.files);
+//         } catch {
+//           return [];
+//         }
+//       })();
+//   return files.filter(file => file.isBrochure);
+// });
+//
+// const menuLinks = computed(() => {
+//   if (!company.value || !company.value.files) return [];
+//   const files = Array.isArray(company.value.files)
+//       ? company.value.files
+//       : (() => {
+//         try {
+//           return JSON.parse(company.value.files);
+//         } catch {
+//           return [];
+//         }
+//       })();
+//   return files.filter(file => file.isMenu);
+// });
 
 
 // Computed properties for displaying translated or original content
@@ -1516,49 +1555,31 @@ function updateMetaTags(contact, company) {
 }
 
 onMounted(async () => {
-  const deviceType = getDeviceType();
-  console.log('🔍 Detected Device Type:', deviceType);
-  console.log('📱 user Agent:', navigator.userAgent);
+  // 1. Fetch data FIRST
+  const phone = route.params.phone;
+  const dataPromise = api.get(`/public/${phone}`);
 
-  // Wait a moment for GA to initialize
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  await trackPageView();
-
-
+  // 2. Fire non-critical stuff in background
+  trackPageView();
   setupScrollTracking();
   setupEngagementTracking();
 
+  // 3. Await data
   try {
-    const savedLanguage = localStorage.getItem('preferredLanguage');
-    if (savedLanguage) {
-      locale.value = savedLanguage;
-    }
-
-    const phone = route.params.phone;
-    const res = await api.get(`/public/${phone}`);
-
+    const res = await dataPromise;
     company.value = res.data.company;
     contacts.value = [res.data.contact];
     theme.value = res.data.theme;
+    loaded.value = true; // show page NOW
 
+    // 4. Non-critical stuff after render
     updatePageTitle();
     updateMetaTags(res.data.contact, res.data.company);
 
-    if (locale.value === 'ar') {
-      await translateDatabaseContent();
-    }
-
-    let themeLoaded = true;
-
-    if (theme.value?.cssFile) {
-      themeLoaded = await applyTheme(theme.value.cssFile);
-    }
-
-    loaded.value = themeLoaded;
+    if (theme.value?.cssFile) applyTheme(theme.value.cssFile);
+    if (locale.value === 'ar') translateDatabaseContent();
 
   } catch (err) {
-    console.error(err);
     loaded.value = true;
   }
 });
@@ -1762,7 +1783,7 @@ const getSocialIcon = (name) => {
     vimeo: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#1AB7EA"><path d="M23.98 6.62c-.1 2.22-1.64 5.26-4.64 9.15C16.1 19.88 13.8 22 11.7 22c-1.33 0-2.46-1.28-3.38-3.84-.62-2.27-1.17-4.53-1.75-6.8C5.97 9.59 5.3 8.92 4.3 9.03a9.32 9.32 0 01-2.2.41L1.36 7.7C2.92 6.06 4.36 4.36 5.67 2.6c1.07-1.27 2.3-1.94 3.68-2 2.4-.1 3.87 1.7 4.4 5.4.3 2.4.5 3.88.67 4.43.37 1.6.78 2.4 1.24 2.4.35 0 .87-.55 1.55-1.65.68-1.1 1.04-2 1.07-2.7.04-.95-.28-1.43-.97-1.43-.33 0-.66.07-1 .2.66-2.14 1.92-3.2 3.8-3.16 2.52.06 3.71 1.72 3.56 5.06z"/></svg>`,
     medium: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#000000"><path d="M2 4v16h20V4H2zm6.8 4.6a2.3 2.3 0 110 4.6 2.3 2.3 0 010-4.6zm7.7 2.3c0 2.54-2 4.6-4.46 4.6-2.46 0-4.46-2.06-4.46-4.6s2-4.6 4.46-4.6C14.47 6.3 16.5 8.36 16.5 11zm2.7-2.3a1.6 1.6 0 110 3.2 1.6 1.6 0 010-3.2z"/></svg>`,
     behance: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#1769FF"><path d="M7.2 10.2c.75 0 1.35-.63 1.35-1.38S7.95 7.5 7.2 7.5H3v2.7h4.2zm.15 1.35H3V15h4.35c.75 0 1.35-.66 1.35-1.5s-.6-1.35-1.35-1.35zm10.8-1.95c-1.41 0-2.52 1.11-2.52 2.52 0 1.41 1.11 2.52 2.52 2.52 1.41 0 2.55-1.11 2.55-2.52 0-1.41-1.14-2.52-2.55-2.52zM12 4.5h6.75v1.5H12V4.5z"/></svg>`,
-    dribbble: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#EA4C89"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm6.314 5.672a9.49 9.49 0 011.993 5.898c-.315-.063-3.482-.687-6.634-.297-.093-.211-.18-.423-.273-.634-.267-.6-.566-1.21-.886-1.81 3.375-1.35 5.351-3.204 5.8-3.657zm-2.402-1.64c-.387.404-2.165 2.137-5.41 3.329-1.7-3.115-3.585-5.602-3.987-6.139a9.49 9.49 0 019.397 2.81zM6.44 2.945c.372.472 2.24 2.927 3.992 6.116-4.258 1.126-8.03 1.097-8.613 1.084a9.49 9.49 0 014.62-7.2zM2.017 12.01v-.198c.58.013 5.313.04 9.953-1.299.258.503.503 1.017.733 1.53-.116.034-.233.067-.35.103-4.697 1.487-7.221 5.561-7.506 6.032a9.43 9.43 0 01-2.83-6.168zm4.74 7.32c.248-.46 2.055-3.617 6.94-5.33 1.195 3.108 1.69 5.722 1.79 6.38a9.455 9.455 0 01-8.73-1.05zm10.78.1c-.08-.53-.56-3.05-1.71-6.14 2.99-.47 5.614.3 6.07.44a9.44 9.44 0 01-4.36 5.7z"/></svg>`,
+    dribble: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#EA4C89"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm6.314 5.672a9.49 9.49 0 011.993 5.898c-.315-.063-3.482-.687-6.634-.297-.093-.211-.18-.423-.273-.634-.267-.6-.566-1.21-.886-1.81 3.375-1.35 5.351-3.204 5.8-3.657zm-2.402-1.64c-.387.404-2.165 2.137-5.41 3.329-1.7-3.115-3.585-5.602-3.987-6.139a9.49 9.49 0 019.397 2.81zM6.44 2.945c.372.472 2.24 2.927 3.992 6.116-4.258 1.126-8.03 1.097-8.613 1.084a9.49 9.49 0 014.62-7.2zM2.017 12.01v-.198c.58.013 5.313.04 9.953-1.299.258.503.503 1.017.733 1.53-.116.034-.233.067-.35.103-4.697 1.487-7.221 5.561-7.506 6.032a9.43 9.43 0 01-2.83-6.168zm4.74 7.32c.248-.46 2.055-3.617 6.94-5.33 1.195 3.108 1.69 5.722 1.79 6.38a9.455 9.455 0 01-8.73-1.05zm10.78.1c-.08-.53-.56-3.05-1.71-6.14 2.99-.47 5.614.3 6.07.44a9.44 9.44 0 01-4.36 5.7z"/></svg>`,
     reddit: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#FF4500"><path d="M12 0a12 12 0 100 24 12 12 0 000-24zm5.48 10.52c.66 0 1.2.54 1.2 1.2s-.54 1.2-1.2 1.2c-.44 0-.82-.24-1.03-.6a5.48 5.48 0 01-2.98 1.6c.06.2.09.41.09.63 0 1.8-1.52 3.26-3.4 3.26-1.87 0-3.4-1.46-3.4-3.26 0-.22.03-.43.09-.63a5.48 5.48 0 01-2.98-1.6c-.21.36-.59.6-1.03.6-.66 0-1.2-.54-1.2-1.2s.54-1.2 1.2-1.2c.66 0 1.2.54 1.2 1.2 0 .22-.06.42-.16.6a4.11 4.11 0 002.45 1.3c.54-.86 1.58-1.46 2.76-1.46s2.22.6 2.76 1.46a4.11 4.11 0 002.45-1.3c-.1-.18-.16-.38-.16-.6 0-.66.54-1.2 1.2-1.2z"/></svg>`,
     snapchat: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#FFFC00"><path d="M12 0c-2.77 0-5.02 2.25-5.02 5.02v.29c0 .47-.21.92-.57 1.22-.67.57-1.44 1.13-1.51 1.99-.09 1.14 1.1 1.85 2.03 2.18.46.16.94.34 1.07.79.17.58-.34 1.06-.85 1.3-.7.32-1.46.55-2.23.61-.52.04-.87.51-.75 1.02.2.84 1.22 1.22 2 1.39.57.12 1.18.17 1.64.53.35.27.51.73.66 1.14.43 1.16 1.43 2.02 2.64 2.34 1.79.46 3.71.46 5.5 0 1.21-.32 2.21-1.18 2.64-2.34.15-.41.31-.86.66-1.14.46-.36 1.07-.41 1.64-.53.78-.17 1.79-.55 2-1.39.12-.51-.23-.98-.75-1.02-.77-.06-1.53-.29-2.23-.61-.51-.24-1.03-.72-.85-1.3.13-.45.61-.63 1.07-.79.93-.33 2.12-1.04 2.03-2.18-.07-.86-.84-1.42-1.51-1.99-.36-.3-.57-.75-.57-1.22v-.29C17.02 2.25 14.77 0 12 0z"/></svg>`,
     pinterest: `<svg width="28" height="28" viewBox="0 0 24 24" fill="#E60023"><path d="M12 0C5.373 0 0 5.372 0 12c0 4.991 3.657 9.128 8.438 10.062-.117-.855-.223-2.168.047-3.103.242-.83 1.558-5.29 1.558-5.29s-.397-.794-.397-1.965c0-1.84 1.067-3.214 2.397-3.214 1.13 0 1.676.848 1.676 1.864 0 1.136-.724 2.835-1.095 4.413-.311 1.315.662 2.387 1.962 2.387 2.355 0 3.941-3.031 3.941-6.623 0-2.732-1.839-4.776-5.184-4.776-3.777 0-6.13 2.816-6.13 5.96 0 1.084.416 2.247.936 2.879.103.125.118.235.087.362-.095.398-.311 1.266-.354 1.441-.056.232-.183.281-.423.17-1.577-.733-2.557-3.034-2.557-4.889 0-3.976 2.892-7.626 8.342-7.626 4.376 0 7.771 3.12 7.771 7.289 0 4.343-2.739 7.834-6.54 7.834-1.277 0-2.478-.662-2.892-1.448l-.786 3c-.283 1.088-1.051 2.45-1.566 3.282C9.87 23.83 10.91 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>`,

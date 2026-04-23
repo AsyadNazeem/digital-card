@@ -1,4 +1,4 @@
-// routes/theme.js - Diagnostic Version
+// routes/theme.js - UPDATED VERSION with Layout Integration
 
 import express from "express";
 import Theme from "../models/Theme.js";
@@ -15,11 +15,12 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-// Get all themes
+// Get all themes with layout information
 router.get("/", async (req, res) => {
     try {
         const themes = await Theme.findAll({
-            order: [['id', 'ASC']]
+            order: [['id', 'ASC']],
+            attributes: ['id', 'name', 'description', 'previewImage', 'cssFile', 'isPremium', 'layoutType']
         });
         res.json(themes);
     } catch (err) {
@@ -37,52 +38,36 @@ router.get("/:themeId/css", async (req, res) => {
             return res.status(404).json({ message: "Theme not found" });
         }
 
-        // DIAGNOSTIC LOGGING
-        console.log("\n========== PATH DIAGNOSTIC ==========");
-        console.log("📍 __filename:", __filename);
-        console.log("📍 __dirname:", __dirname);
-        console.log("📍 CSS from DB:", theme.cssFile);
-
         // Try different path resolutions
         const pathAttempts = [
-            { label: "Attempt 1 (up 1 level)", path: path.join(__dirname, "..", theme.cssFile) },
-            { label: "Attempt 2 (up 2 levels)", path: path.join(__dirname, "../..", theme.cssFile) },
-            { label: "Attempt 3 (up 3 levels)", path: path.join(__dirname, "../../..", theme.cssFile) },
-            { label: "Attempt 4 (process.cwd)", path: path.join(process.cwd(), theme.cssFile) },
+            path.join(__dirname, "..", theme.cssFile),
+            path.join(__dirname, "../..", theme.cssFile),
+            path.join(process.cwd(), theme.cssFile),
+            path.join(process.cwd(), "public", theme.cssFile)
         ];
 
         let cssPath = null;
-        let foundPath = null;
 
         for (const attempt of pathAttempts) {
-            console.log(`\n${attempt.label}:`);
-            console.log("  Path:", attempt.path);
-            console.log("  Exists:", fs.existsSync(attempt.path) ? "✅ YES" : "❌ NO");
-
-            if (fs.existsSync(attempt.path) && !foundPath) {
-                foundPath = attempt.path;
-                cssPath = attempt.path;
+            if (fs.existsSync(attempt)) {
+                cssPath = attempt;
+                break;
             }
         }
 
-        console.log("\n====================================\n");
-
-        if (!cssPath || !fs.existsSync(cssPath)) {
-            console.error("❌ CSS file not found in any location!");
+        if (!cssPath) {
+            console.error("❌ CSS file not found:", theme.cssFile);
             return res.status(404).json({
                 message: "Theme CSS file not found",
-                triedPaths: pathAttempts.map(a => a.path)
+                cssFile: theme.cssFile
             });
         }
 
-        console.log("✅ Using CSS path:", cssPath);
-
         const cssContent = fs.readFileSync(cssPath, 'utf8');
 
-        // Set proper headers for CSS
         res.setHeader('Content-Type', 'text/css; charset=utf-8');
-        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-        res.setHeader('Access-Control-Allow-Origin', '*'); // Allow CORS for CSS
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.setHeader('Access-Control-Allow-Origin', '*');
 
         res.send(cssContent);
 
@@ -101,7 +86,6 @@ router.get("/:themeId/preview", authenticateToken, async (req, res) => {
             return res.status(404).json({ message: "Theme not found" });
         }
 
-        // Get user's actual data for realistic preview
         const userId = req.user.id;
         const user = await User.findByPk(userId, {
             include: [
@@ -120,7 +104,6 @@ router.get("/:themeId/preview", authenticateToken, async (req, res) => {
             ]
         });
 
-        // Use user's actual data or fallback to sample data
         const contact = user.contacts?.[0] || {
             firstName: 'John',
             lastName: 'Doe',
@@ -139,6 +122,7 @@ router.get("/:themeId/preview", authenticateToken, async (req, res) => {
             googleLocation: 'https://maps.google.com',
             view360: null,
             googleReviews: null,
+            layoutType: theme.layoutType || 'classic', // Use theme's layout
             socialLinks: {
                 facebook: 'https://facebook.com',
                 linkedin: 'https://linkedin.com',
@@ -158,10 +142,12 @@ router.get("/:themeId/preview", authenticateToken, async (req, res) => {
     }
 });
 
-// Select theme with plan validation
+// ============================================
+// NEW: Select theme with layout type update
+// ============================================
 router.post("/select", authenticateToken, async (req, res) => {
     try {
-        const { themeId } = req.body;
+        const { themeId, applyLayout } = req.body; // applyLayout = true to update company layout
         const userId = req.user.id;
 
         if (!themeId) {
@@ -186,14 +172,29 @@ router.post("/select", authenticateToken, async (req, res) => {
         // Update user's selected theme
         await user.update({ selectedThemeId: themeId });
 
+        // ============================================
+        // NEW: Update company layout if applyLayout is true
+        // ============================================
+        if (applyLayout && theme.layoutType) {
+            const companies = await Company.findAll({
+                where: { userId: userId }
+            });
+
+            for (const company of companies) {
+                await company.update({ layoutType: theme.layoutType });
+            }
+        }
+
         res.json({
             message: "Theme updated successfully",
             theme: {
                 id: theme.id,
                 name: theme.name,
                 isPremium: theme.isPremium,
-                cssFile: theme.cssFile
-            }
+                cssFile: theme.cssFile,
+                layoutType: theme.layoutType
+            },
+            layoutUpdated: applyLayout && theme.layoutType ? true : false
         });
 
     } catch (err) {
@@ -201,5 +202,65 @@ router.post("/select", authenticateToken, async (req, res) => {
         res.status(500).json({ message: "Failed to update theme" });
     }
 });
+
+// routes/theme.js - Add this PATCH route
+
+// ============================================
+// UPDATE THEME LAYOUT TYPE
+// ============================================
+router.patch("/:themeId", authenticateToken, async (req, res) => {
+    try {
+        const { themeId } = req.params;
+        const { layoutType } = req.body;
+
+        // Validate layoutType
+        const validLayouts = ['classic', 'modern', 'compact', 'minimal'];
+        if (!validLayouts.includes(layoutType)) {
+            return res.status(400).json({
+                message: "Invalid layout type. Must be: classic, modern, compact, or minimal"
+            });
+        }
+
+        // Get user's selected theme
+        const user = await User.findByPk(req.user.id);
+
+        if (user.selectedThemeId !== themeId) {
+            return res.status(403).json({
+                message: "You can only update your currently selected theme's layout"
+            });
+        }
+
+        // Find and update the theme
+        const theme = await Theme.findByPk(themeId);
+
+        if (!theme) {
+            return res.status(404).json({
+                message: "Theme not found"
+            });
+        }
+
+        // Update layoutType
+        await theme.update({ layoutType });
+
+        res.json({
+            success: true,
+            message: "Layout updated successfully",
+            theme: {
+                id: theme.id,
+                name: theme.name,
+                layoutType: theme.layoutType,
+                cssFile: theme.cssFile
+            }
+        });
+
+    } catch (err) {
+        console.error("Theme layout update error:", err);
+        res.status(500).json({
+            message: "Failed to update layout",
+            error: err.message
+        });
+    }
+});
+
 
 export default router;
