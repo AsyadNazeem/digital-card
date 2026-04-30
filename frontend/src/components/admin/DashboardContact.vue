@@ -2,6 +2,7 @@
   <transition name="modal-fade">
     <div v-if="show" class="modal-overlay">
       <div class="modal-container" @click.stop>
+
         <!-- Modal Header -->
         <div class="modal-header">
           <h2 class="modal-title">{{ contact?.id ? 'Edit Contact' : 'Create Contact' }}</h2>
@@ -16,19 +17,42 @@
         <!-- Form Content -->
         <div class="modal-content">
           <div class="form-container">
-            <!-- Contact Photo Upload -->
+
+            <!-- ── CONTACT TYPE SELECTOR ── -->
+            <div class="contact-type-selector">
+              <label class="radio-option">
+                <input type="radio" v-model="contactType" value="individual" name="adminContactType"/>
+                <span class="radio-label">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      Individual
+    </span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" v-model="contactType" value="group" name="adminContactType"/>
+                <span class="radio-label">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      Group
+    </span>
+              </label>
+            </div>
+
+            <!-- ── SHARED: Photo Upload ── -->
             <div class="form-group full-width">
               <label class="form-label">Contact Photo</label>
               <div class="upload-area">
-                <input
-                    type="file"
-                    @change="handlePhotoUpload"
-                    accept="image/*"
-                    id="edit-photo-upload"
-                    class="file-input"
-                />
+                <input type="file" @change="handlePhotoUpload" accept="image/*"
+                       id="edit-photo-upload" class="file-input"/>
                 <label for="edit-photo-upload" class="upload-label">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="17 8 12 3 7 8"></polyline>
                     <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -42,8 +66,10 @@
               </div>
             </div>
 
-            <!-- Contact Information -->
-            <div class="form-grid">
+            <!-- ══════════════════════════════════════
+                 INDIVIDUAL FORM
+            ══════════════════════════════════════ -->
+            <div v-if="contactType === 'individual'" class="form-grid">
               <div class="form-group">
                 <label class="form-label">First Name <span class="required">*</span></label>
                 <input v-model="form.firstName" type="text" class="form-input" required/>
@@ -53,21 +79,13 @@
                 <input v-model="form.lastName" type="text" class="form-input" required/>
               </div>
 
-              <!-- Mobile with Country Code -->
+              <!-- Mobile -->
               <div class="form-group">
                 <label class="form-label">Mobile <span class="required">*</span></label>
                 <div class="phone-input-group">
-                  <CountryCodeDropdown
-                      v-model="mobileCountryCode"
-                  />
-                  <input
-                      v-model="form.mobile"
-                      type="tel"
-                      class="form-input phone-input"
-                      placeholder="Enter mobile number"
-                      @input="validateMobile"
-                      required
-                  />
+                  <CountryCodeDropdown v-model="mobileCountryCode"/>
+                  <input v-model="form.mobile" type="tel" class="form-input phone-input"
+                         placeholder="Enter mobile number" @input="validateMobile" required/>
                 </div>
                 <p v-if="mobileValidation.message"
                    :class="mobileValidation.isValid ? 'validation-success' : 'validation-error'">
@@ -75,20 +93,13 @@
                 </p>
               </div>
 
-              <!-- Telephone with Country Code -->
+              <!-- Telephone -->
               <div class="form-group">
                 <label class="form-label">Telephone</label>
                 <div class="phone-input-group">
-                  <CountryCodeDropdown
-                      v-model="telephoneCountryCode"
-                  />
-                  <input
-                      v-model="form.telephone"
-                      type="tel"
-                      class="form-input phone-input"
-                      placeholder="Enter phone number"
-                      @input="validateTelephone"
-                  />
+                  <CountryCodeDropdown v-model="telephoneCountryCode"/>
+                  <input v-model="form.telephone" type="tel" class="form-input phone-input"
+                         placeholder="Enter phone number" @input="validateTelephone"/>
                 </div>
                 <p v-if="telephoneValidation.message"
                    :class="telephoneValidation.isValid ? 'validation-success' : 'validation-error'">
@@ -96,30 +107,18 @@
                 </p>
               </div>
 
+              <!-- WhatsApp -->
               <div class="form-group">
                 <label class="form-label">
-                  <input
-                      type="checkbox"
-                      v-model="whatsappSameAsMobile"
-                      style="margin-right: 8px;"
-
-                  />
+                  <input type="checkbox" v-model="whatsappSameAsMobile" style="margin-right: 8px;"/>
                   WhatsApp (Same as Mobile)
                 </label>
                 <div class="phone-input-group">
-                  <CountryCodeDropdown
-                      v-model="whatsappCountryCode"
-                      :disabled="whatsappSameAsMobile"
-                  />
-                  <input
-                      v-model="form.whatsapp"
-                      type="tel"
-                      class="form-input phone-input"
-                      placeholder="Enter mobile number"
-                      @input="handleContactWhatsApp"
-                      :disabled="whatsappSameAsMobile"
-                      :style="{ opacity: whatsappSameAsMobile ? 0.6 : 1 }"
-                  />
+                  <CountryCodeDropdown v-model="whatsappCountryCode" :disabled="whatsappSameAsMobile"/>
+                  <input v-model="form.whatsapp" type="tel" class="form-input phone-input"
+                         placeholder="Enter WhatsApp number" @input="handleContactWhatsApp"
+                         :disabled="whatsappSameAsMobile"
+                         :style="{ opacity: whatsappSameAsMobile ? 0.6 : 1 }"/>
                 </div>
                 <p v-if="mobileValidation.whatsapp?.message && !whatsappSameAsMobile"
                    :class="mobileValidation.whatsapp?.isValid ? 'validation-success' : 'validation-error'">
@@ -127,52 +126,32 @@
                 </p>
               </div>
 
+              <!-- WhatsApp Channel -->
               <div class="form-group">
                 <label class="form-label">WhatsApp Channel Link</label>
-                <input
-                    v-model="form.whatsappChannel"
-                    type="url"
-                    class="form-input"
-                    placeholder="https://whatsapp.com/channel/..."
-                />
-                <p class="validation-info">
-                  📢 Enter your WhatsApp Channel invite link (optional)
-                </p>
+                <input v-model="form.whatsappChannel" type="url" class="form-input"
+                       placeholder="https://whatsapp.com/channel/..."/>
+                <p class="validation-info">📢 Enter your WhatsApp Channel invite link (optional)</p>
               </div>
 
+              <!-- Card Mobile -->
               <div class="form-group">
                 <label class="form-label">
-                  <input
-                      type="checkbox"
-                      v-model="cardMobileSameAsMobile"
-                      style="margin-right: 8px;"
-                  />
+                  <input type="checkbox" v-model="cardMobileSameAsMobile" style="margin-right: 8px;"/>
                   Card Mobile (Same as Mobile)
                 </label>
-
                 <div class="phone-input-group">
-                  <CountryCodeDropdown
-                      v-model="cardMobileCountryCode"
-                      :disabled="cardMobileSameAsMobile"
-                  />
-
-                  <input
-                      v-model="form.cardMobileNum"
-                      type="tel"
-                      class="form-input phone-input"
-                      placeholder="Enter mobile"
-                      @input="validateCardMobile"
-                      :disabled="cardMobileSameAsMobile"
-                      :style="{ opacity: cardMobileSameAsMobile ? 0.6 : 1 }"
-                  />
+                  <CountryCodeDropdown v-model="cardMobileCountryCode" :disabled="cardMobileSameAsMobile"/>
+                  <input v-model="form.cardMobileNum" type="tel" class="form-input phone-input"
+                         placeholder="Enter mobile" @input="validateCardMobile"
+                         :disabled="cardMobileSameAsMobile"
+                         :style="{ opacity: cardMobileSameAsMobile ? 0.6 : 1 }"/>
                 </div>
-
                 <p v-if="cardMobileValidation.message && !cardMobileSameAsMobile"
-                   :class=" cardMobileValidation.isValid ? 'validation-success' : 'validation-error' ">
+                   :class="cardMobileValidation.isValid ? 'validation-success' : 'validation-error'">
                   {{ cardMobileValidation.message }}
                 </p>
               </div>
-
 
               <div class="form-group">
                 <label class="form-label">Email <span class="required">*</span></label>
@@ -186,11 +165,68 @@
                 <label class="form-label">Company</label>
                 <select v-model="form.companyId" class="form-input">
                   <option value="">Select a company</option>
-                  <option
-                      v-for="company in companies"
-                      :key="company.id"
-                      :value="company.id"
-                  >
+                  <option v-for="company in companies" :key="company.id" :value="company.id">
+                    {{ company.companyName }}
+                  </option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Status <span class="required">*</span></label>
+                <select v-model="form.status" class="form-input" required>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- ══════════════════════════════════════
+                 GROUP FORM
+            ══════════════════════════════════════ -->
+            <div v-else-if="contactType === 'group'" class="form-grid">
+              <div class="form-group">
+                <label class="form-label">First Name <span class="required">*</span></label>
+                <input v-model="form.firstName" type="text" class="form-input" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Last Name <span class="required">*</span></label>
+                <input v-model="form.lastName" type="text" class="form-input" required/>
+              </div>
+
+              <!-- Mobile only (no telephone for group) -->
+              <div class="form-group">
+                <label class="form-label">Mobile <span class="required">*</span></label>
+                <div class="phone-input-group">
+                  <CountryCodeDropdown v-model="mobileCountryCode"/>
+                  <input v-model="form.mobile" type="tel" class="form-input phone-input"
+                         placeholder="Enter mobile number" @input="validateMobile" required/>
+                </div>
+                <p v-if="mobileValidation.message"
+                   :class="mobileValidation.isValid ? 'validation-success' : 'validation-error'">
+                  {{ mobileValidation.message }}
+                </p>
+              </div>
+
+              <!-- WhatsApp Channel (group uses channel, not direct WA number) -->
+              <div class="form-group">
+                <label class="form-label">WhatsApp Channel Link</label>
+                <input v-model="form.whatsappChannel" type="url" class="form-input"
+                       placeholder="https://whatsapp.com/channel/..."/>
+                <p class="validation-info">📢 Enter your WhatsApp Channel invite link (optional)</p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Email <span class="required">*</span></label>
+                <input v-model="form.email" type="email" class="form-input" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Designation <span class="required">*</span></label>
+                <input v-model="form.designation" type="text" class="form-input" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Company</label>
+                <select v-model="form.companyId" class="form-input">
+                  <option value="">Select a company</option>
+                  <option v-for="company in companies" :key="company.id" :value="company.id">
                     {{ company.companyName }}
                   </option>
                 </select>
@@ -208,10 +244,13 @@
             <div class="form-actions">
               <button @click="saveContact" class="btn-save" :disabled="saving || !isFormValid">
                 <span v-if="saving">Saving...</span>
-                <span v-else>💾 Save Changes</span>
+                <span v-else>💾 {{
+                    contact?.id ? 'Save Changes' : (contactType === 'group' ? 'Save Group Contact' : 'Save Contact')
+                  }}</span>
               </button>
               <button @click="closeModal" class="btn-cancel">Cancel</button>
             </div>
+
           </div>
         </div>
       </div>
@@ -283,6 +322,7 @@ const photoFileName = ref('')
 const photoPreview = ref('')
 const saving = ref(false)
 const companies = ref([])
+const contactType = ref('individual')
 
 // Image cropper states
 const showPhotoCropper = ref(false)
@@ -524,7 +564,8 @@ const isFormValid = computed(() => {
 watch(() => props.contact, (newContact) => {
   if (newContact) {
     const isCreating = !newContact.id
-
+    contactType.value = newContact.type || 'individual'  // ADD THIS
+    console.log('Contact type from API:', newContact?.type) // Add this
     // Helper: Extract national number (remove country code)
     const extractNumber = (fullNumber) => {
       if (!fullNumber) return ''
@@ -633,6 +674,7 @@ watch(() => props.contact, (newContact) => {
 
     } else {
       // RESET FOR NEW CONTACT
+      contactType.value = 'individual'  // ADD THIS
       photoPreview.value = ''
       photoFileName.value = ''
       whatsappSameAsMobile.value = true
@@ -792,6 +834,7 @@ async function saveContact() {
     // Append basic fields
     formData.append('firstName', form.value.firstName)
     formData.append('lastName', form.value.lastName)
+    formData.append('type', contactType.value)
     formData.append('email', form.value.email)
     formData.append('designation', form.value.designation)
     formData.append('status', form.value.status)
@@ -871,7 +914,6 @@ function closeModal() {
 }
 </script>
 
-/* Add these responsive styles to your Contact Modal */
 
 <style scoped>
 /* ============================================
@@ -1402,6 +1444,84 @@ input[type="checkbox"]:focus-visible {
   .upload-label {
     padding: 8px;
     min-height: 44px;
+  }
+}
+
+.contact-type-selector {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #f8f6f4 0%, #fff 100%);
+  border-radius: 12px;
+  border: 2px solid #e5e1dc;
+}
+
+.radio-option {
+  flex: 1;
+  cursor: pointer;
+}
+
+.radio-option input[type="radio"] {
+  display: none;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: white;
+  border: 2px solid #e5e1dc;
+  border-radius: 10px;
+  font-weight: 600;
+  color: #64748b;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+
+.radio-option input[type="radio"]:disabled + .radio-label {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.radio-option input[type="radio"]:disabled:checked + .radio-label {
+  opacity: 1; /* Keep the selected one fully visible */
+}
+
+.radio-option input[type="radio"]:checked + .radio-label {
+  background: linear-gradient(135deg, #5c4033 0%, #7d5a4f 100%);
+  border-color: #5c4033;
+  color: white;
+}
+
+.radio-label:hover {
+  border-color: #5c4033;
+  background: #f8f6f4;
+}
+
+.radio-option input[type="radio"]:checked + .radio-label:hover {
+  background: linear-gradient(135deg, #5c4033 0%, #7d5a4f 100%);
+}
+
+.validation-info {
+  color: #7f8c8d;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .contact-type-selector {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .radio-label {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
   }
 }
 </style>

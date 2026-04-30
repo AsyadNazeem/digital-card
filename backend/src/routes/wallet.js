@@ -7,6 +7,7 @@ import http from "http";
 import { fileURLToPath } from "url";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { PKPass } from "passkit-generator";
+import { buildThumbnail, buildStrip, buildLogo } from "../controllers/passImageComposer.js";
 
 const router = express.Router();
 
@@ -421,52 +422,50 @@ router.post("/apple/pass", authenticateToken, async (req, res) => {
         }
 
         /* ---------------------------
-           PROFILE PHOTO
+           LOAD RAW IMAGE BUFFERS
         --------------------------- */
 
-        if (contact.photo) {
+        const [rawPhoto, rawLogo] = await Promise.all([
+            contact.photo   ? loadImageBuffer(contact.photo)       : Promise.resolve(null),
+            contact.companyLogo ? loadImageBuffer(contact.companyLogo) : Promise.resolve(null),
+        ]);
 
-            const photo = await loadImageBuffer(contact.photo);
+        /* ---------------------------
+           THUMBNAIL  (circular, white ring)
+           Uses buildThumbnail() from passImageComposer
+        --------------------------- */
 
-            if (photo) {
-                pass.addBuffer("thumbnail.png", photo);
-                pass.addBuffer("thumbnail@2x.png", photo);
-                pass.addBuffer("thumbnail@3x.png", photo);
+        if (rawPhoto) {
+            const thumbnail = await buildThumbnail(rawPhoto);
+            if (thumbnail) {
+                pass.addBuffer("thumbnail.png",   thumbnail);
+                pass.addBuffer("thumbnail@2x.png", thumbnail);
+                pass.addBuffer("thumbnail@3x.png", thumbnail);
             }
-
         }
 
         /* ---------------------------
-           COMPANY LOGO
+           LOGO  (company logo or styled wordmark)
+           Uses buildLogo() from passImageComposer
         --------------------------- */
 
-        if (contact.companyLogo) {
-
-            const logo = await loadImageBuffer(contact.companyLogo);
-
-            if (logo) {
-                pass.addBuffer("logo.png", logo);
-                pass.addBuffer("logo@2x.png", logo);
-            }
-
+        const logo = await buildLogo(rawLogo, contact.companyName || contact.name);
+        if (logo) {
+            pass.addBuffer("logo.png",   logo);
+            pass.addBuffer("logo@2x.png", logo);
+            pass.addBuffer("logo@3x.png", logo);
         }
 
         /* ---------------------------
-           STRIP BANNER
+           STRIP BANNER  (dark gradient + photo + name/title/company)
+           Uses buildStrip() from passImageComposer
         --------------------------- */
 
-        const bannerSource = contact.companyLogo || contact.photo;
-
-        if (bannerSource) {
-
-            const banner = await loadImageBuffer(bannerSource);
-
-            if (banner) {
-                pass.addBuffer("strip.png", banner);
-                pass.addBuffer("strip@2x.png", banner);
-                pass.addBuffer("strip@3x.png", banner);
-            }
-
+        const strip = await buildStrip(contact, rawPhoto, rawLogo);
+        if (strip) {
+            pass.addBuffer("strip.png",   strip);
+            pass.addBuffer("strip@2x.png", strip);
+            pass.addBuffer("strip@3x.png", strip);
         }
 
         /* ---------------------------

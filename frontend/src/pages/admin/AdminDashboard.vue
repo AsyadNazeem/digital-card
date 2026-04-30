@@ -115,18 +115,18 @@ const recentUsers = ref([]);
 
 // For mapping stats to icons & colors
 const statItems = [
-  { key: "total", label: "Total Users", icon: "users", color: "purple" },
-  { key: "today", label: "Today's Signups", icon: "user-plus", color: "blue" },
-  { key: "month", label: "This Month", icon: "calendar", color: "green" },
-  { key: "active", label: "Active Users", icon: "user-check", color: "orange" },
-  { key: "google", label: "Google Signups", icon: "globe", color: "red" },
-  { key: "local", label: "Local Signups", icon: "mail", color: "gray" }
+  { key: "total",  label: "Total Users",      icon: "users",      color: "purple" },
+  { key: "today",  label: "Today's Signups",  icon: "user-plus",  color: "blue"   },
+  { key: "month",  label: "This Month",       icon: "calendar",   color: "green"  },
+  { key: "active", label: "Active Users",     icon: "user-check", color: "orange" },
+  { key: "google", label: "Google Signups",   icon: "globe",      color: "red"    },
+  { key: "apple",  label: "Apple Signups",    icon: "apple",      color: "silver" },
+  { key: "local",  label: "Local Signups",    icon: "mail",       color: "gray"   },
 ];
 
-// Icon SVG mapping function - Updated with proper icons
+// Icon SVG mapping function
 const getIconSvg = (iconName) => {
   const iconMap = {
-    // Sidebar and general icons
     'users': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
 
     'user-plus': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
@@ -141,8 +141,10 @@ const getIconSvg = (iconName) => {
 
     'phone': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
 
-    // Logout icon - smaller version
     'log-out': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+
+    // Apple logo mark (the  shape via path)
+    'apple': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>',
   };
   return iconMap[iconName] || iconMap['users'];
 };
@@ -254,11 +256,12 @@ onMounted(() => {
 
 /* Stat Card Colors */
 .purple { background: linear-gradient(135deg, #5c4033, #3e2a23); }
-.blue { background: linear-gradient(135deg, #6b5d57, #5c4033); }
-.green { background: linear-gradient(135deg, #10b981, #059669); }
+.blue   { background: linear-gradient(135deg, #6b5d57, #5c4033); }
+.green  { background: linear-gradient(135deg, #10b981, #059669); }
 .orange { background: linear-gradient(135deg, #d4af37, #b8941f); }
-.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.gray { background: linear-gradient(135deg, #9b8b7e, #6b5d57); }
+.red    { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.silver { background: linear-gradient(135deg, #6e6e73, #1c1c1e); }
+.gray   { background: linear-gradient(135deg, #9b8b7e, #6b5d57); }
 
 .stat-value {
   font-size: 2rem;

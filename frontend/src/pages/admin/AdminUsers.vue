@@ -668,7 +668,7 @@
                           {{ (company.status || 'active').toUpperCase() }}
                         </span>
                         </td>
-                        <td class="td-actions">
+                        <td class="td-actions" style="display: flex">
                           <button
                               v-if="can(PERMISSIONS.EDIT_COMPANY)"
                               @click="editCompany(company)"
@@ -683,6 +683,19 @@
                             Edit
                           </button>
                           <span v-else class="view-only-text">View Only</span>
+
+                          <button
+                              v-if="can(PERMISSIONS.DELETE_USER)"
+                              @click.stop="deleteCompany(company)"
+                              class="btn-delete"
+                              title="Delete Company"
+                              style="margin-left: 6px;"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
                         </td>
                       </tr>
                       </tbody>
@@ -912,6 +925,13 @@
                                 </svg>
                                 A-Wallet
                               </button>
+                              <button @click.stop="deleteContact(contact)" class="btn-card-action delete">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                  <polyline points="3 6 5 6 21 6"></polyline>
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                                Delete
+                              </button>
                             </div>
                           </div>
                         </td>
@@ -1013,6 +1033,13 @@
                             <rect x="3" y="14" width="7" height="7"></rect>
                           </svg>
                           QR
+                        </button>
+                        <button @click="deleteContact(contact)" class="btn-card-action delete">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                          Delete
                         </button>
                       </div>
                     </div>
@@ -1948,6 +1975,39 @@ async function handleReviewSaved() {
   }
 }
 
+const deleteCompany = async (company) => {
+  if (!can(PERMISSIONS.DELETE_USER)) {
+    alert('You do not have permission to delete companies')
+    return
+  }
+  if (!confirm(`Delete "${company.companyName}"? This will also delete ALL contacts and reviews under this company.`)) return
+
+  try {
+    await adminApi.delete(`/user/${selectedUser.value.id}/company/${company.id}`)
+    alert('✅ Company and all related data deleted successfully')
+    await fetchUserData(selectedUser.value.id)
+  } catch (err) {
+    console.error('Error deleting company:', err)
+    alert(err.response?.data?.message || 'Failed to delete company')
+  }
+}
+
+const deleteContact = async (contact) => {
+  if (!can(PERMISSIONS.DELETE_USER)) {
+    alert('You do not have permission to delete contacts')
+    return
+  }
+  if (!confirm(`Delete contact "${contact.firstName} ${contact.lastName}"?`)) return
+
+  try {
+    await adminApi.delete(`/user/${selectedUser.value.id}/contact/${contact.id}`)
+    alert('✅ Contact deleted successfully')
+    await fetchUserData(selectedUser.value.id)
+  } catch (err) {
+    console.error('Error deleting contact:', err)
+    alert(err.response?.data?.message || 'Failed to delete contact')
+  }
+}
 
 const deleteReview = async (reviewItem) => {
   if (!can(PERMISSIONS.DELETE_REVIEW)) {

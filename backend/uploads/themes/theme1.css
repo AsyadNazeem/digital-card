@@ -3,6 +3,204 @@
     /*font-family: 'Montserrat', sans-serif;*/
 }
 
+/* Full-width file links section */
+.fullwidth-links-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 1px auto 0;
+    padding: 0 17px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.fullwidth-link-btn {
+    width: 100% !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    padding: 12px 20px !important;
+    font-size: 14px !important;
+    min-height: 45px;
+    height: auto;
+    box-sizing: border-box;
+}
+
+.fullwidth-link-btn .action-icon-group {
+    width: 45px;
+    height: 45px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 420px) {
+    .fullwidth-links-section {
+        padding: 0 16px;
+    }
+
+    .fullwidth-link-btn {
+        padding: 10px 16px !important;
+        min-height: 58px;
+        height: auto;
+        font-size: 13px !important;
+    }
+
+    .fullwidth-link-btn .action-icon-group {
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+    }
+}
+
+/* ── Group Additional Actions Grid ── */
+.additional-actions-group {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px;
+    margin: 8px auto 20px;
+    padding: 0 17px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.additional-actions--two-lines-group {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.action-link-secondary-group {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 8px;
+    background: #ffffff;
+    color: #1f2937;
+    border-radius: 16px;
+    border: 1px solid #eef2f7;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+    transition: all 0.25s ease;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.action-link-secondary-group:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.14);
+}
+
+.action-icon-group {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+}
+
+.action-icon-group svg {
+    width: 20px;
+    height: 20px;
+}
+
+.shop-now-btn-group .action-icon-group {
+    background: rgba(99, 102, 241, 0.15);
+    color: #4f46e5;
+}
+
+.order-now-btn-group .action-icon-group {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.brochure-btn-group .action-icon-group {
+    background: rgba(245, 158, 11, 0.18);
+    color: #b45309;
+}
+
+.menu-btn-group .action-icon-group {
+    background: rgba(239, 68, 68, 0.15);
+    color: #b91c1c;
+}
+
+/* Center orphan buttons in last row of group additional actions */
+.additional-actions-group {
+    justify-items: center;
+}
+
+.additional-actions-group > * {
+    width: 100%;
+}
+
+/* When only 1 button in last row - center it */
+.additional-actions-group > *:last-child:nth-child(3n+1) {
+    grid-column: 2 / 3;
+}
+
+/* When only 2 buttons in last row - center them */
+.additional-actions-group > *:last-child:nth-child(3n+2) {
+    grid-column: 3 / 4;
+}
+
+.additional-actions-group > *:nth-last-child(2):nth-child(3n+1) {
+    grid-column: 2 / 3;
+}
+
+@media (max-width: 420px) {
+    .additional-actions-group {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px;
+        margin: 8px auto 20px;
+        padding: 0 17px;
+        width: 100%;
+    }
+
+    .action-link-secondary-group {
+        padding: 12px 6px;
+        font-size: 11px;
+    }
+
+    .action-icon-group {
+        width: 38px;
+        height: 38px;
+    }
+
+    .action-icon-group svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+/* WhatsApp standalone container fix */
+.whatsapp-standalone-container {
+    padding: 0 16px;
+    margin: -9px auto 1px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.whatsapp-channel-standalone {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+}
+
+/*!* WhatsApp standalone container fix *!*/
+/*.whatsapp-standalone-container {*/
+/*    padding: 0 16px;*/
+/*    margin: 16px auto 8px;*/
+/*    max-width: 100%;*/
+/*    box-sizing: border-box;*/
+/*}*/
+
+/*.whatsapp-channel-standalone {*/
+/*    width: 100% !important;*/
+/*    max-width: 100% !important;*/
+/*    box-sizing: border-box;*/
+/*}*/
+
 /* ── Loading Screen ── */
 .loading-screen {
     position: fixed;
@@ -71,6 +269,48 @@
     40%           { transform: translateY(-8px); opacity: 1;   }
 }
 
+/* Location button - match WhatsApp Channel style */
+.group-location-btn {
+    width: calc(100% - 34px);
+    max-width: 520px;
+    margin: 12px auto 12px;
+    height: 71px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    padding: 18px 20px;
+
+    background: #ffffff;
+    color: #1f2937;
+
+    border-radius: 15px;
+    border: 1px solid #eef2f7;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+
+    transition: all 0.25s ease;
+}
+
+.group-location-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.14);
+}
+
+.group-location-btn svg {
+    width: 56px;
+    height: 56px;
+    background: #f1f5f9;
+    color: #1f2937;
+    padding: 6px;
+    border-radius: 12px;
+}
+
 /* WhatsApp Standalone Container - Full width, centered */
 .whatsapp-standalone-container {
     padding: 0 16px;
@@ -93,27 +333,6 @@
 
 .whatsapp-channel-btn:hover .action-icon-group {
     background: rgba(37, 211, 102, 0.25);
-}
-
-/* Ensure other buttons stay in 2-column grid */
-.additional-actions-group {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin: 10px auto 30px;
-    padding: 0 16px;
-    max-width: 520px;
-}
-
-/* Mobile Responsive */
-@media (max-width: 420px) {
-    .whatsapp-standalone-container {
-        padding: 0 12px;
-    }
-
-    .additional-actions-group {
-        padding: 0 12px;
-    }
 }
 
 .whatsapp-icon-btn-group {
@@ -218,106 +437,6 @@
         padding: 9px;
     }
 }
-
-
-.additional-actions-group {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-
-    margin: 10px auto 30px;
-    padding: 0 16px;
-    max-width: 520px;
-}
-
-.action-link-secondary-group {
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-
-    padding: 22px 14px;
-
-    background: #ffffff;
-    color: #1f2937;
-
-    border-radius: 20px;
-    border: 1px solid #eef2f7;
-
-    text-align: center;
-    font-size: 14px;
-    font-weight: 700;
-
-    box-shadow:
-            0 10px 28px rgba(0, 0, 0, 0.08);
-
-    transition: all 0.25s ease;
-}
-
-.action-link-secondary-group:hover {
-    transform: translateY(-4px);
-    box-shadow:
-            0 18px 44px rgba(0, 0, 0, 0.14);
-}
-
-.action-icon-group {
-    width: 56px;
-    height: 56px;
-
-    border-radius: 16px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #f1f5f9;
-}
-
-.action-icon-group svg {
-    width: 26px;
-    height: 26px;
-}
-
-.shop-now-btn-group .action-icon-group {
-    background: rgba(99, 102, 241, 0.15);
-    color: #4f46e5;
-}
-
-.order-now-btn-group .action-icon-group {
-    background: rgba(16, 185, 129, 0.15);
-    color: #059669;
-}
-
-.brochure-btn-group .action-icon-group {
-    background: rgba(245, 158, 11, 0.18);
-    color: #b45309;
-}
-
-.menu-btn-group .action-icon-group {
-    background: rgba(239, 68, 68, 0.15);
-    color: #b91c1c;
-}
-
-.action-link-secondary-group:has(svg circle),
-.action-link-secondary-group:has(svg polygon) {
-    background: linear-gradient(
-            180deg,
-            #ffffff,
-            #f8fafc
-    );
-}
-
-@media (max-width: 420px) {
-    .additional-actions-group {
-        grid-template-columns: 1fr;
-    }
-
-    .action-link-secondary-group {
-        padding: 20px;
-    }
-}
-
-
 
 
 /* ========================================
@@ -474,7 +593,7 @@ a {
 
 /* buttons themselves */
 .additional-actions .action-link-secondary {
-    flex: 1 1 0;
+    flex: 1 2 0;
     text-align: center;
 }
 

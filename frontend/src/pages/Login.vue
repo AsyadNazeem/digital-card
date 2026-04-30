@@ -6,7 +6,7 @@
         <div class="logo-container">
           <img src="/images/logo.jpeg" alt="TapMyName" class="main-logo" />
         </div>
-        <h1 class="brand-title">Digital Business Cards</h1>
+        <h1 class="brand-title">Next-Gen Digital Business Cards with QR Technology</h1>
         <p class="brand-description">
           Create, share, and manage your professional digital contact cards with ease.
           Make networking seamless and eco-friendly.
@@ -17,7 +17,7 @@
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
-            <span>Instant sharing via NFC & QR</span>
+            <span>Instant sharing via QR</span>
           </div>
           <div class="feature-item">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -32,6 +32,13 @@
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
             <span>Real-time updates</span>
+          </div>
+          <div class="feature-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span>Google & Apple Wallet Support</span>
           </div>
         </div>
       </div>
@@ -441,7 +448,7 @@ async function handleGoogleLogin() {
 }
 
 .branding-content {
-  max-width: 500px;
+  max-width: 480px;
   z-index: 1;
   color: white;
 }
@@ -454,6 +461,7 @@ async function handleGoogleLogin() {
   width: 280px;
   height: auto;
   filter: brightness(1.1);
+
 }
 
 .brand-title {

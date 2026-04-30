@@ -99,7 +99,6 @@ function isValidUrl(string) {
     }
 }
 
-
 // ✅ GET: Overview stats
 router.get("/stats/overview", authenticateAdmin, async (req, res) => {
     try {
@@ -120,6 +119,11 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
 
         const google = await User.count({where: {provider: "google"}});
         const local = await User.count({where: {provider: "local"}});
+        const apple = await User.count({
+            where: {
+                appleId: {[Op.ne]: null},
+            },
+        });
 
         // Log the action
         await logAdminAction({
@@ -131,7 +135,7 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({total, today, month, google, local});
+        res.json({total, today, month, google, local, apple});
     } catch (err) {
         console.error("❌ Error in stats route:", err);
         res.status(500).json({message: "Error fetching stats"});
@@ -220,7 +224,8 @@ router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
                 attributes: ["id", "companyName"]
             }],
             attributes: [
-                'id', 'firstName', 'lastName', 'email', 'mobile',
+                'id', 'type',
+                'firstName', 'lastName', 'email', 'mobile',
                 'telephone', 'whatsapp', 'whatsappChannel', 'designation', 'photo', 'companyId',
                 'status', 'createdAt', 'cardMobileNum'
             ],
@@ -817,17 +822,23 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
                 formattedCardMobile = formattedMobile;
             }
 
-            // -------------------------
-            // BUILD UPDATE OBJECT
-            // -------------------------
+            // ✅ Validate contact type if provided
+            const contactType = req.body.type;
+            if (contactType && !['individual', 'group'].includes(contactType)) {
+                return res.status(400).json({
+                    message: "Type must be either 'individual' or 'group'"
+                });
+            }
+
             const updateData = {
+                type: contactType || contact.type,              // ✅ NEW — keep existing if not sent
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 telephone: formattedTelephone,
                 mobile: formattedMobile,
                 whatsapp: formattedWhatsapp,
-                cardMobileNum: formattedCardMobile,   // ✅ added correctly
-                whatsappChannel: req.body.whatsappChannel ? req.body.whatsappChannel.trim() : null, // ✅ ADD THIS
+                cardMobileNum: formattedCardMobile,
+                whatsappChannel: req.body.whatsappChannel ? req.body.whatsappChannel.trim() : null,
                 email: req.body.email,
                 designation: req.body.designation,
                 companyId: req.body.companyId || null,
@@ -1114,16 +1125,23 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
                 formattedCardMobile = formattedMobile;
             }
 
-            // --- FINAL CONTACT DATA ---
+            const contactType = req.body.type || 'individual';
+            if (!['individual', 'group'].includes(contactType)) {
+                return res.status(400).json({
+                    message: "Type must be either 'individual' or 'group'"
+                });
+            }
+
             const contactData = {
                 userId,
+                type: contactType,
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 telephone: formattedTelephone,
                 mobile: formattedMobile,
                 whatsapp: formattedWhatsapp,
-                whatsappChannel: req.body.whatsappChannel?.trim() || null,  // ✅ ADD THIS LINE
-                cardMobileNum: formattedCardMobile,   // ✅ added correctly here
+                whatsappChannel: req.body.whatsappChannel?.trim() || null,
+                cardMobileNum: formattedCardMobile,
                 email: req.body.email,
                 designation: req.body.designation,
                 companyId: req.body.companyId || null,
@@ -1666,4 +1684,71 @@ router.post("/apple-wallet/pass", authenticateAdmin, async (req, res) => {
     }
 });
 
+// DELETE: Delete company (cascades to contacts and reviews)
+router.delete("/user/:userId/company/:companyId", authenticateAdmin, async (req, res) => {
+    try {
+        const { userId, companyId } = req.params
+
+        const company = await Company.findOne({ where: { id: companyId, userId } })
+        if (!company) return res.status(404).json({ message: "Company not found" })
+
+        const companyName = company.companyName
+
+        // Delete all reviews under this company
+        await Review.destroy({ where: { companyId } })
+
+        // Delete all contacts under this company
+        await Contact.destroy({ where: { companyId } })
+
+        // Delete the company itself
+        await company.destroy()
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.DELETE_USER,
+            targetType: 'company',
+            targetId: companyId,
+            targetName: companyName,
+            description: `Deleted company: ${companyName} and all related contacts/reviews`,
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        })
+
+        res.json({ success: true, message: "Company and all related data deleted successfully" })
+    } catch (err) {
+        console.error("❌ Error deleting company:", err)
+        res.status(500).json({ message: "Failed to delete company", error: err.message })
+    }
+})
+
+// DELETE: Delete single contact
+router.delete("/user/:userId/contact/:contactId", authenticateAdmin, async (req, res) => {
+    try {
+        const { userId, contactId } = req.params
+
+        const contact = await Contact.findOne({ where: { id: contactId, userId } })
+        if (!contact) return res.status(404).json({ message: "Contact not found" })
+
+        const contactName = `${contact.firstName} ${contact.lastName}`
+        await contact.destroy()
+
+        await logAdminAction({
+            adminId: req.admin.id,
+            action: ADMIN_ACTIONS.DELETE_USER,
+            targetType: 'contact',
+            targetId: contactId,
+            targetName: contactName,
+            description: `Deleted contact: ${contactName}`,
+            ipAddress: getClientIp(req),
+            userAgent: req.headers['user-agent']
+        })
+
+        res.json({ success: true, message: "Contact deleted successfully" })
+    } catch (err) {
+        console.error("❌ Error deleting contact:", err)
+        res.status(500).json({ message: "Failed to delete contact", error: err.message })
+    }
+})
+
 export default router;
+

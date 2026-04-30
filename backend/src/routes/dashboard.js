@@ -12,6 +12,7 @@ import { Op } from 'sequelize';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import sanitizeHtml from 'sanitize-html';
 import { customAlphabet } from 'nanoid';
+import { transporter } from "./otp.js"; // adjust path as needed
 
 
 const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 8); // 8 chars
@@ -791,12 +792,13 @@ router.get("/contacts/stats", authenticate, async (req, res) => {
 // ============================================
 
 // ✅ Submit limit increase request
+// ✅ Submit limit increase request
 router.post("/request-limits", authenticateToken, async (req, res) => {
     try {
         const userId = req.userId;
-        const { companies, contacts, reviews, reason } = req.body; // ADD reviews
+        const { companies, contacts, reviews, reason } = req.body;
 
-        if (!companies && !contacts && !reviews) { // UPDATE validation
+        if (!companies && !contacts && !reviews) {
             return res.status(400).json({
                 message: "Request must include companies, contacts, or reviews"
             });
@@ -806,16 +808,107 @@ router.post("/request-limits", authenticateToken, async (req, res) => {
             userId,
             requestedCompanies: companies || 0,
             requestedContacts: contacts || 0,
-            requestedReviews: reviews || 0, // ADD THIS
+            requestedReviews: reviews || 0,
             reason: reason || "",
             status: "pending"
         });
+
+        // ✅ Fetch user details for email
+        const user = await User.findByPk(userId);
+
+        // ✅ Send admin notification email (non-blocking)
+        try {
+            await transporter.sendMail({
+                from: `"TapMyName Notifications" <${process.env.MAIL_USER}>`,
+                to: "hello@tapmy.name",
+                subject: `📬 New Limit Increase Request — #${newRequest.id}`,
+                html: `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                            .header { background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                            .content { background: #ffffff; padding: 30px; border: 1px solid #e5e1dc; border-top: none; border-radius: 0 0 10px 10px; }
+                            .info-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                            .info-table td { padding: 12px 16px; border-bottom: 1px solid #f0ece8; font-size: 14px; }
+                            .info-table td:first-child { font-weight: bold; color: #5c4033; width: 40%; background: #fafaf8; }
+                            .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+                            .reason-box { background: #fafaf8; border-left: 4px solid #5c4033; padding: 14px 18px; margin: 20px 0; border-radius: 0 6px 6px 0; font-size: 14px; color: #555; }
+                            .footer { text-align: center; color: #9b8b7e; font-size: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e1dc; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">
+                                <h1 style="margin: 0; font-size: 22px; color: #f5e6d3;">New Limit Increase Request</h1>
+                                <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Request #${newRequest.id} — Awaiting Review</p>
+                            </div>
+                            <div class="content">
+                                <p>A user has submitted a new limit increase request. Please review the details below.</p>
+
+                                <table class="info-table">
+                                    <tr>
+                                        <td>User</td>
+                                        <td>${user?.name || "N/A"}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Email</td>
+                                        <td>${user?.email || "N/A"}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Request ID</td>
+                                        <td>#${newRequest.id}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Status</td>
+                                        <td><span class="badge">Pending</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Companies Requested</td>
+                                        <td>${companies || 0}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Contacts Requested</td>
+                                        <td>${contacts || 0}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Reviews Requested</td>
+                                        <td>${reviews || 0}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Submitted At</td>
+                                        <td>${new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</td>
+                                    </tr>
+                                </table>
+
+                                ${reason ? `
+                                <p style="margin-bottom: 6px; font-weight: bold; color: #5c4033;">Reason Provided:</p>
+                                <div class="reason-box">${reason}</div>
+                                ` : '<p style="color: #9b8b7e; font-size: 14px;">No reason was provided for this request.</p>'}
+                            </div>
+                            <div class="footer">
+                                <p>This is an automated notification from TapMyName. Please log in to the admin panel to approve or reject this request.</p>
+                                <p>© ${new Date().getFullYear()} TapMyName. All rights reserved.</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `
+            });
+            console.log(`✅ Admin notified for request #${newRequest.id}`);
+        } catch (emailErr) {
+            // Email failure should NOT block the user's request from succeeding
+            console.error("⚠️ Admin email notification failed:", emailErr.message);
+        }
 
         return res.json({
             success: true,
             message: "Your request has been submitted successfully",
             request: newRequest
         });
+
     } catch (err) {
         console.error("❌ Request Save Error:", err);
         res.status(500).json({

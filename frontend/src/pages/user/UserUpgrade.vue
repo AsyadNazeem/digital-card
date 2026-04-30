@@ -56,6 +56,12 @@
           </div>
 
         </div>
+        <!-- Contact Us -->
+        <div class="contact-us-note">
+          <p>Ready to upgrade? Contact us at
+            <a href="mailto:hello@tapmy.name">hello@tapmy.name</a>
+          </p>
+        </div>
       </div>
     </div>
   </transition>
@@ -80,6 +86,46 @@ defineEmits(['close'])
 
 
 <style scoped>
+
+.contact-us-note {
+  text-align: center;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.dark-mode .contact-us-note {
+  border-top-color: #2d2640;
+}
+
+.contact-us-note p {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+.dark-mode .contact-us-note p {
+  color: #9ca3af;
+}
+
+.contact-us-note a {
+  color: #6B4423;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.dark-mode .contact-us-note a {
+  color: #a78bfa;
+}
+
+.contact-us-note a:hover {
+  color: #8B5A3C;
+  text-decoration: underline;
+}
+
+.dark-mode .contact-us-note a:hover {
+  color: #c4b5fd;
+}
 .upgrade-overlay {
   position: fixed;
   inset: 0;
