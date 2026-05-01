@@ -18,7 +18,7 @@
         @logout="logout"
     />
 
-    <!-- MOVE MODALS HERE - OUTSIDE MAIN CONTENT -->
+    <!-- MODALS — outside main content -->
     <UserSettings
         :open="showSettings"
         @close="showSettings = false"
@@ -35,6 +35,7 @@
         :contact-count="contactCount"
         :review-count="reviewCount"
         :user-limits="userLimits"
+        @banner-visibility="onBannerVisibility"
     />
 
     <UserPhoneModal
@@ -44,7 +45,11 @@
     />
 
     <!-- Main Content Area -->
-    <main :class="['main-content', { expanded: !sidebarExpanded }]">
+    <main
+        ref="mainContentRef"
+        :class="['main-content', { expanded: !sidebarExpanded }]"
+        :style="{ marginTop: mainMarginTop, height: mainHeight }"
+    >
       <UserCompanySection
           :active-tab="activeTab"
           :company-count="companyCount"
@@ -90,7 +95,7 @@
 </template>
 
 <script setup>
-import {onMounted, provide, ref, watch} from 'vue';
+import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue';
 import api from '@/services/api.js';
 import UserSettings from '@/components/user/UserSettings.vue';
 import RequestLimitPopup from '@/components/user/UserRequestModel.vue';
@@ -103,30 +108,29 @@ import UserPhoneModal from '@/components/user/UserPhoneModel.vue';
 import UserHeader from "@/components/user/UserHeader.vue";
 import UserNavbar from "@/components/user/UserNavbar.vue";
 import UserUpgrade from '@/pages/user/UserUpgrade.vue';
-import {useRouter} from 'vue-router';
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-// State
-const activeTab = ref('company');
-const showSettings = ref(false);
-const showPhonePopup = ref(false);
-const showUpgrade = ref(false);
-const contacts = ref([]);
-const sidebarExpanded = ref(true);
-const userName = ref('John Doe');
-const userRole = ref('User');
-const userPlan = ref('free');
-
-// Load dark mode from localStorage (default to false if not set)
-const isDarkMode = ref(localStorage.getItem('darkMode') === 'true');
+// ── State ──
+const activeTab        = ref('company');
+const showSettings     = ref(false);
+const showPhonePopup   = ref(false);
+const showUpgrade      = ref(false);
+const contacts         = ref([]);
+const sidebarExpanded  = ref(true);
+const userName         = ref('John Doe');
+const userRole         = ref('User');
+const userPlan         = ref('free');
+const mainContentRef   = ref(null);
+const isDarkMode       = ref(localStorage.getItem('darkMode') === 'true');
+const isBannerVisible  = ref(false);
 
 // Counts
 const companyCount = ref(0);
 const contactCount = ref(0);
-const reviewCount = ref(0);
+const reviewCount  = ref(0);
 
-// User limits
 const userLimits = ref({
   companyLimit: 3,
   contactLimit: 10,
@@ -134,23 +138,36 @@ const userLimits = ref({
   role: 'user'
 });
 
-// Provide activeTab and isDarkMode to child components
-provide('activeTab', activeTab);
+// ── Provide ──
+provide('activeTab',  activeTab);
 provide('isDarkMode', isDarkMode);
 
-// Watch for dark mode changes and save to localStorage
-watch(isDarkMode, (newValue) => {
-  localStorage.setItem('darkMode', newValue.toString());
-}, {immediate: true});
+// ── Dark mode persistence ──
+watch(isDarkMode, (v) => { localStorage.setItem('darkMode', v.toString()); }, { immediate: true });
 
-function toggleSidebar() {
-  sidebarExpanded.value = !sidebarExpanded.value;
+// ── Banner handler ──
+function onBannerVisibility(visible) {
+  isBannerVisible.value = visible;
 }
 
-function toggleDarkMode() {
-  isDarkMode.value = !isDarkMode.value;
-}
+// ── Responsive ──
+const isMobile = ref(typeof window !== 'undefined' && window.innerWidth <= 1024);
+function handleResize() { isMobile.value = window.innerWidth <= 1024; }
 
+// ── Margin / height calculations ──
+const HEADER_H = 64;
+
+const bannerHeight = computed(() => {
+  if (!isBannerVisible.value) return 0;
+  if (isMobile.value) return 48;
+  if (window.innerWidth <= 1024) return 52;
+  return 56;
+});
+
+const mainMarginTop = computed(() => `${HEADER_H + bannerHeight.value}px`);
+const mainHeight = computed(() => `calc(100vh - ${HEADER_H + bannerHeight.value}px)`);
+
+// ── Auth / data ──
 const token = localStorage.getItem('token');
 
 function logout() {
@@ -160,158 +177,120 @@ function logout() {
 }
 
 async function checkUserPhone() {
-  if (!token) {
-    router.push('/login');
-    return;
-  }
-
+  if (!token) { router.push('/login'); return; }
   try {
-    const res = await api.get('/auth/me', {
-      headers: {Authorization: `Bearer ${token}`}
-    });
-
+    const res = await api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
     if (res.data.name) userName.value = res.data.name;
     if (res.data.role) userRole.value = res.data.role;
-
-    if (!res.data.phone) {
-      showPhonePopup.value = true;
-    }
+    if (!res.data.phone) showPhonePopup.value = true;
   } catch (err) {
-    console.error('Error checking user phone:', err);
-    if (err.response?.status === 401) {
-      router.push('/login');
-    }
+    if (err.response?.status === 401) router.push('/login');
   }
 }
 
-function handlePhoneAdded(phone) {
-  console.log('Phone added:', phone);
+function handlePhoneAdded() {
   showPhonePopup.value = false;
   loadData();
 }
 
 async function loadData() {
-  if (!token) {
-    router.push('/login');
-    return;
-  }
-
+  if (!token) { router.push('/login'); return; }
   try {
-    const res = await api.get('/dashboard/data', {
-      headers: {Authorization: `Bearer ${token}`}
-    });
-
-    contacts.value = res.data.contacts || [];
+    const res = await api.get('/dashboard/data', { headers: { Authorization: `Bearer ${token}` } });
+    contacts.value     = res.data.contacts  || [];
     companyCount.value = res.data.companies?.length || 0;
-    contactCount.value = res.data.contacts?.length || 0;
+    contactCount.value = res.data.contacts?.length  || 0;
 
-    const userRes = await api.get('/auth/me', {
-      headers: {Authorization: `Bearer ${token}`}
-    });
-
+    const userRes  = await api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
     const userData = userRes.data;
     userLimits.value = {
       companyLimit: userData.companyLimit || 3,
       contactLimit: userData.contactLimit || 10,
-      reviewLimit: userData.reviewLimit || 5,
-      role: userData.role || 'user'
+      reviewLimit:  userData.reviewLimit  || 5,
+      role:         userData.role         || 'user'
     };
 
-    const reviewRes = await api.get('/dashboard/reviews', {
-      headers: {Authorization: `Bearer ${token}`}
-    });
+    const reviewRes   = await api.get('/dashboard/reviews', { headers: { Authorization: `Bearer ${token}` } });
     reviewCount.value = reviewRes.data.reviews?.length || 0;
-
-    console.log('✅ Dashboard data loaded successfully');
   } catch (err) {
-    console.error('❌ Load dashboard error:', err);
     if (err.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       router.push('/login');
-    } else {
-      alert('Error loading dashboard data. Please refresh or log in again.');
     }
   }
 }
 
 async function loadUserPlan() {
   try {
-    const token = localStorage.getItem('token')
-    const res = await api.get('/dashboard/user/plan', {
-      headers: {Authorization: `Bearer ${token}`}
-    })
-
-    userPlan.value = (res.data.plan || 'free').toLowerCase()
-
-    console.log('✅ USER PLAN:', userPlan.value)
-  } catch (err) {
-    console.error('❌ Failed to load plan', err)
-    userPlan.value = 'free'
-  }
+    const res  = await api.get('/dashboard/user/plan', { headers: { Authorization: `Bearer ${token}` } });
+    userPlan.value = (res.data.plan || 'free').toLowerCase();
+  } catch { userPlan.value = 'free'; }
 }
+
+function toggleSidebar()  { sidebarExpanded.value = !sidebarExpanded.value; }
+function toggleDarkMode()  { isDarkMode.value = !isDarkMode.value; }
 
 onMounted(() => {
   checkUserPhone();
   loadData();
   loadUserPlan();
+  window.addEventListener('resize', handleResize);
 });
 
-defineExpose({
-  activeTab
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
 });
+
+defineExpose({ activeTab });
 </script>
 
 <style scoped>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 .dashboard-wrapper {
   display: flex;
   min-height: 100vh;
   background: #f8f9fa;
   transition: background 0.3s ease;
-}
-
-/* Dark Mode - Professional Dark Purple-Blue */
-.dashboard-wrapper.dark-mode {
-  background: #0f0d1a;
-}
-
-/* Main Content - FIXED */
-.main-content {
-  margin-top: 64px;
-  padding: 2rem;
-  min-height: calc(100vh - 64px);
-  position: relative;
-  z-index: auto;
   overflow-x: hidden;
 }
 
-/* Desktop with sidebar - ONLY apply sidebar margins on desktop */
+.dashboard-wrapper.dark-mode { background: #131118; }
+
+.main-content {
+  /* margin-top and height are set via inline :style binding */
+  padding: 2rem;
+  position: relative;
+  z-index: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Smooth transition when banner appears/disappears */
+  transition:
+      margin-left   0.3s ease,
+      width         0.3s ease,
+      margin-top    0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      height        0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 @media (min-width: 1025px) {
   .main-content {
     width: calc(100vw - 260px);
     margin-left: 260px;
   }
-
   .main-content.expanded {
     width: calc(100vw - 72px);
     margin-left: 72px;
   }
 }
 
-/* Tablet and Mobile - NO sidebar margins */
 @media (max-width: 1024px) {
   .main-content {
     width: 100vw;
     margin-left: 0 !important;
-    /* Add safe area padding for notched devices + bottom nav */
     padding-bottom: calc(80px + env(safe-area-inset-bottom));
     z-index: 1;
   }
-
   .main-content.expanded {
     width: 100vw;
     margin-left: 0 !important;

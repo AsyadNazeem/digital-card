@@ -1,12 +1,10 @@
 <template>
   <!-- Request Limit Increase Banner - Fixed to header -->
-  <div
-      v-if="showBanner"
-      :class="['limit-banner', { 'dark-mode': isDarkMode }]">
+  <div v-if="showBanner" :class="['limit-banner', { 'dark-mode': isDarkMode }]">
     <div class="limit-banner-content">
       <div class="limit-banner-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2"
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5"
              stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 9v4"/>
           <path d="M12 17h.01"/>
@@ -18,8 +16,8 @@
         <p>Request more companies, contacts, or reviews from the admin to continue adding.</p>
       </div>
       <button @click="showRequestModal = true" class="btn-request">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
         Request More
       </button>
@@ -27,184 +25,225 @@
   </div>
 
   <!-- Request Limit Increase Modal -->
-  <transition name="modal">
-    <div v-if="showRequestModal" class="modal-overlay" @click="showRequestModal = false">
-      <div :class="['request-modal-container', { 'dark-mode': isDarkMode }]" @click.stop>
+  <transition name="modal-fade">
+    <div v-if="showRequestModal" class="modal-overlay" @click.self="showRequestModal = false">
+      <div :class="['request-modal-container', { 'dark-mode': isDarkMode }]">
+
+        <!-- Modal Header -->
         <div class="request-modal-header">
-          <h2 class="request-modal-title">Request Additional Limits</h2>
-          <button @click="showRequestModal = false" class="btn-close">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
+          <div class="modal-header-left">
+            <div class="modal-header-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+              </svg>
+            </div>
+            <h2 class="request-modal-title">Request Additional Limits</h2>
+          </div>
+          <button @click="showRequestModal = false" class="btn-close" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
 
         <div class="request-modal-body">
+
           <!-- Current Limits Display -->
           <div class="current-limits">
-            <h3>Your Current Limits</h3>
+            <div class="section-label">
+              <span class="section-number">01</span>
+              <span class="section-title">Your Current Limits</span>
+            </div>
             <div class="limits-grid">
               <div class="limit-card">
                 <div class="limit-icon company">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="2" width="16" height="20" rx="2"/>
                   </svg>
                 </div>
                 <div class="limit-info">
                   <span class="limit-label">Companies</span>
                   <span class="limit-value">{{ companyCount }} / {{ userLimits.companyLimit }}</span>
                 </div>
+                <div class="limit-progress-wrap">
+                  <div class="limit-progress-bar">
+                    <div
+                        class="limit-progress-fill"
+                        :style="{ width: Math.min(100, (companyCount / userLimits.companyLimit) * 100) + '%' }"
+                        :class="companyCount >= userLimits.companyLimit ? 'full' : ''"
+                    ></div>
+                  </div>
+                </div>
               </div>
+
               <div class="limit-card">
                 <div class="limit-icon contact">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
                   </svg>
                 </div>
                 <div class="limit-info">
                   <span class="limit-label">Contacts</span>
                   <span class="limit-value">{{ contactCount }} / {{ userLimits.contactLimit }}</span>
                 </div>
+                <div class="limit-progress-wrap">
+                  <div class="limit-progress-bar">
+                    <div
+                        class="limit-progress-fill"
+                        :style="{ width: Math.min(100, (contactCount / userLimits.contactLimit) * 100) + '%' }"
+                        :class="contactCount >= userLimits.contactLimit ? 'full' : ''"
+                    ></div>
+                  </div>
+                </div>
               </div>
+
               <div class="limit-card">
                 <div class="limit-icon review">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                   </svg>
                 </div>
                 <div class="limit-info">
                   <span class="limit-label">Reviews</span>
                   <span class="limit-value">{{ reviewCount }} / {{ userLimits.reviewLimit }}</span>
                 </div>
+                <div class="limit-progress-wrap">
+                  <div class="limit-progress-bar">
+                    <div
+                        class="limit-progress-fill"
+                        :style="{ width: Math.min(100, (reviewCount / userLimits.reviewLimit) * 100) + '%' }"
+                        :class="reviewCount >= userLimits.reviewLimit ? 'full' : ''"
+                    ></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Request Form -->
-          <form @submit.prevent="submitRequest" class="request-form">
-            <div class="request-form-group">
-              <label class="request-label">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-                </svg>
-                How many companies do you need?
-              </label>
-              <div class="quantity-selector">
-                <button type="button" @click="decrementCompanies" class="qty-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
+          <div class="request-form-section">
+            <div class="section-label">
+              <span class="section-number">02</span>
+              <span class="section-title">Request Additional</span>
+            </div>
+
+            <div class="fields-grid">
+              <!-- Companies -->
+              <div class="field-wrap">
+                <label class="field-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="2" width="16" height="20" rx="2"/>
                   </svg>
-                </button>
-                <input
-                    type="number"
-                    v-model.number="requestForm.companies"
-                    min="0"
-                    max="100"
-                    class="qty-input"
-                />
-                <button type="button" @click="incrementCompanies" class="qty-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  Additional Companies
+                </label>
+                <div class="quantity-selector">
+                  <button type="button" @click="decrementCompanies" class="qty-btn" :disabled="requestForm.companies === 0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                  </button>
+                  <input type="number" v-model.number="requestForm.companies" min="0" max="100" class="qty-input" />
+                  <button type="button" @click="incrementCompanies" class="qty-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Contacts -->
+              <div class="field-wrap">
+                <label class="field-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
                   </svg>
-                </button>
+                  Additional Contacts
+                </label>
+                <div class="quantity-selector">
+                  <button type="button" @click="decrementContacts" class="qty-btn" :disabled="requestForm.contacts === 0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                  </button>
+                  <input type="number" v-model.number="requestForm.contacts" min="0" max="500" class="qty-input" />
+                  <button type="button" @click="incrementContacts" class="qty-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Reviews -->
+              <div class="field-wrap">
+                <label class="field-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                  Additional Reviews
+                </label>
+                <div class="quantity-selector">
+                  <button type="button" @click="decrementReviews" class="qty-btn" :disabled="requestForm.reviews === 0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                  </button>
+                  <input type="number" v-model.number="requestForm.reviews" min="0" max="100" class="qty-input" />
+                  <button type="button" @click="incrementReviews" class="qty-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Reason -->
+              <div class="field-wrap full">
+                <label class="field-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  Reason for Request
+                  <span class="field-optional">optional</span>
+                </label>
+                <textarea
+                    v-model="requestForm.reason"
+                    rows="3"
+                    class="field-input field-textarea"
+                    placeholder="Tell us why you need more limits…"
+                ></textarea>
               </div>
             </div>
+          </div>
 
-            <div class="request-form-group">
-              <label class="request-label">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                </svg>
-                How many contacts do you need?
-              </label>
-              <div class="quantity-selector">
-                <button type="button" @click="decrementContacts" class="qty-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                </button>
-                <input
-                    type="number"
-                    v-model.number="requestForm.contacts"
-                    min="0"
-                    max="500"
-                    class="qty-input"
-                />
-                <button type="button" @click="incrementContacts" class="qty-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                </button>
-              </div>
-            </div>
+          <!-- Result message -->
+          <p v-if="requestMessage" :class="['request-message', requestSuccess ? 'success' : 'error']">
+            {{ requestMessage }}
+          </p>
 
-            <div class="request-form-group">
-              <label class="request-label">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-                How many reviews do you need?
-              </label>
-              <div class="quantity-selector">
-                <button type="button" @click="decrementReviews" class="qty-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                </button>
-                <input
-                    type="number"
-                    v-model.number="requestForm.reviews"
-                    min="0"
-                    max="100"
-                    class="qty-input"
-                />
-                <button type="button" @click="incrementReviews" class="qty-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                </button>
-              </div>
-            </div>
+          <!-- Actions -->
+          <div class="form-bottom-actions">
+            <button type="button" @click="showRequestModal = false" class="cancel-btn" :disabled="requestLoading">
+              Cancel
+            </button>
+            <button
+                type="button"
+                @click="submitRequest"
+                class="save-btn"
+                :disabled="requestLoading || (requestForm.companies === 0 && requestForm.contacts === 0 && requestForm.reviews === 0)"
+            >
+              <svg v-if="!requestLoading" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+              </svg>
+              <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+              {{ requestLoading ? 'Submitting…' : 'Submit Request' }}
+            </button>
+          </div>
 
-            <div class="request-form-group">
-              <label class="request-label">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                Reason for request (optional)
-              </label>
-              <textarea
-                  v-model="requestForm.reason"
-                  rows="3"
-                  class="request-textarea"
-                  placeholder="Tell us why you need more limits..."
-              ></textarea>
-            </div>
-
-            <div class="request-actions">
-              <button type="submit" class="btn-submit-request"
-                      :disabled="requestLoading || (requestForm.companies === 0 && requestForm.contacts === 0 && requestForm.reviews === 0)">
-                <svg v-if="!requestLoading" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
-                </svg>
-                <span v-if="!requestLoading">Submit Request</span>
-                <span v-else>Submitting...</span>
-              </button>
-              <button type="button" @click="showRequestModal = false" class="btn-cancel-request">
-                Cancel
-              </button>
-            </div>
-
-            <p v-if="requestMessage" :class="['request-message', requestSuccess ? 'success' : 'error']">
-              {{ requestMessage }}
-            </p>
-          </form>
         </div>
       </div>
     </div>
@@ -215,134 +254,64 @@
 import { ref, computed, watch, onUnmounted, inject } from "vue";
 import api from "@/services/api";
 
+const isDarkMode = inject('isDarkMode', ref(false));
+
 const props = defineProps({
-  companyCount: {
-    type: Number,
-    required: true,
-  },
-  contactCount: {
-    type: Number,
-    required: true,
-  },
-  reviewCount: {
-    type: Number,
-    required: true,
-  },
-  userLimits: {
-    type: Object,
-    required: true,
-  },
+  companyCount: { type: Number, required: true },
+  contactCount:  { type: Number, required: true },
+  reviewCount:   { type: Number, required: true },
+  userLimits:    { type: Object, required: true },
 });
 
 const emit = defineEmits(['banner-visibility']);
 
-// Inject dark mode state
-const isDarkMode = inject('isDarkMode', ref(false));
-
 const showRequestModal = ref(false);
-
-const requestForm = ref({
-  companies: 0,
-  contacts: 0,
-  reviews: 0,
-  reason: "",
-});
-
+const requestForm = ref({ companies: 0, contacts: 0, reviews: 0, reason: "" });
 const requestLoading = ref(false);
 const requestMessage = ref("");
 const requestSuccess = ref(false);
 
-// Computed property to determine if banner should show
-const showBanner = computed(() => {
-  return props.companyCount >= props.userLimits.companyLimit ||
-      props.contactCount >= props.userLimits.contactLimit ||
-      props.reviewCount >= props.userLimits.reviewLimit;
-});
+const showBanner = computed(() =>
+    props.companyCount >= props.userLimits.companyLimit ||
+    props.contactCount >= props.userLimits.contactLimit ||
+    props.reviewCount  >= props.userLimits.reviewLimit
+);
 
-// Watch for banner visibility changes and emit to parent
 watch(showBanner, (newVal) => {
   emit('banner-visibility', newVal);
-
-  // Add/remove class to body to adjust layout
-  if (newVal) {
-    document.body.classList.add('banner-active');
-  } else {
-    document.body.classList.remove('banner-active');
-  }
+  document.body.classList.toggle('banner-active', newVal);
 }, { immediate: true });
 
-// Cleanup on component unmount
-onUnmounted(() => {
-  document.body.classList.remove('banner-active');
-});
+onUnmounted(() => { document.body.classList.remove('banner-active'); });
 
-function incrementCompanies() {
-  requestForm.value.companies++;
-}
-
-function decrementCompanies() {
-  if (requestForm.value.companies > 0) {
-    requestForm.value.companies--;
-  }
-}
-
-function incrementContacts() {
-  requestForm.value.contacts++;
-}
-
-function decrementContacts() {
-  if (requestForm.value.contacts > 0) {
-    requestForm.value.contacts--;
-  }
-}
-
-function incrementReviews() {
-  requestForm.value.reviews++;
-}
-
-function decrementReviews() {
-  if (requestForm.value.reviews > 0) {
-    requestForm.value.reviews--;
-  }
-}
+function incrementCompanies() { requestForm.value.companies++; }
+function decrementCompanies() { if (requestForm.value.companies > 0) requestForm.value.companies--; }
+function incrementContacts()  { requestForm.value.contacts++; }
+function decrementContacts()  { if (requestForm.value.contacts > 0) requestForm.value.contacts--; }
+function incrementReviews()   { requestForm.value.reviews++; }
+function decrementReviews()   { if (requestForm.value.reviews > 0) requestForm.value.reviews--; }
 
 async function submitRequest() {
   requestMessage.value = "";
   requestSuccess.value = false;
 
-  if (
-      requestForm.value.companies === 0 &&
-      requestForm.value.contacts === 0 &&
-      requestForm.value.reviews === 0
-  ) {
+  if (!requestForm.value.companies && !requestForm.value.contacts && !requestForm.value.reviews) {
     requestMessage.value = "Please request at least one item.";
     return;
   }
 
   try {
     requestLoading.value = true;
-
     const res = await api.post("/dashboard/request-limits", {
       companies: requestForm.value.companies,
-      contacts: requestForm.value.contacts,
-      reviews: requestForm.value.reviews,
-      reason: requestForm.value.reason,
+      contacts:  requestForm.value.contacts,
+      reviews:   requestForm.value.reviews,
+      reason:    requestForm.value.reason,
     });
-
     requestSuccess.value = true;
     requestMessage.value = res.data.message || "Request submitted successfully.";
-
-    requestForm.value = {
-      companies: 0,
-      contacts: 0,
-      reviews: 0,
-      reason: "",
-    };
-
-    setTimeout(() => {
-      showRequestModal.value = false;
-      requestMessage.value = "";
-    }, 1500);
+    requestForm.value = { companies: 0, contacts: 0, reviews: 0, reason: "" };
+    setTimeout(() => { showRequestModal.value = false; requestMessage.value = ""; }, 1500);
   } catch (err) {
     requestSuccess.value = false;
     requestMessage.value = err.response?.data?.message || "Failed to submit request.";
@@ -353,839 +322,658 @@ async function submitRequest() {
 </script>
 
 <style scoped>
-/* Fixed Limit Banner - Stuck to Header */
+/* ══════════════════════════════════════
+   DESIGN TOKENS — mirrors contact-tab exactly
+══════════════════════════════════════ */
+.limit-banner,
+.modal-overlay,
+.request-modal-container {
+  --c-bg: #ffffff;
+  --c-surface: #ffffff;
+  --c-surface-2: #faf9f7;
+  --c-border: #e8e3dc;
+  --c-border-focus: #7c5c4e;
+  --c-text-primary: #1c1410;
+  --c-text-secondary: #5a4f46;
+  --c-text-muted: #9e8e84;
+  --c-accent: #7c5c4e;
+  --c-accent-2: #a07060;
+  --c-accent-hover: #5e443a;
+  --c-accent-light: #f0e8e4;
+  --c-accent-subtle: #f8f3f0;
+  --c-danger: #b83232;
+  --c-danger-light: #fdf0f0;
+  --c-success: #2d6a50;
+  --c-success-light: #ecf7f2;
+  --c-warning: #a06010;
+  --c-warning-light: #fef6ec;
+  --c-shadow-xs: 0 1px 2px rgba(28,20,16,.06);
+  --c-shadow-sm: 0 2px 6px rgba(28,20,16,.08), 0 1px 2px rgba(28,20,16,.04);
+  --c-shadow-md: 0 6px 20px rgba(28,20,16,.10), 0 2px 6px rgba(28,20,16,.06);
+  --c-shadow-lg: 0 16px 48px rgba(28,20,16,.16), 0 4px 12px rgba(28,20,16,.08);
+  --c-radius: 14px;
+  --c-radius-sm: 8px;
+  --c-radius-xs: 5px;
+  --c-radius-pill: 100px;
+  font-family: 'Segoe UI', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  color: var(--c-text-primary);
+}
+
+.limit-banner.dark-mode,
+.request-modal-container.dark-mode {
+  --c-bg: #131118;
+  --c-surface: #1a1720;
+  --c-surface-2: #1e1b26;
+  --c-border: #2c2838;
+  --c-border-focus: #c4906e;
+  --c-text-primary: #f2ede8;
+  --c-text-secondary: #a89490;
+  --c-text-muted: #6a5e5a;
+  --c-accent: #c4906e;
+  --c-accent-2: #d4a880;
+  --c-accent-hover: #d4a070;
+  --c-accent-light: #281e18;
+  --c-accent-subtle: #1e1612;
+  --c-danger: #e06060;
+  --c-danger-light: #281414;
+  --c-success: #60b88a;
+  --c-success-light: #102418;
+  --c-warning: #e8a840;
+  --c-warning-light: #281c08;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+button { font-family: inherit; cursor: pointer; }
+input, textarea { font-family: inherit; }
+
+/* ══════════════════════════════════════
+   BANNER
+══════════════════════════════════════ */
+/* KEEP only this, remove the transition line: */
 .limit-banner {
   position: fixed;
   top: 64px;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #FDF8F3 0%, #F5E6D3 100%);
-  border-bottom: 2px solid #C19A6B;
-  padding: 1rem 2rem;
-  z-index: 99;
-  box-shadow: 0 4px 12px rgba(107, 68, 35, 0.15);
+  background: var(--c-accent-subtle);
+  border-bottom: 2px solid var(--c-border);
+  padding: 20px 24px;
+  z-index: 101;
+  box-shadow: var(--c-shadow-sm);
   animation: slideDown 0.3s ease-out;
-  transition: all 0.3s ease;
+  /* transition line removed */
 }
 
-/* Dark Mode for Banner - Professional Dark Purple-Blue */
 .limit-banner.dark-mode {
-  background: linear-gradient(135deg, #2d2640 0%, #1a1626 100%);
-  border-bottom: 2px solid #3d3555;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  background: var(--c-surface-2);
+  border-bottom-color: var(--c-border);
 }
 
 @keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
 }
 
 .limit-banner-content {
-  max-width: 1700px;
+  max-width: 1750px;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 14px;
 }
 
 .limit-banner-icon {
   flex-shrink: 0;
-  width: 2.75rem;
-  height: 2.75rem;
-  background: linear-gradient(135deg, #D4AF37 0%, #C19A6B 100%);
+  width: 36px;
+  height: 36px;
+  background: var(--c-warning-light);
+  border: 1.5px solid rgba(160,96,16,.2);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  color: var(--c-warning);
 }
 
-.limit-banner-text {
-  flex: 1;
-}
+.limit-banner-text { flex: 1; }
 
 .limit-banner-text h3 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: #6B4423;
-  letter-spacing: -0.01em;
-}
-
-.dark-mode .limit-banner-text h3 {
-  color: #E5C4A0;
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--c-text-primary);
+  letter-spacing: -0.2px;
 }
 
 .limit-banner-text p {
   margin: 0;
-  font-size: 0.875rem;
-  color: #8B5A3C;
-}
-
-.dark-mode .limit-banner-text p {
-  color: #D4A574;
+  font-size: 12px;
+  color: var(--c-text-secondary);
 }
 
 .btn-request {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #6B4423 0%, #8B5A3C 100%);
-  color: white;
+  gap: 7px;
+  padding: 9px 18px;
+  background: var(--c-accent);
+  color: #fff;
   border: none;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--c-radius-sm);
+  font-size: 13px;
+  font-weight: 650;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(107, 68, 35, 0.25);
+  transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
+  box-shadow: 0 2px 8px rgba(124,92,78,.3);
+  letter-spacing: 0.01em;
 }
 
 .btn-request:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(107, 68, 35, 0.35);
-  background: linear-gradient(135deg, #8B5A3C 0%, #A67C52 100%);
+  background: var(--c-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(124,92,78,.4);
 }
 
-.btn-request:active {
-  transform: translateY(0);
-}
-
-/* Modal Overlay */
+/* ══════════════════════════════════════
+   MODAL OVERLAY
+══════════════════════════════════════ */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(16,14,20,.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  padding: 1rem;
+  z-index: 99999;
+  padding: 16px;
 }
 
-/* Request Modal */
+/* ══════════════════════════════════════
+   MODAL CONTAINER
+══════════════════════════════════════ */
 .request-modal-container {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(107, 68, 35, 0.3);
-  max-width: 650px;
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius);
   width: 100%;
-  max-height: 80vh;
+  max-width: 640px;
+  max-height: 88vh;
   overflow-y: auto;
-  animation: modalSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transition: all 0.3s ease;
-}
-
-/* Dark Mode for Modal - Professional Dark Purple-Blue */
-.request-modal-container.dark-mode {
-  background: #1a1626;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
-}
-
-@keyframes modalSlideUp {
-  from {
-    transform: translateY(30px) scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-}
-
-.request-modal-header {
+  box-shadow: var(--c-shadow-lg);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+}
+
+/* Scrollbar */
+.request-modal-container::-webkit-scrollbar { width: 5px; }
+.request-modal-container::-webkit-scrollbar-track { background: transparent; }
+.request-modal-container::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 4px; }
+
+/* ── Modal Header ── */
+.request-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
   align-items: center;
-  padding: 2rem;
-  border-bottom: 1px solid #F5E6D3;
-  background: linear-gradient(135deg, #FDF8F3 0%, #ffffff 100%);
-  border-radius: 16px 16px 0 0;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 22px;
+  background: var(--c-surface);
+  border-bottom: 1.5px solid var(--c-border);
+  box-shadow: var(--c-shadow-xs);
 }
 
-.dark-mode .request-modal-header {
-  border-bottom: 1px solid #2d2640;
-  background: linear-gradient(135deg, #2d2640 0%, #1a1626 100%);
+.modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.request-modal-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.dark-mode .request-modal-title {
-  color: #e5e7eb;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 0.5rem;
+.modal-header-icon {
+  width: 34px;
+  height: 34px;
+  background: var(--c-accent);
+  border-radius: var(--c-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  transition: all 0.2s;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(124,92,78,.25);
 }
 
-.dark-mode .btn-close {
-  color: #9ca3af;
+.request-modal-title {
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -0.4px;
+  color: var(--c-text-primary);
+  margin: 0;
+}
+
+.btn-close {
+  background: var(--c-surface-2);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-xs);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-text-secondary);
+  transition: all 0.15s;
+  flex-shrink: 0;
 }
 
 .btn-close:hover {
-  background: #FDF8F3;
-  color: #6B4423;
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+  background: var(--c-danger-light);
 }
 
-.dark-mode .btn-close:hover {
-  background: #2d2640;
-  color: #E5C4A0;
-}
-
+/* ── Modal Body ── */
 .request-modal-body {
-  padding: 2rem;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-/* Current Limits */
+/* ── Section Labels (same as contact) ── */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.section-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--c-text-primary);
+  letter-spacing: -0.2px;
+}
+
+/* ── Current Limits Block ── */
 .current-limits {
-  margin-bottom: 2rem;
-  padding: 1.75rem;
-  background: linear-gradient(135deg, #FDF8F3 0%, #F5E6D3 100%);
-  border-radius: 12px;
-  border: 1px solid #F5E6D3;
-}
-
-.dark-mode .current-limits {
-  background: linear-gradient(135deg, #2d2640 0%, #1a1626 100%);
-  border: 1px solid #3d3555;
-}
-
-.current-limits h3 {
-  margin: 0 0 1.25rem 0;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: #6B4423;
-}
-
-.dark-mode .current-limits h3 {
-  color: #E5C4A0;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--c-border);
+  margin-bottom: 22px;
 }
 
 .limits-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
 .limit-card {
+  background: var(--c-surface-2);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
+  padding: 14px;
   display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  padding: 1.25rem;
-  background: white;
-  border-radius: 10px;
-  border: 1px solid #F5E6D3;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(107, 68, 35, 0.05);
-}
-
-.dark-mode .limit-card {
-  background: #0f0d1a;
-  border: 1px solid #2d2640;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  flex-direction: column;
+  gap: 8px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  box-shadow: var(--c-shadow-xs);
 }
 
 .limit-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(107, 68, 35, 0.1);
-}
-
-.dark-mode .limit-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--c-shadow-sm);
+  border-color: var(--c-accent-2);
 }
 
 .limit-icon {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--c-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.limit-icon.company {
-  background: linear-gradient(135deg, #6B4423 0%, #8B5A3C 100%);
-  color: white;
-}
-
-.limit-icon.contact {
-  background: linear-gradient(135deg, #A67C52 0%, #C19A6B 100%);
-  color: white;
-}
-
-.limit-icon.review {
-  background: linear-gradient(135deg, #D4AF37 0%, #DEB887 100%);
-  color: white;
-}
+.limit-icon.company { background: var(--c-accent-light); color: var(--c-accent); }
+.limit-icon.contact { background: var(--c-success-light); color: var(--c-success); }
+.limit-icon.review  { background: var(--c-warning-light); color: var(--c-warning); }
 
 .limit-info {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 2px;
 }
 
 .limit-label {
-  font-size: 0.75rem;
-  color: #6b7280;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.dark-mode .limit-label {
-  color: #9ca3af;
-}
-
 .limit-value {
-  font-size: 1.25rem;
+  font-size: 16px;
+  font-weight: 750;
+  color: var(--c-text-primary);
+  letter-spacing: -0.3px;
+}
+
+.limit-progress-wrap { margin-top: 2px; }
+
+.limit-progress-bar {
+  height: 4px;
+  background: var(--c-border);
+  border-radius: var(--c-radius-pill);
+  overflow: hidden;
+}
+
+.limit-progress-fill {
+  height: 100%;
+  background: var(--c-accent);
+  border-radius: var(--c-radius-pill);
+  transition: width 0.4s ease;
+}
+
+.limit-progress-fill.full { background: var(--c-danger); }
+
+/* ── Request Form Section ── */
+.request-form-section {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--c-border);
+  margin-bottom: 20px;
+}
+
+/* ── Fields Grid (matches contact) ── */
+.fields-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.field-wrap { display: flex; flex-direction: column; gap: 7px; }
+.field-wrap.full { grid-column: 1 / -1; }
+
+.field-label {
+  font-size: 12px;
   font-weight: 700;
-  color: #1f2937;
-}
-
-.dark-mode .limit-value {
-  color: #e5e7eb;
-}
-
-/* Request Form */
-.request-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-}
-
-.request-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-}
-
-.request-label {
+  color: var(--c-text-secondary);
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  font-size: 0.9375rem;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.field-optional {
+  font-size: 10px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--c-text-muted);
+  background: var(--c-surface-2);
+  padding: 2px 7px;
+  border-radius: var(--c-radius-pill);
+  border: 1px solid var(--c-border);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: auto;
 }
 
-.dark-mode .request-label {
-  color: #e5e7eb;
-}
-
-.request-label svg {
-  color: #6B4423;
-}
-
-.dark-mode .request-label svg {
-  color: #D4A574;
-}
-
-/* Quantity Selector */
+/* ── Quantity Selector ── */
 .quantity-selector {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  background: #FDF8F3;
-  border: 2px solid #F5E6D3;
-  border-radius: 10px;
-  transition: all 0.2s;
-}
-
-.dark-mode .quantity-selector {
-  background: #0f0d1a;
-  border: 2px solid #2d2640;
+  gap: 0;
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
+  overflow: hidden;
+  box-shadow: var(--c-shadow-xs);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .quantity-selector:focus-within {
-  border-color: #8B5A3C;
-  box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.1);
+  border-color: var(--c-border-focus);
+  box-shadow: 0 0 0 3px rgba(124,92,78,.12);
 }
 
 .dark-mode .quantity-selector:focus-within {
-  border-color: #D4A574;
-  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
+  box-shadow: 0 0 0 3px rgba(196,144,110,.15);
 }
 
 .qty-btn {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 38px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #6B4423;
+  background: var(--c-surface-2);
+  border: none;
+  border-right: 1.5px solid var(--c-border);
+  color: var(--c-text-secondary);
+  transition: all 0.15s;
   flex-shrink: 0;
 }
 
-.dark-mode .qty-btn {
-  background: #1a1626;
-  border: 1px solid #3d3555;
-  color: #D4A574;
+.qty-btn:last-child {
+  border-right: none;
+  border-left: 1.5px solid var(--c-border);
 }
 
-.qty-btn:hover {
-  background: linear-gradient(135deg, #6B4423 0%, #8B5A3C 100%);
-  border-color: #6B4423;
-  color: white;
-  transform: scale(1.05);
+.qty-btn:hover:not(:disabled) {
+  background: var(--c-accent);
+  color: #fff;
 }
 
-.dark-mode .qty-btn:hover {
-  background: linear-gradient(135deg, #D4A574 0%, #E5C4A0 100%);
-  border-color: #D4A574;
-}
-
-.qty-btn:active {
-  transform: scale(0.95);
+.qty-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .qty-input {
   flex: 1;
   text-align: center;
-  font-size: 1.375rem;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 17px;
+  font-weight: 750;
+  color: var(--c-text-primary);
   background: transparent;
   border: none;
   outline: none;
-  padding: 0.25rem;
-}
-
-.dark-mode .qty-input {
-  color: #e5e7eb;
+  padding: 10px 4px;
+  min-width: 0;
+  letter-spacing: -0.3px;
 }
 
 .qty-input::-webkit-inner-spin-button,
-.qty-input::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
+.qty-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.qty-input[type=number] { -moz-appearance: textfield; }
 
-.request-textarea {
+/* ── Textarea ── */
+.field-input {
   width: 100%;
-  padding: 1rem;
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 0.9375rem;
-  font-family: inherit;
-  resize: vertical;
-  transition: all 0.2s;
-  color: #1f2937;
+  padding: 11px 14px;
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
+  font-size: 14px;
+  color: var(--c-text-primary);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: var(--c-shadow-xs);
 }
 
-.dark-mode .request-textarea {
-  background: #0f0d1a;
-  border: 2px solid #2d2640;
-  color: #e5e7eb;
-}
+.field-input::placeholder { color: var(--c-text-muted); }
 
-.request-textarea:focus {
+.field-input:focus {
   outline: none;
-  border-color: #8B5A3C;
-  box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.1);
+  border-color: var(--c-border-focus);
+  box-shadow: 0 0 0 3px rgba(124,92,78,.12);
 }
 
-.dark-mode .request-textarea:focus {
-  border-color: #D4A574;
-  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
-}
+.dark-mode .field-input:focus { box-shadow: 0 0 0 3px rgba(196,144,110,.15); }
 
-.request-textarea::placeholder {
-  color: #9ca3af;
-}
+.field-textarea { resize: vertical; min-height: 80px; }
 
-.dark-mode .request-textarea::placeholder {
-  color: #6b7280;
-}
-
-/* Request Actions */
-.request-actions {
-  display: flex;
-  gap: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #F5E6D3;
-}
-
-.dark-mode .request-actions {
-  border-top: 1px solid #2d2640;
-}
-
-.btn-submit-request {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.625rem;
-  padding: 0.875rem 1.75rem;
-  background: linear-gradient(135deg, #6B4423 0%, #8B5A3C 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-family: inherit;
-  box-shadow: 0 2px 8px rgba(107, 68, 35, 0.25);
-}
-
-.btn-submit-request:hover:not(:disabled) {
-  background: linear-gradient(135deg, #8B5A3C 0%, #A67C52 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(107, 68, 35, 0.35);
-}
-
-.btn-submit-request:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-submit-request:disabled {
-  background: #cbd5e1;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.dark-mode .btn-submit-request:disabled {
-  background: #2d2640;
-  color: #6b7280;
-}
-
-.btn-cancel-request {
-  padding: 0.875rem 1.75rem;
-  background: white;
-  color: #6b7280;
-  border: 2px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-.dark-mode .btn-cancel-request {
-  background: #0f0d1a;
-  color: #9ca3af;
-  border: 2px solid #2d2640;
-}
-
-.btn-cancel-request:hover {
-  background: #FDF8F3;
-  border-color: #F5E6D3;
-  color: #6B4423;
-}
-
-.dark-mode .btn-cancel-request:hover {
-  background: #2d2640;
-  border-color: #3d3555;
-  color: #E5C4A0;
-}
-
+/* ── Request Message ── */
 .request-message {
-  padding: 1rem 1.25rem;
-  border-radius: 10px;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  text-align: center;
-  animation: messageSlide 0.3s ease-out;
-}
-
-@keyframes messageSlide {
-  from {
-    transform: translateY(-10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: var(--c-radius-sm);
+  margin-bottom: 4px;
 }
 
 .request-message.success {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #166534;
-  border: 2px solid #86efac;
-}
-
-.dark-mode .request-message.success {
-  background: linear-gradient(135deg, #1a3a23 0%, #1e4f2a 100%);
-  color: #86efac;
-  border: 2px solid #166534;
+  background: var(--c-success-light);
+  color: var(--c-success);
 }
 
 .request-message.error {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #991b1b;
-  border: 2px solid #fca5a5;
+  background: var(--c-danger-light);
+  color: var(--c-danger);
 }
 
-.dark-mode .request-message.error {
-  background: linear-gradient(135deg, #3a1a1a 0%, #4f1e1e 100%);
-  color: #fca5a5;
-  border: 2px solid #991b1b;
+/* ── Bottom Actions (matches contact) ── */
+.form-bottom-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
 }
 
-/* Modal Transitions */
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.3s ease;
+.cancel-btn {
+  padding: 11px 24px;
+  background: var(--c-surface-2);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--c-text-secondary);
+  transition: all 0.15s;
 }
 
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
+.cancel-btn:hover:not(:disabled) {
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+  background: var(--c-danger-light);
 }
 
-.modal-enter-active .request-modal-container,
-.modal-leave-active .request-modal-container {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.cancel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 26px;
+  background: var(--c-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--c-radius-sm);
+  font-size: 14px;
+  font-weight: 750;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(124,92,78,.3);
+  letter-spacing: 0.01em;
 }
 
-.modal-enter-from .request-modal-container,
-.modal-leave-to .request-modal-container {
-  transform: translateY(30px) scale(0.95);
+.save-btn:hover:not(:disabled) {
+  background: var(--c-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(124,92,78,.4);
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .limit-banner {
-    padding: 1rem 1.5rem;
-  }
+.save-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-  .limit-banner-content {
-    gap: 0.875rem;
-  }
-}
+/* Spin */
+.spin-icon { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
+/* ══════════════════════════════════════
+   MODAL TRANSITION
+══════════════════════════════════════ */
+.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.22s ease; }
+.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
+
+/* ══════════════════════════════════════
+   RESPONSIVE — TABLET (≤ 768px)
+══════════════════════════════════════ */
 @media (max-width: 768px) {
-  .limit-banner {
-    top: 60px;
-    padding: 0.875rem 1rem;
-  }
+  .limit-banner { top: 60px; padding: 10px 16px; }
 
-  .limit-banner-content {
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
+  .limits-grid { grid-template-columns: 1fr; gap: 10px; }
+  .fields-grid { grid-template-columns: 1fr; }
 
-  .limit-banner-icon {
-    width: 2.25rem;
-    height: 2.25rem;
-  }
+  .request-modal-body { padding: 18px; }
+  .request-modal-header { padding: 14px 18px; }
+}
 
-  .limit-banner-icon svg {
-    width: 20px;
-    height: 20px;
-  }
+/* ══════════════════════════════════════
+   RESPONSIVE — MOBILE (≤ 640px)
+══════════════════════════════════════ */
+@media (max-width: 640px) {
+  .limit-banner { padding: 9px 14px; }
 
-  .limit-banner-text h3 {
-    font-size: 0.9375rem;
-  }
+  .limit-banner-text p { display: none; }
 
-  .limit-banner-text p {
-    font-size: 0.8125rem;
-  }
+  .btn-request { padding: 8px 14px; font-size: 12px; }
 
-  .btn-request {
-    width: 100%;
-    justify-content: center;
-    padding: 0.625rem 1.25rem;
-  }
+  .modal-overlay { padding: 10px; align-items: flex-end; }
 
   .request-modal-container {
-    margin: 0.5rem;
-    max-height: 85vh;
+    max-height: 92vh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
 
-  .request-modal-header {
-    padding: 1.5rem;
-  }
+  .request-modal-header { padding: 13px 16px; }
+  .request-modal-title  { font-size: 15px; }
 
-  .request-modal-title {
-    font-size: 1.25rem;
-  }
+  .request-modal-body { padding: 16px; }
 
-  .request-modal-body {
-    padding: 1.5rem;
-  }
+  .limits-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
-  .current-limits {
-    padding: 1.25rem;
-  }
+  .limit-card { padding: 10px; gap: 6px; }
+  .limit-icon { width: 28px; height: 28px; }
+  .limit-value { font-size: 14px; }
+  .limit-label { font-size: 10px; }
 
-  .limits-grid {
-    grid-template-columns: 1fr;
-    gap: 0.875rem;
-  }
+  .fields-grid { grid-template-columns: 1fr; gap: 14px; }
 
-  .limit-card {
-    padding: 1rem;
-  }
-
-  .limit-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-
-  .request-form {
-    gap: 1.5rem;
-  }
-
-  .quantity-selector {
-    padding: 0.875rem 1rem;
-  }
-
-  .qty-btn {
-    width: 2rem;
-    height: 2rem;
-  }
-
-  .qty-input {
-    font-size: 1.25rem;
-  }
-
-  .request-actions {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .btn-submit-request,
-  .btn-cancel-request {
-    width: 100%;
-  }
+  .form-bottom-actions { flex-direction: column; }
+  .cancel-btn, .save-btn { width: 100%; justify-content: center; }
 }
 
-@media (max-width: 480px) {
-  .limit-banner {
-    padding: 0.75rem;
-  }
-
-  .limit-banner-text h3 {
-    font-size: 0.875rem;
-  }
-
-  .limit-banner-text p {
-    font-size: 0.75rem;
-    display: none;
-  }
-
-  .btn-request {
-    padding: 0.5rem 1rem;
-    font-size: 0.8125rem;
-  }
-
-  .btn-request svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .request-modal-header {
-    padding: 1.25rem;
-  }
-
-  .request-modal-title {
-    font-size: 1.125rem;
-  }
-
-  .request-modal-body {
-    padding: 1.25rem;
-  }
-
-  .current-limits {
-    padding: 1rem;
-  }
-
-  .limit-card {
-    padding: 0.875rem;
-  }
-
-  .limit-icon {
-    width: 2.25rem;
-    height: 2.25rem;
-  }
-
-  .limit-value {
-    font-size: 1.125rem;
-  }
-
-  .request-label {
-    font-size: 0.875rem;
-  }
-
-  .quantity-selector {
-    padding: 0.75rem;
-  }
-
-  .qty-input {
-    font-size: 1.125rem;
-  }
+/* ══════════════════════════════════════
+   TOUCH TARGETS
+══════════════════════════════════════ */
+@media (hover: none) and (pointer: coarse) {
+  .qty-btn, .btn-request, .save-btn, .cancel-btn, .btn-close { min-height: 44px; }
+  .qty-input, .field-input { font-size: 16px !important; }
 }
 
-/* Adjust main content when banner is visible */
-.main-content-with-banner {
-  margin-top: 130px !important;
+/* ══════════════════════════════════════
+   REDUCED MOTION
+══════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition-duration: 0.01ms !important; }
 }
 
-@media (max-width: 768px) {
-  .main-content-with-banner {
-    margin-top: 120px !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .main-content-with-banner {
-    margin-top: 110px !important;
-  }
-}
-
-/* Global styles to push content down when banner is active */
-:global(body.banner-active) {
-  --banner-height: 76px;
-}
-
-@media (max-width: 768px) {
-  :global(body.banner-active) {
-    --banner-height: 70px;
-  }
-}
-
-@media (max-width: 480px) {
-  :global(body.banner-active) {
-    --banner-height: 60px;
-  }
-}
+/* ══════════════════════════════════════
+   GLOBAL BANNER LAYOUT HELPERS
+══════════════════════════════════════ */
+:global(body.banner-active) { --banner-height: 60px; }
 </style>

@@ -1,570 +1,245 @@
 <template>
-  <transition name="modal">
-    <div v-if="open" :class="['modal-overlay-full', { 'dark-mode': isDarkMode }]" @click="closePopup">
-      <div class="modal-container" @click.stop>
+  <transition name="modal-fade">
+    <div v-if="open" :class="['settings-overlay', { 'dark-mode': isDarkMode }]" @click.self="closePopup">
+      <div :class="['settings-modal', { 'dark-mode': isDarkMode }]">
 
-        <!-- Close Button (Top Right) -->
-        <button type="button" class="modal-close-btn-top" @click="closePopup">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <!-- Header -->
+        <div class="settings-modal-header">
+          <div class="header-left">
+            <!-- Mobile back button (shown only inside content on mobile) -->
+            <button v-if="mobileShowContent" class="back-btn" type="button" @click="mobileShowContent = false">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+            <h2 class="settings-modal-title">
+              {{ mobileShowContent ? activeNavItem?.label : 'Account Settings' }}
+            </h2>
+          </div>
+          <button class="qr-close-btn" type="button" @click="closePopup">
+            <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16">
+              <line x1="18" x2="6" y1="6" y2="18"/>
+              <line x1="6" x2="18" y1="6" y2="18"/>
+            </svg>
+          </button>
+        </div>
 
-        <div class="modal-layout">
-          <!-- Sidebar -->
-          <aside class="settings-sidebar">
-            <div class="settings-sidebar-header">
-              <h2 class="settings-main-title">Account Settings</h2>
-            </div>
+        <!-- Layout -->
+        <div class="settings-layout">
+
+          <!-- Sidebar Nav -->
+          <aside :class="['settings-sidebar', { 'mobile-hidden': mobileShowContent }]">
             <nav class="settings-nav">
               <button
-                  @click="activeSetting = 'username'"
-                  :class="['settings-nav-item', { active: activeSetting === 'username' }]"
+                  v-for="item in navItems" :key="item.id"
+                  :class="['settings-nav-item', { active: activeSetting === item.id }]"
+                  :title="item.label"
+                  @click="selectNav(item.id)"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
+                <div class="nav-item-left">
+                  <span class="nav-icon" v-html="item.icon"/>
+                  <span class="nav-label">{{ item.label }}</span>
+                </div>
+                <svg class="nav-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"/>
                 </svg>
-                Username
-              </button>
-              <button
-                  @click="activeSetting = 'email'"
-                  :class="['settings-nav-item', { active: activeSetting === 'email' }]"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                  <polyline points="22,6 12,13 2,6"></polyline>
-                </svg>
-                Email
-              </button>
-              <button
-                  @click="activeSetting = 'password'"
-                  :class="['settings-nav-item', { active: activeSetting === 'password' }]"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-                Password
-              </button>
-              <button
-                  @click="activeSetting = 'limits'"
-                  :class="['settings-nav-item', { active: activeSetting === 'limits' }]"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
-                </svg>
-                Request Limits
-              </button>
-              <button
-                  @click="activeSetting = 'history'"
-                  :class="['settings-nav-item', { active: activeSetting === 'history' }]"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18"></path>
-                </svg>
-                Request History
               </button>
             </nav>
+
+            <!-- Mobile user hint -->
+            <div class="sidebar-footer-hint">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              Tap a setting to continue
+            </div>
           </aside>
 
-          <!-- Content -->
-          <section class="settings-content">
-            <!-- Username Panel -->
+          <!-- Content Panel -->
+          <section :class="['settings-content', { 'mobile-hidden': !mobileShowContent }]">
+
+            <!-- ── Username ── -->
             <div v-if="activeSetting === 'username'" class="settings-panel">
               <div class="panel-header">
-                <h2 class="panel-title">Change Username</h2>
-                <p class="panel-description">Your username can be changed only once every 30 days.</p>
+                <h3 class="panel-title">Change Username</h3>
+                <p class="panel-desc">Your username can be changed only once every 30 days.</p>
               </div>
-
               <div class="panel-body">
                 <div class="form-group">
                   <label class="form-label">New Username</label>
-                  <input
-                      type="text"
-                      v-model="settingsForm.username"
-                      class="form-input"
-                      placeholder="Enter new username"
-                  />
+                  <input v-model="settingsForm.username" class="form-input" placeholder="Enter new username" type="text"/>
                 </div>
-
-                <button class="btn-primary" @click="updateUsername">
-                  Save Username
+                <button :disabled="usernameLoading" class="save-btn full-width" type="button" @click="updateUsername">
+                  <svg v-if="!usernameLoading" fill="none" height="15" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg v-else class="spin-icon" fill="none" height="15" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  {{ usernameLoading ? 'Saving…' : 'Save Username' }}
                 </button>
-
-                <p v-if="usernameMessage" :class="['feedback-message', usernameSuccess ? 'success' : 'error']">
-                  {{ usernameMessage }}
-                </p>
+                <p v-if="usernameMessage" :class="['feedback-msg', usernameSuccess ? 'msg-success' : 'msg-error']">{{ usernameMessage }}</p>
               </div>
             </div>
 
-            <!-- Email Panel -->
+            <!-- ── Email ── -->
             <div v-if="activeSetting === 'email'" class="settings-panel">
               <div class="panel-header">
-                <h2 class="panel-title">Change Email</h2>
-                <p class="panel-description">
-                  Enter your new email address. We'll send a verification OTP before applying changes.
-                </p>
+                <h3 class="panel-title">Change Email</h3>
+                <p class="panel-desc">We'll send a verification OTP before applying changes.</p>
               </div>
-
               <div class="panel-body">
                 <div class="form-group">
                   <label class="form-label">New Email</label>
-                  <input
-                      type="email"
-                      v-model="settingsForm.email"
-                      class="form-input"
-                      placeholder="Enter new email"
-                      :disabled="emailOtpSent || emailVerified"
-                  />
-                  <button
-                      v-if="!emailOtpSent"
-                      class="btn-primary"
-                      @click="sendEmailOtp"
-                      :disabled="emailLoading"
-                  >
-                    <span v-if="!emailLoading">Send OTP</span>
-                    <span v-else>Sending...</span>
-                  </button>
+                  <input v-model="settingsForm.email" :disabled="emailOtpSent || emailVerified" class="form-input" placeholder="Enter new email" type="email"/>
                 </div>
-
+                <button v-if="!emailOtpSent" :disabled="emailLoading" class="save-btn full-width" type="button" @click="sendEmailOtp">
+                  {{ emailLoading ? 'Sending…' : 'Send OTP' }}
+                </button>
                 <div v-if="emailOtpSent && !emailVerified" class="form-group">
                   <label class="form-label">Enter OTP</label>
-                  <div class="input-with-button">
-                    <input
-                        type="text"
-                        v-model="emailOtp"
-                        class="form-input"
-                        placeholder="Enter OTP"
-                    />
-                    <button
-                        class="btn-secondary"
-                        @click="verifyEmailOtp"
-                        :disabled="emailLoading"
-                    >
-                      <span v-if="!emailLoading">Verify OTP</span>
-                      <span v-else>Verifying...</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div v-if="emailVerified" class="form-group">
-                  <button class="btn-primary" @click="confirmEmailChange" :disabled="emailLoading">
-                    <span v-if="!emailLoading">Confirm Change</span>
-                    <span v-else>Saving...</span>
+                  <input v-model="emailOtp" class="form-input" placeholder="Enter OTP sent to your email" type="text"/>
+                  <button :disabled="emailLoading" class="save-btn full-width" type="button" @click="verifyEmailOtp">
+                    {{ emailLoading ? 'Verifying…' : 'Verify OTP' }}
                   </button>
                 </div>
-
-                <p v-if="emailMessage" :class="['feedback-message', emailVerified ? 'success' : 'error']">
-                  {{ emailMessage }}
-                </p>
+                <div v-if="emailVerified">
+                  <button :disabled="emailLoading" class="save-btn full-width" type="button" @click="confirmEmailChange">
+                    {{ emailLoading ? 'Saving…' : 'Confirm Email Change' }}
+                  </button>
+                </div>
+                <p v-if="emailMessage" :class="['feedback-msg', emailVerified ? 'msg-success' : 'msg-error']">{{ emailMessage }}</p>
               </div>
             </div>
 
-            <!-- Password Panel -->
+            <!-- ── Password ── -->
             <div v-if="activeSetting === 'password'" class="settings-panel">
               <div class="panel-header">
-                <h2 class="panel-title">Change Password</h2>
-                <p class="panel-description">Please enter your current password and choose a new one.</p>
+                <h3 class="panel-title">Change Password</h3>
+                <p class="panel-desc">Enter your current password and choose a new one.</p>
               </div>
-
               <div class="panel-body">
-                <div class="form-group">
-                  <label class="form-label">Current Password</label>
-                  <div class="password-input-wrapper">
-                    <input
-                        :type="showCurrentPassword ? 'text' : 'password'"
-                        v-model="passwordForm.current"
-                        class="form-input"
-                        placeholder="Enter current password"
-                    />
-                    <button
-                        type="button"
-                        @click="showCurrentPassword = !showCurrentPassword"
-                        class="password-toggle-btn"
-                    >
-                      <svg v-if="!showCurrentPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                           stroke="currentColor" stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                           stroke-width="2">
-                        <path
-                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
+                <div v-for="(field, key) in passwordFields" :key="key" class="form-group">
+                  <label class="form-label">{{ field.label }}</label>
+                  <div class="password-wrap">
+                    <input v-model="passwordForm[key]" :placeholder="field.placeholder" :type="field.show ? 'text' : 'password'" class="form-input"/>
+                    <button class="eye-btn" type="button" @click="field.show = !field.show">
+                      <svg v-if="!field.show" fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <svg v-else fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" x2="23" y1="1" y2="23"/></svg>
                     </button>
                   </div>
                 </div>
-
-                <div class="form-group">
-                  <label class="form-label">New Password</label>
-                  <div class="password-input-wrapper">
-                    <input
-                        :type="showNewPassword ? 'text' : 'password'"
-                        v-model="passwordForm.new"
-                        class="form-input"
-                        placeholder="Enter new password"
-                    />
-                    <button
-                        type="button"
-                        @click="showNewPassword = !showNewPassword"
-                        class="password-toggle-btn"
-                    >
-                      <svg v-if="!showNewPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                           stroke="currentColor" stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                           stroke-width="2">
-                        <path
-                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Confirm New Password</label>
-                  <div class="password-input-wrapper">
-                    <input
-                        :type="showConfirmPassword ? 'text' : 'password'"
-                        v-model="passwordForm.confirm"
-                        class="form-input"
-                        placeholder="Re-enter new password"
-                    />
-                    <button
-                        type="button"
-                        @click="showConfirmPassword = !showConfirmPassword"
-                        class="password-toggle-btn"
-                    >
-                      <svg v-if="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                           stroke="currentColor" stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                           stroke-width="2">
-                        <path
-                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <button class="btn-primary" @click="updatePassword">Update Password</button>
-
-                <p v-if="passwordMessage" :class="['feedback-message', passwordSuccess ? 'success' : 'error']">
-                  {{ passwordMessage }}
-                </p>
+                <button :disabled="passwordLoading" class="save-btn full-width" type="button" @click="updatePassword">
+                  <svg v-if="!passwordLoading" fill="none" height="15" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg v-else class="spin-icon" fill="none" height="15" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  {{ passwordLoading ? 'Updating…' : 'Update Password' }}
+                </button>
+                <p v-if="passwordMessage" :class="['feedback-msg', passwordSuccess ? 'msg-success' : 'msg-error']">{{ passwordMessage }}</p>
               </div>
             </div>
 
-            <!-- Request Limits Panel -->
+            <!-- ── Request Limits ── -->
             <div v-if="activeSetting === 'limits'" class="settings-panel">
               <div class="panel-header">
-                <h2 class="panel-title">Request More Limits</h2>
-                <p class="panel-description">
-                  Need more companies or contacts? Request an increase and our admin will review your request.
-                </p>
+                <h3 class="panel-title">Request More Limits</h3>
+                <p class="panel-desc">Need more companies, contacts, or reviews? Submit a request for admin review.</p>
               </div>
-
               <div class="panel-body">
-                <!-- Current Limits Display -->
                 <div class="limits-overview">
-                  <div class="limit-card">
-                    <div class="limit-card-header">
-                      <div class="limit-icon company">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-                        </svg>
-                      </div>
-                      <span class="limit-label">Companies</span>
+                  <div v-for="lim in limitCards" :key="lim.key" class="limit-card">
+                    <div class="limit-card-top">
+                      <div :class="['limit-icon', lim.colorClass]" v-html="lim.icon"/>
+                      <span class="limit-label-text">{{ lim.label }}</span>
                     </div>
                     <div class="limit-stats">
-                      <span class="limit-current">{{ companyCount }}</span>
-                      <span class="limit-divider">/</span>
-                      <span class="limit-max">{{ userLimits.companyLimit }}</span>
+                      <span class="limit-current">{{ lim.count }}</span>
+                      <span class="limit-sep">/</span>
+                      <span class="limit-max">{{ lim.max }}</span>
                     </div>
-                    <div class="limit-progress-bar">
-                      <div
-                          class="limit-progress-fill company"
-                          :style="{ width: `${(companyCount / userLimits.companyLimit) * 100}%` }"
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div class="limit-card">
-                    <div class="limit-card-header">
-                      <div class="limit-icon contact">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                          <circle cx="9" cy="7" r="4"></circle>
-                        </svg>
-                      </div>
-                      <span class="limit-label">Contacts</span>
-                    </div>
-                    <div class="limit-stats">
-                      <span class="limit-current">{{ contactCount }}</span>
-                      <span class="limit-divider">/</span>
-                      <span class="limit-max">{{ userLimits.contactLimit }}</span>
-                    </div>
-                    <div class="limit-progress-bar">
-                      <div
-                          class="limit-progress-fill contact"
-                          :style="{ width: `${(contactCount / userLimits.contactLimit) * 100}%` }"
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div class="limit-card">
-                    <div class="limit-card-header">
-                      <div class="limit-icon review">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                        </svg>
-                      </div>
-                      <span class="limit-label">Reviews</span>
-                    </div>
-                    <div class="limit-stats">
-                      <span class="limit-current">{{ reviewCount }}</span>
-                      <span class="limit-divider">/</span>
-                      <span class="limit-max">{{ userLimits.reviewLimit }}</span>
-                    </div>
-                    <div class="limit-progress-bar">
-                      <div
-                          class="limit-progress-fill review"
-                          :style="{ width: `${(reviewCount / userLimits.reviewLimit) * 100}%` }"
-                      ></div>
+                    <div class="limit-bar-track">
+                      <div :class="['limit-bar-fill', lim.colorClass]" :style="{ width: Math.min((lim.count / lim.max) * 100, 100) + '%' }"/>
                     </div>
                   </div>
                 </div>
-
-                <!-- Request Form -->
-                <form @submit.prevent="submitSettingsRequest" class="request-form">
-                  <div class="form-group">
-                    <label class="form-label">Additional Companies Needed</label>
+                <form class="request-form" @submit.prevent="submitSettingsRequest">
+                  <div v-for="f in requestFields" :key="f.key" class="form-group">
+                    <label class="form-label">{{ f.label }}</label>
                     <div class="quantity-selector">
-                      <button type="button" @click="decrementSettingsCompanies" class="qty-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
+                      <button class="qty-btn" type="button" @click="decrement(f.key)">
+                        <svg fill="none" height="13" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13"><line x1="5" x2="19" y1="12" y2="12"/></svg>
                       </button>
-                      <input
-                          type="number"
-                          v-model.number="settingsRequestForm.companies"
-                          min="0"
-                          max="100"
-                          class="qty-input"
-                      />
-                      <button type="button" @click="incrementSettingsCompanies" class="qty-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <line x1="12" y1="5" x2="12" y2="19"></line>
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
+                      <input v-model.number="settingsRequestForm[f.key]" class="qty-input" max="500" min="0" type="number"/>
+                      <button class="qty-btn" type="button" @click="increment(f.key)">
+                        <svg fill="none" height="13" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
                       </button>
                     </div>
                   </div>
-
-                  <div class="form-group">
-                    <label class="form-label">Additional Contacts Needed</label>
-                    <div class="quantity-selector">
-                      <button type="button" @click="decrementSettingsContacts" class="qty-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                      </button>
-                      <input
-                          type="number"
-                          v-model.number="settingsRequestForm.contacts"
-                          min="0"
-                          max="500"
-                          class="qty-input"
-                      />
-                      <button type="button" @click="incrementSettingsContacts" class="qty-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <line x1="12" y1="5" x2="12" y2="19"></line>
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">Additional Reviews Needed</label>
-                    <div class="quantity-selector">
-                      <button type="button" @click="decrementSettingsReviews" class="qty-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                      </button>
-                      <input
-                          type="number"
-                          v-model.number="settingsRequestForm.reviews"
-                          min="0"
-                          max="500"
-                          class="qty-input"
-                      />
-                      <button type="button" @click="incrementSettingsReviews" class="qty-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                          <line x1="12" y1="5" x2="12" y2="19"></line>
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
                   <div class="form-group">
                     <label class="form-label">Reason for Request (Optional)</label>
-                    <textarea
-                        v-model="settingsRequestForm.reason"
-                        rows="3"
-                        class="form-input"
-                        placeholder="Tell us why you need more limits..."
-                    ></textarea>
+                    <textarea v-model="settingsRequestForm.reason" class="form-input" placeholder="Tell us why you need more limits…" rows="3"/>
                   </div>
-
-                  <button
-                      type="submit"
-                      class="btn-primary"
-                      :disabled="settingsRequestLoading || (settingsRequestForm.companies === 0 && settingsRequestForm.contacts === 0 && settingsRequestForm.reviews === 0)"
-                  >
-                    <span v-if="!settingsRequestLoading">Submit Request</span>
-                    <span v-else>Submitting...</span>
+                  <button :disabled="settingsRequestLoading || (!settingsRequestForm.companies && !settingsRequestForm.contacts && !settingsRequestForm.reviews)" class="save-btn full-width" type="submit">
+                    <svg v-if="!settingsRequestLoading" fill="none" height="15" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                    <svg v-else class="spin-icon" fill="none" height="15" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    {{ settingsRequestLoading ? 'Submitting…' : 'Submit Request' }}
                   </button>
-
-                  <p v-if="settingsRequestMessage"
-                     :class="['feedback-message', settingsRequestSuccess ? 'success' : 'error']">
-                    {{ settingsRequestMessage }}
-                  </p>
+                  <p v-if="settingsRequestMessage" :class="['feedback-msg', settingsRequestSuccess ? 'msg-success' : 'msg-error']">{{ settingsRequestMessage }}</p>
                 </form>
               </div>
             </div>
 
-            <!-- Request History Panel -->
+            <!-- ── Request History ── -->
             <div v-if="activeSetting === 'history'" class="settings-panel">
               <div class="panel-header">
-                <h2 class="panel-title">Request History</h2>
-                <p class="panel-description">
-                  View all your limit increase requests and their current status.
-                </p>
+                <h3 class="panel-title">Request History</h3>
+                <p class="panel-desc">View all your limit increase requests and their current status.</p>
               </div>
-
               <div class="panel-body">
-                <!-- Loading State -->
-                <div v-if="historyLoading" class="state-container">
-                  <div class="spinner"></div>
-                  <p class="state-text">Loading your requests...</p>
+                <div v-if="historyLoading" class="empty-state">
+                  <div class="empty-icon-wrap spin-wrap">
+                    <svg class="spin-icon" fill="none" height="26" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="26"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  </div>
+                  <p class="empty-title">Loading requests…</p>
                 </div>
-
-                <!-- Error State -->
-                <div v-else-if="historyError" class="state-container">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                  </svg>
-                  <p class="state-text">{{ historyError }}</p>
-                  <button @click="loadRequestHistory" class="btn-secondary">Try Again</button>
+                <div v-else-if="historyError" class="empty-state">
+                  <div class="empty-icon-wrap" style="background: var(--c-danger-light); color: var(--c-danger);">
+                    <svg fill="none" height="26" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="26"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                  </div>
+                  <p class="empty-title">{{ historyError }}</p>
+                  <button class="outline-btn" type="button" @click="loadRequestHistory">Try Again</button>
                 </div>
-
-                <!-- Empty State -->
-                <div v-else-if="!requestHistory || requestHistory.length === 0" class="state-container">
-                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18"></path>
-                  </svg>
-                  <h3 class="state-title">No Requests Yet</h3>
-                  <p class="state-text">You haven't submitted any limit increase requests.</p>
-                  <button @click="activeSetting = 'limits'" class="btn-primary">
-                    Make Your First Request
-                  </button>
+                <div v-else-if="!requestHistory.length" class="empty-state">
+                  <div class="empty-icon-wrap">
+                    <svg fill="none" height="26" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="26"><path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18"/></svg>
+                  </div>
+                  <p class="empty-title">No Requests Yet</p>
+                  <p class="empty-sub">You haven't submitted any limit increase requests.</p>
+                  <button class="save-btn" type="button" @click="activeSetting = 'limits'">Make Your First Request</button>
                 </div>
-
-                <!-- Request List -->
-                <div v-else class="history-container">
-                  <!-- Filter Tabs -->
+                <div v-else class="history-wrap">
                   <div class="filter-tabs">
-                    <button
-                        @click="historyFilter = 'all'"
-                        :class="['filter-tab', { active: historyFilter === 'all' }]"
-                    >
-                      All
-                    </button>
-                    <button
-                        @click="historyFilter = 'pending'"
-                        :class="['filter-tab', { active: historyFilter === 'pending' }]"
-                    >
-                      Pending
-                    </button>
-                    <button
-                        @click="historyFilter = 'approved'"
-                        :class="['filter-tab', { active: historyFilter === 'approved' }]"
-                    >
-                      Approved
-                    </button>
-                    <button
-                        @click="historyFilter = 'rejected'"
-                        :class="['filter-tab', { active: historyFilter === 'rejected' }]"
-                    >
-                      Rejected
+                    <button v-for="f in ['all','pending','approved','rejected']" :key="f"
+                            :class="['filter-tab', { active: historyFilter === f }]"
+                            type="button" @click="historyFilter = f">
+                      {{ f.charAt(0).toUpperCase() + f.slice(1) }}
+                      <span v-if="historyFilter === f" class="tab-active-dot"/>
                     </button>
                   </div>
-
-                  <!-- Request Cards -->
                   <div class="history-list">
-                    <div
-                        v-for="request in displayedHistory"
-                        :key="request.id"
-                        class="history-item"
-                    >
+                    <div v-for="req in displayedHistory" :key="req.id" class="history-item">
                       <div class="history-item-header">
-                        <span class="request-id">#{{ request.id }}</span>
-                        <span :class="['status-badge', request.status]">
-                          {{ request.status }}
-                        </span>
+                        <span class="req-id">#{{ req.id }}</span>
+                        <span :class="['status-badge', req.status]">{{ req.status }}</span>
                       </div>
                       <div class="history-item-body">
-                        <div class="request-details-grid">
-                          <div v-if="request.requestedCompanies > 0" class="detail-row">
-                            <span class="detail-label">Companies:</span>
-                            <span class="detail-value">{{ request.requestedCompanies }}</span>
-                          </div>
-                          <div v-if="request.requestedContacts > 0" class="detail-row">
-                            <span class="detail-label">Contacts:</span>
-                            <span class="detail-value">{{ request.requestedContacts }}</span>
-                          </div>
-                          <div v-if="request.requestedReviews > 0" class="detail-row">
-                            <span class="detail-label">Reviews:</span>
-                            <span class="detail-value">{{ request.requestedReviews }}</span>
-                          </div>
+                        <div class="detail-grid">
+                          <div v-if="req.requestedCompanies > 0" class="detail-row"><span class="detail-label">Companies</span><span class="detail-value">{{ req.requestedCompanies }}</span></div>
+                          <div v-if="req.requestedContacts > 0" class="detail-row"><span class="detail-label">Contacts</span><span class="detail-value">{{ req.requestedContacts }}</span></div>
+                          <div v-if="req.requestedReviews > 0" class="detail-row"><span class="detail-label">Reviews</span><span class="detail-value">{{ req.requestedReviews }}</span></div>
                         </div>
-                        <div v-if="request.reason" class="request-reason">
-                          <p class="reason-text">{{ request.reason }}</p>
-                        </div>
+                        <div v-if="req.reason" class="req-reason"><p>{{ req.reason }}</p></div>
                       </div>
-                      <div class="history-item-footer">
-                        <span class="request-date">{{ formatDate(request.createdAt) }}</span>
-                      </div>
+                      <div class="history-item-footer"><span class="req-date">{{ formatDate(req.createdAt) }}</span></div>
                     </div>
                   </div>
-
-                  <div v-if="displayedHistory.length === 0 && historyFilter !== 'all'" class="no-results">
-                    <p>No {{ historyFilter }} requests found.</p>
-                  </div>
+                  <div v-if="!displayedHistory.length && historyFilter !== 'all'" class="no-results">No {{ historyFilter }} requests found.</div>
                 </div>
               </div>
             </div>
@@ -572,1558 +247,825 @@
           </section>
         </div>
       </div>
+      <AlertModal
+          v-bind="alertState"
+          @confirm="alertState.onConfirm"
+          @cancel="alertState.onCancel"
+      />
     </div>
   </transition>
 </template>
 
 <script setup>
-import { ref, computed, watch, inject } from "vue";
-import api from "@/services/api";
+import { computed, inject, reactive, ref, watch } from 'vue';
+import api from '@/services/api';
+import AlertModal from '@/components/user/AlertModal.vue';          // ← NEW
+import { useAlert } from '@/composables/useAlert.js';               // ← NEW
 
 const isDarkMode = inject('isDarkMode', ref(false));
+const activeSetting = ref('username');
+const mobileShowContent = ref(false);
 
-const activeSetting = ref("username");
+const props = defineProps({ open: { type: Boolean, required: true } });
+const emit = defineEmits(['close']);
 
-const props = defineProps({
-  open: {
-    type: Boolean,
-    required: true,
-  },
-});
+// ── Alert composable ──────────────────────────────────────────────── ← NEW
+const { alertState, showAlert, showConfirm } = useAlert();
 
-const emit = defineEmits(["close"]);
+const activeNavItem = computed(() => navItems.find(n => n.id === activeSetting.value));
 
-// User + Limit Data
-const userLimits = ref({
-  companyLimit: 1,
-  contactLimit: 1,
-  reviewLimit: 1,
-});
+function selectNav(id) {
+  activeSetting.value = id;
+  mobileShowContent.value = true;
+}
 
+const navItems = [
+  { id: 'username', label: 'Username',       icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
+  { id: 'email',    label: 'Email',           icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' },
+  { id: 'password', label: 'Password',        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
+  { id: 'limits',   label: 'Request Limits',  icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>' },
+  { id: 'history',  label: 'Request History', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18"/></svg>' },
+];
+
+const userLimits = ref({ companyLimit: 1, contactLimit: 1, reviewLimit: 1 });
 const companyCount = ref(0);
 const contactCount = ref(0);
 const reviewCount = ref(0);
 
-// Settings Forms
-const settingsForm = ref({
-  username: "",
-  email: "",
-  phone: "",
+const limitCards = computed(() => [
+  { key: 'company', label: 'Companies', count: companyCount.value, max: userLimits.value.companyLimit, colorClass: 'company-color', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/></svg>' },
+  { key: 'contact', label: 'Contacts',  count: contactCount.value, max: userLimits.value.contactLimit, colorClass: 'contact-color', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>' },
+  { key: 'review',  label: 'Reviews',   count: reviewCount.value,  max: userLimits.value.reviewLimit,  colorClass: 'review-color',  icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
+]);
+
+const requestFields = [
+  { key: 'companies', label: 'Additional Companies Needed' },
+  { key: 'contacts',  label: 'Additional Contacts Needed'  },
+  { key: 'reviews',   label: 'Additional Reviews Needed'   },
+];
+
+const settingsForm = ref({ username: '', email: '' });
+const passwordFields = reactive({
+  current: { label: 'Current Password',    placeholder: 'Enter current password',  show: false },
+  new:     { label: 'New Password',         placeholder: 'Enter new password',       show: false },
+  confirm: { label: 'Confirm New Password', placeholder: 'Re-enter new password',    show: false },
 });
+const passwordForm = ref({ current: '', new: '', confirm: '' });
+const settingsRequestForm = ref({ companies: 0, contacts: 0, reviews: 0, reason: '' });
 
-// Username
-const usernameMessage = ref("");
-const usernameSuccess = ref(false);
-const usernameLoading = ref(false);
+const usernameLoading = ref(false); const usernameMessage = ref(''); const usernameSuccess = ref(false);
+const emailLoading = ref(false);    const emailMessage = ref('');    const emailOtp = ref('');
+const emailOtpSent = ref(false);    const emailVerified = ref(false);
+const passwordLoading = ref(false); const passwordMessage = ref(''); const passwordSuccess = ref(false);
+const settingsRequestLoading = ref(false); const settingsRequestMessage = ref(''); const settingsRequestSuccess = ref(false);
+const requestHistory = ref([]);     const historyLoading = ref(false); const historyError = ref('');
+const historyFilter = ref('all');
 
+function increment(key) { settingsRequestForm.value[key]++; }
+function decrement(key) { if (settingsRequestForm.value[key] > 0) settingsRequestForm.value[key]--; }
+
+// ── Username ──────────────────────────────────────────────────────── (unchanged, uses inline feedback)
 async function updateUsername() {
-  const newName = settingsForm.value.username.trim();
-  usernameMessage.value = "";
-  usernameSuccess.value = false;
-
-  if (!newName) {
-    usernameMessage.value = "Please enter your new username.";
-    return;
-  }
-
+  const name = settingsForm.value.username.trim();
+  usernameMessage.value = ''; usernameSuccess.value = false;
+  if (!name) { usernameMessage.value = 'Please enter your new username.'; return; }
   try {
     usernameLoading.value = true;
-    const res = await api.post("/settings/change-username", {
-      name: newName,
-    });
+    const res = await api.post('/settings/change-username', { name });
     usernameSuccess.value = true;
-    usernameMessage.value = res.data.message || "Username updated successfully!";
-    settingsForm.value.username = "";
-  } catch (err) {
-    usernameMessage.value = err.response?.data?.message || "Failed to update username.";
-  } finally {
-    usernameLoading.value = false;
-  }
+    usernameMessage.value = res.data.message || 'Username updated successfully!';
+    settingsForm.value.username = '';
+  } catch (err) { usernameMessage.value = err.response?.data?.message || 'Failed to update username.'; }
+  finally { usernameLoading.value = false; }
 }
 
-// Email Change
-const emailOtp = ref("");
-const emailOtpSent = ref(false);
-const emailVerified = ref(false);
-const emailLoading = ref(false);
-const emailMessage = ref("");
-
+// ── Email OTP ─────────────────────────────────────────────────────── (unchanged, uses inline feedback)
 async function sendEmailOtp() {
-  if (!settingsForm.value.email) {
-    emailMessage.value = "Please enter a valid email.";
-    return;
-  }
-
+  if (!settingsForm.value.email) { emailMessage.value = 'Please enter a valid email.'; return; }
   try {
     emailLoading.value = true;
-    const res = await api.post("/settings/send-email-otp", {
-      email: settingsForm.value.email,
-    });
-    emailOtpSent.value = true;
-    emailMessage.value = res.data.message || "OTP sent successfully.";
-  } catch (err) {
-    emailMessage.value = err.response?.data?.message || "Failed to send OTP.";
-  } finally {
-    emailLoading.value = false;
-  }
+    const res = await api.post('/settings/send-email-otp', { email: settingsForm.value.email });
+    emailOtpSent.value = true; emailMessage.value = res.data.message || 'OTP sent successfully.';
+  } catch (err) { emailMessage.value = err.response?.data?.message || 'Failed to send OTP.'; }
+  finally { emailLoading.value = false; }
 }
 
 async function verifyEmailOtp() {
-  if (!emailOtp.value) {
-    emailMessage.value = "Please enter the OTP.";
-    return;
-  }
-
+  if (!emailOtp.value) { emailMessage.value = 'Please enter the OTP.'; return; }
   try {
     emailLoading.value = true;
-    const res = await api.post("/settings/verify-email-otp", {
-      email: settingsForm.value.email,
-      otp: emailOtp.value,
-    });
-
-    if (res.data.success) {
-      emailVerified.value = true;
-      emailMessage.value = "OTP verified successfully.";
-    } else {
-      emailMessage.value = "Invalid OTP.";
-    }
-  } catch (err) {
-    emailMessage.value = err.response?.data?.message || "OTP verification failed.";
-  } finally {
-    emailLoading.value = false;
-  }
+    const res = await api.post('/settings/verify-email-otp', { email: settingsForm.value.email, otp: emailOtp.value });
+    if (res.data.success) { emailVerified.value = true; emailMessage.value = 'OTP verified successfully.'; }
+    else { emailMessage.value = 'Invalid OTP.'; }
+  } catch (err) { emailMessage.value = err.response?.data?.message || 'OTP verification failed.'; }
+  finally { emailLoading.value = false; }
 }
 
+// ── Confirm Email Change ──────────────────────────────────────────── ← NEW
 async function confirmEmailChange() {
   try {
     emailLoading.value = true;
-    const res = await api.post("/settings/confirm-email-change", {
-      email: settingsForm.value.email,
+    const res = await api.post('/settings/confirm-email-change', { email: settingsForm.value.email });
+    await showAlert({
+      type: 'success',
+      title: 'Email Updated!',
+      message: res.data.message || 'Your email address has been updated successfully.',
+      confirmLabel: 'Great!'
     });
-    alert(res.data.message || "Email updated successfully.");
-    resetEmailState();
+    emailOtp.value = ''; emailOtpSent.value = false; emailVerified.value = false;
+    emailMessage.value = ''; settingsForm.value.email = '';
   } catch (err) {
-    emailMessage.value = err.response?.data?.message || "Failed to update email.";
-  } finally {
-    emailLoading.value = false;
-  }
+    emailMessage.value = err.response?.data?.message || 'Failed to update email.';
+  } finally { emailLoading.value = false; }
 }
 
-function resetEmailState() {
-  emailOtp.value = "";
-  emailOtpSent.value = false;
-  emailVerified.value = false;
-  emailMessage.value = "";
-  settingsForm.value.email = "";
-}
-
-// Password Change
-const passwordForm = ref({
-  current: "",
-  new: "",
-  confirm: "",
-});
-
-const showCurrentPassword = ref(false);
-const showNewPassword = ref(false);
-const showConfirmPassword = ref(false);
-
-const passwordMessage = ref("");
-const passwordSuccess = ref(false);
-const passwordLoading = ref(false);
-
+// ── Password ──────────────────────────────────────────────────────── (unchanged, uses inline feedback)
 async function updatePassword() {
-  passwordMessage.value = "";
-  passwordSuccess.value = false;
-
-  if (
-      !passwordForm.value.current ||
-      !passwordForm.value.new ||
-      !passwordForm.value.confirm
-  ) {
-    passwordMessage.value = "All fields are required.";
-    return;
-  }
-
-  if (passwordForm.value.new !== passwordForm.value.confirm) {
-    passwordMessage.value = "Passwords do not match.";
-    return;
-  }
-
+  passwordMessage.value = ''; passwordSuccess.value = false;
+  const { current, new: n, confirm } = passwordForm.value;
+  if (!current || !n || !confirm) { passwordMessage.value = 'All fields are required.'; return; }
+  if (n !== confirm) { passwordMessage.value = 'Passwords do not match.'; return; }
   try {
     passwordLoading.value = true;
-    const res = await api.post("/settings/change-password", {
-      currentPassword: passwordForm.value.current,
-      newPassword: passwordForm.value.new,
-    });
-
+    const res = await api.post('/settings/change-password', { currentPassword: current, newPassword: n });
     passwordSuccess.value = true;
-    passwordMessage.value = res.data.message || "Password updated successfully.";
-    passwordForm.value = { current: "", new: "", confirm: "" };
-  } catch (err) {
-    passwordMessage.value = err.response?.data?.message || "Failed to update password.";
-  } finally {
-    passwordLoading.value = false;
-  }
+    passwordMessage.value = res.data.message || 'Password updated successfully.';
+    passwordForm.value = { current: '', new: '', confirm: '' };
+  } catch (err) { passwordMessage.value = err.response?.data?.message || 'Failed to update password.'; }
+  finally { passwordLoading.value = false; }
 }
 
-// Request Limits
-const settingsRequestForm = ref({
-  companies: 0,
-  contacts: 0,
-  reviews: 0,
-  reason: "",
-});
-
-const settingsRequestLoading = ref(false);
-const settingsRequestMessage = ref("");
-const settingsRequestSuccess = ref(false);
-
-function incrementSettingsCompanies() {
-  settingsRequestForm.value.companies++;
-}
-function decrementSettingsCompanies() {
-  if (settingsRequestForm.value.companies > 0)
-    settingsRequestForm.value.companies--;
-}
-
-function incrementSettingsContacts() {
-  settingsRequestForm.value.contacts++;
-}
-function decrementSettingsContacts() {
-  if (settingsRequestForm.value.contacts > 0)
-    settingsRequestForm.value.contacts--;
-}
-
-function incrementSettingsReviews() {
-  settingsRequestForm.value.reviews++;
-}
-function decrementSettingsReviews() {
-  if (settingsRequestForm.value.reviews > 0)
-    settingsRequestForm.value.reviews--;
-}
-
+// ── Submit Limits Request ─────────────────────────────────────────── (unchanged, uses inline feedback)
 async function submitSettingsRequest() {
-  if (
-      settingsRequestForm.value.companies === 0 &&
-      settingsRequestForm.value.contacts === 0 &&
-      settingsRequestForm.value.reviews === 0
-  ) {
-    settingsRequestMessage.value = "Please request at least one item.";
-    return;
-  }
-
+  const { companies, contacts, reviews } = settingsRequestForm.value;
+  if (!companies && !contacts && !reviews) { settingsRequestMessage.value = 'Please request at least one item.'; return; }
   try {
     settingsRequestLoading.value = true;
-    const res = await api.post("/dashboard/request-limits", settingsRequestForm.value);
+    const res = await api.post('/dashboard/request-limits', settingsRequestForm.value);
     settingsRequestSuccess.value = true;
-    settingsRequestMessage.value = res.data.message || "Request submitted successfully.";
-    settingsRequestForm.value = { companies: 0, contacts: 0, reviews: 0, reason: "" };
+    settingsRequestMessage.value = res.data.message || 'Request submitted successfully.';
+    settingsRequestForm.value = { companies: 0, contacts: 0, reviews: 0, reason: '' };
   } catch (err) {
     settingsRequestSuccess.value = false;
-    settingsRequestMessage.value =
-        err.response?.data?.message || "Failed to submit request.";
-  } finally {
-    settingsRequestLoading.value = false;
-  }
+    settingsRequestMessage.value = err.response?.data?.message || 'Failed to submit request.';
+  } finally { settingsRequestLoading.value = false; }
 }
 
-// Request History
-const requestHistory = ref([]);
-const historyLoading = ref(false);
-const historyError = ref("");
-const historyFilter = ref("all");
-
+// ── Request History ───────────────────────────────────────────────── (unchanged, uses inline error state)
 async function loadRequestHistory() {
   try {
-    historyLoading.value = true;
-    const res = await api.get("/dashboard/request-history");
+    historyLoading.value = true; historyError.value = '';
+    const res = await api.get('/dashboard/request-history');
     requestHistory.value = res.data.requests || [];
-  } catch (err) {
-    historyError.value = "Failed to load request history.";
-  } finally {
-    historyLoading.value = false;
-  }
+  } catch { historyError.value = 'Failed to load request history.'; }
+  finally { historyLoading.value = false; }
 }
 
-function filteredHistory(status) {
-  if (status === "all") return requestHistory.value;
-  return requestHistory.value.filter(r => r.status === status);
-}
+const displayedHistory = computed(() =>
+    historyFilter.value === 'all' ? requestHistory.value
+        : requestHistory.value.filter(r => r.status === historyFilter.value)
+);
 
-const displayedHistory = computed(() => {
-  return historyFilter.value === "all"
-      ? requestHistory.value
-      : requestHistory.value.filter(r => r.status === historyFilter.value);
-});
-
-function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString();
-}
+function formatDate(d) { return new Date(d).toLocaleDateString(); }
 
 watch(activeSetting, val => {
-  if (val === 'history' && requestHistory.value.length === 0) {
-    loadRequestHistory();
-  }
+  if (val === 'history' && !requestHistory.value.length) loadRequestHistory();
 });
 
-function closePopup() {
-  emit("close");
-}
+watch(() => props.open, val => {
+  if (!val) { mobileShowContent.value = false; }
+  if (val) document.addEventListener('keydown', onKeydown);
+  else document.removeEventListener('keydown', onKeydown);
+});
 
-function onKeydown(e) {
-  if (e.key === "Escape") closePopup();
-}
-
-watch(
-    () => props.open,
-    val => {
-      if (val) document.addEventListener("keydown", onKeydown);
-      else document.removeEventListener("keydown", onKeydown);
-    }
-);
+function closePopup() { emit('close'); }
+function onKeydown(e) { if (e.key === 'Escape') closePopup(); }
 </script>
 
 <style scoped>
-/* ===================================
-   MODERN PROFESSIONAL DESIGN
-   =================================== */
-
-/* Modal Overlay */
-.modal-overlay-full {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10000;
-  padding: 20px;
+/* ══ CSS Custom Properties ══ */
+.settings-overlay {
+  --c-bg: #ffffff;
+  --c-surface: #ffffff;
+  --c-surface-2: #faf9f7;
+  --c-border: #e8e3dc;
+  --c-text-primary: #1c1410;
+  --c-text-secondary: #5a4f46;
+  --c-text-muted: #9e8e84;
+  --c-accent: #7c5c4e;
+  --c-accent-2: #a07060;
+  --c-accent-hover: #5e443a;
+  --c-accent-light: #f0e8e4;
+  --c-accent-subtle: #f8f3f0;
+  --c-danger: #b83232;
+  --c-danger-light: #fdf0f0;
+  --c-success: #2d6a50;
+  --c-success-light: #ecf7f2;
+  --c-success-border: #7ec8a0;
+  --c-warning: #a06010;
+  --c-warning-light: #fef6ec;
+  --c-warning-border: #e8b870;
+  --c-shadow-xs: 0 1px 2px rgba(28,20,16,0.06);
+  --c-shadow-sm: 0 2px 6px rgba(28,20,16,0.08), 0 1px 2px rgba(28,20,16,0.04);
+  --c-shadow-md: 0 6px 20px rgba(28,20,16,0.10), 0 2px 6px rgba(28,20,16,0.06);
+  --c-shadow-lg: 0 16px 48px rgba(28,20,16,0.16), 0 4px 12px rgba(28,20,16,0.08);
+  --c-radius: 14px;
+  --c-radius-sm: 8px;
+  --c-radius-xs: 5px;
+  --c-radius-pill: 100px;
+  font-family: 'Segoe UI', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
 }
 
-.dark-mode.modal-overlay-full {
-  background: rgba(0, 0, 0, 0.9);
+.settings-overlay.dark-mode {
+  --c-bg: #100e14;
+  --c-surface: #1a1720;
+  --c-surface-2: #1e1b26;
+  --c-border: #2c2838;
+  --c-text-primary: #f2ede8;
+  --c-text-secondary: #a89490;
+  --c-text-muted: #6a5e5a;
+  --c-accent: #c4906e;
+  --c-accent-2: #d4a880;
+  --c-accent-hover: #d4a070;
+  --c-accent-light: #281e18;
+  --c-accent-subtle: #1e1612;
+  --c-danger: #e06060;
+  --c-danger-light: #281414;
+  --c-success: #60b88a;
+  --c-success-light: #102418;
+  --c-success-border: #1e6040;
+  --c-warning: #e8a840;
+  --c-warning-light: #281c08;
+  --c-warning-border: #6a4810;
+  --c-shadow-xs: 0 1px 2px rgba(0,0,0,0.2);
+  --c-shadow-sm: 0 2px 6px rgba(0,0,0,0.3);
+  --c-shadow-md: 0 6px 20px rgba(0,0,0,0.4);
+  --c-shadow-lg: 0 16px 48px rgba(0,0,0,0.5);
 }
 
-/* Modal Container */
-.modal-container {
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  max-width: 1000px;
+*, *::before, *::after { box-sizing: border-box; }
+button { font-family: inherit; cursor: pointer; }
+
+/* ══════════════════════════════════════
+   OVERLAY
+══════════════════════════════════════ */
+.settings-overlay {
+  position: fixed; inset: 0;
+  background: rgba(16,14,20,0.6);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 99999;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+/* ══════════════════════════════════════
+   MODAL SHELL
+══════════════════════════════════════ */
+.settings-modal {
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius);
   width: 100%;
-  max-height: 85vh;
+  max-width: 720px;
+  max-height: 90vh;
+  display: flex; flex-direction: column;
   overflow: hidden;
-  position: relative;
-  animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--c-shadow-lg);
+  margin: auto;
+  color: var(--c-text-primary);
 }
 
-.dark-mode .modal-container {
-  background: #18181b;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Top Close Button */
-.modal-close-btn-top {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  color: #71717a;
-  cursor: pointer;
-  transition: all 0.2s;
-  z-index: 10;
-}
-
-.modal-close-btn-top:hover {
-  background: #f4f4f5;
-  color: #18181b;
-}
-
-.dark-mode .modal-close-btn-top {
-  color: #a1a1aa;
-}
-
-.dark-mode .modal-close-btn-top:hover {
-  background: #27272a;
-  color: #ffffff;
-}
-
-/* Modal Layout */
-.modal-layout {
-  display: flex;
-  height: 650px;
-}
-
-/* ===================================
-   SIDEBAR
-   =================================== */
-
-.settings-sidebar {
-  width: 280px;
-  background: #fafafa;
-  border-right: 1px solid #e4e4e7;
-  display: flex;
-  flex-direction: column;
+/* ── Header ── */
+.settings-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, var(--c-accent-subtle) 0%, var(--c-surface) 100%);
+  border-bottom: 1.5px solid var(--c-border);
   flex-shrink: 0;
-}
-
-.dark-mode .settings-sidebar {
-  background: #09090b;
-  border-right-color: #27272a;
-}
-
-.settings-sidebar-header {
-  padding: 32px 24px 24px 24px;
-  border-bottom: 1px solid #e4e4e7;
-}
-
-.dark-mode .settings-sidebar-header {
-  border-bottom-color: #27272a;
-}
-
-.settings-main-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #18181b;
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-
-.dark-mode .settings-main-title {
-  color: #fafafa;
-}
-
-/* Navigation */
-.settings-nav {
-  padding: 16px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  overflow-y: auto;
-}
-
-.settings-nav-item {
-  display: flex;
-  align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  background: transparent;
-  border: none;
-  border-radius: 10px;
-  color: #52525b;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
 }
 
-.dark-mode .settings-nav-item {
-  color: #a1a1aa;
+.header-left {
+  display: flex; align-items: center; gap: 10px;
+  min-width: 0;
 }
 
-.settings-nav-item:hover {
-  background: #f4f4f5;
-  color: #18181b;
+.settings-modal-title {
+  font-size: 18px; font-weight: 750;
+  color: var(--c-text-primary); margin: 0; letter-spacing: -0.4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-.dark-mode .settings-nav-item:hover {
-  background: #18181b;
-  color: #fafafa;
+.back-btn {
+  display: none;
+  width: 32px; height: 32px; flex-shrink: 0;
+  background: var(--c-surface-2);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-xs);
+  color: var(--c-text-secondary);
+  align-items: center; justify-content: center;
+  transition: all 0.15s;
 }
+.back-btn:hover { border-color: var(--c-accent); color: var(--c-accent); background: var(--c-accent-light); }
 
-.settings-nav-item.active {
-  background: #6366f1;
-  color: #ffffff;
-  font-weight: 600;
-}
-
-.settings-nav-item svg {
+.qr-close-btn {
   flex-shrink: 0;
+  background: var(--c-surface-2);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-xs);
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--c-text-secondary); transition: all 0.15s;
+}
+.qr-close-btn:hover { border-color: var(--c-danger); color: var(--c-danger); background: var(--c-danger-light); }
+
+/* ══════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════ */
+.settings-layout {
+  display: flex; flex: 1;
+  overflow: hidden; min-height: 0;
 }
 
-/* ===================================
-   CONTENT AREA
-   =================================== */
-
-.settings-content {
-  flex: 1;
-  padding: 32px 40px;
+/* ── Sidebar ── */
+.settings-sidebar {
+  width: 200px; flex-shrink: 0;
+  background: var(--c-surface-2);
+  border-right: 1.5px solid var(--c-border);
+  display: flex; flex-direction: column;
   overflow-y: auto;
-  background: #ffffff;
 }
 
-.dark-mode .settings-content {
-  background: #18181b;
+.settings-nav {
+  padding: 10px 8px;
+  display: flex; flex-direction: column; gap: 2px;
+  flex: 1;
 }
 
-.settings-panel {
-  max-width: 560px;
-  margin: 0 auto;
+/* Nav item — compact with chevron for mobile affordance */
+.settings-nav-item {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  width: 100%; padding: 10px 12px;
+  background: transparent; border: none;
+  border-radius: var(--c-radius-sm);
+  color: var(--c-text-secondary);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: background 0.15s, color 0.15s;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.settings-nav-item:hover { background: var(--c-accent-light); color: var(--c-accent); }
+.settings-nav-item.active {
+  background: var(--c-accent-subtle);
+  color: var(--c-accent); font-weight: 650;
+  border-left: 3px solid var(--c-accent);
+  padding-left: 9px;
 }
 
-/* Panel Header */
+.nav-item-left {
+  display: flex; align-items: center; gap: 9px;
+  min-width: 0;
+}
+
+.nav-icon {
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px;
+}
+.nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.nav-chevron {
+  flex-shrink: 0; color: var(--c-border);
+  transition: color 0.15s;
+  display: none; /* hidden on desktop, shown on mobile */
+}
+
+/* Footer hint — mobile only */
+.sidebar-footer-hint {
+  display: none;
+  align-items: center; gap: 6px;
+  padding: 12px 16px;
+  font-size: 11px; color: var(--c-text-muted);
+  border-top: 1.5px solid var(--c-border);
+}
+.sidebar-footer-hint svg { flex-shrink: 0; color: var(--c-text-muted); }
+
+/* ── Content ── */
+.settings-content {
+  flex: 1; padding: 24px 28px;
+  overflow-y: auto; background: var(--c-surface);
+}
+
+.settings-panel { max-width: 460px; }
+
 .panel-header {
-  margin-bottom: 32px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #e4e4e7;
+  margin-bottom: 22px; padding-bottom: 16px;
+  border-bottom: 1.5px solid var(--c-border);
 }
-
-.dark-mode .panel-header {
-  border-bottom-color: #27272a;
-}
-
 .panel-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #18181b;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.02em;
+  font-size: 16px; font-weight: 750;
+  color: var(--c-text-primary); margin: 0 0 5px; letter-spacing: -0.3px;
 }
+.panel-desc { font-size: 13px; color: var(--c-text-muted); margin: 0; line-height: 1.55; }
 
-.dark-mode .panel-title {
-  color: #fafafa;
-}
+.panel-body { display: flex; flex-direction: column; gap: 16px; }
 
-.panel-description {
-  font-size: 14px;
-  color: #71717a;
-  margin: 0;
-  line-height: 1.6;
-}
-
-.dark-mode .panel-description {
-  color: #a1a1aa;
-}
-
-/* Panel Body */
-.panel-body {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* ===================================
-   FORM ELEMENTS
-   =================================== */
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+/* ══════════════════════════════════════
+   FORMS
+══════════════════════════════════════ */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
 
 .form-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #18181b;
-  letter-spacing: -0.01em;
-}
-
-.dark-mode .form-label {
-  color: #fafafa;
+  font-size: 11px; font-weight: 700;
+  color: var(--c-text-secondary);
+  text-transform: uppercase; letter-spacing: 0.06em;
 }
 
 .form-input {
-  width: 94%;
-  padding: 12px 16px;
-  background: #ffffff;
-  border: 1.5px solid #e4e4e7;
-  border-radius: 10px;
-  font-size: 14px;
-  color: #18181b;
-  transition: all 0.2s;
-  font-family: inherit;
+  width: 100%; padding: 10px 14px;
+  background: var(--c-surface-2);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
+  font-size: 14px; color: var(--c-text-primary);
+  font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s;
 }
+.form-input:focus { outline: none; border-color: var(--c-accent); box-shadow: 0 0 0 3px rgba(124,92,78,0.12); }
+.form-input:disabled { opacity: 0.5; cursor: not-allowed; }
+.form-input::placeholder { color: var(--c-text-muted); }
+textarea.form-input { resize: vertical; min-height: 88px; line-height: 1.5; }
 
-.dark-mode .form-input {
-  background: #09090b;
-  border-color: #27272a;
-  color: #fafafa;
+.password-wrap { position: relative; display: flex; align-items: center; }
+.password-wrap .form-input { padding-right: 44px; }
+.eye-btn {
+  position: absolute; right: 12px;
+  background: none; border: none; cursor: pointer;
+  color: var(--c-text-muted); padding: 4px;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.15s;
 }
+.eye-btn:hover { color: var(--c-accent); }
 
-.form-input:focus {
-  outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+/* ── Buttons ── */
+.save-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 22px;
+  background: var(--c-accent); color: #fff;
+  border: none; border-radius: var(--c-radius-sm);
+  font-size: 13px; font-weight: 750;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(124,92,78,0.3);
+  letter-spacing: 0.01em;
 }
+.save-btn.full-width { width: 100%; }
+.save-btn:hover:not(:disabled) { background: var(--c-accent-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,92,78,0.4); }
+.save-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-.form-input:disabled {
-  background: #f4f4f5;
-  cursor: not-allowed;
-  opacity: 0.6;
+.outline-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 16px;
+  background: var(--c-surface-2);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
+  font-size: 13px; font-weight: 650;
+  color: var(--c-text-secondary);
+  white-space: nowrap; transition: all 0.15s;
 }
+.outline-btn:hover { border-color: var(--c-accent); color: var(--c-accent); background: var(--c-accent-light); }
+.outline-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.dark-mode .form-input:disabled {
-  background: #18181b;
+/* ── Feedback ── */
+.feedback-msg {
+  padding: 10px 14px; border-radius: var(--c-radius-sm);
+  font-size: 13px; font-weight: 600; border: 1.5px solid;
 }
+.msg-success { background: var(--c-success-light); color: var(--c-success); border-color: var(--c-success-border); }
+.msg-error   { background: var(--c-danger-light);  color: var(--c-danger);  border-color: var(--c-danger); }
 
-.form-input::placeholder {
-  color: #a1a1aa;
-}
+.spin-icon { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-textarea.form-input {
-  resize: vertical;
-  min-height: 100px;
-}
-
-/* Password Input */
-.password-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.password-input-wrapper .form-input {
-  padding-right: 48px;
-}
-
-.password-toggle-btn {
-  position: absolute;
-  right: 12px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #71717a;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
-}
-
-.password-toggle-btn:hover {
-  color: #6366f1;
-}
-
-.dark-mode .password-toggle-btn {
-  color: #a1a1aa;
-}
-
-.dark-mode .password-toggle-btn:hover {
-  color: #818cf8;
-}
-
-/* Input with Button */
-.input-with-button {
-  display: flex;
-  gap: 12px;
-}
-
-.input-with-button .form-input {
-  flex: 1;
-}
-
-/* ===================================
-   BUTTONS
-   =================================== */
-
-.btn-primary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: #6366f1;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #4f46e5;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-.btn-primary:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-secondary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 20px;
-  background: transparent;
-  color: #6366f1;
-  border: 1.5px solid #6366f1;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-  white-space: nowrap;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #6366f1;
-  color: #ffffff;
-}
-
-.btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.dark-mode .btn-secondary {
-  color: #818cf8;
-  border-color: #818cf8;
-}
-
-.dark-mode .btn-secondary:hover:not(:disabled) {
-  background: #818cf8;
-  color: #18181b;
-}
-
-/* ===================================
-   FEEDBACK MESSAGES
-   =================================== */
-
-.feedback-message {
-  padding: 12px 16px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.feedback-message.success {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #86efac;
-}
-
-.dark-mode .feedback-message.success {
-  background: #14532d;
-  color: #86efac;
-  border-color: #166534;
-}
-
-.feedback-message.error {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fca5a5;
-}
-
-.dark-mode .feedback-message.error {
-  background: #450a0a;
-  color: #fca5a5;
-  border-color: #991b1b;
-}
-
-/* ===================================
+/* ══════════════════════════════════════
    LIMITS OVERVIEW
-   =================================== */
-
+══════════════════════════════════════ */
 .limits-overview {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 32px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px; margin-bottom: 18px;
 }
 
 .limit-card {
-  background: #fafafa;
-  border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  padding: 20px;
-  transition: all 0.2s;
+  background: var(--c-surface-2);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
+  padding: 12px;
+  transition: box-shadow 0.2s, transform 0.18s;
+  box-shadow: var(--c-shadow-xs);
 }
-
-.dark-mode .limit-card {
-  background: #09090b;
-  border-color: #27272a;
-}
-
-.limit-card:hover {
-  border-color: #6366f1;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
-}
-
-.limit-card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
+.limit-card:hover { box-shadow: var(--c-shadow-sm); transform: translateY(-2px); }
+.limit-card-top { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
 
 .limit-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: var(--c-radius-xs);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
+.company-color { background: linear-gradient(135deg, var(--c-accent), var(--c-accent-2)); color: #fff; }
+.contact-color { background: linear-gradient(135deg, var(--c-accent-2), #b88060); color: #fff; }
+.review-color  { background: linear-gradient(135deg, #c4a030, #d4b850); color: #fff; }
 
-.limit-icon.company {
-  background: #ede9fe;
-  color: #6366f1;
-}
+.limit-label-text { font-size: 11px; font-weight: 700; color: var(--c-text-secondary); }
+.limit-stats { display: flex; align-items: baseline; gap: 2px; margin-bottom: 7px; }
+.limit-current { font-size: 20px; font-weight: 750; color: var(--c-text-primary); }
+.limit-sep { font-size: 13px; color: var(--c-border); margin: 0 2px; }
+.limit-max { font-size: 13px; font-weight: 600; color: var(--c-text-muted); }
+.limit-bar-track { height: 3px; background: var(--c-border); border-radius: 999px; overflow: hidden; }
+.limit-bar-fill { height: 100%; border-radius: 999px; transition: width 0.3s ease; }
+.limit-bar-fill.company-color { background: var(--c-accent); }
+.limit-bar-fill.contact-color { background: var(--c-accent-2); }
+.limit-bar-fill.review-color  { background: #c4a030; }
 
-.dark-mode .limit-icon.company {
-  background: #312e81;
-  color: #a78bfa;
-}
-
-.limit-icon.contact {
-  background: #dbeafe;
-  color: #2563eb;
-}
-
-.dark-mode .limit-icon.contact {
-  background: #1e3a8a;
-  color: #60a5fa;
-}
-
-.limit-icon.review {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.dark-mode .limit-icon.review {
-  background: #78350f;
-  color: #fbbf24;
-}
-
-.limit-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #52525b;
-}
-
-.dark-mode .limit-label {
-  color: #a1a1aa;
-}
-
-.limit-stats {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  margin-bottom: 12px;
-}
-
-.limit-current {
-  font-size: 28px;
-  font-weight: 700;
-  color: #18181b;
-}
-
-.dark-mode .limit-current {
-  color: #fafafa;
-}
-
-.limit-divider {
-  font-size: 18px;
-  color: #a1a1aa;
-  margin: 0 4px;
-}
-
-.limit-max {
-  font-size: 18px;
-  font-weight: 600;
-  color: #71717a;
-}
-
-.dark-mode .limit-max {
-  color: #a1a1aa;
-}
-
-.limit-progress-bar {
-  height: 6px;
-  background: #e4e4e7;
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.dark-mode .limit-progress-bar {
-  background: #27272a;
-}
-
-.limit-progress-fill {
-  height: 100%;
-  border-radius: 9999px;
-  transition: width 0.3s ease;
-}
-
-.limit-progress-fill.company {
-  background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
-}
-
-.limit-progress-fill.contact {
-  background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
-}
-
-.limit-progress-fill.review {
-  background: linear-gradient(90deg, #d97706 0%, #b45309 100%);
-}
-
-/* ===================================
-   QUANTITY SELECTOR
-   =================================== */
-
+/* ── Quantity selector ── */
 .quantity-selector {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #fafafa;
-  border: 1.5px solid #e4e4e7;
-  border-radius: 10px;
-  padding: 8px;
-  gap: 12px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  background: var(--c-surface-2);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-
-.dark-mode .quantity-selector {
-  background: #09090b;
-  border-color: #27272a;
-}
+.quantity-selector:focus-within { border-color: var(--c-accent); box-shadow: 0 0 0 3px rgba(124,92,78,0.12); }
 
 .qty-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff;
-  border: 1.5px solid #e4e4e7;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #52525b;
-  flex-shrink: 0;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-xs);
+  color: var(--c-accent); flex-shrink: 0;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
-
-.dark-mode .qty-btn {
-  background: #18181b;
-  border-color: #27272a;
-  color: #a1a1aa;
-}
-
-.qty-btn:hover {
-  background: #6366f1;
-  border-color: #6366f1;
-  color: #ffffff;
-  transform: scale(1.05);
-}
-
-.qty-btn:active {
-  transform: scale(0.95);
-}
+.qty-btn:hover { background: var(--c-accent); border-color: var(--c-accent); color: #fff; }
+.qty-btn:active { transform: scale(0.94); }
 
 .qty-input {
-  flex: 1;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 700;
-  color: #18181b;
-  background: transparent;
-  border: none;
-  outline: none;
-  min-width: 40px;
+  flex: 1; text-align: center;
+  font-size: 16px; font-weight: 750;
+  color: var(--c-text-primary);
+  background: transparent; border: none; outline: none;
 }
-
-.dark-mode .qty-input {
-  color: #fafafa;
-}
-
 .qty-input::-webkit-inner-spin-button,
-.qty-input::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.qty-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+/* ══════════════════════════════════════
+   EMPTY STATE
+══════════════════════════════════════ */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px;
+  padding: 48px 20px; text-align: center;
 }
-
-/* ===================================
-   REQUEST HISTORY
-   =================================== */
-
-.state-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  gap: 16px;
-  text-align: center;
+.empty-icon-wrap {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: var(--c-accent-light); color: var(--c-accent);
+  display: flex; align-items: center; justify-content: center;
 }
+.spin-wrap { background: var(--c-accent-light); }
+.empty-title { font-size: 15px; font-weight: 750; color: var(--c-text-primary); margin: 0; }
+.empty-sub   { font-size: 13px; color: var(--c-text-muted); margin: 0; }
 
-.state-container svg {
-  color: #d4d4d8;
-}
+/* ══════════════════════════════════════
+   HISTORY
+══════════════════════════════════════ */
+.history-wrap { display: flex; flex-direction: column; gap: 12px; }
 
-.dark-mode .state-container svg {
-  color: #52525b;
-}
-
-.state-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #18181b;
-  margin: 0;
-}
-
-.dark-mode .state-title {
-  color: #fafafa;
-}
-
-.state-text {
-  font-size: 14px;
-  color: #71717a;
-  margin: 0;
-}
-
-.dark-mode .state-text {
-  color: #a1a1aa;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e4e4e7;
-  border-top-color: #6366f1;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.dark-mode .spinner {
-  border-color: #27272a;
-  border-top-color: #818cf8;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Filter Tabs */
 .filter-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  padding: 6px;
-  background: #fafafa;
-  border-radius: 12px;
-  border: 1px solid #e4e4e7;
+  display: flex; gap: 0;
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
+  overflow: hidden;
+  background: var(--c-surface);
+  box-shadow: var(--c-shadow-xs);
 }
-
-.dark-mode .filter-tabs {
-  background: #09090b;
-  border-color: #27272a;
-}
-
 .filter-tab {
   flex: 1;
-  padding: 10px 16px;
-  background: transparent;
-  color: #71717a;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 8px 10px;
+  background: transparent; border: none;
+  border-right: 1.5px solid var(--c-border);
+  font-size: 12px; font-weight: 650;
+  color: var(--c-text-secondary);
+  transition: all 0.18s; cursor: pointer;
 }
+.filter-tab:last-child { border-right: none; }
+.filter-tab.active { background: var(--c-accent); color: #fff; }
+.filter-tab:hover:not(.active) { background: var(--c-accent-light); color: var(--c-accent); }
+.tab-active-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.7); flex-shrink: 0; }
 
-.dark-mode .filter-tab {
-  color: #a1a1aa;
-}
-
-.filter-tab:hover {
-  background: #ffffff;
-  color: #18181b;
-}
-
-.dark-mode .filter-tab:hover {
-  background: #18181b;
-  color: #fafafa;
-}
-
-.filter-tab.active {
-  background: #ffffff;
-  color: #6366f1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.dark-mode .filter-tab.active {
-  background: #18181b;
-  color: #818cf8;
-}
-
-/* History List */
-.history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+.history-list { display: flex; flex-direction: column; gap: 8px; }
 
 .history-item {
-  background: #fafafa;
-  border: 1px solid #e4e4e7;
-  border-radius: 12px;
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
   overflow: hidden;
-  transition: all 0.2s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: var(--c-shadow-xs);
 }
-
-.dark-mode .history-item {
-  background: #09090b;
-  border-color: #27272a;
-}
-
-.history-item:hover {
-  border-color: #6366f1;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
-}
+.history-item:hover { border-color: var(--c-accent-2); box-shadow: var(--c-shadow-sm); }
 
 .history-item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  background: #ffffff;
-  border-bottom: 1px solid #e4e4e7;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px;
+  background: var(--c-surface-2);
+  border-bottom: 1.5px solid var(--c-border);
 }
-
-.dark-mode .history-item-header {
-  background: #18181b;
-  border-bottom-color: #27272a;
-}
-
-.request-id {
-  font-size: 13px;
-  font-weight: 700;
-  color: #71717a;
-}
-
-.dark-mode .request-id {
-  color: #a1a1aa;
-}
+.req-id { font-size: 11px; font-weight: 700; color: var(--c-text-muted); }
 
 .status-badge {
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
+  padding: 3px 9px; border-radius: var(--c-radius-pill);
+  font-size: 10px; font-weight: 700; text-transform: capitalize; letter-spacing: 0.04em;
 }
+.status-badge.pending  { background: var(--c-warning-light); color: var(--c-warning);  border: 1px solid var(--c-warning-border); }
+.status-badge.approved { background: var(--c-success-light); color: var(--c-success);  border: 1px solid var(--c-success-border); }
+.status-badge.rejected { background: var(--c-danger-light);  color: var(--c-danger);   border: 1px solid var(--c-danger); }
 
-.status-badge.pending {
-  background: #fef3c7;
-  color: #92400e;
-}
+.history-item-body { padding: 12px 14px; }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px,1fr)); gap: 6px 14px; margin-bottom: 8px; }
+.detail-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.detail-label { font-size: 12px; color: var(--c-text-muted); font-weight: 600; }
+.detail-value { font-size: 14px; font-weight: 750; color: var(--c-text-primary); }
 
-.dark-mode .status-badge.pending {
-  background: #78350f;
-  color: #fbbf24;
+.req-reason {
+  padding: 8px 10px;
+  background: var(--c-surface-2);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-xs);
+  margin-top: 8px;
 }
-
-.status-badge.approved {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.dark-mode .status-badge.approved {
-  background: #064e3b;
-  color: #6ee7b7;
-}
-
-.status-badge.rejected {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.dark-mode .status-badge.rejected {
-  background: #7f1d1d;
-  color: #fca5a5;
-}
-
-.history-item-body {
-  padding: 20px;
-}
-
-.request-details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.detail-label {
-  font-size: 13px;
-  color: #71717a;
-  font-weight: 500;
-}
-
-.dark-mode .detail-label {
-  color: #a1a1aa;
-}
-
-.detail-value {
-  font-size: 16px;
-  font-weight: 700;
-  color: #18181b;
-}
-
-.dark-mode .detail-value {
-  color: #fafafa;
-}
-
-.request-reason {
-  padding: 12px;
-  background: #ffffff;
-  border-radius: 8px;
-  border: 1px solid #e4e4e7;
-}
-
-.dark-mode .request-reason {
-  background: #18181b;
-  border-color: #27272a;
-}
-
-.reason-text {
-  margin: 0;
-  font-size: 13px;
-  color: #52525b;
-  line-height: 1.6;
-}
-
-.dark-mode .reason-text {
-  color: #a1a1aa;
-}
+.req-reason p { margin: 0; font-size: 12px; color: var(--c-text-secondary); line-height: 1.5; }
 
 .history-item-footer {
-  padding: 12px 20px;
-  background: #ffffff;
-  border-top: 1px solid #e4e4e7;
+  padding: 7px 14px;
+  background: var(--c-surface-2);
+  border-top: 1.5px solid var(--c-border);
 }
+.req-date { font-size: 11px; color: var(--c-text-muted); font-weight: 500; }
+.no-results { padding: 28px 20px; text-align: center; font-size: 13px; color: var(--c-text-muted); }
 
-.dark-mode .history-item-footer {
-  background: #18181b;
-  border-top-color: #27272a;
-}
-
-.request-date {
-  font-size: 12px;
-  color: #a1a1aa;
-  font-weight: 500;
-}
-
-.no-results {
-  padding: 40px 20px;
-  text-align: center;
-  color: #71717a;
-  font-size: 14px;
-}
-
-.dark-mode .no-results {
-  color: #a1a1aa;
-}
-
-/* ===================================
-   SCROLLBAR STYLING
-   =================================== */
-
+/* Scrollbars */
 .settings-content::-webkit-scrollbar,
-.settings-nav::-webkit-scrollbar {
-  width: 8px;
-}
-
-.settings-content::-webkit-scrollbar-track,
-.settings-nav::-webkit-scrollbar-track {
-  background: #fafafa;
-}
-
-.dark-mode .settings-content::-webkit-scrollbar-track,
-.dark-mode .settings-nav::-webkit-scrollbar-track {
-  background: #18181b;
-}
-
+.settings-sidebar::-webkit-scrollbar { width: 4px; }
 .settings-content::-webkit-scrollbar-thumb,
-.settings-nav::-webkit-scrollbar-thumb {
-  background: #6366f1;
-  border-radius: 4px;
+.settings-sidebar::-webkit-scrollbar-thumb { background: var(--c-accent-2); border-radius: 2px; }
+.settings-content::-webkit-scrollbar-track,
+.settings-sidebar::-webkit-scrollbar-track { background: transparent; }
+
+/* Modal transition */
+.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.22s ease; }
+.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
+
+/* ══════════════════════════════════════
+   TABLET  ≤ 820px
+══════════════════════════════════════ */
+@media (max-width: 820px) {
+  .settings-sidebar { width: 180px; }
+  .settings-content { padding: 20px; }
+  .settings-modal-title { font-size: 16px; }
 }
 
-.settings-content::-webkit-scrollbar-thumb:hover,
-.settings-nav::-webkit-scrollbar-thumb:hover {
-  background: #4f46e5;
-}
-
-/* ===================================
-   MOBILE RESPONSIVE
-   =================================== */
-
-@media (max-width: 768px) {
-  .modal-overlay-full {
+/* ══════════════════════════════════════
+   MOBILE  ≤ 640px
+   Two-panel navigation: list → detail
+══════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* Full screen on mobile */
+  .settings-overlay {
     padding: 0;
     align-items: flex-end;
   }
 
-  .modal-container {
+  .settings-modal {
     max-width: 100%;
-    max-height: 95vh;
-    border-radius: 20px 20px 0 0;
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
   }
 
-  .modal-layout {
+  /* Smaller header */
+  .settings-modal-header { padding: 14px 16px; }
+  .settings-modal-title  { font-size: 15px; }
+
+  /* Show back button when in content view */
+  .back-btn { display: flex; }
+
+  /* Layout stacks: only show one panel at a time */
+  .settings-layout {
     flex-direction: column;
-    height: auto;
-    min-height: 500px;
-    max-height: 95vh;
+    overflow: hidden;
+    flex: 1;
+    position: relative;
   }
 
-  .modal-close-btn-top {
-    top: 16px;
-    right: 16px;
-    width: 32px;
-    height: 32px;
-  }
-
+  /* Sidebar — full width list, takes full height */
   .settings-sidebar {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid #e4e4e7;
+    border-bottom: none;
+    flex: 1;
+    overflow-y: auto;
   }
 
-  .dark-mode .settings-sidebar {
-    border-bottom-color: #27272a;
-  }
-
-  .settings-sidebar-header {
-    padding: 20px 16px 16px 16px;
-  }
-
-  .settings-main-title {
-    font-size: 16px;
-  }
-
-  .settings-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 12px;
-    scrollbar-width: none;
-  }
-
-  .settings-nav::-webkit-scrollbar {
-    display: none;
-  }
+  /* Nav items — larger, more touch-friendly with full chevron */
+  .settings-nav { padding: 8px; gap: 3px; }
 
   .settings-nav-item {
-    flex-shrink: 0;
-    padding: 10px 16px;
-    font-size: 13px;
-    white-space: nowrap;
+    padding: 14px 16px;
+    border-radius: var(--c-radius-sm);
+    border: 1.5px solid transparent;
+    font-size: 14px;
   }
-
-  .settings-nav-item svg {
-    width: 18px;
-    height: 18px;
+  .settings-nav-item:hover {
+    border-color: var(--c-accent-light);
+    background: var(--c-accent-light);
   }
+  .settings-nav-item.active {
+    border-left: none;
+    padding-left: 16px;
+    background: var(--c-accent-subtle);
+    border-color: var(--c-accent-light);
+  }
+  .nav-chevron { display: block; color: var(--c-text-muted); }
 
+  /* Show hint at bottom of sidebar */
+  .sidebar-footer-hint { display: flex; }
+
+  /* Content — slides in on top (full width, full height) */
   .settings-content {
-    padding: 24px 16px;
-    flex: 1;
+    position: absolute;
+    inset: 0;
+    padding: 20px 16px;
+    overflow-y: auto;
+    z-index: 1;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--c-surface);
   }
 
-  .settings-panel {
-    max-width: 100%;
+  /* When content is active, slide it in */
+  .settings-content:not(.mobile-hidden) {
+    transform: translateX(0);
   }
 
-  .panel-header {
-    margin-bottom: 24px;
-    padding-bottom: 20px;
-    padding-right: 40px;
-  }
-
-  .panel-title {
-    font-size: 20px;
-  }
-
-  .panel-description {
-    font-size: 13px;
-  }
-
-  .limits-overview {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .limit-card {
-    padding: 16px;
-  }
-
-  .filter-tabs {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    scrollbar-width: none;
-  }
-
-  .filter-tabs::-webkit-scrollbar {
+  /* Hide sidebar when content is shown */
+  .settings-sidebar.mobile-hidden {
     display: none;
   }
 
-  .filter-tab {
-    flex-shrink: 0;
-  }
+  .settings-panel { max-width: 100%; }
 
-  .request-details-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+  .panel-header { margin-bottom: 18px; padding-bottom: 14px; }
+  .panel-title   { font-size: 15px; }
 
-  .input-with-button {
-    flex-direction: column;
-  }
+  /* iOS zoom prevention */
+  .form-input   { font-size: 16px; }
+  textarea.form-input { font-size: 14px; }
 
-  .input-with-button .form-input {
-    width: 100%;
-  }
+  .limits-overview { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .limit-card { padding: 10px; }
+  .limit-current { font-size: 16px; }
 
-  .btn-secondary {
-    width: 100%;
-  }
+  .filter-tab { padding: 9px 8px; font-size: 11px; }
+
+  .detail-grid { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 480px) {
-  .modal-container {
-    border-radius: 0;
-    max-height: 100vh;
-  }
-
-  .modal-layout {
-    min-height: 100vh;
-    max-height: 100vh;
-  }
-
-  .settings-content {
-    padding: 20px 16px;
-  }
-
-  .panel-header {
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-  }
-
-  .panel-title {
-    font-size: 18px;
-  }
-
-  .panel-body {
-    gap: 20px;
-  }
-
-  .form-group {
-    gap: 6px;
-  }
-
-  .form-label {
-    font-size: 12px;
-  }
-
-  .form-input {
-    padding: 10px 14px;
-    font-size: 14px;
-    width: 92%;
-  }
-
-  .btn-primary,
-  .btn-secondary {
-    padding: 10px 20px;
-    font-size: 13px;
-  }
+/* ══════════════════════════════════════
+   SMALL PHONES  ≤ 380px
+══════════════════════════════════════ */
+@media (max-width: 380px) {
+  .limits-overview { grid-template-columns: 1fr; }
+  .settings-content { padding: 16px 14px; }
 }
 
-/* Modal Transitions */
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.3s ease;
+/* Touch targets */
+@media (hover: none) and (pointer: coarse) {
+  .qr-close-btn, .back-btn, .save-btn, .outline-btn,
+  .qty-btn, .filter-tab, .settings-nav-item { min-height: 44px; }
 }
 
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
+/* Focus rings */
+.save-btn:focus-visible, .outline-btn:focus-visible,
+.qr-close-btn:focus-visible, .back-btn:focus-visible,
+.settings-nav-item:focus-visible, .filter-tab:focus-visible,
+.qty-btn:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
 
-.modal-enter-active .modal-container,
-.modal-leave-active .modal-container {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.modal-enter-from .modal-container {
-  transform: scale(0.96) translateY(20px);
-}
-
-.modal-leave-to .modal-container {
-  transform: scale(0.96) translateY(20px);
-}
-
-@media (max-width: 768px) {
-  .modal-enter-from .modal-container {
-    transform: translateY(100%);
-  }
-
-  .modal-leave-to .modal-container {
-    transform: translateY(100%);
-  }
-}
-
-/* Accessibility */
-.btn-primary:focus-visible,
-.btn-secondary:focus-visible,
-.modal-close-btn-top:focus-visible,
-.settings-nav-item:focus-visible,
-.filter-tab:focus-visible,
-.qty-btn:focus-visible {
-  outline: 2px solid #6366f1;
-  outline-offset: 2px;
-}
-
-/* Reduced Motion */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+  * { animation: none !important; transition-duration: 0.01ms !important; }
 }
 </style>

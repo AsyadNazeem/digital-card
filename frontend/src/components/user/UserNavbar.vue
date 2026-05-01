@@ -1,45 +1,35 @@
 <template>
-  <!-- Desktop Sidebar -->
+  <!-- Desktop Sidebar (unchanged) -->
   <aside :class="['desktop-sidebar', { collapsed: !sidebarExpanded, 'dark-mode': isDarkMode }]">
-    <!-- Collapse/Expand Toggle Button -->
     <button
         class="sidebar-toggle-btn"
         @click="$emit('toggle-sidebar')"
         :title="sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'"
     >
-      <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          :class="['toggle-icon', { rotated: !sidebarExpanded }]"
-      >
-        <polyline points="15 18 9 12 15 6"></polyline>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           :class="['toggle-icon', { rotated: !sidebarExpanded }]">
+        <polyline points="15 18 9 12 15 6"/>
       </svg>
     </button>
 
     <nav class="sidebar-nav">
       <button
-          v-for="tab in tabs"
-          :key="tab.id"
+          v-for="tab in tabs" :key="tab.id"
           @click="selectTab(tab.id)"
           :class="['nav-item', { active: modelValue === tab.id }]"
           :title="tab.label"
       >
-        <span class="nav-icon" v-html="tab.icon"></span>
+        <span class="nav-icon" v-html="tab.icon"/>
         <span class="nav-label">{{ tab.label }}</span>
       </button>
     </nav>
 
-    <!-- User Profile Section -->
     <div class="sidebar-footer">
       <button class="user-profile" @click="showProfilePopup = !showProfilePopup">
         <div class="user-avatar">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
           </svg>
         </div>
         <div class="user-info">
@@ -50,48 +40,42 @@
     </div>
   </aside>
 
-  <!-- Desktop Profile Popup -->
+  <!-- Desktop Profile Popup (unchanged) -->
   <transition name="fade">
     <div v-if="showProfilePopup" class="profile-overlay" @click="showProfilePopup = false">
       <transition name="scale">
-        <div v-if="showProfilePopup" :class="['profile-popup desktop-popup', { 'dark-mode': isDarkMode }]" @click.stop>
-          <!-- User Header -->
+        <div v-if="showProfilePopup"
+             :class="['profile-popup desktop-popup', { 'dark-mode': isDarkMode }]"
+             @click.stop>
           <div class="profile-header">
             <div class="profile-user-info">
-              <div class="profile-avatar">
-                {{ userInitials }}
-              </div>
+              <div class="profile-avatar">{{ userInitials }}</div>
               <div class="profile-details">
                 <div class="profile-name">{{ userName }}</div>
                 <div class="profile-plan">{{ userRole }}</div>
               </div>
             </div>
           </div>
-
-          <!-- Profile Menu Items -->
           <div class="profile-menu">
             <button
-                v-for="item in profileMenuItems"
-                :key="item.id"
+                v-for="item in profileMenuItems" :key="item.id"
                 @click="handleProfileAction(item.id)"
                 class="profile-menu-item"
             >
-              <span class="profile-item-icon" v-html="item.icon"></span>
+              <span class="profile-item-icon" v-html="item.icon"/>
               <span class="profile-item-label">{{ item.label }}</span>
-              <svg v-if="item.hasChevron" class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9 18 15 12 9 6"></polyline>
+              <svg v-if="item.hasChevron" class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
               </svg>
             </button>
-
-            <!-- Divider before logout -->
-            <div class="profile-divider"></div>
-
+            <div class="profile-divider"/>
             <button @click="handleProfileAction('logout')" class="profile-menu-item logout-item">
               <span class="profile-item-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
                 </svg>
               </span>
               <span class="profile-item-label">Log out</span>
@@ -102,106 +86,108 @@
     </div>
   </transition>
 
-  <!-- Mobile Bottom Navigation -->
+  <!-- Mobile Bottom Nav -->
   <nav :class="['mobile-bottom-nav', { 'dark-mode': isDarkMode }]">
     <button
-        v-for="tab in tabs.slice(0, 4)"
-        :key="tab.id"
+        v-for="tab in tabs.slice(0, 4)" :key="tab.id"
         @click="selectTab(tab.id)"
         :class="['mobile-nav-item', { active: modelValue === tab.id }]"
     >
-      <span class="mobile-icon" v-html="tab.icon"></span>
+      <span class="mobile-icon" v-html="tab.icon"/>
       <span class="mobile-label">{{ tab.label }}</span>
+      <span v-if="modelValue === tab.id" class="active-dot"/>
     </button>
 
-    <!-- More Button -->
     <button
         @click="showMoreMenu = !showMoreMenu"
-        class="mobile-nav-item"
-        :class="{ active: showMoreMenu }"
+        :class="['mobile-nav-item', { active: showMoreMenu }]"
     >
       <span class="mobile-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
       </span>
       <span class="mobile-label">More</span>
+      <span v-if="showMoreMenu" class="active-dot"/>
     </button>
   </nav>
 
-  <!-- Mobile More Menu Popup -->
+  <!-- Mobile More Sheet -->
   <transition name="fade">
-    <div v-if="showMoreMenu" class="more-menu-overlay" @click="showMoreMenu = false">
+    <div v-if="showMoreMenu" class="more-overlay" @click="showMoreMenu = false">
       <transition name="slide-up">
-        <div v-if="showMoreMenu" class="more-menu-popup" @click.stop>
-          <div :class="['more-menu-content', { 'dark-mode': isDarkMode }]">
-            <div class="more-menu-header">
-              <span>More Options</span>
-              <button @click="showMoreMenu = false" class="close-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+        <div v-if="showMoreMenu" class="more-sheet" :class="{ 'dark-mode': isDarkMode }" @click.stop>
+
+          <!-- Drag handle -->
+          <div class="drag-handle"/>
+
+          <!-- Sheet header -->
+          <div class="sheet-header">
+            <span class="sheet-title">Menu</span>
+            <button class="close-btn" @click="showMoreMenu = false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- User card -->
+          <div class="user-card">
+            <div class="sheet-avatar">{{ userInitials }}</div>
+            <div class="sheet-user-info">
+              <div class="sheet-user-name">{{ userName }}</div>
+              <div class="sheet-user-role">{{ userRole }}</div>
             </div>
+            <button class="upgrade-btn" @click="handleMobileProfileAction('upgrade')">Upgrade</button>
+          </div>
 
-            <div class="more-menu-items">
-              <!-- Additional Tabs -->
-              <button
-                  v-for="tab in tabs.slice(4)"
-                  :key="tab.id"
-                  @click="selectTabAndClose(tab.id)"
-                  :class="['more-menu-item', { active: modelValue === tab.id }]"
-              >
-                <span class="menu-item-icon" v-html="tab.icon"></span>
-                <span class="menu-item-label">{{ tab.label }}</span>
-              </button>
+          <div class="sheet-body">
+            <!-- Extra tabs (Themes etc.) -->
+            <div v-if="tabs.slice(4).length" class="section-label">Navigation</div>
+            <button
+                v-for="tab in tabs.slice(4)" :key="tab.id"
+                @click="selectTabAndClose(tab.id)"
+                :class="['sheet-row', { 'sheet-row-active': modelValue === tab.id }]"
+            >
+              <div class="row-icon-wrap" :class="{ 'row-icon-active': modelValue === tab.id }" v-html="tab.icon"/>
+              <span class="row-label">{{ tab.label }}</span>
+              <svg class="row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
 
-              <!-- Divider -->
-              <div class="mobile-divider"></div>
+            <div class="sheet-divider"/>
 
-              <!-- Settings & Upgrade Plan -->
-              <button
-                  v-for="item in mobileProfileItems"
-                  :key="item.id"
-                  @click="handleMobileProfileAction(item.id)"
-                  class="more-menu-item profile-item"
-              >
-                <span class="menu-item-icon" v-html="item.icon"></span>
-                <span class="menu-item-label">{{ item.label }}</span>
-                <svg v-if="item.hasChevron" class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="9 18 15 12 9 6"></polyline>
+            <!-- Account section -->
+            <div class="section-label">Account</div>
+            <button
+                v-for="item in mobileProfileItems" :key="item.id"
+                @click="handleMobileProfileAction(item.id)"
+                class="sheet-row"
+            >
+              <div class="row-icon-wrap" v-html="item.icon"/>
+              <span class="row-label">{{ item.label }}</span>
+              <svg v-if="item.hasChevron" class="row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+
+            <!-- Logout — always visible -->
+            <button class="sheet-row logout-row" @click="handleMobileProfileAction('logout')">
+              <div class="row-icon-wrap logout-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
                 </svg>
-              </button>
-
-              <!-- User Profile -->
-              <div class="mobile-user-section">
-                <button
-                    class="mobile-user-profile"
-                    @click="showProfilePopup = !showProfilePopup"
-                >
-                  <div class="mobile-user-avatar">{{ userInitials }}</div>
-
-                  <div class="mobile-user-info">
-                    <div class="mobile-user-name">{{ userName }}</div>
-                    <div class="mobile-user-role">{{ userRole }}</div>
-                  </div>
-
-                  <!-- Dynamic Arrow -->
-                  <div
-                      class="mobile-user-arrow"
-                      :class="{ open: showProfilePopup }"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                </button>
               </div>
-
-            </div>
+              <span class="logout-label">Log out</span>
+            </button>
           </div>
         </div>
       </transition>
@@ -215,8 +201,9 @@
   />
 </template>
 
+
 <script setup>
-import { ref, computed, inject } from 'vue';
+import {computed, inject, ref} from 'vue';
 import LogoutConfirmModal from './LogoutModal.vue';
 
 const showLogoutModal = ref(false);
@@ -261,15 +248,18 @@ const tabs = [
   {
     id: 'company',
     label: 'Companies',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 21v-6h6v6"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01"/></svg>'  },
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 21v-6h6v6"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01"/></svg>'
+  },
   {
     id: 'contact',
     label: 'Contacts',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>'  },
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>'
+  },
   {
     id: 'review',
     label: 'Review',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>'  },
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>'
+  },
   {
     id: 'analytics',
     label: 'Analytics',
@@ -303,12 +293,6 @@ const mobileProfileItems = [
     label: 'Settings',
     icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c0 .6.4 1 1 1h.1a2 2 0 1 1 0 4h-.1c-.6 0-1 .4-1 1z"/></svg>',
     hasChevron: true
-  },
-  {
-    id: 'upgrade',
-    label: 'Upgrade plan',
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l10 5-10 5-10-5 10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>',
-    hasChevron: false
   }
 ];
 
@@ -354,18 +338,404 @@ function handleMobileProfileAction(actionId) {
   if (actionId === 'settings') {
     emit('open-settings');
   }
+  if (actionId === 'logout') showLogoutModal.value = true
 }
-
 
 
 </script>
 
 <style scoped>
-/* ===================================
-   MOBILE SAFE AREA SUPPORT
-   =================================== */
+
 :root {
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Mobile bottom nav ── */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  z-index: 100;
+}
+
+.mobile-bottom-nav.dark-mode {
+  background: #1a1626;
+  border-top-color: #2d2640;
+}
+
+.mobile-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 6px 4px 4px;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+
+.mobile-nav-item.active {
+  color: #6B4423;
+}
+
+.dark-mode .mobile-nav-item {
+  color: #6b5d57;
+}
+
+.dark-mode .mobile-nav-item.active {
+  color: #D4A574;
+}
+
+.mobile-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+}
+
+.mobile-label {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.active-dot {
+  width: 4px;
+  height: 4px;
+  background: #6B4423;
+  border-radius: 50%;
+  margin-top: 1px;
+}
+
+.dark-mode .active-dot {
+  background: #D4A574;
+}
+
+/* ── More sheet overlay ── */
+.more-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.more-sheet {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.more-sheet.dark-mode {
+  background: #131118;
+}
+
+.drag-handle {
+  width: 36px;
+  height: 4px;
+  background: #e0dbd4;
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+
+.dark-mode .drag-handle {
+  background: #2c2838;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 10px;
+  flex-shrink: 0;
+}
+
+.sheet-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.dark-mode .sheet-title {
+  color: #e5e7eb;
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dark-mode .close-btn {
+  background: #2d2640;
+  color: #9ca3af;
+}
+
+/* User card */
+.user-card {
+  margin: 0 12px 8px;
+  background: #fdf8f3;
+  border: 1px solid #e8dfd4;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.dark-mode .user-card {
+  background: #0f0d1a;
+  border-color: #2d2640;
+}
+
+.sheet-avatar {
+  width: 44px;
+  height: 44px;
+  background: #6B4423;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sheet-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sheet-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.dark-mode .sheet-user-name {
+  color: #e5e7eb;
+}
+
+.sheet-user-role {
+  font-size: 12px;
+  color: #8a7060;
+  margin-top: 2px;
+}
+
+.dark-mode .sheet-user-role {
+  color: #9ca3af;
+}
+
+.upgrade-btn {
+  background: #6B4423;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Sheet scrollable body */
+.sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px 16px;
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  padding: 8px 4px 4px;
+}
+
+.sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 11px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s;
+  margin-bottom: 2px;
+}
+
+.sheet-row:hover, .sheet-row:active {
+  background: #f9f6f2;
+}
+
+.dark-mode .sheet-row:hover {
+  background: #1e1b26;
+}
+
+.sheet-row-active {
+  background: #fdf3eb;
+}
+
+.dark-mode .sheet-row-active {
+  background: #1e1b26;
+}
+
+.row-icon-wrap {
+  width: 38px;
+  height: 38px;
+  background: #f5f0eb;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #6B4423;
+}
+
+.dark-mode .row-icon-wrap {
+  background: #2d2640;
+  color: #D4A574;
+}
+
+.row-icon-active {
+  background: #6B4423 !important;
+  color: #fff !important;
+}
+
+.row-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.dark-mode .row-label {
+  color: #e5e7eb;
+}
+
+.sheet-row-active .row-label {
+  color: #6B4423;
+}
+
+.dark-mode .sheet-row-active .row-label {
+  color: #D4A574;
+}
+
+.row-chevron {
+  color: #d1d5db;
+  flex-shrink: 0;
+}
+
+.sheet-divider {
+  height: 1px;
+  background: #f0ebe4;
+  margin: 8px 0;
+}
+
+.dark-mode .sheet-divider {
+  background: #2c2838;
+}
+
+/* Logout row */
+.logout-row:hover {
+  background: #fef2f2 !important;
+}
+
+.dark-mode .logout-row:hover {
+  background: #2a1a1a !important;
+}
+
+.logout-icon-wrap {
+  background: #fef2f2 !important;
+  color: #ef4444 !important;
+}
+
+.dark-mode .logout-icon-wrap {
+  background: #2a1a1a !important;
+  color: #f87171 !important;
+}
+
+.logout-label {
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.dark-mode .logout-label {
+  color: #f87171;
+}
+
+/* Animations */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active, .slide-up-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-up-enter-from, .slide-up-leave-to {
+  transform: translateY(100%);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .desktop-sidebar {
+    display: none;
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  .profile-overlay {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .more-sheet {
+    max-height: 88vh;
+  }
 }
 
 .mobile-user-profile {
@@ -405,15 +775,15 @@ function handleMobileProfileAction(actionId) {
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
+  transition: width 0.3s ease, border 0.3s ease; /* border instead of border-color */
   z-index: 100;
   overflow: hidden;
 }
 
 /* Dark Mode for Desktop Sidebar - Professional Dark Purple-Blue */
 .desktop-sidebar.dark-mode {
-  background: #1a1626;
-  border-right: 1px solid #2d2640;
+  background: #131118;
+  border-right: 1px solid #2c2838;
 }
 
 .sidebar-toggle-btn {
@@ -436,16 +806,26 @@ function handleMobileProfileAction(actionId) {
 
 .desktop-sidebar.dark-mode ~ .sidebar-toggle-btn,
 .desktop-sidebar.dark-mode .sidebar-toggle-btn {
-  background: #2d2640;
-  border-color: #3d3555;
+  background: #1a1720;
+  border-color: #2c2838;
 }
 
 .desktop-sidebar.collapsed {
   width: 72px;
+  border-right: none; /* completely remove, not just transparent */
 }
 
 .desktop-sidebar.collapsed .sidebar-toggle-btn {
   left: 60px;
+}
+
+.desktop-sidebar.collapsed .sidebar-footer {
+  border-top-color: transparent;
+}
+
+/* Hide the sidebar-footer border in dark mode when collapsed */
+.desktop-sidebar.dark-mode.collapsed .sidebar-footer {
+  border-top-color: transparent;
 }
 
 .sidebar-toggle-btn:hover {
@@ -455,8 +835,8 @@ function handleMobileProfileAction(actionId) {
 }
 
 .desktop-sidebar.dark-mode .sidebar-toggle-btn:hover {
-  background: #3d3555;
-  border-color: #4d4565;
+  background: #1e1b26;
+  border-color: #2c2838;
 }
 
 .sidebar-toggle-btn:active {
@@ -510,7 +890,7 @@ function handleMobileProfileAction(actionId) {
 }
 
 .desktop-sidebar.dark-mode .nav-item:hover {
-  background: #2d2640;
+  background: #1e1b26;
   color: #E5C4A0;
 }
 
@@ -521,7 +901,7 @@ function handleMobileProfileAction(actionId) {
 }
 
 .desktop-sidebar.dark-mode .nav-item.active {
-  background: #2d2640;
+  background: #1e1b26;
   color: #E5C4A0;
 }
 
@@ -559,7 +939,7 @@ function handleMobileProfileAction(actionId) {
 }
 
 .desktop-sidebar.dark-mode .sidebar-footer {
-  border-top: 1px solid #2d2640;
+  border-top: 1px solid #2c2838;
 }
 
 .user-profile {
@@ -581,7 +961,7 @@ function handleMobileProfileAction(actionId) {
 }
 
 .desktop-sidebar.dark-mode .user-profile:hover {
-  background: #2d2640;
+  background: #1e1b26;
 }
 
 .user-avatar {
@@ -666,8 +1046,8 @@ function handleMobileProfileAction(actionId) {
 }
 
 .profile-popup.desktop-popup.dark-mode {
-  background: #1a1626;
-  border-color: #2d2640;
+  background: #1a1720;
+  border-color: #2c2838;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
@@ -854,8 +1234,8 @@ function handleMobileProfileAction(actionId) {
 }
 
 .mobile-bottom-nav.dark-mode {
-  background: #1a1626;
-  border-top: 1px solid #2d2640;
+  background: #131118;
+  border-top: 1px solid #2c2838;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -1235,4 +1615,5 @@ body.banner-active .sidebar-toggle-btn {
     top: calc(120px + 1rem) !important;
   }
 }
+
 </style>

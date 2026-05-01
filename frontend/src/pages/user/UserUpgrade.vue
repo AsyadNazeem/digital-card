@@ -1,66 +1,168 @@
 <template>
-  <transition name="fade">
-    <div v-if="open" :class="['upgrade-overlay', { 'dark-mode': isDarkMode }]">
-      <div class="upgrade-container">
+  <transition name="modal-fade">
+    <div v-if="open" :class="['upgrade-overlay', { 'dark-mode': isDarkMode }]" @click.self="$emit('close')">
+      <div :class="['upgrade-modal', { 'dark-mode': isDarkMode }]">
 
-        <div class="upgrade-header">
-          <h2>Choose Your Plan</h2>
-
-          <button class="close-btn" @click="$emit('close')">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
+        <!-- Header -->
+        <div class="upgrade-modal-header">
+          <h2 class="upgrade-modal-title">Choose Your Plan</h2>
+          <button class="qr-close-btn" @click="$emit('close')" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
 
-        <div class="plans-grid">
+        <!-- Body -->
+        <div class="upgrade-modal-body">
 
-          <div class="plan-card" :class="{ highlight: currentPlan === 'free' }">
-            <div class="plan-title">Free</div>
-            <div class="plan-price">Contact admin</div>
-            <ul class="plan-features">
-              <li>1 Company (limited features)</li>
-              <li>1 Contact</li>
-              <li>1 Review</li>
-              <li class="disabled">No Analytics</li>
-              <li class="disabled">No Premium Themes</li>
-            </ul>
-            <button class="choose-btn">Choose Plan</button>
+          <!-- Info strip -->
+          <div class="info-strip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span>
+              You are currently on the
+              <strong>{{ planLabel(currentPlan) }}</strong>.
+              Upgrade to unlock premium themes and advanced features.
+            </span>
           </div>
 
-          <div class="plan-card" :class="{ highlight: currentPlan === 'plus' }">
-            <div class="plan-title">Plus</div>
-            <div class="plan-price">Contact admin</div>
-            <ul class="plan-features">
-              <li>2 Companies (full features)</li>
-              <li>6 Contacts</li>
-              <li>2 Reviews</li>
-              <li>With Analytics</li>
-              <li>With Plus Themes</li>
-            </ul>
-            <button class="choose-btn primary">Choose Plan</button>
+          <!-- Plans Grid -->
+          <div class="plans-grid">
+
+            <!-- Free -->
+            <div class="plan-card" :class="{ 'current-plan': currentPlan === 'free' }">
+              <span v-if="currentPlan === 'free'" class="current-badge">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Current
+              </span>
+              <div class="plan-top">
+                <div class="plan-title">Free</div>
+                <div class="plan-price">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  Contact admin to get started
+                </div>
+              </div>
+              <ul class="plan-features">
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  1 Company (limited features)
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  1 Contact
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  1 Review
+                </li>
+                <li class="disabled">
+                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                  No Analytics
+                </li>
+                <li class="disabled">
+                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                  No Premium Themes
+                </li>
+              </ul>
+              <button
+                  class="plan-btn"
+                  :class="currentPlan === 'free' ? 'btn-current' : 'btn-outline'"
+                  :disabled="currentPlan === 'free'"
+                  type="button"
+              >
+                {{ currentPlan === 'free' ? 'Current Plan' : 'Choose Free' }}
+              </button>
+            </div>
+
+            <!-- Plus -->
+            <div class="plan-card" :class="{ 'current-plan': currentPlan === 'plus', featured: currentPlan !== 'plus' }">
+              <span v-if="currentPlan === 'plus'" class="current-badge">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Current
+              </span>
+              <div class="plan-top">
+                <div class="plan-title">Plus</div>
+                <div class="plan-price">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  Contact admin to upgrade
+                </div>
+              </div>
+              <ul class="plan-features">
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 2 Companies (full features)</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 6 Contacts</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 2 Reviews</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Analytics Included</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Plus Themes</li>
+              </ul>
+              <button
+                  class="plan-btn"
+                  :class="currentPlan === 'plus' ? 'btn-current' : 'btn-primary'"
+                  :disabled="currentPlan === 'plus'"
+                  type="button"
+              >
+                {{ currentPlan === 'plus' ? 'Current Plan' : 'Choose Plus →' }}
+              </button>
+            </div>
+
+            <!-- Premium -->
+            <div class="plan-card" :class="{ 'current-plan': currentPlan === 'premium' }">
+              <span v-if="currentPlan === 'premium'" class="current-badge">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Current
+              </span>
+              <div class="plan-top">
+                <div class="plan-title">Premium</div>
+                <div class="plan-price">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  Contact admin to upgrade
+                </div>
+              </div>
+              <ul class="plan-features">
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 5 Companies (full features)</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 15 Contacts</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 5 Reviews</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Analytics Included</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> All Premium Themes</li>
+              </ul>
+              <button
+                  class="plan-btn"
+                  :class="currentPlan === 'premium' ? 'btn-current' : 'btn-outline'"
+                  :disabled="currentPlan === 'premium'"
+                  type="button"
+              >
+                {{ currentPlan === 'premium' ? 'Current Plan' : 'Choose Premium →' }}
+              </button>
+            </div>
+
           </div>
 
-          <div class="plan-card" :class="{ highlight: currentPlan === 'premium' }">
-            <div class="plan-title">Premium</div>
-            <div class="plan-price">Contact admin</div>
-            <ul class="plan-features">
-              <li>5 Companies (full features)</li>
-              <li>15 Contacts</li>
-              <li>5 Reviews</li>
-              <li>With Analytics</li>
-              <li>With Premium Themes</li>
-            </ul>
-            <button class="choose-btn">Choose Plan</button>
+          <!-- Contact note -->
+          <div class="contact-note">
+            <p>
+              Ready to upgrade? Contact us at
+              <a href="mailto:hello@tapmy.name">hello@tapmy.name</a>
+            </p>
           </div>
 
-        </div>
-        <!-- Contact Us -->
-        <div class="contact-us-note">
-          <p>Ready to upgrade? Contact us at
-            <a href="mailto:hello@tapmy.name">hello@tapmy.name</a>
-          </p>
         </div>
       </div>
     </div>
@@ -70,508 +172,309 @@
 <script setup>
 import { inject, ref } from 'vue';
 
-// Add this line after your imports
 const isDarkMode = inject('isDarkMode', ref(false));
 
 defineProps({
   open: Boolean,
-  currentPlan: {
-    type: String,
-    default: 'free'
-  }
-})
+  currentPlan: { type: String, default: 'free' }
+});
 
-defineEmits(['close'])
+defineEmits(['close']);
+
+function planLabel(plan) {
+  return { free: 'Free Plan', plus: 'Plus Plan', premium: 'Premium Plan' }[plan] ?? 'Free Plan';
+}
 </script>
 
-
 <style scoped>
-
-.contact-us-note {
-  text-align: center;
-  margin-top: 2.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+/* ══ CSS Custom Properties — mirrors Theme tab exactly ══ */
+.upgrade-overlay {
+  --c-bg: #ffffff;
+  --c-surface: #ffffff;
+  --c-surface-2: #faf9f7;
+  --c-border: #e8e3dc;
+  --c-text-primary: #1c1410;
+  --c-text-secondary: #5a4f46;
+  --c-text-muted: #9e8e84;
+  --c-accent: #7c5c4e;
+  --c-accent-2: #a07060;
+  --c-accent-hover: #5e443a;
+  --c-accent-light: #f0e8e4;
+  --c-accent-subtle: #f8f3f0;
+  --c-danger: #b83232;
+  --c-danger-light: #fdf0f0;
+  --c-success: #2d6a50;
+  --c-shadow-sm: 0 2px 6px rgba(28,20,16,0.08), 0 1px 2px rgba(28,20,16,0.04);
+  --c-shadow-md: 0 6px 20px rgba(28,20,16,0.10), 0 2px 6px rgba(28,20,16,0.06);
+  --c-shadow-lg: 0 16px 48px rgba(28,20,16,0.16), 0 4px 12px rgba(28,20,16,0.08);
+  --c-radius: 14px;
+  --c-radius-sm: 8px;
+  --c-radius-xs: 5px;
+  --c-radius-pill: 100px;
+  font-family: 'Segoe UI', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
 }
 
-.dark-mode .contact-us-note {
-  border-top-color: #2d2640;
+.upgrade-overlay.dark-mode {
+  --c-bg: #100e14;
+  --c-surface: #1a1720;
+  --c-surface-2: #1e1b26;
+  --c-border: #2c2838;
+  --c-text-primary: #f2ede8;
+  --c-text-secondary: #a89490;
+  --c-text-muted: #6a5e5a;
+  --c-accent: #c4906e;
+  --c-accent-2: #d4a880;
+  --c-accent-hover: #d4a070;
+  --c-accent-light: #281e18;
+  --c-accent-subtle: #1e1612;
+  --c-danger: #e06060;
+  --c-danger-light: #281414;
+  --c-success: #60b88a;
+  --c-shadow-sm: 0 2px 6px rgba(0,0,0,0.3);
+  --c-shadow-md: 0 6px 20px rgba(0,0,0,0.4);
+  --c-shadow-lg: 0 16px 48px rgba(0,0,0,0.5);
 }
 
-.contact-us-note p {
-  font-size: 0.95rem;
-  color: #6b7280;
-}
+*, *::before, *::after { box-sizing: border-box; }
+button { font-family: inherit; cursor: pointer; }
 
-.dark-mode .contact-us-note p {
-  color: #9ca3af;
-}
-
-.contact-us-note a {
-  color: #6B4423;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.dark-mode .contact-us-note a {
-  color: #a78bfa;
-}
-
-.contact-us-note a:hover {
-  color: #8B5A3C;
-  text-decoration: underline;
-}
-
-.dark-mode .contact-us-note a:hover {
-  color: #c4b5fd;
-}
+/* Overlay */
 .upgrade-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  z-index: 3000;
+  background: rgba(16,14,20,0.6);
+  backdrop-filter: blur(4px);
   display: flex;
-  align-items: stretch;
-  justify-content: stretch;
-  transition: background 0.3s ease;
-}
-
-.dark-mode.upgrade-overlay {
-  background: rgba(0, 0, 0, 0.85);
-}
-
-/* Full Screen Container */
-.upgrade-container {
-  background: #ffffff;
-  width: 100vw;
-  height: 100vh;
-  padding: 3rem 3rem 2rem;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 16px;
   overflow-y: auto;
+}
+
+/* Modal Shell */
+.upgrade-modal {
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius);
+  width: 100%;
+  max-width: 920px;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
-}
-
-.dark-mode .upgrade-container {
-  background: #0f0d1a;
+  overflow: hidden;
+  box-shadow: var(--c-shadow-lg);
+  margin: auto;
+  color: var(--c-text-primary);
 }
 
 /* Header */
-.upgrade-header {
+.upgrade-modal-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 3rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  transition: border-color 0.3s ease;
+  justify-content: space-between;
+  padding: 20px 28px;
+  background: linear-gradient(135deg, var(--c-accent-subtle) 0%, var(--c-surface) 100%);
+  border-bottom: 1.5px solid var(--c-border);
+  flex-shrink: 0;
 }
 
-.dark-mode .upgrade-header {
-  border-bottom-color: #2d2640;
-}
-
-.upgrade-header h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #6B4423;
-  transition: color 0.3s ease;
-}
-
-.dark-mode .upgrade-header h2 {
-  color: #a78bfa;
-}
-
-/* Close Button */
-.close-btn {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  cursor: pointer;
-  color: #6B4423;
-  padding: 0.6rem;
-  border-radius: 10px;
-  transition: all 0.2s ease;
-}
-
-.dark-mode .close-btn {
-  background: #1a1626;
-  border-color: #2d2640;
-  color: #a78bfa;
-}
-
-.close-btn:hover {
-  background: #6B4423;
-  color: white;
-  border-color: #6B4423;
-}
-
-.dark-mode .close-btn:hover {
-  background: #6366f1;
-  color: white;
-  border-color: #6366f1;
-}
-
-/* Plans Layout */
-.plans-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-/* Plan Card */
-.plan-card {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 2.5rem 2rem;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-.dark-mode .plan-card {
-  background: #1a1626;
-  border-color: #2d2640;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.plan-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
-}
-
-.dark-mode .plan-card:hover {
-  box-shadow: 0 20px 50px rgba(99, 102, 241, 0.3);
-}
-
-/* Highlighted Plan */
-.plan-card.highlight {
-  border: 2px solid #8B5A3C;
-  background: #FDF8F3;
-  transform: scale(1.03);
-}
-
-.dark-mode .plan-card.highlight {
-  border-color: #6366f1;
-  background: #2d2640;
-}
-
-/* Title */
-.plan-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  color: #6B4423;
-  transition: color 0.3s ease;
-}
-
-.dark-mode .plan-title {
-  color: #a78bfa;
-}
-
-/* Price */
-.plan-price {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #8B5A3C;
-  margin-bottom: 1.75rem;
-  transition: color 0.3s ease;
-}
-
-.dark-mode .plan-price {
-  color: #c4b5fd;
-}
-
-/* Features */
-.plan-features {
-  list-style: none;
-  padding: 0;
+.upgrade-modal-title {
+  font-size: 22px;
+  font-weight: 750;
+  color: var(--c-text-primary);
   margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.qr-close-btn {
+  background: var(--c-surface-2);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius-xs);
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--c-text-secondary);
+  transition: all 0.15s;
+}
+.qr-close-btn:hover { border-color: var(--c-danger); color: var(--c-danger); background: var(--c-danger-light); }
+
+/* Body */
+.upgrade-modal-body {
+  padding: 24px 28px;
+  overflow-y: auto;
   flex: 1;
 }
 
-.plan-features li {
-  padding: 0.6rem 0;
-  font-size: 0.95rem;
-  color: #374151;
+/* Info strip */
+.info-strip {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: color 0.3s ease;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 24px;
+  background: var(--c-accent-subtle);
+  border: 1.5px solid var(--c-accent-light);
+  border-radius: var(--c-radius-sm);
+  font-size: 13px;
+  color: var(--c-text-secondary);
+}
+.info-strip svg { color: var(--c-accent); flex-shrink: 0; margin-top: 1px; }
+
+/* Plans grid */
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
 }
 
-.dark-mode .plan-features li {
-  color: #e5e7eb;
+/* Plan card — mirrors .theme-card */
+.plan-card {
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--c-radius);
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--c-shadow-sm);
+  transition: box-shadow 0.22s, border-color 0.22s, transform 0.18s;
+  position: relative;
+}
+.plan-card:hover { box-shadow: var(--c-shadow-md); border-color: var(--c-accent-2); transform: translateY(-3px); }
+
+.plan-card.current-plan {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px rgba(124,92,78,0.14), var(--c-shadow-sm);
+}
+.dark-mode .plan-card.current-plan {
+  box-shadow: 0 0 0 3px rgba(196,144,110,0.18), var(--c-shadow-sm);
 }
 
-.plan-features li::before {
-  content: "✓";
-  color: #8B5A3C;
-  font-weight: bold;
-  transition: color 0.3s ease;
+/* Current badge — mirrors .active-badge */
+.current-badge {
+  position: absolute;
+  top: 14px; right: 14px;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 11px;
+  background: linear-gradient(135deg, var(--c-accent), var(--c-accent-2));
+  color: #fff;
+  border-radius: var(--c-radius-pill);
+  font-size: 11px; font-weight: 700;
+  box-shadow: 0 2px 8px rgba(124,92,78,0.35);
+  letter-spacing: 0.02em;
 }
 
-.dark-mode .plan-features li::before {
-  color: #a78bfa;
+/* Plan top section */
+.plan-top {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid var(--c-border);
 }
 
-.plan-features li.disabled {
-  color: #9ca3af;
-  text-decoration: line-through;
+.plan-title {
+  font-size: 17px; font-weight: 750;
+  color: var(--c-accent);
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
 }
 
-.dark-mode .plan-features li.disabled {
-  color: #6b7280;
+.plan-price {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--c-text-muted);
+}
+.plan-price svg { flex-shrink: 0; color: var(--c-text-muted); }
+
+/* Feature list */
+.plan-features {
+  list-style: none;
+  padding: 0; margin: 0;
+  flex: 1;
+  display: flex; flex-direction: column; gap: 9px;
+  margin-bottom: 20px;
+}
+.plan-features li {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--c-text-secondary);
+}
+.plan-features li.disabled { color: var(--c-text-muted); text-decoration: line-through; }
+.feat-check { color: var(--c-success); flex-shrink: 0; }
+.feat-cross { color: var(--c-text-muted); flex-shrink: 0; }
+
+/* Buttons — mirror save-btn / cancel-btn */
+.plan-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--c-radius-sm);
+  font-size: 13px; font-weight: 750;
+  transition: all 0.15s;
+  letter-spacing: 0.01em;
+  width: 100%;
 }
 
-.plan-features li.disabled::before {
-  content: "✕";
-  color: #9ca3af;
+.btn-primary {
+  background: var(--c-accent); color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(124,92,78,0.3);
+}
+.btn-primary:hover { background: var(--c-accent-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,92,78,0.4); }
+
+.btn-outline {
+  background: var(--c-surface-2); color: var(--c-text-secondary);
+  border: 1.5px solid var(--c-border);
+}
+.btn-outline:hover { border-color: var(--c-accent); color: var(--c-accent); background: var(--c-accent-light); }
+
+.btn-current {
+  background: var(--c-surface-2); color: var(--c-text-muted);
+  border: 1.5px solid var(--c-border);
+  cursor: default; opacity: 0.7;
 }
 
-.dark-mode .plan-features li.disabled::before {
-  color: #6b7280;
+/* Contact note */
+.contact-note {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1.5px solid var(--c-border);
+  text-align: center;
 }
+.contact-note p { font-size: 13px; color: var(--c-text-muted); }
+.contact-note a { color: var(--c-accent); font-weight: 650; text-decoration: none; }
+.contact-note a:hover { color: var(--c-accent-hover); text-decoration: underline; }
 
-/* Buttons */
-.choose-btn {
-  margin-top: 2rem;
-  padding: 0.85rem;
-  border-radius: 12px;
-  border: 1px solid #8B5A3C;
-  background: #ffffff;
-  cursor: pointer;
-  font-weight: 600;
-  color: #6B4423;
-  transition: all 0.2s ease;
-}
+/* Modal transition */
+.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.22s ease; }
+.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
 
-.dark-mode .choose-btn {
-  background: #0f0d1a;
-  border-color: #6366f1;
-  color: #a78bfa;
-}
-
-.choose-btn:hover {
-  background: #8B5A3C;
-  color: white;
-}
-
-.dark-mode .choose-btn:hover {
-  background: #6366f1;
-  color: white;
-  border-color: #6366f1;
-}
-
-/* Primary Button */
-.choose-btn.primary {
-  background: #6B4423;
-  color: white;
-  border-color: #6B4423;
-}
-
-.dark-mode .choose-btn.primary {
-  background: #6366f1;
-  color: white;
-  border-color: #6366f1;
-}
-
-.choose-btn.primary:hover {
-  background: #8B5A3C;
-  border-color: #8B5A3C;
-}
-
-.dark-mode .choose-btn.primary:hover {
-  background: #818cf8;
-  border-color: #818cf8;
-}
-
-.choose-btn:disabled {
-  background: #e5e7eb;
-  border-color: #e5e7eb;
-  color: #9ca3af;
-  cursor: not-allowed;
-}
-
-.dark-mode .choose-btn:disabled {
-  background: #1a1626;
-  border-color: #2d2640;
-  color: #6b7280;
-}
-
-/* Scrollbar Styling */
-.upgrade-container::-webkit-scrollbar {
-  width: 10px;
-}
-
-.upgrade-container::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-.dark-mode .upgrade-container::-webkit-scrollbar-track {
-  background: #1a1626;
-}
-
-.upgrade-container::-webkit-scrollbar-thumb {
-  background: #8B5A3C;
-  border-radius: 5px;
-}
-
-.dark-mode .upgrade-container::-webkit-scrollbar-thumb {
-  background: #6366f1;
-}
-
-.upgrade-container::-webkit-scrollbar-thumb:hover {
-  background: #6B4423;
-}
-
-.dark-mode .upgrade-container::-webkit-scrollbar-thumb:hover {
-  background: #818cf8;
-}
-
-/* Fade Animation */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+/* Tablet */
+@media (max-width: 900px) {
+  .upgrade-modal-header { padding: 18px 20px; }
+  .upgrade-modal-body { padding: 20px; }
+  .plans-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
 }
 
 /* Mobile */
-@media (max-width: 768px) {
-  .upgrade-container {
-    padding: 2rem 1.25rem;
+@media (max-width: 640px) {
+  .upgrade-overlay { padding: 0; align-items: flex-end; }
+  .upgrade-modal {
+    max-height: 92vh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
   }
-
-  .upgrade-header {
-    margin-bottom: 2rem;
-  }
-
-  .upgrade-header h2 {
-    font-size: 1.5rem;
-  }
-
-  .plans-grid {
-    gap: 1.5rem;
-    grid-template-columns: 1fr;
-  }
-
-  .plan-card {
-    padding: 2rem 1.5rem;
-  }
-
-  .plan-card.highlight {
-    transform: none;
-  }
-
-  .plan-card:hover {
-    transform: none;
-  }
-
-  .plan-title {
-    font-size: 1.4rem;
-  }
-
-  .plan-price {
-    font-size: 0.9375rem;
-  }
-
-  .plan-features li {
-    font-size: 0.875rem;
-    padding: 0.5rem 0;
-  }
-
-  .choose-btn {
-    padding: 0.75rem;
-    font-size: 0.9375rem;
-  }
+  .upgrade-modal-header { padding: 16px; }
+  .upgrade-modal-title { font-size: 18px; }
+  .upgrade-modal-body { padding: 16px; }
+  .plans-grid { grid-template-columns: 1fr; gap: 12px; }
+  .plan-card:hover { transform: none; }
 }
 
-/* Small Mobile */
-@media (max-width: 480px) {
-  .upgrade-container {
-    padding: 1.5rem 1rem;
-  }
-
-  .upgrade-header {
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.875rem;
-  }
-
-  .upgrade-header h2 {
-    font-size: 1.25rem;
-  }
-
-  .close-btn {
-    padding: 0.5rem;
-  }
-
-  .close-btn svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .plans-grid {
-    gap: 1.25rem;
-  }
-
-  .plan-card {
-    padding: 1.5rem 1.25rem;
-    border-radius: 14px;
-  }
-
-  .plan-title {
-    font-size: 1.25rem;
-  }
-
-  .plan-price {
-    font-size: 0.875rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .plan-features li {
-    font-size: 0.8125rem;
-    padding: 0.4rem 0;
-  }
-
-  .choose-btn {
-    padding: 0.7rem;
-    font-size: 0.875rem;
-    margin-top: 1.5rem;
-    border-radius: 10px;
-  }
+/* Touch */
+@media (hover: none) and (pointer: coarse) {
+  .qr-close-btn, .plan-btn { min-height: 44px; }
 }
 
-/* Accessibility */
-.choose-btn:focus-visible,
-.close-btn:focus-visible {
-  outline: 3px solid #8B5A3C;
-  outline-offset: 2px;
-}
-
-.dark-mode .choose-btn:focus-visible,
-.dark-mode .close-btn:focus-visible {
-  outline-color: #6366f1;
-}
-
-/* Reduced Motion */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  .plan-card:hover {
-    transform: none;
-  }
+  * { animation: none !important; transition-duration: 0.01ms !important; }
 }
 </style>
