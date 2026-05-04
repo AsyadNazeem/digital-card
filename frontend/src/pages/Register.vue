@@ -489,12 +489,14 @@ async function register() {
     loading.value = true
     message.value = ''
 
+// Change this in your register() function:
     const res = await api.post('/auth/register', {
       name: name.value.trim(),
       email: email.value.trim(),
       phone: phone.value.trim(),
       password: password.value.trim(),
-      countryCode: countryCode.value,
+      countryCode: countryCode.value,           // keeps dial code e.g. +94
+      country: selectedCountry.value?.fullName || null,
     })
 
     messageType.value = 'success'

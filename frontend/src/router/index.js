@@ -10,7 +10,6 @@ import { startIdleTimer, stopIdleTimer } from "../utils/idleLogout";
 import { useAdminStore } from "@/store/adminStore.js";
 import { ADMIN_PAGES, ADMIN_ROLES } from "@/config/permissionRegistry.js";
 
-// ✅ AUTO-GENERATE admin child routes from ADMIN_PAGES
 const adminChildRoutes = ADMIN_PAGES.map(page => ({
     path: page.path,
     name: page.name.replace(/\s+/g, ''),
@@ -22,34 +21,24 @@ const adminChildRoutes = ADMIN_PAGES.map(page => ({
 }))
 
 const routes = [
-    // USER ROUTES
     { path: "/", redirect: "/login" },
     { path: "/login", component: Login },
     { path: "/register", component: Register },
     { path: "/reset-password", component: ResetPassword },
     { path: "/dashboard", component: UserLayout, meta: { requiresAuth: true } },
     { path: "/:phone", component: PublicCard },
-
-    // ADMIN LOGIN
     { path: "/admin/login", name: "AdminLogin", component: AdminLogin },
-
-    // ADMIN LAYOUT + AUTO-GENERATED PAGES
     {
         path: "/admin",
         component: () => import("../components/admin/AdminLayout.vue"),
         meta: { requiresAdminAuth: true },
-        children: adminChildRoutes // ✅ AUTO-GENERATED FROM ADMIN_PAGES!
+        children: adminChildRoutes
     },
-    // ADD this route (replace the existing /r/:code route):
-
     {
         path: '/:companyName/:branchName',
         name: 'ReviewShare',
-        component: (ReviewShare),
-        meta: {
-            requiresAuth: false,
-            title: 'Leave a Review'
-        }
+        component: ReviewShare,
+        meta: { requiresAuth: false, title: 'Leave a Review' }
     }
 ];
 
@@ -58,8 +47,8 @@ const router = createRouter({
     routes,
 });
 
-// Navigation Guard
-router.beforeEach((to, from, next) => {
+// Navigation Guard — async so we can await permission fetch
+router.beforeEach(async (to, from, next) => {
     const userToken = localStorage.getItem("token");
     const adminToken = localStorage.getItem("adminToken");
     const adminStore = useAdminStore();
@@ -69,14 +58,12 @@ router.beforeEach((to, from, next) => {
         if (!userToken) {
             return next("/login");
         }
-
         startIdleTimer(() => {
             localStorage.removeItem("token");
             stopIdleTimer();
             alert("You were logged out due to inactivity.");
             window.location.href = "/login";
         }, 10);
-
         return next();
     }
 
@@ -86,11 +73,8 @@ router.beforeEach((to, from, next) => {
             return next("/admin/login");
         }
 
-        // Check if admin store is initialized
         if (!adminStore.isAuthenticated) {
-            console.warn("Admin store not initialized, attempting to restore from localStorage");
             adminStore.initializeAuth();
-
             if (!adminStore.isAuthenticated) {
                 localStorage.removeItem("adminToken");
                 localStorage.removeItem("adminUser");
@@ -100,16 +84,16 @@ router.beforeEach((to, from, next) => {
 
         // Check super admin requirement
         if (to.meta.requiresSuperAdmin && !adminStore.isSuperAdmin) {
-            alert("This page requires Super Admin access");
             return next("/admin/dashboard");
         }
 
-        // ✅ Check specific permission if required
-        if (to.meta.requiresPermission) {
+        // Check specific permission
+        if (to.meta.requiresPermission && !adminStore.isSuperAdmin) {
+            if (adminStore.myPermissions.length === 0) {
+                await adminStore.fetchMyPermissions();
+            }
             const hasPermission = adminStore.myPermissions.includes(to.meta.requiresPermission);
-
-            if (!hasPermission && !adminStore.isSuperAdmin) {
-                alert("You don't have permission to access this page");
+            if (!hasPermission) {
                 return next("/admin/dashboard");
             }
         }

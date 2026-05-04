@@ -20,7 +20,7 @@ export const ADMIN_PAGES = [
         permission: 'create_user',
         category: 'User Management',
         description: 'Create new user accounts manually',
-        defaultRoles: ['super_admin'],
+        defaultRoles: ['super_admin', 'admin'],
     },
     {
         permission: 'view_requests',
@@ -51,6 +51,42 @@ export const ADMIN_PAGES = [
         category: 'System',
         description: 'View and modify system settings',
         defaultRoles: ['super_admin'],
+    },
+    {
+        permission: 'delete_user',
+        category: 'User Management',
+        description: 'Delete user accounts',
+        defaultRoles: ['super_admin', 'admin'],
+    },
+    {
+        permission: 'edit_user_limits',
+        category: 'User Management',
+        description: 'Edit user limits and plans',
+        defaultRoles: ['super_admin', 'admin'],
+    },
+    {
+        permission: 'edit_company',
+        category: 'User Management',
+        description: 'Edit company details',
+        defaultRoles: ['super_admin', 'admin'],
+    },
+    {
+        permission: 'edit_contact',
+        category: 'User Management',
+        description: 'Edit contact details',
+        defaultRoles: ['super_admin', 'admin'],
+    },
+    {
+        permission: 'edit_review',
+        category: 'User Management',
+        description: 'Edit review details',
+        defaultRoles: ['super_admin', 'admin'],
+    },
+    {
+        permission: 'delete_review',
+        category: 'User Management',
+        description: 'Delete reviews',
+        defaultRoles: ['super_admin', 'admin'],
     },
 ]
 

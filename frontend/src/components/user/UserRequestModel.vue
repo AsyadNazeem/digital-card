@@ -3,9 +3,9 @@
   <div v-if="showBanner" :class="['limit-banner', { 'dark-mode': isDarkMode }]">
     <div class="limit-banner-content">
       <div class="limit-banner-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round">
+        <svg fill="none" height="18" stroke="currentColor" stroke-linecap="round"
+             stroke-linejoin="round" stroke-width="2.5"
+             viewBox="0 0 24 24" width="18">
           <path d="M12 9v4"/>
           <path d="M12 17h.01"/>
           <path d="M10.3 3.86l-7.18 12.42A2 2 0 0 0 4.82 19h14.36a2 2 0 0 0 1.7-2.72L13.7 3.86a2 2 0 0 0-3.4 0z"/>
@@ -15,8 +15,8 @@
         <h3>You've reached your limit!</h3>
         <p>Request more companies, contacts, or reviews from the admin to continue adding.</p>
       </div>
-      <button @click="showRequestModal = true" class="btn-request">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <button class="btn-request" @click="showRequestModal = true">
+        <svg fill="none" height="15" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
         Request More
@@ -33,15 +33,16 @@
         <div class="request-modal-header">
           <div class="modal-header-left">
             <div class="modal-header-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18">
                 <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
               </svg>
             </div>
             <h2 class="request-modal-title">Request Additional Limits</h2>
           </div>
-          <button @click="showRequestModal = false" class="btn-close" type="button">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          <button class="btn-close" type="button" @click="showRequestModal = false">
+            <svg fill="none" height="16" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="16">
+              <line x1="18" x2="6" y1="6" y2="18"/>
+              <line x1="6" x2="18" y1="6" y2="18"/>
             </svg>
           </button>
         </div>
@@ -57,8 +58,8 @@
             <div class="limits-grid">
               <div class="limit-card">
                 <div class="limit-icon company">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="4" y="2" width="16" height="20" rx="2"/>
+                  <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16">
+                    <rect height="20" rx="2" width="16" x="4" y="2"/>
                   </svg>
                 </div>
                 <div class="limit-info">
@@ -68,9 +69,9 @@
                 <div class="limit-progress-wrap">
                   <div class="limit-progress-bar">
                     <div
-                        class="limit-progress-fill"
-                        :style="{ width: Math.min(100, (companyCount / userLimits.companyLimit) * 100) + '%' }"
                         :class="companyCount >= userLimits.companyLimit ? 'full' : ''"
+                        :style="{ width: Math.min(100, (companyCount / userLimits.companyLimit) * 100) + '%' }"
+                        class="limit-progress-fill"
                     ></div>
                   </div>
                 </div>
@@ -78,7 +79,7 @@
 
               <div class="limit-card">
                 <div class="limit-icon contact">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                   </svg>
@@ -90,9 +91,9 @@
                 <div class="limit-progress-wrap">
                   <div class="limit-progress-bar">
                     <div
-                        class="limit-progress-fill"
-                        :style="{ width: Math.min(100, (contactCount / userLimits.contactLimit) * 100) + '%' }"
                         :class="contactCount >= userLimits.contactLimit ? 'full' : ''"
+                        :style="{ width: Math.min(100, (contactCount / userLimits.contactLimit) * 100) + '%' }"
+                        class="limit-progress-fill"
                     ></div>
                   </div>
                 </div>
@@ -100,8 +101,9 @@
 
               <div class="limit-card">
                 <div class="limit-icon review">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16">
+                    <polygon
+                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                   </svg>
                 </div>
                 <div class="limit-info">
@@ -111,9 +113,9 @@
                 <div class="limit-progress-wrap">
                   <div class="limit-progress-bar">
                     <div
-                        class="limit-progress-fill"
-                        :style="{ width: Math.min(100, (reviewCount / userLimits.reviewLimit) * 100) + '%' }"
                         :class="reviewCount >= userLimits.reviewLimit ? 'full' : ''"
+                        :style="{ width: Math.min(100, (reviewCount / userLimits.reviewLimit) * 100) + '%' }"
+                        class="limit-progress-fill"
                     ></div>
                   </div>
                 </div>
@@ -132,21 +134,25 @@
               <!-- Companies -->
               <div class="field-wrap">
                 <label class="field-label">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="4" y="2" width="16" height="20" rx="2"/>
+                  <svg fill="none" height="13" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13">
+                    <rect height="20" rx="2" width="16" x="4" y="2"/>
                   </svg>
                   Additional Companies
                 </label>
                 <div class="quantity-selector">
-                  <button type="button" @click="decrementCompanies" class="qty-btn" :disabled="requestForm.companies === 0">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="5" y1="12" x2="19" y2="12"/>
+                  <button :disabled="requestForm.companies === 0" class="qty-btn" type="button"
+                          @click="decrementCompanies">
+                    <svg fill="none" height="14" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                         width="14">
+                      <line x1="5" x2="19" y1="12" y2="12"/>
                     </svg>
                   </button>
-                  <input type="number" v-model.number="requestForm.companies" min="0" max="100" class="qty-input" />
-                  <button type="button" @click="incrementCompanies" class="qty-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  <input v-model.number="requestForm.companies" class="qty-input" max="100" min="0" type="number"/>
+                  <button class="qty-btn" type="button" @click="incrementCompanies">
+                    <svg fill="none" height="14" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                         width="14">
+                      <line x1="12" x2="12" y1="5" y2="19"/>
+                      <line x1="5" x2="19" y1="12" y2="12"/>
                     </svg>
                   </button>
                 </div>
@@ -155,22 +161,26 @@
               <!-- Contacts -->
               <div class="field-wrap">
                 <label class="field-label">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg fill="none" height="13" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                   </svg>
                   Additional Contacts
                 </label>
                 <div class="quantity-selector">
-                  <button type="button" @click="decrementContacts" class="qty-btn" :disabled="requestForm.contacts === 0">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="5" y1="12" x2="19" y2="12"/>
+                  <button :disabled="requestForm.contacts === 0" class="qty-btn" type="button"
+                          @click="decrementContacts">
+                    <svg fill="none" height="14" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                         width="14">
+                      <line x1="5" x2="19" y1="12" y2="12"/>
                     </svg>
                   </button>
-                  <input type="number" v-model.number="requestForm.contacts" min="0" max="500" class="qty-input" />
-                  <button type="button" @click="incrementContacts" class="qty-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  <input v-model.number="requestForm.contacts" class="qty-input" max="500" min="0" type="number"/>
+                  <button class="qty-btn" type="button" @click="incrementContacts">
+                    <svg fill="none" height="14" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                         width="14">
+                      <line x1="12" x2="12" y1="5" y2="19"/>
+                      <line x1="5" x2="19" y1="12" y2="12"/>
                     </svg>
                   </button>
                 </div>
@@ -179,21 +189,25 @@
               <!-- Reviews -->
               <div class="field-wrap">
                 <label class="field-label">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  <svg fill="none" height="13" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13">
+                    <polygon
+                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                   </svg>
                   Additional Reviews
                 </label>
                 <div class="quantity-selector">
-                  <button type="button" @click="decrementReviews" class="qty-btn" :disabled="requestForm.reviews === 0">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="5" y1="12" x2="19" y2="12"/>
+                  <button :disabled="requestForm.reviews === 0" class="qty-btn" type="button" @click="decrementReviews">
+                    <svg fill="none" height="14" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                         width="14">
+                      <line x1="5" x2="19" y1="12" y2="12"/>
                     </svg>
                   </button>
-                  <input type="number" v-model.number="requestForm.reviews" min="0" max="100" class="qty-input" />
-                  <button type="button" @click="incrementReviews" class="qty-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  <input v-model.number="requestForm.reviews" class="qty-input" max="100" min="0" type="number"/>
+                  <button class="qty-btn" type="button" @click="incrementReviews">
+                    <svg fill="none" height="14" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                         width="14">
+                      <line x1="12" x2="12" y1="5" y2="19"/>
+                      <line x1="5" x2="19" y1="12" y2="12"/>
                     </svg>
                   </button>
                 </div>
@@ -202,7 +216,7 @@
               <!-- Reason -->
               <div class="field-wrap full">
                 <label class="field-label">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg fill="none" height="13" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                   </svg>
                   Reason for Request
@@ -210,9 +224,9 @@
                 </label>
                 <textarea
                     v-model="requestForm.reason"
-                    rows="3"
                     class="field-input field-textarea"
                     placeholder="Tell us why you need more limits…"
+                    rows="3"
                 ></textarea>
               </div>
             </div>
@@ -225,19 +239,21 @@
 
           <!-- Actions -->
           <div class="form-bottom-actions">
-            <button type="button" @click="showRequestModal = false" class="cancel-btn" :disabled="requestLoading">
+            <button :disabled="requestLoading" class="cancel-btn" type="button" @click="showRequestModal = false">
               Cancel
             </button>
             <button
+                :disabled="requestLoading || (requestForm.companies === 0 && requestForm.contacts === 0 && requestForm.reviews === 0)"
+                class="save-btn"
                 type="button"
                 @click="submitRequest"
-                class="save-btn"
-                :disabled="requestLoading || (requestForm.companies === 0 && requestForm.contacts === 0 && requestForm.reviews === 0)"
             >
-              <svg v-if="!requestLoading" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg v-if="!requestLoading" fill="none" height="15" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                   width="15">
                 <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
               </svg>
-              <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon">
+              <svg v-else class="spin-icon" fill="none" height="15" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                   width="15">
                 <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
               </svg>
               {{ requestLoading ? 'Submitting…' : 'Submit Request' }}
@@ -251,22 +267,22 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onUnmounted, inject } from "vue";
+import {computed, inject, onUnmounted, ref, watch} from "vue";
 import api from "@/services/api";
 
 const isDarkMode = inject('isDarkMode', ref(false));
 
 const props = defineProps({
-  companyCount: { type: Number, required: true },
-  contactCount:  { type: Number, required: true },
-  reviewCount:   { type: Number, required: true },
-  userLimits:    { type: Object, required: true },
+  companyCount: {type: Number, required: true},
+  contactCount: {type: Number, required: true},
+  reviewCount: {type: Number, required: true},
+  userLimits: {type: Object, required: true},
 });
 
 const emit = defineEmits(['banner-visibility']);
 
 const showRequestModal = ref(false);
-const requestForm = ref({ companies: 0, contacts: 0, reviews: 0, reason: "" });
+const requestForm = ref({companies: 0, contacts: 0, reviews: 0, reason: ""});
 const requestLoading = ref(false);
 const requestMessage = ref("");
 const requestSuccess = ref(false);
@@ -274,22 +290,41 @@ const requestSuccess = ref(false);
 const showBanner = computed(() =>
     props.companyCount >= props.userLimits.companyLimit ||
     props.contactCount >= props.userLimits.contactLimit ||
-    props.reviewCount  >= props.userLimits.reviewLimit
+    props.reviewCount >= props.userLimits.reviewLimit
 );
 
 watch(showBanner, (newVal) => {
   emit('banner-visibility', newVal);
   document.body.classList.toggle('banner-active', newVal);
-}, { immediate: true });
+}, {immediate: true});
 
-onUnmounted(() => { document.body.classList.remove('banner-active'); });
+onUnmounted(() => {
+  document.body.classList.remove('banner-active');
+});
 
-function incrementCompanies() { requestForm.value.companies++; }
-function decrementCompanies() { if (requestForm.value.companies > 0) requestForm.value.companies--; }
-function incrementContacts()  { requestForm.value.contacts++; }
-function decrementContacts()  { if (requestForm.value.contacts > 0) requestForm.value.contacts--; }
-function incrementReviews()   { requestForm.value.reviews++; }
-function decrementReviews()   { if (requestForm.value.reviews > 0) requestForm.value.reviews--; }
+function incrementCompanies() {
+  requestForm.value.companies++;
+}
+
+function decrementCompanies() {
+  if (requestForm.value.companies > 0) requestForm.value.companies--;
+}
+
+function incrementContacts() {
+  requestForm.value.contacts++;
+}
+
+function decrementContacts() {
+  if (requestForm.value.contacts > 0) requestForm.value.contacts--;
+}
+
+function incrementReviews() {
+  requestForm.value.reviews++;
+}
+
+function decrementReviews() {
+  if (requestForm.value.reviews > 0) requestForm.value.reviews--;
+}
 
 async function submitRequest() {
   requestMessage.value = "";
@@ -304,14 +339,17 @@ async function submitRequest() {
     requestLoading.value = true;
     const res = await api.post("/dashboard/request-limits", {
       companies: requestForm.value.companies,
-      contacts:  requestForm.value.contacts,
-      reviews:   requestForm.value.reviews,
-      reason:    requestForm.value.reason,
+      contacts: requestForm.value.contacts,
+      reviews: requestForm.value.reviews,
+      reason: requestForm.value.reason,
     });
     requestSuccess.value = true;
     requestMessage.value = res.data.message || "Request submitted successfully.";
-    requestForm.value = { companies: 0, contacts: 0, reviews: 0, reason: "" };
-    setTimeout(() => { showRequestModal.value = false; requestMessage.value = ""; }, 1500);
+    requestForm.value = {companies: 0, contacts: 0, reviews: 0, reason: ""};
+    setTimeout(() => {
+      showRequestModal.value = false;
+      requestMessage.value = "";
+    }, 1500);
   } catch (err) {
     requestSuccess.value = false;
     requestMessage.value = err.response?.data?.message || "Failed to submit request.";
@@ -347,10 +385,10 @@ async function submitRequest() {
   --c-success-light: #ecf7f2;
   --c-warning: #a06010;
   --c-warning-light: #fef6ec;
-  --c-shadow-xs: 0 1px 2px rgba(28,20,16,.06);
-  --c-shadow-sm: 0 2px 6px rgba(28,20,16,.08), 0 1px 2px rgba(28,20,16,.04);
-  --c-shadow-md: 0 6px 20px rgba(28,20,16,.10), 0 2px 6px rgba(28,20,16,.06);
-  --c-shadow-lg: 0 16px 48px rgba(28,20,16,.16), 0 4px 12px rgba(28,20,16,.08);
+  --c-shadow-xs: 0 1px 2px rgba(28, 20, 16, .06);
+  --c-shadow-sm: 0 2px 6px rgba(28, 20, 16, .08), 0 1px 2px rgba(28, 20, 16, .04);
+  --c-shadow-md: 0 6px 20px rgba(28, 20, 16, .10), 0 2px 6px rgba(28, 20, 16, .06);
+  --c-shadow-lg: 0 16px 48px rgba(28, 20, 16, .16), 0 4px 12px rgba(28, 20, 16, .08);
   --c-radius: 14px;
   --c-radius-sm: 8px;
   --c-radius-xs: 5px;
@@ -383,9 +421,18 @@ async function submitRequest() {
   --c-warning-light: #281c08;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
-button { font-family: inherit; cursor: pointer; }
-input, textarea { font-family: inherit; }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, textarea {
+  font-family: inherit;
+}
 
 /* ══════════════════════════════════════
    BANNER
@@ -411,8 +458,14 @@ input, textarea { font-family: inherit; }
 }
 
 @keyframes slideDown {
-  from { transform: translateY(-100%); opacity: 0; }
-  to   { transform: translateY(0);     opacity: 1; }
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .limit-banner-content {
@@ -428,7 +481,7 @@ input, textarea { font-family: inherit; }
   width: 36px;
   height: 36px;
   background: var(--c-warning-light);
-  border: 1.5px solid rgba(160,96,16,.2);
+  border: 1.5px solid rgba(160, 96, 16, .2);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -436,7 +489,9 @@ input, textarea { font-family: inherit; }
   color: var(--c-warning);
 }
 
-.limit-banner-text { flex: 1; }
+.limit-banner-text {
+  flex: 1;
+}
 
 .limit-banner-text h3 {
   margin: 0 0 2px;
@@ -465,14 +520,14 @@ input, textarea { font-family: inherit; }
   font-weight: 650;
   white-space: nowrap;
   transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
-  box-shadow: 0 2px 8px rgba(124,92,78,.3);
+  box-shadow: 0 2px 8px rgba(124, 92, 78, .3);
   letter-spacing: 0.01em;
 }
 
 .btn-request:hover {
   background: var(--c-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(124,92,78,.4);
+  box-shadow: 0 4px 14px rgba(124, 92, 78, .4);
 }
 
 /* ══════════════════════════════════════
@@ -481,7 +536,7 @@ input, textarea { font-family: inherit; }
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(16,14,20,.6);
+  background: rgba(16, 14, 20, .6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -507,9 +562,18 @@ input, textarea { font-family: inherit; }
 }
 
 /* Scrollbar */
-.request-modal-container::-webkit-scrollbar { width: 5px; }
-.request-modal-container::-webkit-scrollbar-track { background: transparent; }
-.request-modal-container::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 4px; }
+.request-modal-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+.request-modal-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.request-modal-container::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border-radius: 4px;
+}
 
 /* ── Modal Header ── */
 .request-modal-header {
@@ -542,7 +606,7 @@ input, textarea { font-family: inherit; }
   justify-content: center;
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(124,92,78,.25);
+  box-shadow: 0 2px 8px rgba(124, 92, 78, .25);
 }
 
 .request-modal-title {
@@ -651,9 +715,20 @@ input, textarea { font-family: inherit; }
   flex-shrink: 0;
 }
 
-.limit-icon.company { background: var(--c-accent-light); color: var(--c-accent); }
-.limit-icon.contact { background: var(--c-success-light); color: var(--c-success); }
-.limit-icon.review  { background: var(--c-warning-light); color: var(--c-warning); }
+.limit-icon.company {
+  background: var(--c-accent-light);
+  color: var(--c-accent);
+}
+
+.limit-icon.contact {
+  background: var(--c-success-light);
+  color: var(--c-success);
+}
+
+.limit-icon.review {
+  background: var(--c-warning-light);
+  color: var(--c-warning);
+}
 
 .limit-info {
   display: flex;
@@ -676,7 +751,9 @@ input, textarea { font-family: inherit; }
   letter-spacing: -0.3px;
 }
 
-.limit-progress-wrap { margin-top: 2px; }
+.limit-progress-wrap {
+  margin-top: 2px;
+}
 
 .limit-progress-bar {
   height: 4px;
@@ -692,7 +769,9 @@ input, textarea { font-family: inherit; }
   transition: width 0.4s ease;
 }
 
-.limit-progress-fill.full { background: var(--c-danger); }
+.limit-progress-fill.full {
+  background: var(--c-danger);
+}
 
 /* ── Request Form Section ── */
 .request-form-section {
@@ -708,8 +787,15 @@ input, textarea { font-family: inherit; }
   gap: 16px;
 }
 
-.field-wrap { display: flex; flex-direction: column; gap: 7px; }
-.field-wrap.full { grid-column: 1 / -1; }
+.field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field-wrap.full {
+  grid-column: 1 / -1;
+}
 
 .field-label {
   font-size: 12px;
@@ -750,11 +836,11 @@ input, textarea { font-family: inherit; }
 
 .quantity-selector:focus-within {
   border-color: var(--c-border-focus);
-  box-shadow: 0 0 0 3px rgba(124,92,78,.12);
+  box-shadow: 0 0 0 3px rgba(124, 92, 78, .12);
 }
 
 .dark-mode .quantity-selector:focus-within {
-  box-shadow: 0 0 0 3px rgba(196,144,110,.15);
+  box-shadow: 0 0 0 3px rgba(196, 144, 110, .15);
 }
 
 .qty-btn {
@@ -801,8 +887,14 @@ input, textarea { font-family: inherit; }
 }
 
 .qty-input::-webkit-inner-spin-button,
-.qty-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-.qty-input[type=number] { -moz-appearance: textfield; }
+.qty-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-input[type=number] {
+  -moz-appearance: textfield;
+}
 
 /* ── Textarea ── */
 .field-input {
@@ -817,17 +909,24 @@ input, textarea { font-family: inherit; }
   box-shadow: var(--c-shadow-xs);
 }
 
-.field-input::placeholder { color: var(--c-text-muted); }
+.field-input::placeholder {
+  color: var(--c-text-muted);
+}
 
 .field-input:focus {
   outline: none;
   border-color: var(--c-border-focus);
-  box-shadow: 0 0 0 3px rgba(124,92,78,.12);
+  box-shadow: 0 0 0 3px rgba(124, 92, 78, .12);
 }
 
-.dark-mode .field-input:focus { box-shadow: 0 0 0 3px rgba(196,144,110,.15); }
+.dark-mode .field-input:focus {
+  box-shadow: 0 0 0 3px rgba(196, 144, 110, .15);
+}
 
-.field-textarea { resize: vertical; min-height: 80px; }
+.field-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
 
 /* ── Request Message ── */
 .request-message {
@@ -872,7 +971,10 @@ input, textarea { font-family: inherit; }
   background: var(--c-danger-light);
 }
 
-.cancel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .save-btn {
   display: inline-flex;
@@ -886,52 +988,92 @@ input, textarea { font-family: inherit; }
   font-size: 14px;
   font-weight: 750;
   transition: all 0.15s;
-  box-shadow: 0 2px 8px rgba(124,92,78,.3);
+  box-shadow: 0 2px 8px rgba(124, 92, 78, .3);
   letter-spacing: 0.01em;
 }
 
 .save-btn:hover:not(:disabled) {
   background: var(--c-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(124,92,78,.4);
+  box-shadow: 0 4px 16px rgba(124, 92, 78, .4);
 }
 
-.save-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
 
 /* Spin */
-.spin-icon { animation: spin 0.9s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.spin-icon {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* ══════════════════════════════════════
    MODAL TRANSITION
 ══════════════════════════════════════ */
-.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.22s ease; }
-.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
+.modal-fade-enter-active, .modal-fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.modal-fade-enter-from, .modal-fade-leave-to {
+  opacity: 0;
+}
 
 /* ══════════════════════════════════════
    RESPONSIVE — TABLET (≤ 768px)
 ══════════════════════════════════════ */
 @media (max-width: 768px) {
-  .limit-banner { top: 60px; padding: 10px 16px; }
+  .limit-banner {
+    top: 60px;
+    padding: 10px 16px;
+  }
 
-  .limits-grid { grid-template-columns: 1fr; gap: 10px; }
-  .fields-grid { grid-template-columns: 1fr; }
+  .limits-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 
-  .request-modal-body { padding: 18px; }
-  .request-modal-header { padding: 14px 18px; }
+  .fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .request-modal-body {
+    padding: 18px;
+  }
+
+  .request-modal-header {
+    padding: 14px 18px;
+  }
 }
 
 /* ══════════════════════════════════════
    RESPONSIVE — MOBILE (≤ 640px)
 ══════════════════════════════════════ */
 @media (max-width: 640px) {
-  .limit-banner { padding: 9px 14px; }
+  .limit-banner {
+    padding: 9px 14px;
+  }
 
-  .limit-banner-text p { display: none; }
+  .limit-banner-text p {
+    display: none;
+  }
 
-  .btn-request { padding: 8px 14px; font-size: 12px; }
+  .btn-request {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
 
-  .modal-overlay { padding: 10px; align-items: flex-end; }
+  .modal-overlay {
+    padding: 10px;
+    align-items: flex-end;
+  }
 
   .request-modal-container {
     max-height: 92vh;
@@ -939,41 +1081,83 @@ input, textarea { font-family: inherit; }
     border-bottom-right-radius: 0;
   }
 
-  .request-modal-header { padding: 13px 16px; }
-  .request-modal-title  { font-size: 15px; }
+  .request-modal-header {
+    padding: 13px 16px;
+  }
 
-  .request-modal-body { padding: 16px; }
+  .request-modal-title {
+    font-size: 15px;
+  }
 
-  .limits-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .request-modal-body {
+    padding: 16px;
+  }
 
-  .limit-card { padding: 10px; gap: 6px; }
-  .limit-icon { width: 28px; height: 28px; }
-  .limit-value { font-size: 14px; }
-  .limit-label { font-size: 10px; }
+  .limits-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
 
-  .fields-grid { grid-template-columns: 1fr; gap: 14px; }
+  .limit-card {
+    padding: 10px;
+    gap: 6px;
+  }
 
-  .form-bottom-actions { flex-direction: column; }
-  .cancel-btn, .save-btn { width: 100%; justify-content: center; }
+  .limit-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .limit-value {
+    font-size: 14px;
+  }
+
+  .limit-label {
+    font-size: 10px;
+  }
+
+  .fields-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .form-bottom-actions {
+    flex-direction: column;
+  }
+
+  .cancel-btn, .save-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* ══════════════════════════════════════
    TOUCH TARGETS
 ══════════════════════════════════════ */
 @media (hover: none) and (pointer: coarse) {
-  .qty-btn, .btn-request, .save-btn, .cancel-btn, .btn-close { min-height: 44px; }
-  .qty-input, .field-input { font-size: 16px !important; }
+  .qty-btn, .btn-request, .save-btn, .cancel-btn, .btn-close {
+    min-height: 44px;
+  }
+
+  .qty-input, .field-input {
+    font-size: 16px !important;
+  }
 }
 
 /* ══════════════════════════════════════
    REDUCED MOTION
 ══════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition-duration: 0.01ms !important; }
+  * {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ══════════════════════════════════════
    GLOBAL BANNER LAYOUT HELPERS
 ══════════════════════════════════════ */
-:global(body.banner-active) { --banner-height: 60px; }
+:global(body.banner-active) {
+  --banner-height: 60px;
+}
 </style>

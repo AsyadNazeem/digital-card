@@ -1284,7 +1284,7 @@ a { text-decoration: none; }
 ══════════════════════════════════════ */
 .list-view {
   padding: 24px;
-  max-width: 1600px;
+  max-width: 1800px;
   margin: 0 auto;
   border-radius: 0.5rem;
 }

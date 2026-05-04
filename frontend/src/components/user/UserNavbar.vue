@@ -812,7 +812,6 @@ function handleMobileProfileAction(actionId) {
 
 .desktop-sidebar.collapsed {
   width: 72px;
-  border-right: none; /* completely remove, not just transparent */
 }
 
 .desktop-sidebar.collapsed .sidebar-toggle-btn {
@@ -929,7 +928,8 @@ function handleMobileProfileAction(actionId) {
 
 .desktop-sidebar.collapsed .nav-item {
   justify-content: center;
-  padding: 0.75rem;
+  padding: 0.75rem 0;
+  gap: 0;
 }
 
 /* Sidebar Footer */
@@ -1013,7 +1013,8 @@ function handleMobileProfileAction(actionId) {
 
 .desktop-sidebar.collapsed .user-profile {
   justify-content: center;
-  padding: 0.5rem;
+  padding: 0.5rem 0;   /* same here */
+  gap: 0;
 }
 
 /* Profile Popup Overlay */

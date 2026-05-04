@@ -1,5 +1,5 @@
 <template>
-  <div :class="['dashboard-wrapper', { 'dark-mode': isDarkMode }]">
+  <div :class="['dashboard-wrapper', { 'dark-mode': isDarkMode, 'sidebar-collapsed': !sidebarExpanded }]">
     <!-- Top Header -->
     <UserHeader
         @toggle-sidebar="toggleSidebar"
@@ -47,8 +47,8 @@
     <!-- Main Content Area -->
     <main
         ref="mainContentRef"
-        :class="['main-content', { expanded: !sidebarExpanded }]"
-        :style="{ marginTop: mainMarginTop, height: mainHeight }"
+        class="main-content"
+        :style="mainContentStyle"
     >
       <UserCompanySection
           :active-tab="activeTab"
@@ -155,7 +155,9 @@ const isMobile = ref(typeof window !== 'undefined' && window.innerWidth <= 1024)
 function handleResize() { isMobile.value = window.innerWidth <= 1024; }
 
 // ── Margin / height calculations ──
-const HEADER_H = 64;
+const HEADER_H      = 64;
+const SIDEBAR_W     = 260;
+const SIDEBAR_W_COL = 72;
 
 const bannerHeight = computed(() => {
   if (!isBannerVisible.value) return 0;
@@ -164,8 +166,30 @@ const bannerHeight = computed(() => {
   return 56;
 });
 
-const mainMarginTop = computed(() => `${HEADER_H + bannerHeight.value}px`);
-const mainHeight = computed(() => `calc(100vh - ${HEADER_H + bannerHeight.value}px)`);
+const mainContentStyle = computed(() => {
+// In mainContentStyle computed, change the topOffset to account for banner:
+  const topOffset = HEADER_H + bannerHeight.value; // Add banner height
+
+  if (isMobile.value) {
+    return {
+      marginTop:  `${topOffset}px`,
+      height:     `calc(100vh - ${topOffset}px)`,
+      marginLeft: '0px',
+      width:      '100vw',
+      transition: 'margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    };
+  }
+
+  const sideW = sidebarExpanded.value ? SIDEBAR_W : SIDEBAR_W_COL;
+
+  return {
+    marginTop:  `${topOffset}px`,
+    height:     `calc(100vh - ${topOffset}px)`,
+    marginLeft: `${sideW}px`,
+    width:      `calc(100vw - ${sideW}px)`,
+    transition: 'margin-left 0.3s ease, width 0.3s ease, margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  };
+});
 
 // ── Auth / data ──
 const token = localStorage.getItem('token');
@@ -253,47 +277,23 @@ defineExpose({ activeTab });
   min-height: 100vh;
   background: #f8f9fa;
   transition: background 0.3s ease;
+}
+
+.main-content {
+  position: relative;
+  flex: 1;
   overflow-x: hidden;
+  overflow-y: auto;
+  padding: 2rem;
 }
 
 .dashboard-wrapper.dark-mode { background: #131118; }
 
-.main-content {
-  /* margin-top and height are set via inline :style binding */
-  padding: 2rem;
-  position: relative;
-  z-index: auto;
-  overflow-x: hidden;
-  overflow-y: auto;
-  /* Smooth transition when banner appears/disappears */
-  transition:
-      margin-left   0.3s ease,
-      width         0.3s ease,
-      margin-top    0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      height        0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@media (min-width: 1025px) {
-  .main-content {
-    width: calc(100vw - 260px);
-    margin-left: 260px;
-  }
-  .main-content.expanded {
-    width: calc(100vw - 72px);
-    margin-left: 72px;
-  }
-}
 
 @media (max-width: 1024px) {
   .main-content {
-    width: 100vw;
-    margin-left: 0 !important;
     padding-bottom: calc(80px + env(safe-area-inset-bottom));
     z-index: 1;
-  }
-  .main-content.expanded {
-    width: 100vw;
-    margin-left: 0 !important;
   }
 }
 

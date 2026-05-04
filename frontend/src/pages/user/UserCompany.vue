@@ -16,7 +16,8 @@
             @click="openCompanyForm"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
           <span>Add Company</span>
         </button>
@@ -30,8 +31,10 @@
 
       <!-- Search -->
       <div class="search-bar" v-if="userCompanies.length > 0">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         <input
             type="text"
@@ -41,7 +44,8 @@
         />
         <button v-if="searchQuery" @click="searchQuery = ''" class="search-clear" type="button">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
       </div>
@@ -64,7 +68,8 @@
               />
               <div v-else class="card-logo-placeholder">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/>
+                  <rect x="4" y="2" width="16" height="20" rx="2"/>
+                  <path d="M9 22v-4h6v4"/>
                 </svg>
               </div>
             </div>
@@ -83,7 +88,8 @@
           <div class="card-body">
             <div class="card-meta-row">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
               </svg>
               <span>{{ c.email }}</span>
             </div>
@@ -104,13 +110,15 @@
           <div class="card-actions">
             <button class="action-btn edit-btn" @click="editCompany(c)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 20h9"/><path d="M16.5 3.5l4 4L7 21H3v-4z"/>
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5l4 4L7 21H3v-4z"/>
               </svg>
               Edit
             </button>
             <button class="action-btn delete-btn" @click="deleteCompany(c.id)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6"/>
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-2 14H7L5 6"/>
               </svg>
               Delete
             </button>
@@ -122,7 +130,8 @@
       <div v-else-if="searchQuery" class="empty-state">
         <div class="empty-icon-wrap">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
         </div>
         <p class="empty-title">No results for "{{ searchQuery }}"</p>
@@ -133,7 +142,8 @@
       <div v-else class="empty-state">
         <div class="empty-icon-wrap">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M8 10h.01"/>
+            <rect x="4" y="2" width="16" height="20" rx="2"/>
+            <path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M8 10h.01"/>
           </svg>
         </div>
         <p class="empty-title">No companies yet</p>
@@ -155,7 +165,8 @@
             :key="page"
             @click="currentPage = page"
             :class="['pag-btn', { active: currentPage === page }]"
-        >{{ page }}</button>
+        >{{ page }}
+        </button>
         <button class="pag-btn arrow" @click="currentPage++" :disabled="currentPage === totalPages">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="9 18 15 12 9 6"/>
@@ -178,12 +189,14 @@
         <h2 class="form-page-title">{{ companyForm.id ? 'Edit Company' : 'New Company' }}</h2>
         <div class="form-topbar-right">
           <button @click="saveCompany" class="save-btn-top" :disabled="saving" type="button">
-            <svg v-if="!saving" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg v-if="!saving" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
               <polyline points="17 21 17 13 7 13 7 21"/>
               <polyline points="7 3 7 8 15 8"/>
             </svg>
-            <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon">
+            <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 class="spin-icon">
               <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
             </svg>
             {{ saving ? 'Saving…' : 'Save' }}
@@ -212,19 +225,19 @@
           <div class="fields-grid">
             <div class="field-wrap">
               <label class="field-label">Company Name <span class="req">*</span></label>
-              <input v-model="companyForm.companyName" type="text" class="field-input" placeholder="Acme Corporation" />
+              <input v-model="companyForm.companyName" type="text" class="field-input" placeholder="Acme Corporation"/>
             </div>
             <div class="field-wrap">
               <label class="field-label">Email <span class="req">*</span></label>
-              <input v-model="companyForm.email" type="email" class="field-input" placeholder="hello@company.com" />
+              <input v-model="companyForm.email" type="email" class="field-input" placeholder="hello@company.com"/>
             </div>
             <div class="field-wrap">
               <label class="field-label">Website <span class="req">*</span></label>
-              <input v-model="companyForm.website" type="url" class="field-input" placeholder="https://company.com" />
+              <input v-model="companyForm.website" type="url" class="field-input" placeholder="https://company.com"/>
             </div>
             <div class="field-wrap">
               <label class="field-label">Display URL</label>
-              <input v-model="companyForm.displayUrl" type="text" class="field-input" placeholder="company.com" />
+              <input v-model="companyForm.displayUrl" type="text" class="field-input" placeholder="company.com"/>
             </div>
             <div class="field-wrap">
               <label class="field-label">Status <span class="req">*</span></label>
@@ -256,15 +269,16 @@
           </div>
           <div class="logo-upload-area">
             <div v-if="logoPreview" class="logo-preview-wrap">
-              <img :src="logoPreview" alt="Logo preview" class="logo-preview-img" />
+              <img :src="logoPreview" alt="Logo preview" class="logo-preview-img"/>
               <button @click="removeLogo" class="logo-remove-btn" type="button">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
             </div>
             <label for="logo-upload" class="logo-dropzone">
-              <input type="file" @change="handleLogoUpload" accept="image/*" id="logo-upload" class="hidden-file" />
+              <input type="file" @change="handleLogoUpload" accept="image/*" id="logo-upload" class="hidden-file"/>
               <div class="dropzone-content">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -288,37 +302,48 @@
             <div class="field-wrap">
               <label class="field-label">360° View Link</label>
               <div class="input-icon-wrap">
-                <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+                <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 8v4l3 3"/>
                 </svg>
-                <input v-model="companyForm.view360" type="url" class="field-input icon-padded" placeholder="https://..." />
+                <input v-model="companyForm.view360" type="url" class="field-input icon-padded"
+                       placeholder="https://..."/>
               </div>
             </div>
             <div class="field-wrap">
               <label class="field-label">Google Location</label>
               <div class="input-icon-wrap">
-                <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
                 </svg>
-                <input v-model="companyForm.googleLocation" type="text" class="field-input icon-padded" placeholder="Google Maps URL" />
+                <input v-model="companyForm.googleLocation" type="text" class="field-input icon-padded"
+                       placeholder="Google Maps URL"/>
               </div>
             </div>
             <div class="field-wrap">
               <label class="field-label">Google Reviews</label>
               <div class="input-icon-wrap">
-                <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2">
+                  <polygon
+                      points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                 </svg>
-                <input v-model="companyForm.googleReviews" type="text" class="field-input icon-padded" placeholder="Reviews URL" />
+                <input v-model="companyForm.googleReviews" type="text" class="field-input icon-padded"
+                       placeholder="Reviews URL"/>
               </div>
             </div>
             <div class="field-wrap">
               <label class="field-label">TripAdvisor</label>
               <div class="input-icon-wrap">
-                <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2">
                   <circle cx="12" cy="12" r="10"/>
                 </svg>
-                <input v-model="companyForm.tripAdvisor" type="text" class="field-input icon-padded" placeholder="TripAdvisor URL" />
+                <input v-model="companyForm.tripAdvisor" type="text" class="field-input icon-padded"
+                       placeholder="TripAdvisor URL"/>
               </div>
             </div>
           </div>
@@ -362,8 +387,10 @@
                 />
               </div>
               <div class="link-type-chips">
-                <label v-for="lt in linkTypes" :key="lt.key" :class="['type-chip', { selected: pendingLinkType[lt.key] }]">
-                  <input type="checkbox" v-model="pendingLinkType[lt.key]" :disabled="isBrochureDisabled" class="hidden-check" />
+                <label v-for="lt in linkTypes" :key="lt.key"
+                       :class="['type-chip', { selected: pendingLinkType[lt.key] }]">
+                  <input type="checkbox" v-model="pendingLinkType[lt.key]" :disabled="isBrochureDisabled"
+                         class="hidden-check"/>
                   {{ lt.icon }} {{ lt.label }}
                 </label>
               </div>
@@ -387,7 +414,8 @@
                 </div>
                 <button type="button" @click="removeLink(index)" class="link-remove-btn" :disabled="isBrochureDisabled">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6"/>
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-2 14H7L5 6"/>
                   </svg>
                 </button>
               </div>
@@ -415,27 +443,28 @@
             </div>
             <div class="field-wrap">
               <label class="field-label">Country / Region</label>
-              <CountrySelector v-model="companyForm.country" />
+              <CountrySelector v-model="companyForm.country"/>
             </div>
             <div class="field-wrap full">
               <label class="field-label">Street Address</label>
-              <input v-model="companyForm.streetAddress" type="text" class="field-input" placeholder="123 Main St" />
+              <input v-model="companyForm.streetAddress" type="text" class="field-input" placeholder="123 Main St"/>
             </div>
             <div class="field-wrap full">
               <label class="field-label">Street Address Line 2</label>
-              <input v-model="companyForm.streetAddressLine2" type="text" class="field-input" placeholder="Suite, floor, etc." />
+              <input v-model="companyForm.streetAddressLine2" type="text" class="field-input"
+                     placeholder="Suite, floor, etc."/>
             </div>
             <div class="field-wrap">
               <label class="field-label">City</label>
-              <input v-model="companyForm.city" type="text" class="field-input" placeholder="City" />
+              <input v-model="companyForm.city" type="text" class="field-input" placeholder="City"/>
             </div>
             <div class="field-wrap">
               <label class="field-label">Postal Code</label>
-              <input v-model="companyForm.postalCode" type="text" class="field-input" placeholder="00000" />
+              <input v-model="companyForm.postalCode" type="text" class="field-input" placeholder="00000"/>
             </div>
             <div class="field-wrap">
               <label class="field-label">PO Box</label>
-              <input v-model="companyForm.poBox" type="text" class="field-input" placeholder="PO Box" />
+              <input v-model="companyForm.poBox" type="text" class="field-input" placeholder="PO Box"/>
             </div>
           </div>
         </div>
@@ -487,7 +516,8 @@
                     <span class="toggle-thumb"></span>
                   </span>
                   <span class="social-label-text">{{ social.label }}</span>
-                  <span v-if="userPlan === 'free' && !social.enabled && enabledSocialMediaCount >= 2" class="social-limit-note">Limit reached</span>
+                  <span v-if="userPlan === 'free' && !social.enabled && enabledSocialMediaCount >= 2"
+                        class="social-limit-note">Limit reached</span>
                 </label>
               </div>
               <input
@@ -513,11 +543,14 @@
                 />
                 <span class="toggle-track"><span class="toggle-thumb"></span></span>
               </label>
-              <input v-model="custom.name" type="text" class="field-input" placeholder="Platform name" :disabled="!custom.enabled" />
-              <input v-model="custom.url" type="url" class="field-input" placeholder="Profile URL" :disabled="!custom.enabled" />
+              <input v-model="custom.name" type="text" class="field-input" placeholder="Platform name"
+                     :disabled="!custom.enabled"/>
+              <input v-model="custom.url" type="url" class="field-input" placeholder="Profile URL"
+                     :disabled="!custom.enabled"/>
               <button @click="removeCustomSocial(index)" class="remove-custom-social" type="button">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
             </div>
@@ -530,10 +563,12 @@
               :disabled="userPlan === 'free' && enabledSocialMediaCount >= 2"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Add Custom Platform
-            <span v-if="userPlan === 'free' && enabledSocialMediaCount >= 2" class="upgrade-hint">(Upgrade to add more)</span>
+            <span v-if="userPlan === 'free' && enabledSocialMediaCount >= 2"
+                  class="upgrade-hint">(Upgrade to add more)</span>
           </button>
         </div>
 
@@ -541,7 +576,8 @@
         <div class="form-bottom-actions">
           <button @click="closeCompanyForm" class="cancel-btn" :disabled="saving" type="button">Cancel</button>
           <button @click="saveCompany" class="save-btn" :disabled="saving" type="button">
-            <svg v-if="!saving" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg v-if="!saving" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
               <polyline points="17 21 17 13 7 13 7 21"/>
             </svg>
@@ -569,28 +605,28 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, inject } from 'vue';
+import {computed, inject, onMounted, ref, watch} from 'vue';
 import api from '@/services/api.js';
-import { VITE_IMAGE_UPLOAD_URL } from '@/config.js';
-import { QuillEditor } from '@vueup/vue-quill';
+import {VITE_IMAGE_UPLOAD_URL} from '@/config.js';
+import {QuillEditor} from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import CountrySelector from '@/components/CountrySelector.vue';
 import ImageCropperModal from '@/components/ImageCropper.vue';
-import AlertModal from '@/components/user/AlertModal.vue';          // ← NEW
-import { useAlert } from '@/composables/useAlert.js';          // ← NEW
+import AlertModal from '@/components/user/AlertModal.vue'; // ← NEW
+import {useAlert} from '@/composables/useAlert.js'; // ← NEW
 
 const isDarkMode = inject('isDarkMode', ref(false));
 
 const props = defineProps({
-  activeTab:    { type: String, required: true },
-  companyCount: { type: Number, required: true },
-  userLimits:   { type: Object, required: true }
+  activeTab: {type: String, required: true},
+  companyCount: {type: Number, required: true},
+  userLimits: {type: Object, required: true}
 });
 
 const emit = defineEmits(['company-added', 'company-deleted', 'company-updated']);
 
 // ── Alert composable ──────────────────────────────────────────────── ← NEW
-const { alertState, showAlert, showConfirm } = useAlert();
+const {alertState, showAlert, showConfirm} = useAlert();
 
 // ── State (unchanged) ──
 const userCompanies = ref([]);
@@ -609,22 +645,22 @@ const cropperType = ref('logo');
 
 const pendingLinkUrl = ref('');
 const pendingLinkName = ref('');
-const pendingLinkType = ref({ isBrochure: false, isMenu: false, isShopNow: false, isOrderNow: false });
+const pendingLinkType = ref({isBrochure: false, isMenu: false, isShopNow: false, isOrderNow: false});
 
 const linkTypes = [
-  { key: 'isBrochure', icon: '📄', label: 'Brochure' },
-  { key: 'isMenu',     icon: '🍽️', label: 'Menu'     },
-  { key: 'isShopNow',  icon: '🛒', label: 'Shop'     },
-  { key: 'isOrderNow', icon: '📦', label: 'Order'    }
+  {key: 'isBrochure', icon: '📄', label: 'Brochure'},
+  {key: 'isMenu', icon: '🍽️', label: 'Menu'},
+  {key: 'isShopNow', icon: '🛒', label: 'Shop'},
+  {key: 'isOrderNow', icon: '📦', label: 'Order'}
 ];
 
 const mainSocialMedia = ref([
-  { name: 'facebook',  label: 'Facebook',     enabled: false, url: '' },
-  { name: 'twitter',   label: 'X (Twitter)',  enabled: false, url: '' },
-  { name: 'linkedin',  label: 'LinkedIn',     enabled: false, url: '' },
-  { name: 'instagram', label: 'Instagram',    enabled: false, url: '' },
-  { name: 'youtube',   label: 'YouTube',      enabled: false, url: '' },
-  { name: 'tiktok',    label: 'TikTok',       enabled: false, url: '' }
+  {name: 'facebook', label: 'Facebook', enabled: false, url: ''},
+  {name: 'twitter', label: 'X (Twitter)', enabled: false, url: ''},
+  {name: 'linkedin', label: 'LinkedIn', enabled: false, url: ''},
+  {name: 'instagram', label: 'Instagram', enabled: false, url: ''},
+  {name: 'youtube', label: 'YouTube', enabled: false, url: ''},
+  {name: 'tiktok', label: 'TikTok', enabled: false, url: ''}
 ]);
 
 const customSocialMedia = ref([]);
@@ -673,7 +709,9 @@ const fetchUserPlan = async () => {
   try {
     const res = await api.get('/auth/me');
     userPlan.value = (res.data?.user?.plan || res.data?.plan || 'free').toLowerCase();
-  } catch { userPlan.value = 'free'; }
+  } catch {
+    userPlan.value = 'free';
+  }
 };
 
 const fetchCompanies = async () => {
@@ -691,8 +729,14 @@ const fetchCompanies = async () => {
 };
 
 // ── Form helpers ──
-const openCompanyForm = () => { resetForm(); showCompanyForm.value = true; };
-const closeCompanyForm = () => { showCompanyForm.value = false; resetForm(); };
+const openCompanyForm = () => {
+  resetForm();
+  showCompanyForm.value = true;
+};
+const closeCompanyForm = () => {
+  showCompanyForm.value = false;
+  resetForm();
+};
 
 const resetForm = () => {
   companyForm.value = {
@@ -701,10 +745,15 @@ const resetForm = () => {
     status: 'active', files: [], existingLogoPath: null, country: '',
     streetAddress: '', streetAddressLine2: '', city: '', postalCode: '', poBox: '', label: ''
   };
-  logoPreview.value = null; logoFileName.value = '';
-  pendingLinkUrl.value = ''; pendingLinkName.value = '';
-  pendingLinkType.value = { isBrochure: false, isMenu: false, isShopNow: false, isOrderNow: false };
-  mainSocialMedia.value.forEach(s => { s.enabled = false; s.url = ''; });
+  logoPreview.value = null;
+  logoFileName.value = '';
+  pendingLinkUrl.value = '';
+  pendingLinkName.value = '';
+  pendingLinkType.value = {isBrochure: false, isMenu: false, isShopNow: false, isOrderNow: false};
+  mainSocialMedia.value.forEach(s => {
+    s.enabled = false;
+    s.url = '';
+  });
   customSocialMedia.value = [];
 };
 
@@ -712,40 +761,66 @@ const handleLogoUpload = (e) => {
   const file = e.target.files[0];
   if (!file) return;
   if (!file.type.startsWith('image/')) {
-    showAlert({ type: 'error', title: 'Invalid File', message: 'Please upload an image file (PNG, JPG, etc.).', confirmLabel: 'OK' }); // ← NEW
+    showAlert({
+      type: 'error',
+      title: 'Invalid File',
+      message: 'Please upload an image file (PNG, JPG, etc.).',
+      confirmLabel: 'OK'
+    }); // ← NEW
     return;
   }
   if (file.size > 5 * 1024 * 1024) {
-    showAlert({ type: 'warning', title: 'File Too Large', message: 'Image size must be less than 5MB.', confirmLabel: 'OK' }); // ← NEW
+    showAlert({
+      type: 'warning',
+      title: 'File Too Large',
+      message: 'Image size must be less than 5MB.',
+      confirmLabel: 'OK'
+    }); // ← NEW
     return;
   }
   logoFileName.value = file.name;
   const reader = new FileReader();
-  reader.onload = (ev) => { tempImageSrc.value = ev.target.result; cropperType.value = 'logo'; showCropperModal.value = true; };
+  reader.onload = (ev) => {
+    tempImageSrc.value = ev.target.result;
+    cropperType.value = 'logo';
+    showCropperModal.value = true;
+  };
   reader.readAsDataURL(file);
 };
 
 const handleCroppedImage = (blob) => {
-  const file = new File([blob], 'logo.jpg', { type: 'image/jpeg' });
+  const file = new File([blob], 'logo.jpg', {type: 'image/jpeg'});
   logoPreview.value = URL.createObjectURL(blob);
   companyForm.value.logo = file;
 };
 
 const removeLogo = () => {
-  logoPreview.value = null; logoFileName.value = '';
-  companyForm.value.logo = null; companyForm.value.existingLogoPath = null;
+  logoPreview.value = null;
+  logoFileName.value = '';
+  companyForm.value.logo = null;
+  companyForm.value.existingLogoPath = null;
   const el = document.getElementById('logo-upload');
   if (el) el.value = '';
 };
 
 const addLinkToList = async () => {
   if (!pendingLinkUrl.value.trim()) {
-    await showAlert({ type: 'warning', title: 'URL Required', message: 'Please enter a URL for the link.', confirmLabel: 'OK' }); // ← NEW
+    await showAlert({
+      type: 'warning',
+      title: 'URL Required',
+      message: 'Please enter a URL for the link.',
+      confirmLabel: 'OK'
+    }); // ← NEW
     return;
   }
   const hasType = Object.values(pendingLinkType.value).some(Boolean);
   if (!hasType) {
-    await showAlert({ type: 'warning', title: 'Type Required', message: 'Please select at least one link type (Brochure, Menu, Shop or Order).', confirmLabel: 'OK' }); // ← NEW
+    await showAlert({
+      type: 'warning',
+      title: 'Type Required',
+      message: 'Please select at least one link type (Brochure, Menu, Shop or Order).',
+      confirmLabel: 'OK'
+    }); // ← NEW
     return;
   }
   companyForm.value.files.push({
@@ -753,8 +828,9 @@ const addLinkToList = async () => {
     name: pendingLinkName.value.trim() || 'Untitled Link',
     ...pendingLinkType.value
   });
-  pendingLinkUrl.value = ''; pendingLinkName.value = '';
-  pendingLinkType.value = { isBrochure: false, isMenu: false, isShopNow: false, isOrderNow: false };
+  pendingLinkUrl.value = '';
+  pendingLinkName.value = '';
+  pendingLinkType.value = {isBrochure: false, isMenu: false, isShopNow: false, isOrderNow: false};
 };
 
 const removeLink = (i) => companyForm.value.files.splice(i, 1);
@@ -762,7 +838,12 @@ const removeLink = (i) => companyForm.value.files.splice(i, 1);
 const handleSocialToggle = async (social) => {
   if (userPlan.value !== 'free') return;
   if (social.enabled && enabledSocialMediaCount.value > 2) {
-    await showAlert({ type: 'warning', title: 'Limit Reached', message: 'Free plan allows only 2 social media platforms. Disable one to enable another.', confirmLabel: 'Got it' }); // ← NEW
+    await showAlert({
+      type: 'warning',
+      title: 'Limit Reached',
+      message: 'Free plan allows only 2 social media platforms. Disable one to enable another.',
+      confirmLabel: 'Got it'
+    }); // ← NEW
     social.enabled = false;
   }
 };
@@ -770,17 +851,27 @@ const handleSocialToggle = async (social) => {
 const handleCustomSocialToggle = async (custom) => {
   if (userPlan.value !== 'free') return;
   if (custom.enabled && enabledSocialMediaCount.value > 2) {
-    await showAlert({ type: 'warning', title: 'Limit Reached', message: 'Free plan allows only 2 social media platforms. Disable one to enable another.', confirmLabel: 'Got it' }); // ← NEW
+    await showAlert({
+      type: 'warning',
+      title: 'Limit Reached',
+      message: 'Free plan allows only 2 social media platforms. Disable one to enable another.',
+      confirmLabel: 'Got it'
+    }); // ← NEW
     custom.enabled = false;
   }
 };
 
 const addCustomSocial = async () => {
   if (userPlan.value === 'free' && enabledSocialMediaCount.value >= 2) {
-    await showAlert({ type: 'warning', title: 'Limit Reached', message: 'Free plan allows a maximum of 2 social media links. Upgrade to add more.', confirmLabel: 'Got it' }); // ← NEW
+    await showAlert({
+      type: 'warning',
+      title: 'Limit Reached',
+      message: 'Free plan allows a maximum of 2 social media links. Upgrade to add more.',
+      confirmLabel: 'Got it'
+    }); // ← NEW
     return;
   }
-  customSocialMedia.value.push({ name: '', url: '', enabled: false });
+  customSocialMedia.value.push({name: '', url: '', enabled: false});
 };
 
 const removeCustomSocial = (i) => customSocialMedia.value.splice(i, 1);
@@ -788,15 +879,25 @@ const removeCustomSocial = (i) => customSocialMedia.value.splice(i, 1);
 // ── Save ──────────────────────────────────────────────────────────── ← NEW (all alerts replaced)
 const saveCompany = async () => {
   if (!companyForm.value.companyName.trim()) {
-    await showAlert({ type: 'warning', title: 'Required Field', message: 'Company name is required.', confirmLabel: 'OK' });
+    await showAlert({
+      type: 'warning',
+      title: 'Required Field',
+      message: 'Company name is required.',
+      confirmLabel: 'OK'
+    });
     return;
   }
   if (!companyForm.value.website.trim()) {
-    await showAlert({ type: 'warning', title: 'Required Field', message: 'Website is required.', confirmLabel: 'OK' });
+    await showAlert({type: 'warning', title: 'Required Field', message: 'Website is required.', confirmLabel: 'OK'});
     return;
   }
   if (!companyForm.value.email.trim()) {
-    await showAlert({ type: 'warning', title: 'Required Field', message: 'Email address is required.', confirmLabel: 'OK' });
+    await showAlert({
+      type: 'warning',
+      title: 'Required Field',
+      message: 'Email address is required.',
+      confirmLabel: 'OK'
+    });
     return;
   }
   if (userPlan.value === 'free' && enabledSocialMediaCount.value > 2) {
@@ -808,31 +909,43 @@ const saveCompany = async () => {
     return;
   }
   if (userPlan.value === 'free' && companyForm.value.files.length > 0) {
-    await showAlert({ type: 'warning', title: 'Premium Feature', message: 'Brochure links require a Plus or Pro plan.', confirmLabel: 'OK' });
+    await showAlert({
+      type: 'warning',
+      title: 'Premium Feature',
+      message: 'Brochure links require a Plus or Pro plan.',
+      confirmLabel: 'OK'
+    });
     return;
   }
   if (!companyForm.value.id && !companyForm.value.logo) {
-    await showAlert({ type: 'warning', title: 'Logo Required', message: 'Please upload a company logo before saving.', confirmLabel: 'OK' });
+    await showAlert({
+      type: 'warning',
+      title: 'Logo Required',
+      message: 'Please upload a company logo before saving.',
+      confirmLabel: 'OK'
+    });
     return;
   }
 
   saving.value = true;
   try {
     const fd = new FormData();
-    const fields = ['companyName','website','displayUrl','email','bio','view360','googleLocation','googleReviews','tripAdvisor','status','country','streetAddress','streetAddressLine2','city','postalCode','poBox','label'];
+    const fields = ['companyName', 'website', 'displayUrl', 'email', 'bio', 'view360', 'googleLocation', 'googleReviews', 'tripAdvisor', 'status', 'country', 'streetAddress', 'streetAddressLine2', 'city', 'postalCode', 'poBox', 'label'];
     fields.forEach(f => fd.append(f, companyForm.value[f] || ''));
     if (companyForm.value.logo) fd.append('logo', companyForm.value.logo);
     else if (companyForm.value.existingLogoPath) fd.append('existingLogoPath', companyForm.value.existingLogoPath);
     if (userPlan.value !== 'free') fd.append('files', JSON.stringify(companyForm.value.files));
 
     const socialLinks = {};
-    mainSocialMedia.value.filter(s => s.enabled && s.url.trim()).forEach(s => { socialLinks[s.name] = s.url.trim(); });
+    mainSocialMedia.value.filter(s => s.enabled && s.url.trim()).forEach(s => {
+      socialLinks[s.name] = s.url.trim();
+    });
     customSocialMedia.value.filter(c => c.enabled && c.url.trim() && c.name.trim()).forEach(c => {
       socialLinks[c.name.trim().toLowerCase().replace(/\s+/g, '_')] = c.url.trim();
     });
     fd.append('socialLinks', JSON.stringify(socialLinks));
 
-    const cfg = { headers: { 'Content-Type': 'multipart/form-data' } };
+    const cfg = {headers: {'Content-Type': 'multipart/form-data'}};
     const isUpdate = !!companyForm.value.id;
 
     if (isUpdate) {
@@ -870,12 +983,19 @@ const saveCompany = async () => {
 // ── Edit ──────────────────────────────────────────────────────────── ← NEW (alert replaced)
 const editCompany = async (company) => {
   try {
-    mainSocialMedia.value.forEach(s => { s.enabled = false; s.url = ''; });
+    mainSocialMedia.value.forEach(s => {
+      s.enabled = false;
+      s.url = '';
+    });
     customSocialMedia.value = [];
 
     let parsedFiles = [];
     if (company.files) {
-      try { parsedFiles = Array.isArray(company.files) ? company.files : JSON.parse(company.files); } catch { parsedFiles = []; }
+      try {
+        parsedFiles = Array.isArray(company.files) ? company.files : JSON.parse(company.files);
+      } catch {
+        parsedFiles = [];
+      }
     }
 
     companyForm.value = {
@@ -889,8 +1009,13 @@ const editCompany = async (company) => {
       postalCode: company.postalCode || '', poBox: company.poBox || '', label: company.label || ''
     };
 
-    if (company.logo) { logoPreview.value = `${VITE_IMAGE_UPLOAD_URL}${company.logo}`; logoFileName.value = company.logo.split('/').pop(); }
-    else { logoPreview.value = null; logoFileName.value = ''; }
+    if (company.logo) {
+      logoPreview.value = `${VITE_IMAGE_UPLOAD_URL}${company.logo}`;
+      logoFileName.value = company.logo.split('/').pop();
+    } else {
+      logoPreview.value = null;
+      logoFileName.value = '';
+    }
 
     let parsedSocial = [];
     const raw = company.socialLinks || company.socialMedia || [];
@@ -898,13 +1023,21 @@ const editCompany = async (company) => {
       if (Array.isArray(raw)) parsedSocial = raw;
       else if (typeof raw === 'string' && raw.trim()) parsedSocial = JSON.parse(raw);
       else if (typeof raw === 'object' && raw !== null)
-        parsedSocial = Object.entries(raw).map(([k, v]) => ({ name: k, label: k.charAt(0).toUpperCase() + k.slice(1), url: v }));
-    } catch { parsedSocial = []; }
+        parsedSocial = Object.entries(raw).map(([k, v]) => ({
+          name: k,
+          label: k.charAt(0).toUpperCase() + k.slice(1),
+          url: v
+        }));
+    } catch {
+      parsedSocial = [];
+    }
 
     parsedSocial.forEach(s => {
       const main = mainSocialMedia.value.find(m => m.name.toLowerCase() === s.name.toLowerCase());
-      if (main) { main.enabled = true; main.url = s.url || ''; }
-      else customSocialMedia.value.push({ name: s.label || s.name, url: s.url || '', enabled: true });
+      if (main) {
+        main.enabled = true;
+        main.url = s.url || '';
+      } else customSocialMedia.value.push({name: s.label || s.name, url: s.url || '', enabled: true});
     });
 
     showCompanyForm.value = true;
@@ -950,7 +1083,10 @@ const deleteCompany = async (id) => {
   }
 };
 
-onMounted(async () => { await fetchUserPlan(); await fetchCompanies(); });
+onMounted(async () => {
+  await fetchUserPlan();
+  await fetchCompanies();
+});
 </script>
 
 <style scoped>
@@ -974,9 +1110,9 @@ onMounted(async () => { await fetchUserPlan(); await fetchCompanies(); });
   --c-success-light: #edf7f4;
   --c-warning: #b7720a;
   --c-warning-light: #fef8ec;
-  --c-shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
-  --c-shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.05);
-  --c-shadow-lg: 0 8px 24px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06);
+  --c-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
+  --c-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.05);
+  --c-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.06);
   --c-radius: 12px;
   --c-radius-sm: 8px;
   --c-radius-pill: 100px;
@@ -1009,17 +1145,29 @@ onMounted(async () => { await fetchUserPlan(); await fetchCompanies(); });
 }
 
 /* ── Shared base ── */
-*, *::before, *::after { box-sizing: border-box; }
-button { font-family: inherit; cursor: pointer; }
-input, select, textarea { font-family: inherit; }
-a { text-decoration: none; }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+a {
+  text-decoration: none;
+}
 
 /* ═══════════════════════════════════════
    LIST VIEW
 ═══════════════════════════════════════ */
 .list-view {
   padding: 24px;
-  max-width: 1600px;
+  max-width: 1800px;
   margin: 0 auto;
   border-radius: 0.5rem;
 }
@@ -1072,8 +1220,14 @@ a { text-decoration: none; }
   white-space: nowrap;
 }
 
-.add-btn:hover { background: var(--c-accent-hover); transform: translateY(-1px); }
-.add-btn:active { transform: translateY(0); }
+.add-btn:hover {
+  background: var(--c-accent-hover);
+  transform: translateY(-1px);
+}
+
+.add-btn:active {
+  transform: translateY(0);
+}
 
 .limit-badge {
   display: inline-flex;
@@ -1113,10 +1267,19 @@ a { text-decoration: none; }
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.search-input::placeholder { color: var(--c-text-muted); }
-.search-input:focus { outline: none; border-color: var(--c-border-focus); box-shadow: 0 0 0 3px rgba(139,99,85,0.12); }
+.search-input::placeholder {
+  color: var(--c-text-muted);
+}
 
-.dark-mode .search-input:focus { box-shadow: 0 0 0 3px rgba(196,154,122,0.15); }
+.search-input:focus {
+  outline: none;
+  border-color: var(--c-border-focus);
+  box-shadow: 0 0 0 3px rgba(139, 99, 85, 0.12);
+}
+
+.dark-mode .search-input:focus {
+  box-shadow: 0 0 0 3px rgba(196, 154, 122, 0.15);
+}
 
 .search-clear {
   position: absolute;
@@ -1135,7 +1298,10 @@ a { text-decoration: none; }
   transition: background 0.15s;
 }
 
-.search-clear:hover { background: var(--c-danger-light); color: var(--c-danger); }
+.search-clear:hover {
+  background: var(--c-danger-light);
+  color: var(--c-danger);
+}
 
 /* Company Cards Grid */
 .company-grid {
@@ -1172,7 +1338,9 @@ a { text-decoration: none; }
   position: relative;
 }
 
-.card-logo-wrap { flex-shrink: 0; }
+.card-logo-wrap {
+  flex-shrink: 0;
+}
 
 .card-logo {
   width: 46px;
@@ -1220,7 +1388,9 @@ a { text-decoration: none; }
   display: block;
 }
 
-.card-website:hover { text-decoration: underline; }
+.card-website:hover {
+  text-decoration: underline;
+}
 
 .status-dot {
   flex-shrink: 0;
@@ -1235,8 +1405,15 @@ a { text-decoration: none; }
   margin-top: 2px;
 }
 
-.status-dot.active { background: var(--c-success-light); color: var(--c-success); }
-.status-dot.inactive { background: var(--c-danger-light); color: var(--c-danger); }
+.status-dot.active {
+  background: var(--c-success-light);
+  color: var(--c-success);
+}
+
+.status-dot.inactive {
+  background: var(--c-danger-light);
+  color: var(--c-danger);
+}
 
 .card-body {
   padding: 12px 16px;
@@ -1253,8 +1430,16 @@ a { text-decoration: none; }
   overflow: hidden;
 }
 
-.card-meta-row svg { flex-shrink: 0; color: var(--c-text-muted); }
-.card-meta-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-meta-row svg {
+  flex-shrink: 0;
+  color: var(--c-text-muted);
+}
+
+.card-meta-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .card-links-row {
   display: flex;
@@ -1274,7 +1459,10 @@ a { text-decoration: none; }
   transition: background 0.15s;
 }
 
-.card-pill-link:hover { background: var(--c-accent); color: #fff; }
+.card-pill-link:hover {
+  background: var(--c-accent);
+  color: #fff;
+}
 
 .card-actions {
   display: flex;
@@ -1298,11 +1486,25 @@ a { text-decoration: none; }
   transition: all 0.15s;
 }
 
-.edit-btn { background: var(--c-warning-light); color: var(--c-warning); }
-.edit-btn:hover { background: #f39c12; color: #fff; }
+.edit-btn {
+  background: var(--c-warning-light);
+  color: var(--c-warning);
+}
 
-.delete-btn { background: var(--c-danger-light); color: var(--c-danger); }
-.delete-btn:hover { background: var(--c-danger); color: #fff; }
+.edit-btn:hover {
+  background: #f39c12;
+  color: #fff;
+}
+
+.delete-btn {
+  background: var(--c-danger-light);
+  color: var(--c-danger);
+}
+
+.delete-btn:hover {
+  background: var(--c-danger);
+  color: #fff;
+}
 
 /* Empty State */
 .empty-state {
@@ -1351,7 +1553,9 @@ a { text-decoration: none; }
   transition: background 0.15s;
 }
 
-.empty-action-btn:hover { background: var(--c-accent-hover); }
+.empty-action-btn:hover {
+  background: var(--c-accent-hover);
+}
 
 /* Pagination */
 .pagination-bar {
@@ -1378,10 +1582,25 @@ a { text-decoration: none; }
   transition: all 0.15s;
 }
 
-.pag-btn:hover:not(:disabled) { border-color: var(--c-accent); color: var(--c-accent); }
-.pag-btn.active { background: var(--c-accent); border-color: var(--c-accent); color: #fff; }
-.pag-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.pag-btn.arrow { background: var(--c-bg); }
+.pag-btn:hover:not(:disabled) {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
+.pag-btn.active {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  color: #fff;
+}
+
+.pag-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pag-btn.arrow {
+  background: var(--c-bg);
+}
 
 /* ═══════════════════════════════════════
    FORM VIEW
@@ -1420,7 +1639,10 @@ a { text-decoration: none; }
   transition: all 0.15s;
 }
 
-.back-btn:hover { border-color: var(--c-accent); color: var(--c-accent); }
+.back-btn:hover {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
 
 .form-page-title {
   flex: 1;
@@ -1431,7 +1653,10 @@ a { text-decoration: none; }
   margin: 0;
 }
 
-.form-topbar-right { display: flex; gap: 8px; }
+.form-topbar-right {
+  display: flex;
+  gap: 8px;
+}
 
 .save-btn-top {
   display: inline-flex;
@@ -1447,8 +1672,14 @@ a { text-decoration: none; }
   transition: background 0.15s;
 }
 
-.save-btn-top:hover:not(:disabled) { background: var(--c-accent-hover); }
-.save-btn-top:disabled { opacity: 0.6; cursor: not-allowed; }
+.save-btn-top:hover:not(:disabled) {
+  background: var(--c-accent-hover);
+}
+
+.save-btn-top:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 /* Plan Banner */
 .plan-banner {
@@ -1462,17 +1693,38 @@ a { text-decoration: none; }
   flex-wrap: wrap;
 }
 
-.plan-banner.free { background: var(--c-warning-light); }
-.plan-banner.plus { background: var(--c-accent-light); }
-.plan-banner.pro { background: var(--c-success-light); }
+.plan-banner.free {
+  background: var(--c-warning-light);
+}
 
-.plan-info { display: flex; align-items: center; gap: 8px; }
+.plan-banner.plus {
+  background: var(--c-accent-light);
+}
 
-.plan-icon { font-size: 18px; }
+.plan-banner.pro {
+  background: var(--c-success-light);
+}
 
-.plan-name { font-size: 14px; font-weight: 700; color: var(--c-text-primary); }
+.plan-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-.plan-note { font-size: 12px; color: var(--c-text-secondary); }
+.plan-icon {
+  font-size: 18px;
+}
+
+.plan-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-text-primary);
+}
+
+.plan-note {
+  font-size: 12px;
+  color: var(--c-text-secondary);
+}
 
 /* Form Body */
 .form-body {
@@ -1488,7 +1740,9 @@ a { text-decoration: none; }
   border-bottom: 1px solid var(--c-border);
 }
 
-.form-section:last-child { border-bottom: none; }
+.form-section:last-child {
+  border-bottom: none;
+}
 
 .section-label {
   display: flex;
@@ -1535,7 +1789,9 @@ a { text-decoration: none; }
   gap: 6px;
 }
 
-.field-wrap.full { grid-column: 1 / -1; }
+.field-wrap.full {
+  grid-column: 1 / -1;
+}
 
 .field-label {
   font-size: 13px;
@@ -1543,7 +1799,9 @@ a { text-decoration: none; }
   color: var(--c-text-secondary);
 }
 
-.req { color: var(--c-danger); }
+.req {
+  color: var(--c-danger);
+}
 
 .field-input {
   width: 100%;
@@ -1556,19 +1814,33 @@ a { text-decoration: none; }
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.field-input::placeholder { color: var(--c-text-muted); }
+.field-input::placeholder {
+  color: var(--c-text-muted);
+}
 
 .field-input:focus {
   outline: none;
   border-color: var(--c-border-focus);
-  box-shadow: 0 0 0 3px rgba(139,99,85,0.12);
+  box-shadow: 0 0 0 3px rgba(139, 99, 85, 0.12);
 }
 
-.dark-mode .field-input:focus { box-shadow: 0 0 0 3px rgba(196,154,122,0.15); }
+.dark-mode .field-input:focus {
+  box-shadow: 0 0 0 3px rgba(196, 154, 122, 0.15);
+}
 
-.field-input:disabled { opacity: 0.5; cursor: not-allowed; background: var(--c-bg); }
+.field-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--c-bg);
+}
 
-.field-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a09080' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+.field-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a09080' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
 
 /* Status Toggle */
 .status-toggle-group {
@@ -1604,11 +1876,18 @@ a { text-decoration: none; }
   border-radius: 50%;
 }
 
-.toggle-dot.active-dot { background: var(--c-success); }
-.toggle-dot.inactive-dot { background: var(--c-danger); }
+.toggle-dot.active-dot {
+  background: var(--c-success);
+}
+
+.toggle-dot.inactive-dot {
+  background: var(--c-danger);
+}
 
 /* Input with icon */
-.input-icon-wrap { position: relative; }
+.input-icon-wrap {
+  position: relative;
+}
 
 .input-icon {
   position: absolute;
@@ -1619,7 +1898,9 @@ a { text-decoration: none; }
   pointer-events: none;
 }
 
-.field-input.icon-padded { padding-left: 38px; }
+.field-input.icon-padded {
+  padding-left: 38px;
+}
 
 /* ── Logo Upload ── */
 .logo-upload-area {
@@ -1662,12 +1943,24 @@ a { text-decoration: none; }
   transition: transform 0.15s;
 }
 
-.logo-remove-btn:hover { transform: scale(1.1); }
+.logo-remove-btn:hover {
+  transform: scale(1.1);
+}
 
-.logo-dropzone { flex: 1; min-width: 160px; cursor: pointer; display: block; }
+.logo-dropzone {
+  flex: 1;
+  min-width: 160px;
+  cursor: pointer;
+  display: block;
+}
 
-.hidden-file { display: none; }
-.hidden-check { display: none; }
+.hidden-file {
+  display: none;
+}
+
+.hidden-check {
+  display: none;
+}
 
 .dropzone-content {
   display: flex;
@@ -1689,8 +1982,16 @@ a { text-decoration: none; }
   color: var(--c-accent);
 }
 
-.dropzone-text { font-size: 14px; font-weight: 600; color: var(--c-text-primary); }
-.dropzone-hint { font-size: 11px; color: var(--c-text-muted); }
+.dropzone-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+}
+
+.dropzone-hint {
+  font-size: 11px;
+  color: var(--c-text-muted);
+}
 
 /* ── Brochure Panel ── */
 .brochure-panel {
@@ -1701,12 +2002,14 @@ a { text-decoration: none; }
   position: relative;
 }
 
-.brochure-panel.locked { overflow: hidden; }
+.brochure-panel.locked {
+  overflow: hidden;
+}
 
 .lock-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1715,7 +2018,9 @@ a { text-decoration: none; }
   border-radius: var(--c-radius);
 }
 
-.dark-mode .lock-overlay { background: rgba(20,18,30,0.75); }
+.dark-mode .lock-overlay {
+  background: rgba(20, 18, 30, 0.75);
+}
 
 .lock-card {
   background: var(--c-surface);
@@ -1726,9 +2031,24 @@ a { text-decoration: none; }
   box-shadow: var(--c-shadow-md);
 }
 
-.lock-emoji { font-size: 28px; display: block; margin-bottom: 8px; }
-.lock-title { font-size: 15px; font-weight: 700; color: var(--c-text-primary); margin: 0 0 4px; }
-.lock-desc { font-size: 12px; color: var(--c-text-muted); margin: 0; }
+.lock-emoji {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.lock-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-text-primary);
+  margin: 0 0 4px;
+}
+
+.lock-desc {
+  font-size: 12px;
+  color: var(--c-text-muted);
+  margin: 0;
+}
 
 .link-form-row {
   display: flex;
@@ -1737,7 +2057,11 @@ a { text-decoration: none; }
   margin-bottom: 16px;
 }
 
-.link-fields { display: flex; flex-direction: column; gap: 8px; }
+.link-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .link-type-chips {
   display: flex;
@@ -1778,10 +2102,20 @@ a { text-decoration: none; }
   transition: background 0.15s;
 }
 
-.add-link-btn:hover:not(:disabled) { background: var(--c-accent-hover); }
-.add-link-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.add-link-btn:hover:not(:disabled) {
+  background: var(--c-accent-hover);
+}
 
-.link-list { display: flex; flex-direction: column; gap: 8px; }
+.add-link-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .link-item {
   display: flex;
@@ -1793,11 +2127,32 @@ a { text-decoration: none; }
   border-radius: var(--c-radius-sm);
 }
 
-.link-item-info { flex: 1; min-width: 0; }
-.link-item-name { display: block; font-size: 13px; font-weight: 700; color: var(--c-text-primary); margin-bottom: 3px; }
-.link-item-url { display: block; font-size: 12px; color: var(--c-text-muted); word-break: break-all; margin-bottom: 7px; }
+.link-item-info {
+  flex: 1;
+  min-width: 0;
+}
 
-.link-item-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.link-item-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-text-primary);
+  margin-bottom: 3px;
+}
+
+.link-item-url {
+  display: block;
+  font-size: 12px;
+  color: var(--c-text-muted);
+  word-break: break-all;
+  margin-bottom: 7px;
+}
+
+.link-item-tags {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
 
 .link-tag {
   display: inline-flex;
@@ -1808,15 +2163,45 @@ a { text-decoration: none; }
   font-weight: 600;
 }
 
-.link-tag.brochure { background: #e3f2fd; color: #1565c0; }
-.link-tag.menu { background: #fff3e0; color: #e65100; }
-.link-tag.shop { background: var(--c-success-light); color: var(--c-success); }
-.link-tag.order { background: #f3e5f5; color: #6a1b9a; }
+.link-tag.brochure {
+  background: #e3f2fd;
+  color: #1565c0;
+}
 
-.dark-mode .link-tag.brochure { background: #0d1f3c; color: #64b5f6; }
-.dark-mode .link-tag.menu { background: #2a1500; color: #ffb74d; }
-.dark-mode .link-tag.shop { background: var(--c-success-light); color: var(--c-success); }
-.dark-mode .link-tag.order { background: #1e0a2a; color: #ce93d8; }
+.link-tag.menu {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.link-tag.shop {
+  background: var(--c-success-light);
+  color: var(--c-success);
+}
+
+.link-tag.order {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+
+.dark-mode .link-tag.brochure {
+  background: #0d1f3c;
+  color: #64b5f6;
+}
+
+.dark-mode .link-tag.menu {
+  background: #2a1500;
+  color: #ffb74d;
+}
+
+.dark-mode .link-tag.shop {
+  background: var(--c-success-light);
+  color: var(--c-success);
+}
+
+.dark-mode .link-tag.order {
+  background: #1e0a2a;
+  color: #ce93d8;
+}
 
 .link-remove-btn {
   padding: 8px;
@@ -1831,9 +2216,17 @@ a { text-decoration: none; }
   transition: background 0.15s;
 }
 
-.link-remove-btn:hover:not(:disabled) { background: var(--c-danger); color: #fff; }
+.link-remove-btn:hover:not(:disabled) {
+  background: var(--c-danger);
+  color: #fff;
+}
 
-.link-empty-text { font-size: 13px; color: var(--c-text-muted); font-style: italic; margin: 0; }
+.link-empty-text {
+  font-size: 13px;
+  color: var(--c-text-muted);
+  font-style: italic;
+  margin: 0;
+}
 
 /* ── Social Media ── */
 .lock-badge {
@@ -1865,9 +2258,14 @@ a { text-decoration: none; }
   margin-bottom: 16px;
 }
 
-.social-item { display: flex; flex-direction: column; gap: 8px; }
+.social-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-.social-item-header {}
+.social-item-header {
+}
 
 .social-toggle {
   display: inline-flex;
@@ -1889,7 +2287,9 @@ a { text-decoration: none; }
   flex-shrink: 0;
 }
 
-.social-toggle.enabled .toggle-track { background: var(--c-accent); }
+.social-toggle.enabled .toggle-track {
+  background: var(--c-accent);
+}
 
 .toggle-thumb {
   position: absolute;
@@ -1899,11 +2299,13 @@ a { text-decoration: none; }
   height: 16px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   transition: left 0.2s;
 }
 
-.social-toggle.enabled .toggle-thumb { left: 19px; }
+.social-toggle.enabled .toggle-thumb {
+  left: 19px;
+}
 
 .social-label-text {
   font-size: 13px;
@@ -1920,7 +2322,12 @@ a { text-decoration: none; }
 }
 
 /* Custom Social */
-.custom-social-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.custom-social-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
 
 .custom-social-row {
   display: grid;
@@ -1933,7 +2340,9 @@ a { text-decoration: none; }
   border-radius: var(--c-radius-sm);
 }
 
-.social-toggle.compact { gap: 0; }
+.social-toggle.compact {
+  gap: 0;
+}
 
 .remove-custom-social {
   padding: 8px;
@@ -1947,7 +2356,9 @@ a { text-decoration: none; }
   transition: background 0.15s;
 }
 
-.remove-custom-social:hover { background: var(--c-danger-light); }
+.remove-custom-social:hover {
+  background: var(--c-danger-light);
+}
 
 .add-more-social-btn {
   display: inline-flex;
@@ -1969,9 +2380,15 @@ a { text-decoration: none; }
   background: var(--c-accent-light);
 }
 
-.add-more-social-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.add-more-social-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-.upgrade-hint { color: var(--c-warning); font-size: 11px; }
+.upgrade-hint {
+  color: var(--c-warning);
+  font-size: 11px;
+}
 
 /* ── Quill Editor ── */
 .quill-editor {
@@ -1996,12 +2413,32 @@ a { text-decoration: none; }
   min-height: 120px;
 }
 
-:deep(.ql-editor) { min-height: 120px; color: var(--c-text-primary); }
-:deep(.ql-editor.ql-blank::before) { color: var(--c-text-muted); font-style: normal; }
-:deep(.ql-stroke) { stroke: var(--c-text-secondary) !important; }
-:deep(.ql-fill) { fill: var(--c-text-secondary) !important; }
-:deep(.ql-picker-label) { color: var(--c-text-secondary) !important; }
-:deep(.ql-picker-options) { background: var(--c-surface) !important; border-color: var(--c-border) !important; }
+:deep(.ql-editor) {
+  min-height: 120px;
+  color: var(--c-text-primary);
+}
+
+:deep(.ql-editor.ql-blank::before) {
+  color: var(--c-text-muted);
+  font-style: normal;
+}
+
+:deep(.ql-stroke) {
+  stroke: var(--c-text-secondary) !important;
+}
+
+:deep(.ql-fill) {
+  fill: var(--c-text-secondary) !important;
+}
+
+:deep(.ql-picker-label) {
+  color: var(--c-text-secondary) !important;
+}
+
+:deep(.ql-picker-options) {
+  background: var(--c-surface) !important;
+  border-color: var(--c-border) !important;
+}
 
 /* ── Bottom Actions ── */
 .form-bottom-actions {
@@ -2022,7 +2459,10 @@ a { text-decoration: none; }
   transition: all 0.15s;
 }
 
-.cancel-btn:hover:not(:disabled) { border-color: var(--c-danger); color: var(--c-danger); }
+.cancel-btn:hover:not(:disabled) {
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+}
 
 .save-btn {
   display: inline-flex;
@@ -2038,71 +2478,163 @@ a { text-decoration: none; }
   transition: background 0.15s, transform 0.12s;
 }
 
-.save-btn:hover:not(:disabled) { background: var(--c-accent-hover); transform: translateY(-1px); }
-.save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.save-btn:hover:not(:disabled) {
+  background: var(--c-accent-hover);
+  transform: translateY(-1px);
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 /* Spin animation */
-.spin-icon { animation: spin 0.9s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.spin-icon {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* ═══════════════════════════════════════
    RESPONSIVE — TABLET
 ═══════════════════════════════════════ */
 @media (max-width: 768px) {
-  .list-view { padding: 16px; }
-  .form-body { padding: 16px; }
-  .form-topbar { padding: 12px 16px; }
-  .plan-banner { padding: 10px 16px; }
-  .back-label { display: none; }
+  .list-view {
+    padding: 16px;
+  }
+
+  .form-body {
+    padding: 16px;
+  }
+
+  .form-topbar {
+    padding: 12px 16px;
+  }
+
+  .plan-banner {
+    padding: 10px 16px;
+  }
+
+  .back-label {
+    display: none;
+  }
 
   .company-grid {
     grid-template-columns: 1fr;
     gap: 10px;
   }
 
-  .fields-grid { grid-template-columns: 1fr; }
+  .fields-grid {
+    grid-template-columns: 1fr;
+  }
 
-  .social-grid { grid-template-columns: 1fr; }
+  .social-grid {
+    grid-template-columns: 1fr;
+  }
 
-  .form-bottom-actions { flex-direction: column; }
-  .cancel-btn, .save-btn { width: 100%; justify-content: center; }
+  .form-bottom-actions {
+    flex-direction: column;
+  }
+
+  .cancel-btn, .save-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* ═══════════════════════════════════════
    RESPONSIVE — MOBILE
 ═══════════════════════════════════════ */
 @media (max-width: 480px) {
-  .list-view { padding: 12px; }
-  .form-body { padding: 12px; }
-  .form-topbar { padding: 10px 12px; gap: 8px; }
-  .page-title { font-size: 18px; }
-  .form-page-title { font-size: 15px; }
+  .list-view {
+    padding: 12px;
+  }
 
-  .card-actions { flex-direction: column; gap: 6px; }
+  .form-body {
+    padding: 12px;
+  }
+
+  .form-topbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .form-page-title {
+    font-size: 15px;
+  }
+
+  .card-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
 
   .custom-social-row {
     grid-template-columns: auto 1fr;
     grid-template-rows: auto auto;
   }
 
-  .custom-social-row .field-input:first-of-type { grid-column: 2; }
-  .custom-social-row .field-input:last-of-type { grid-column: 1 / -1; }
-  .remove-custom-social { grid-row: 1; grid-column: 3; display: none; }
+  .custom-social-row .field-input:first-of-type {
+    grid-column: 2;
+  }
 
-  .link-type-chips { gap: 6px; }
-  .type-chip { padding: 5px 10px; font-size: 11px; }
+  .custom-social-row .field-input:last-of-type {
+    grid-column: 1 / -1;
+  }
 
-  .logo-upload-area { flex-direction: column; }
-  .logo-dropzone { width: 100%; }
+  .remove-custom-social {
+    grid-row: 1;
+    grid-column: 3;
+    display: none;
+  }
 
-  .status-toggle-group { flex-direction: column; gap: 6px; }
+  .link-type-chips {
+    gap: 6px;
+  }
 
-  .form-bottom-actions { gap: 8px; padding-top: 16px; }
+  .type-chip {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
 
-  .section-number { width: 24px; height: 24px; font-size: 10px; }
-  .section-title { font-size: 14px; }
+  .logo-upload-area {
+    flex-direction: column;
+  }
 
-  .form-section { padding: 18px 0; }
+  .logo-dropzone {
+    width: 100%;
+  }
+
+  .status-toggle-group {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-bottom-actions {
+    gap: 8px;
+    padding-top: 16px;
+  }
+
+  .section-number {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+
+  .section-title {
+    font-size: 14px;
+  }
+
+  .form-section {
+    padding: 18px 0;
+  }
 }
 
 /* ═══════════════════════════════════════
@@ -2114,18 +2646,25 @@ a { text-decoration: none; }
     min-height: 44px;
   }
 
-  input, select, textarea { font-size: 16px !important; }
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* ═══════════════════════════════════════
    ACCESSIBILITY
 ═══════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition-duration: 0.01ms !important; }
+  * {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Print */
 @media print {
-  .form-topbar, .card-actions, .pagination-bar, .add-btn { display: none; }
+  .form-topbar, .card-actions, .pagination-bar, .add-btn {
+    display: none;
+  }
 }
 </style>

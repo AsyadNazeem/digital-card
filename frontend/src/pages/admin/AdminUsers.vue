@@ -2858,6 +2858,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 32px;
+  width: 100%;
 }
 
 .page-header {
@@ -2918,6 +2919,7 @@ onMounted(() => {
   overflow: hidden;
   transition: all 0.2s;
   border: 2px solid #e5e1dc;
+  width: 100%;
 }
 
 .users-table-card:hover {
@@ -2958,6 +2960,18 @@ onMounted(() => {
 .users-table tbody tr {
   transition: all 0.15s;
 }
+
+.users-table th:nth-child(1)  { width: 3%; }   /* # */
+.users-table th:nth-child(2)  { width: 10%; }  /* Name */
+.users-table th:nth-child(3)  { width: 12%; }  /* Email */
+.users-table th:nth-child(4)  { width: 8%; }  /* Phone */
+.users-table th:nth-child(5)  { width: 8%; }   /* Provider */
+.users-table th:nth-child(6)  { width: 8%; }  /* Registration */
+.users-table th:nth-child(7)  { width: 8%; }   /* Company Limit */
+.users-table th:nth-child(8)  { width: 8%; }   /* Contact Limit */
+.users-table th:nth-child(9)  { width: 9%; }   /* Joined */
+.users-table th:nth-child(10) { width: 7%; }   /* Plan */
+.users-table th:nth-child(11) { width: 7%; }   /* Actions */
 
 .clickable-row {
   cursor: pointer;

@@ -1,11 +1,12 @@
 import express from "express";
-import { authenticateAdmin } from "../middleware/adminAuth.js";
+import { authenticateAdmin, requireSuperAdmin } from "../middleware/adminAuth.js";
 import { ADMIN_ACTIONS, getClientIp, logAdminAction } from "../middleware/adminLogger.js";
 import User from "../models/User.js";
 import Request from "../models/Request.js";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
 import Review from "../models/Review.js";
+import Admin from "../models/admin.js";
 import { Op } from "sequelize";
 import bcrypt from "bcryptjs";
 import { isValidPhoneNumber, parsePhoneNumber } from 'libphonenumber-js';
@@ -102,11 +103,18 @@ function isValidUrl(string) {
 // ✅ GET: Overview stats
 router.get("/stats/overview", authenticateAdmin, async (req, res) => {
     try {
-        const total = await User.count();
+        // Build where clause based on role
+        const whereClause = req.admin.role === 'super_admin'
+            ? {}
+            : { createdBy: req.admin.username }
+
+        const total = await User.count({ where: whereClause });
+
         const today = await User.count({
             where: {
-                createdAt: {[Op.gte]: new Date().setHours(0, 0, 0, 0)},
-            },
+                ...whereClause,
+                createdAt: { [Op.gte]: new Date().setHours(0, 0, 0, 0) }
+            }
         });
 
         const monthStart = new Date();
@@ -114,18 +122,18 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
         monthStart.setHours(0, 0, 0, 0);
 
         const month = await User.count({
-            where: {createdAt: {[Op.gte]: monthStart}},
-        });
-
-        const google = await User.count({where: {provider: "google"}});
-        const local = await User.count({where: {provider: "local"}});
-        const apple = await User.count({
             where: {
-                appleId: {[Op.ne]: null},
-            },
+                ...whereClause,
+                createdAt: { [Op.gte]: monthStart }
+            }
         });
 
-        // Log the action
+        const google = await User.count({ where: { ...whereClause, provider: "google" } });
+        const local  = await User.count({ where: { ...whereClause, provider: "local"  } });
+        const apple  = await User.count({
+            where: { ...whereClause, appleId: { [Op.ne]: null } }
+        });
+
         await logAdminAction({
             adminId: req.admin.id,
             action: ADMIN_ACTIONS.VIEW_STATS,
@@ -135,10 +143,10 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({total, today, month, google, local, apple});
+        res.json({ total, today, month, google, local, apple });
     } catch (err) {
         console.error("❌ Error in stats route:", err);
-        res.status(500).json({message: "Error fetching stats"});
+        res.status(500).json({ message: "Error fetching stats" });
     }
 });
 
@@ -146,11 +154,17 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
 // ✅ GET: All users - UPDATE THIS
 router.get("/users", authenticateAdmin, async (req, res) => {
     try {
+        // Build where clause based on role
+        const whereClause = req.admin.role === 'super_admin'
+            ? {}  // super admin sees all users
+            : { createdBy: req.admin.username }  // normal admin sees only their users
+
         const users = await User.findAll({
+            where: whereClause,
             attributes: [
                 "id", "name", "phone", "email", "provider",
                 "registrationType", "companyLimit", "contactLimit",
-                "reviewLimit",  // ADD THIS
+                "reviewLimit", "createdBy",
                 "createdAt", "plan"
             ],
             order: [["createdAt", "DESC"]],
@@ -492,7 +506,8 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
     try {
         const {
             name, email, countryCode, phone, password,
-            companyLimit, contactLimit, registrationType
+            companyLimit, contactLimit, registrationType,
+            country
         } = req.body;
 
         if (!name || !email || !phone || !password) {
@@ -544,7 +559,9 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
             contactLimit: parseInt(contactLimit),
             registrationType: registrationType || "admin",
             selectedThemeId: 1,
-            status: "active"
+            status: "active",
+            country: country || null,
+            createdBy: req.admin.username || null,
         });
 
         await logAdminAction({
@@ -1747,6 +1764,54 @@ router.delete("/user/:userId/contact/:contactId", authenticateAdmin, async (req,
     } catch (err) {
         console.error("❌ Error deleting contact:", err)
         res.status(500).json({ message: "Failed to delete contact", error: err.message })
+    }
+})
+
+// POST: Create admin account
+router.post("/admins/create", authenticateAdmin, requireSuperAdmin, async (req, res) => {
+    try {
+        const { name, username, email, password, role, status } = req.body
+
+        if (!name || !username || !email || !password) {
+            return res.status(400).json({ message: "All fields are required" })
+        }
+
+        const existing = await Admin.findOne({ where: { email } })
+        if (existing) {
+            return res.status(400).json({ message: "Admin with this email already exists" })
+        }
+
+        const existingUsername = await Admin.findOne({ where: { username } })
+        if (existingUsername) {
+            return res.status(400).json({ message: "Username already taken" })
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10)
+
+        const newAdmin = await Admin.create({
+            name,
+            username,
+            email,
+            password: hashedPassword,
+            role: role || 'admin',
+            status: status || 'active',
+        })
+
+        res.status(201).json({
+            success: true,
+            message: "Admin created successfully",
+            admin: {
+                id: newAdmin.id,
+                name: newAdmin.name,
+                username: newAdmin.username,
+                email: newAdmin.email,
+                role: newAdmin.role,
+                status: newAdmin.status,
+            }
+        })
+    } catch (err) {
+        console.error("❌ Error creating admin:", err)
+        res.status(500).json({ message: "Failed to create admin", error: err.message })
     }
 })
 

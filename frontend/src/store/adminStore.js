@@ -297,6 +297,25 @@ export const useAdminStore = defineStore("adminStore", {
             localStorage.setItem("adminToken", token);
         },
 
+        async createAdmin(formData) {
+            try {
+                const res = await adminApi.post('/admins/create', {
+                    name: formData.name,
+                    username: formData.username,
+                    email: formData.email,
+                    password: formData.password,
+                    role: formData.role,
+                    status: formData.status,
+                })
+                return { success: true, data: res.data }
+            } catch (err) {
+                return {
+                    success: false,
+                    error: err.response?.data?.message || err.message
+                }
+            }
+        },
+
         logout() {
             this.token = null;
             this.admin = null;

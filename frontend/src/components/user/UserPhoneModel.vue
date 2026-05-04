@@ -14,7 +14,11 @@
           <div class="phone-form-group">
             <label class="phone-form-label">Phone Number</label>
             <div class="phone-input-group">
-              <CountryCodeDropdown v-model="countryCode"/>
+              <!-- Change this line to add @country-selected -->
+              <CountryCodeDropdown
+                  v-model="countryCode"
+                  @country-selected="onCountrySelected"
+              />
               <input
                   v-model="phoneNumber"
                   maxlength="15"
@@ -29,7 +33,7 @@
           <button
               type="submit"
               class="phone-submit-btn"
-              :disabled="loading || phoneNumber.length !== 9"
+              :disabled="loading || phoneNumber.length < 6"
           >
             {{ loading ? "Saving..." : "Save & Continue" }}
           </button>
@@ -62,6 +66,7 @@ const emit = defineEmits(['phone-added', 'close']);
 // State
 const phoneNumber = ref('');
 const countryCode = ref('+1');
+const selectedCountryObj = ref(null)   // ADD THIS
 const errorMsg = ref('');
 const loading = ref(false);
 
@@ -70,32 +75,30 @@ const phoneValidation = ref({
   message: ''
 });
 
+function onCountrySelected(country) {
+  selectedCountryObj.value = country
+}
+
 // Validate phone number
 function validatePhone(value, code) {
   try {
-    const digitsOnly = value.replace(/\D/g, '');
-    const fullNumber = `${code}${digitsOnly}`;
+    const digitsOnly = value.replace(/\D/g, '')
+    const fullNumber = `${code}${digitsOnly}`
 
-    if (isValidPhoneNumber(fullNumber)) {
-      const phoneNumber = parsePhoneNumber(fullNumber);
-      return {
-        isValid: true,
-        formatted: phoneNumber.formatInternational(),
-        e164: phoneNumber.format('E.164'),
-        countryCode: phoneNumber.country,
-        type: phoneNumber.getType()
-      };
+    if (!isValidPhoneNumber(fullNumber)) {
+      return { isValid: false, error: 'Invalid phone number' }
     }
 
+    const parsed = parsePhoneNumber(fullNumber)
     return {
-      isValid: false,
-      error: 'Invalid phone number'
-    };
+      isValid: true,
+      formatted: parsed.formatInternational(),
+      e164: parsed.format('E.164'),
+      countryCode: parsed.country,
+      type: parsed.getType()
+    }
   } catch (error) {
-    return {
-      isValid: false,
-      error: error.message || 'Invalid phone number'
-    };
+    return { isValid: false, error: 'Invalid phone number' }
   }
 }
 
@@ -135,15 +138,15 @@ async function submitPhone() {
 
     const token = localStorage.getItem('token');
 
+// In submitPhone(), change the api.post call:
     const res = await api.post(
         '/settings/add-phone',
         {
-          phone: validation.e164 // Send in E.164 format
+          phone: validation.e164,
+          country: selectedCountryObj.value?.fullName || null,  // send fullName, not isoCode
         },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-    );
+        { headers: { Authorization: `Bearer ${token}` } }
+    )
 
     // Success - emit event and close modal
     emit('phone-added', validation.e164);

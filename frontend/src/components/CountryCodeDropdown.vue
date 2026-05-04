@@ -77,7 +77,7 @@ const isDarkMode = inject('isDarkMode', ref(false))
 const props = defineProps({
   modelValue: { type: String, default: '+94' },
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'country-selected'])
 
 // Dropdown state
 const isDropdownOpen = ref(false)
@@ -89,13 +89,13 @@ const searchInputRef = ref(null)
 const allCountries = ref(
     countriesData.map(country => ({
       flag: country.flag,
-      name: `${country.flag} ${country.code}`,
+      name: `${country.flag} ${country.code}`,   // country.code is "+94" in your JSON
       fullName: country.name,
-      code: country.code,
+      code: country.code,                         // dial code like "+94"
+      isoCode: country.isoCode || country.name,  // your JSON has no isoCode, fallback to name
       searchText: country.name.toLowerCase()
     }))
 )
-
 // Search filter
 const normalize = str =>
     str.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
@@ -122,7 +122,8 @@ function toggleDropdown() {
 
 // Select and emit country
 function selectCountry(country) {
-  emit('update:modelValue', country.code)
+  emit('update:modelValue', country.code)        // dial code +94 (keeps existing behavior)
+  emit('country-selected', country)              // full object with isoCode
   isDropdownOpen.value = false
   searchQuery.value = ''
 }

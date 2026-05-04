@@ -162,11 +162,9 @@ router.post("/change-username", authenticateToken, async (req, res) => {
 
 router.post("/add-phone", authenticateToken, async (req, res) => {
     try {
-        const { phone } = req.body;
+        const { phone, country } = req.body;   // add country
 
-        // Validate using Google/libphonenumber-js
         const validated = validatePhoneNumberGoogle(phone);
-
         if (!validated.isValid) {
             return res.status(400).json({ message: validated.error });
         }
@@ -176,10 +174,14 @@ router.post("/add-phone", authenticateToken, async (req, res) => {
             return res.status(404).json({ message: "user not found" });
         }
 
-        user.phone = validated.e164; // always store in E.164 format
+        user.phone = validated.e164;
+        if (country) user.country = country;   // ADD THIS — only set if provided
         await user.save();
 
-        res.json({ message: "Phone number added successfully!", phone: validated.e164 });
+        res.json({
+            message: "Phone number added successfully!",
+            phone: validated.e164
+        });
 
     } catch (err) {
         console.error("❌ Add phone error:", err);

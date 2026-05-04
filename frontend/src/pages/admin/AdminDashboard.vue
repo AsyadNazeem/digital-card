@@ -16,7 +16,8 @@
     <section class="recent-section">
       <div class="section-header">
         <h2>Recent Registrations</h2>
-        <p>Last 5 users who joined</p>
+        <p v-if="adminStore.isSuperAdmin">Last 5 users who joined across all admins</p>
+        <p v-else>Last 5 users you registered</p>
       </div>
 
       <!-- Desktop/Tablet Table View -->
@@ -109,6 +110,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import adminApi from "../../services/adminApi";
+import { useAdminStore } from '@/store/adminStore'
+const adminStore = useAdminStore()
 
 const stats = ref({});
 const recentUsers = ref([]);

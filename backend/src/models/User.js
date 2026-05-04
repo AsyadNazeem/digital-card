@@ -39,6 +39,13 @@ const User = sequelize.define(
             },
         },
 
+        country: {
+            type: DataTypes.STRING(10),
+            allowNull: true,
+            defaultValue: null,
+            comment: "ISO country code e.g. LK, US, IN",
+        },
+
         password: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -86,6 +93,13 @@ const User = sequelize.define(
             defaultValue: "self",
             comment:
                 "self = user signup, admin = created by admin, google = Google OAuth",
+        },
+
+        createdBy: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: null,
+            comment: "Name of the admin who created this user",
         },
 
         selectedThemeId: {

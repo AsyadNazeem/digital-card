@@ -247,7 +247,7 @@ async function sendWelcomeEmail(user) {
 
 router.post("/register", async (req, res) => {
     try {
-        const { name, email, phone, password, countryCode } = req.body;
+        const { name, email, phone, password, countryCode, country } = req.body;  // add country
 
         if (!name || !email || !phone || !password || !countryCode)
             return res.status(400).json({ message: "All fields are required" });
@@ -277,6 +277,7 @@ router.post("/register", async (req, res) => {
             registrationType: "self",
             selectedThemeId: 1,
             plan: "free",
+            country: country || null,   // add this
         });
 
         // ✅ Send welcome email after successful registration
@@ -358,6 +359,7 @@ router.get("/me", authenticateToken, async (req, res) => {
                 "name",
                 "email",
                 "phone",
+                "country",
                 "provider",
                 "status",
                 "companyLimit",

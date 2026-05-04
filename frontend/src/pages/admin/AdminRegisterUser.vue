@@ -242,7 +242,8 @@ const router = useRouter()
 const form = ref({
   name: '',
   email: '',
-  countryCode: '+971',
+  countryCode: '+1',
+  country: '',        // ADD THIS
   phone: '',
   password: '',
   companyLimit: 1,
@@ -330,6 +331,7 @@ function toggleDropdown() {
 
 function selectCountry(country) {
   form.value.countryCode = country.code
+  form.value.country = country.fullName  // ← ADD THIS LINE
   isDropdownOpen.value = false
   searchQuery.value = ''
 }
@@ -369,6 +371,7 @@ async function createUser() {
       name: form.value.name.trim(),
       email: form.value.email.trim(),
       countryCode: form.value.countryCode,
+      country: form.value.country || null,    // ADD THIS
       phone: form.value.phone.trim(),
       password: form.value.password.trim(),
       companyLimit: form.value.companyLimit,
@@ -395,13 +398,20 @@ async function createUser() {
   }
 }
 
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+
+  // Set default country name to match the default countryCode (+1 = United States/Canada)
+  const defaultCountry = allCountries.value.find(c => c.code === form.value.countryCode)
+  if (defaultCountry) form.value.country = defaultCountry.fullName
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
+
+
 </script>
 
 <style scoped>

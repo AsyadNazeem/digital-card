@@ -18,8 +18,10 @@
               @click="subTab = 'structural'"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
             </svg>
             Layout
             <span v-if="subTab === 'structural'" class="tab-active-dot"></span>
@@ -44,7 +46,8 @@
         <!-- Info strip -->
         <div class="info-strip">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/>
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
             <line x1="12" y1="8" x2="12.01" y2="8"/>
           </svg>
           <span>Choose your card layout structure. This changes how buttons and sections are arranged.</span>
@@ -88,9 +91,24 @@
               <h3 class="theme-name">Classic Grid</h3>
               <p class="theme-desc">Traditional 3×2 button grid layout</p>
               <ul class="feature-list">
-                <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 3×2 Grid Buttons</li>
-                <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Traditional Layout</li>
-                <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> All Features</li>
+                <li>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  3×2 Grid Buttons
+                </li>
+                <li>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Traditional Layout
+                </li>
+                <li>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  All Features
+                </li>
               </ul>
             </div>
           </div>
@@ -126,9 +144,24 @@
               <h3 class="theme-name">Modern Hero</h3>
               <p class="theme-desc">Full-width hero header with vertical stack</p>
               <ul class="feature-list">
-                <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Hero Header</li>
-                <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Vertical Buttons</li>
-                <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Floating Save Button</li>
+                <li>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Hero Header
+                </li>
+                <li>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Vertical Buttons
+                </li>
+                <li>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Floating Save Button
+                </li>
               </ul>
             </div>
           </div>
@@ -142,7 +175,8 @@
         <!-- Current layout strip -->
         <div class="info-strip">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/>
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
             <line x1="12" y1="8" x2="12.01" y2="8"/>
           </svg>
           <span>
@@ -154,7 +188,8 @@
         <!-- Loading -->
         <div v-if="themesLoading" class="empty-state">
           <div class="empty-icon-wrap spin-wrap">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 class="spin-icon">
               <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
             </svg>
           </div>
@@ -178,7 +213,8 @@
             <div v-if="theme.isPremium && userPlan === 'free'" class="premium-overlay">
               <div class="lock-icon-wrap">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  <rect x="3" y="11" width="18" height="11" rx="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
               </div>
               <span class="lock-label">Upgrade to Premium</span>
@@ -198,7 +234,8 @@
               </div>
               <div v-if="theme.isPremium" class="premium-badge">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
                 Premium
               </div>
@@ -226,7 +263,8 @@
             </h3>
             <button class="qr-close-btn" @click="showConfirmModal = false" type="button">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             </button>
           </div>
@@ -249,12 +287,18 @@
               <div v-if="confirmType === 'structural' && pendingChange === 'classic'" class="modal-layout-classic">
                 <div class="lp-header">Header</div>
                 <div class="lp-grid-3x2">
-                  <div class="lp-btn">Phone</div><div class="lp-btn">WhatsApp</div><div class="lp-btn">Email</div>
-                  <div class="lp-btn">Office</div><div class="lp-btn">Website</div><div class="lp-btn">Location</div>
+                  <div class="lp-btn">Phone</div>
+                  <div class="lp-btn">WhatsApp</div>
+                  <div class="lp-btn">Email</div>
+                  <div class="lp-btn">Office</div>
+                  <div class="lp-btn">Website</div>
+                  <div class="lp-btn">Location</div>
                 </div>
                 <div class="lp-save">Save Contact</div>
                 <div class="lp-secondary">
-                  <div class="lp-btn-sm">360°</div><div class="lp-btn-sm">Reviews</div><div class="lp-btn-sm">Shop</div>
+                  <div class="lp-btn-sm">360°</div>
+                  <div class="lp-btn-sm">Reviews</div>
+                  <div class="lp-btn-sm">Shop</div>
                 </div>
               </div>
 
@@ -286,15 +330,18 @@
 
               <div v-if="confirmType === 'structural'" class="confirm-detail-row">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                  <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
                 </svg>
                 <span><strong>Layout:</strong> {{ pendingChange === 'modern' ? 'Modern Hero' : 'Classic Grid' }}</span>
               </div>
 
               <div v-if="pendingChange?.isPremium" class="premium-notice">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
                 Premium Theme
               </div>
@@ -305,10 +352,12 @@
           <div class="confirm-modal-actions">
             <button @click="showConfirmModal = false" class="cancel-btn" type="button">Cancel</button>
             <button @click="applyChange" class="save-btn" :disabled="applying" type="button">
-              <svg v-if="!applying" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg v-if="!applying" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
-              <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon">
+              <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   class="spin-icon">
                 <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
               </svg>
               {{ applying ? 'Applying…' : 'Apply Changes' }}
@@ -329,20 +378,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject } from 'vue';
+import {inject, onMounted, ref} from 'vue';
 import api from '@/services/api.js';
 import RealThemePreview from '@/components/RealThemePreview.vue';
-import AlertModal from '@/components/user/AlertModal.vue';          // ← NEW
-import { useAlert } from '@/composables/useAlert.js';               // ← NEW
+import AlertModal from '@/components/user/AlertModal.vue'; // ← NEW
+import {useAlert} from '@/composables/useAlert.js'; // ← NEW
 
 const isDarkMode = inject('isDarkMode', ref(false));
 
 const props = defineProps({
-  activeTab: { type: String, required: true }
+  activeTab: {type: String, required: true}
 });
 
 // ── Alert composable ──────────────────────────────────────────────── ← NEW
-const { alertState, showAlert, showConfirm } = useAlert();
+const {alertState, showAlert, showConfirm} = useAlert();
 
 // ── State ──
 const subTab = ref('structural');
@@ -367,7 +416,7 @@ const previewCompany = ref({
   website: 'www.company.com', phone: '+1234567890', logo: null,
   googleLocation: 'https://maps.google.com',
   view360: null, googleReviews: null, tripAdvisor: null,
-  socialLinks: { facebook: 'https://facebook.com', linkedin: 'https://linkedin.com', twitter: 'https://twitter.com' }
+  socialLinks: {facebook: 'https://facebook.com', linkedin: 'https://linkedin.com', twitter: 'https://twitter.com'}
 });
 
 // ── Actions ──
@@ -410,7 +459,7 @@ async function applyChange() {
         });
         return;
       }
-      const response = await api.patch(`/themes/${currentThemeObj.id}`, { layoutType: pendingChange.value });
+      const response = await api.patch(`/themes/${currentThemeObj.id}`, {layoutType: pendingChange.value});
       if (response.data) {
         currentLayoutType.value = pendingChange.value;
         currentThemeObj.layoutType = pendingChange.value;
@@ -423,7 +472,7 @@ async function applyChange() {
         });
       }
     } else {
-      const response = await api.post('/themes/select', { themeId: pendingChange.value.id });
+      const response = await api.post('/themes/select', {themeId: pendingChange.value.id});
       if (response.data) {
         selectedTheme.value = pendingChange.value.id;
         currentLayoutType.value = pendingChange.value.layoutType || 'classic';
@@ -463,7 +512,8 @@ async function loadThemesAndData() {
       const dashData = await api.get('/dashboard/data');
       if (dashData.data.contacts?.[0]) previewContact.value = dashData.data.contacts[0];
       if (dashData.data.companies?.[0]) previewCompany.value = dashData.data.companies[0];
-    } catch { /* use sample data */ }
+    } catch { /* use sample data */
+    }
   } catch {
     await showAlert({                                                 // ← NEW
       type: 'error',
@@ -476,7 +526,9 @@ async function loadThemesAndData() {
   }
 }
 
-onMounted(() => { if (props.activeTab === 'theme') loadThemesAndData(); });
+onMounted(() => {
+  if (props.activeTab === 'theme') loadThemesAndData();
+});
 </script>
 
 <style scoped>
@@ -503,10 +555,10 @@ onMounted(() => { if (props.activeTab === 'theme') loadThemesAndData(); });
   --c-success-light: #ecf7f2;
   --c-warning: #a06010;
   --c-warning-light: #fef6ec;
-  --c-shadow-xs: 0 1px 2px rgba(28,20,16,0.06);
-  --c-shadow-sm: 0 2px 6px rgba(28,20,16,0.08), 0 1px 2px rgba(28,20,16,0.04);
-  --c-shadow-md: 0 6px 20px rgba(28,20,16,0.10), 0 2px 6px rgba(28,20,16,0.06);
-  --c-shadow-lg: 0 16px 48px rgba(28,20,16,0.16), 0 4px 12px rgba(28,20,16,0.08);
+  --c-shadow-xs: 0 1px 2px rgba(28, 20, 16, 0.06);
+  --c-shadow-sm: 0 2px 6px rgba(28, 20, 16, 0.08), 0 1px 2px rgba(28, 20, 16, 0.04);
+  --c-shadow-md: 0 6px 20px rgba(28, 20, 16, 0.10), 0 2px 6px rgba(28, 20, 16, 0.06);
+  --c-shadow-lg: 0 16px 48px rgba(28, 20, 16, 0.16), 0 4px 12px rgba(28, 20, 16, 0.08);
   --c-radius: 14px;
   --c-radius-sm: 8px;
   --c-radius-xs: 5px;
@@ -538,21 +590,27 @@ onMounted(() => { if (props.activeTab === 'theme') loadThemesAndData(); });
   --c-success-light: #102418;
   --c-warning: #e8a840;
   --c-warning-light: #281c08;
-  --c-shadow-xs: 0 1px 2px rgba(0,0,0,0.2);
-  --c-shadow-sm: 0 2px 6px rgba(0,0,0,0.3);
-  --c-shadow-md: 0 6px 20px rgba(0,0,0,0.4);
-  --c-shadow-lg: 0 16px 48px rgba(0,0,0,0.5);
+  --c-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --c-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --c-shadow-md: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --c-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
-*, *::before, *::after { box-sizing: border-box; }
-button { font-family: inherit; cursor: pointer; }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
 
 /* ══════════════════════════════════════
    LIST VIEW SHELL
 ══════════════════════════════════════ */
 .list-view {
   padding: 24px;
-  max-width: 1600px;
+  max-width: 1800px;
   margin: 0 auto;
   border-radius: 0.5rem;
 }
@@ -626,7 +684,9 @@ button { font-family: inherit; cursor: pointer; }
   position: relative;
 }
 
-.sub-tab-btn:last-child { border-right: none; }
+.sub-tab-btn:last-child {
+  border-right: none;
+}
 
 .sub-tab-btn.active {
   background: var(--c-accent);
@@ -642,7 +702,7 @@ button { font-family: inherit; cursor: pointer; }
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.7);
   flex-shrink: 0;
 }
 
@@ -660,7 +720,11 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--c-text-secondary);
 }
 
-.info-strip svg { color: var(--c-accent); flex-shrink: 0; margin-top: 1px; }
+.info-strip svg {
+  color: var(--c-accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
 
 .inline-link {
   display: inline;
@@ -676,7 +740,9 @@ button { font-family: inherit; cursor: pointer; }
   transition: color 0.15s;
 }
 
-.inline-link:hover { color: var(--c-accent-hover); }
+.inline-link:hover {
+  color: var(--c-accent-hover);
+}
 
 /* ── Empty / Loading ── */
 .empty-state {
@@ -699,12 +765,32 @@ button { font-family: inherit; cursor: pointer; }
   margin: 0 auto 20px;
 }
 
-.spin-wrap { background: var(--c-accent-light); }
-.spin-icon { animation: spin 0.9s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.spin-wrap {
+  background: var(--c-accent-light);
+}
 
-.empty-title { font-size: 17px; font-weight: 700; color: var(--c-text-primary); margin: 0 0 8px; }
-.empty-sub { font-size: 13px; color: var(--c-text-muted); margin: 0; }
+.spin-icon {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--c-text-primary);
+  margin: 0 0 8px;
+}
+
+.empty-sub {
+  font-size: 13px;
+  color: var(--c-text-muted);
+  margin: 0;
+}
 
 /* ══════════════════════════════════════
    THEME GRID — matches contact-grid
@@ -737,20 +823,23 @@ button { font-family: inherit; cursor: pointer; }
 
 .theme-card.active {
   border-color: var(--c-accent);
-  box-shadow: 0 0 0 3px rgba(124,92,78,0.14), var(--c-shadow-sm);
+  box-shadow: 0 0 0 3px rgba(124, 92, 78, 0.14), var(--c-shadow-sm);
 }
 
 .dark-mode .theme-card.active {
-  box-shadow: 0 0 0 3px rgba(196,144,110,0.18), var(--c-shadow-sm);
+  box-shadow: 0 0 0 3px rgba(196, 144, 110, 0.18), var(--c-shadow-sm);
 }
 
-.theme-card.disabled { opacity: 0.65; cursor: not-allowed; }
+.theme-card.disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
 
 /* Premium Overlay */
 .premium-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(28,20,16,0.88);
+  background: rgba(28, 20, 16, 0.88);
   backdrop-filter: blur(5px);
   display: flex;
   flex-direction: column;
@@ -762,9 +851,13 @@ button { font-family: inherit; cursor: pointer; }
   transition: opacity 0.2s;
 }
 
-.dark-mode .premium-overlay { background: rgba(100,60,30,0.92); }
+.dark-mode .premium-overlay {
+  background: rgba(100, 60, 30, 0.92);
+}
 
-.theme-card.disabled:hover .premium-overlay { opacity: 1; }
+.theme-card.disabled:hover .premium-overlay {
+  opacity: 1;
+}
 
 .lock-icon-wrap {
   width: 48px;
@@ -775,13 +868,17 @@ button { font-family: inherit; cursor: pointer; }
   align-items: center;
   justify-content: center;
   color: #fff;
-  box-shadow: 0 4px 14px rgba(124,92,78,0.4);
+  box-shadow: 0 4px 14px rgba(124, 92, 78, 0.4);
   animation: pulse-lock 2s ease-in-out infinite;
 }
 
 @keyframes pulse-lock {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
 }
 
 .lock-label {
@@ -832,7 +929,7 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: var(--c-radius-pill);
   font-size: 11px;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(124,92,78,0.35);
+  box-shadow: 0 2px 8px rgba(124, 92, 78, 0.35);
   z-index: 5;
   letter-spacing: 0.02em;
 }
@@ -851,7 +948,7 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: var(--c-radius-pill);
   font-size: 11px;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(124,92,78,0.35);
+  box-shadow: 0 2px 8px rgba(124, 92, 78, 0.35);
   z-index: 5;
 }
 
@@ -899,7 +996,10 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--c-text-secondary);
 }
 
-.feature-list svg { color: var(--c-success); flex-shrink: 0; }
+.feature-list svg {
+  color: var(--c-success);
+  flex-shrink: 0;
+}
 
 /* ══════════════════════════════════════
    LAYOUT PREVIEWS (inside card)
@@ -957,7 +1057,10 @@ button { font-family: inherit; cursor: pointer; }
   font-weight: 700;
 }
 
-.lp-secondary { display: flex; gap: 3px; }
+.lp-secondary {
+  display: flex;
+  gap: 3px;
+}
 
 .lp-btn-sm {
   flex: 1;
@@ -991,9 +1094,18 @@ button { font-family: inherit; cursor: pointer; }
   border: 1.5px solid #fff;
 }
 
-.lp-name { font-size: 7px; font-weight: 700; color: #fff; }
+.lp-name {
+  font-size: 7px;
+  font-weight: 700;
+  color: #fff;
+}
 
-.lp-vertical { display: flex; flex-direction: column; gap: 3px; padding: 0 6px; }
+.lp-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 6px;
+}
 
 .lp-btn-full {
   background: linear-gradient(135deg, var(--c-accent), var(--c-accent-2));
@@ -1022,7 +1134,7 @@ button { font-family: inherit; cursor: pointer; }
 .qr-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(16,14,20,0.6);
+  background: rgba(16, 14, 20, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -1078,7 +1190,11 @@ button { font-family: inherit; cursor: pointer; }
   transition: all 0.15s;
 }
 
-.qr-close-btn:hover { border-color: var(--c-danger); color: var(--c-danger); background: var(--c-danger-light); }
+.qr-close-btn:hover {
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+  background: var(--c-danger-light);
+}
 
 /* Modal Body */
 .confirm-modal-body {
@@ -1130,25 +1246,69 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 .modal-layout-classic .lp-header,
-.modal-layout-modern .lp-hero { font-size: 11px; }
+.modal-layout-modern .lp-hero {
+  font-size: 11px;
+}
 
 .modal-layout-classic .lp-btn,
 .modal-layout-classic .lp-btn-sm,
 .modal-layout-classic .lp-save,
 .modal-layout-modern .lp-btn-full,
 .modal-layout-modern .lp-floating,
-.modal-layout-modern .lp-name { font-size: 10px; }
+.modal-layout-modern .lp-name {
+  font-size: 10px;
+}
 
-.modal-layout-classic .lp-header { height: 44px; border-radius: 6px; }
-.modal-layout-classic .lp-btn { padding: 10px 6px; font-size: 9px; border-radius: 5px; }
-.modal-layout-classic .lp-save { height: 32px; border-radius: 5px; }
-.modal-layout-classic .lp-btn-sm { padding: 9px 4px; font-size: 8.5px; border-radius: 5px; }
+.modal-layout-classic .lp-header {
+  height: 44px;
+  border-radius: 6px;
+}
 
-.modal-layout-modern .lp-hero { height: 90px; border-radius: 6px; gap: 5px; }
-.modal-layout-modern .lp-avatar { width: 32px; height: 32px; }
-.modal-layout-modern .lp-btn-full { padding: 10px; font-size: 9px; border-radius: 5px; }
-.modal-layout-modern .lp-floating { padding: 10px; font-size: 9px; border-radius: 5px; margin: 0; }
-.modal-layout-modern .lp-vertical { gap: 5px; padding: 0; }
+.modal-layout-classic .lp-btn {
+  padding: 10px 6px;
+  font-size: 9px;
+  border-radius: 5px;
+}
+
+.modal-layout-classic .lp-save {
+  height: 32px;
+  border-radius: 5px;
+}
+
+.modal-layout-classic .lp-btn-sm {
+  padding: 9px 4px;
+  font-size: 8.5px;
+  border-radius: 5px;
+}
+
+.modal-layout-modern .lp-hero {
+  height: 90px;
+  border-radius: 6px;
+  gap: 5px;
+}
+
+.modal-layout-modern .lp-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+.modal-layout-modern .lp-btn-full {
+  padding: 10px;
+  font-size: 9px;
+  border-radius: 5px;
+}
+
+.modal-layout-modern .lp-floating {
+  padding: 10px;
+  font-size: 9px;
+  border-radius: 5px;
+  margin: 0;
+}
+
+.modal-layout-modern .lp-vertical {
+  gap: 5px;
+  padding: 0;
+}
 
 /* Meta section */
 .confirm-meta {
@@ -1186,8 +1346,14 @@ button { font-family: inherit; cursor: pointer; }
   margin-bottom: 10px;
 }
 
-.confirm-detail-row svg { color: var(--c-accent); flex-shrink: 0; }
-.confirm-detail-row strong { color: var(--c-text-primary); }
+.confirm-detail-row svg {
+  color: var(--c-accent);
+  flex-shrink: 0;
+}
+
+.confirm-detail-row strong {
+  color: var(--c-text-primary);
+}
 
 .premium-notice {
   display: flex;
@@ -1202,7 +1368,10 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--c-accent);
 }
 
-.premium-notice svg { color: #d4af37; flex-shrink: 0; }
+.premium-notice svg {
+  color: #d4af37;
+  flex-shrink: 0;
+}
 
 /* Modal Actions — matches QR modal actions */
 .confirm-modal-actions {
@@ -1227,7 +1396,11 @@ button { font-family: inherit; cursor: pointer; }
   transition: all 0.15s;
 }
 
-.cancel-btn:hover { border-color: var(--c-danger); color: var(--c-danger); background: var(--c-danger-light); }
+.cancel-btn:hover {
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+  background: var(--c-danger-light);
+}
 
 .save-btn {
   flex: 1;
@@ -1243,50 +1416,101 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 13px;
   font-weight: 750;
   transition: all 0.15s;
-  box-shadow: 0 2px 8px rgba(124,92,78,0.3);
+  box-shadow: 0 2px 8px rgba(124, 92, 78, 0.3);
   letter-spacing: 0.01em;
 }
 
 .save-btn:hover:not(:disabled) {
   background: var(--c-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(124,92,78,0.4);
+  box-shadow: 0 4px 16px rgba(124, 92, 78, 0.4);
 }
 
-.save-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
 
 /* Modal Transition — same as contact tab */
-.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.22s ease; }
-.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
+.modal-fade-enter-active, .modal-fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.modal-fade-enter-from, .modal-fade-leave-to {
+  opacity: 0;
+}
 
 /* ══════════════════════════════════════
    RESPONSIVE — TABLET (≤ 900px)
 ══════════════════════════════════════ */
 @media (max-width: 900px) {
-  .list-view { padding: 20px; }
-  .theme-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .list-view {
+    padding: 20px;
+  }
+
+  .theme-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
 }
 
 /* ══════════════════════════════════════
    RESPONSIVE — MOBILE (≤ 640px)
 ══════════════════════════════════════ */
 @media (max-width: 640px) {
-  .list-view { padding: 14px; }
-  .page-title { font-size: 20px; }
-  .list-header { margin-bottom: 14px; }
+  .list-view {
+    padding: 14px;
+  }
 
-  .sub-tab-group { width: 100%; }
-  .sub-tab-btn { flex: 1; justify-content: center; padding: 9px 12px; font-size: 12px; }
+  .page-title {
+    font-size: 20px;
+  }
 
-  .theme-grid { grid-template-columns: 1fr; gap: 12px; }
+  .list-header {
+    margin-bottom: 14px;
+  }
 
-  .theme-preview-wrapper { height: 190px; }
+  .sub-tab-group {
+    width: 100%;
+  }
 
-  .confirm-modal { max-height: 85vh; }
-  .confirm-modal-header { padding: 14px 16px; }
-  .confirm-modal-title { font-size: 14px; }
-  .confirm-modal-body { padding: 14px 16px; gap: 14px; }
-  .confirm-preview-area { min-height: 200px; padding: 12px; }
+  .sub-tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+
+  .theme-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .theme-preview-wrapper {
+    height: 190px;
+  }
+
+  .confirm-modal {
+    max-height: 85vh;
+  }
+
+  .confirm-modal-header {
+    padding: 14px 16px;
+  }
+
+  .confirm-modal-title {
+    font-size: 14px;
+  }
+
+  .confirm-modal-body {
+    padding: 14px 16px;
+    gap: 14px;
+  }
+
+  .confirm-preview-area {
+    min-height: 200px;
+    padding: 12px;
+  }
 
   .modal-theme-preview-wrap :deep(.theme-preview-content) {
     transform: scale(0.45);
@@ -1294,10 +1518,20 @@ button { font-family: inherit; cursor: pointer; }
   }
 
   .modal-layout-classic,
-  .modal-layout-modern { max-width: 220px; padding: 12px; }
+  .modal-layout-modern {
+    max-width: 220px;
+    padding: 12px;
+  }
 
-  .confirm-modal-actions { padding: 12px 16px; flex-direction: column; }
-  .cancel-btn, .save-btn { width: 100%; justify-content: center; }
+  .confirm-modal-actions {
+    padding: 12px 16px;
+    flex-direction: column;
+  }
+
+  .cancel-btn, .save-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* ══════════════════════════════════════
@@ -1305,13 +1539,18 @@ button { font-family: inherit; cursor: pointer; }
 ══════════════════════════════════════ */
 @media (hover: none) and (pointer: coarse) {
   .sub-tab-btn, .cancel-btn, .save-btn, .qr-close-btn,
-  .inline-link { min-height: 44px; }
+  .inline-link {
+    min-height: 44px;
+  }
 }
 
 /* ══════════════════════════════════════
    ACCESSIBILITY
 ══════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition-duration: 0.01ms !important; }
+  * {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>
