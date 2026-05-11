@@ -57,7 +57,7 @@
                     <polyline points="17 8 12 3 7 8"></polyline>
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                   </svg>
-                  <span>{{ photoFileName || 'Click to upload new photo' }}</span>
+                  <span>{{ photoFileName || 'Click to upload new photo · Max 10MB (auto-compressed to 1MB)' }}</span>
                 </label>
                 <div v-if="photoPreview" class="image-preview">
                   <img :src="photoPreview" alt="Photo preview"/>
@@ -330,6 +330,46 @@ const tempPhotoSrc = ref('')
 const whatsappSameAsMobile = ref(true);
 const whatsappCountryCode = ref('+971');
 
+const compressImage = (file, maxSizeMB = 1) => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      let quality = 0.92;
+
+      const maxDimension = 1600;
+      if (width > maxDimension || height > maxDimension) {
+        const scale = Math.min(maxDimension / width, maxDimension / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const tryCompress = () => {
+        canvas.toBlob((blob) => {
+          if (blob.size <= maxSizeMB * 1024 * 1024 || quality <= 0.4) {
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+          } else {
+            quality -= 0.1;
+            canvas.toBlob(b => resolve(new File([b], file.name, { type: 'image/jpeg' })), 'image/jpeg', quality);
+          }
+        }, 'image/jpeg', quality);
+      };
+
+      tryCompress();
+    };
+
+    img.src = url;
+  });
+};
 
 function validateCardMobile() {
   const fullNumber = cardMobileCountryCode.value + form.value.cardMobileNum;
@@ -759,20 +799,28 @@ function validateMobile() {
   }
 }
 
-function handlePhotoUpload(e) {
-  const file = e.target.files[0]
-  if (file) {
-    photoFileName.value = file.name
+async function handlePhotoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    // Create temporary URL for cropper
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      tempPhotoSrc.value = event.target.result
-      showPhotoCropper.value = true
-    }
-    reader.readAsDataURL(file)
+  if (file.size > 10 * 1024 * 1024) {
+    alert('Image size must be less than 10MB.');
+    return;
   }
+
+  const processedFile = file.size > 1 * 1024 * 1024
+      ? await compressImage(file, 1)
+      : file;
+
+  photoFileName.value = processedFile.name;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    tempPhotoSrc.value = event.target.result;
+    showPhotoCropper.value = true;
+  };
+  reader.readAsDataURL(processedFile);
 }
+
 
 function handlePhotoCropped(blob) {
   // Convert blob to file

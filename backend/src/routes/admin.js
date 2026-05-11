@@ -117,6 +117,16 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
             }
         });
 
+        let userLimitInfo = null;
+        if (req.admin.role !== 'super_admin') {
+            const limit = req.admin.userLimit ?? 0; // fallback to 0 if null
+            userLimitInfo = {
+                userLimit: limit,
+                usersCreated: total,
+                remaining: limit > 0 ? Math.max(0, limit - total) : 0
+            };
+        }
+
         const monthStart = new Date();
         monthStart.setDate(1);
         monthStart.setHours(0, 0, 0, 0);
@@ -143,7 +153,7 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({ total, today, month, google, local, apple });
+        res.json({ total, today, month, google, local, apple, userLimitInfo});
     } catch (err) {
         console.error("❌ Error in stats route:", err);
         res.status(500).json({ message: "Error fetching stats" });
@@ -275,47 +285,43 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
         const {userId} = req.params;
         const {companyLimit, contactLimit, plan} = req.body;
 
-        if (!companyLimit || companyLimit < 1 || !contactLimit || contactLimit < 1) {
-            return res.status(400).json({message: "Limits must be at least 1"});
-        }
-
         const allowedPlans = ["free", "plus", "pro"];
         if (plan && !allowedPlans.includes(plan)) {
             return res.status(400).json({message: "Invalid plan value"});
         }
 
         const user = await User.findByPk(userId);
-        if (!user) return res.status(404).json({message: "user not found"});
+        if (!user) return res.status(404).json({message: "User not found"});
+
+        // ── Auto-set limits based on plan ──
+        const planDefaults = {
+            free: { companyLimit: 1, contactLimit: 1, reviewLimit: 1 },
+            plus: { companyLimit: 2, contactLimit: 6, reviewLimit: 2 },
+            pro:  { companyLimit: 5, contactLimit: 15, reviewLimit: 5 },
+        };
+
+        const defaults = plan ? planDefaults[plan] : null;
+
+        const newCompanyLimit = defaults ? defaults.companyLimit : parseInt(companyLimit);
+        const newContactLimit = defaults ? defaults.contactLimit : parseInt(contactLimit);
+        const newReviewLimit  = defaults ? defaults.reviewLimit  : (parseInt(req.body.reviewLimit) || user.reviewLimit);
+
+        if (!newCompanyLimit || newCompanyLimit < 1 || !newContactLimit || newContactLimit < 1) {
+            return res.status(400).json({message: "Limits must be at least 1"});
+        }
 
         const oldData = {
             companyLimit: user.companyLimit,
             contactLimit: user.contactLimit,
+            reviewLimit: user.reviewLimit,
             plan: user.plan
         };
 
         await user.update({
-            companyLimit: parseInt(companyLimit),
-            contactLimit: parseInt(contactLimit),
+            companyLimit: newCompanyLimit,
+            contactLimit: newContactLimit,
+            reviewLimit: newReviewLimit,
             plan: plan || user.plan
-        });
-
-        await logAdminAction({
-            adminId: req.admin.id,
-            action: ADMIN_ACTIONS.UPDATE_USER_LIMITS,
-            targetType: "user",
-            targetId: userId,
-            targetName: user.name || user.email,
-            description: `Updated limits/plan for ${user.email}`,
-            changes: {
-                before: oldData,
-                after: {
-                    companyLimit: user.companyLimit,
-                    contactLimit: user.contactLimit,
-                    plan: user.plan
-                }
-            },
-            ipAddress: getClientIp(req),
-            userAgent: req.headers["user-agent"]
         });
 
         res.json({
@@ -325,6 +331,7 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
                 id: user.id,
                 companyLimit: user.companyLimit,
                 contactLimit: user.contactLimit,
+                reviewLimit: user.reviewLimit,
                 plan: user.plan
             }
         });
@@ -504,6 +511,20 @@ router.post("/request/:id/reject", authenticateAdmin, async (req, res) => {
 // ✅ POST: Create user
 router.post("/create-user", authenticateAdmin, async (req, res) => {
     try {
+        // ✅ Enforce user creation limit for normal admins
+        if (req.admin.role !== 'super_admin') {
+            const createdCount = await User.count({
+                where: { createdBy: req.admin.username }
+            });
+
+            const limit = req.admin.userLimit ?? Infinity;  // null = unlimited
+            if (createdCount >= limit) {
+                return res.status(403).json({
+                    message: `User creation limit reached. You can only create ${req.admin.userLimit} users.`
+                });
+            }
+        }
+
         const {
             name, email, countryCode, phone, password,
             companyLimit, contactLimit, registrationType,
@@ -1770,7 +1791,7 @@ router.delete("/user/:userId/contact/:contactId", authenticateAdmin, async (req,
 // POST: Create admin account
 router.post("/admins/create", authenticateAdmin, requireSuperAdmin, async (req, res) => {
     try {
-        const { name, username, email, password, role, status } = req.body
+        const { name, username, email, password, role, status, userLimit } = req.body
 
         if (!name || !username || !email || !password) {
             return res.status(400).json({ message: "All fields are required" })
@@ -1795,6 +1816,7 @@ router.post("/admins/create", authenticateAdmin, requireSuperAdmin, async (req, 
             password: hashedPassword,
             role: role || 'admin',
             status: status || 'active',
+            userLimit: role === 'super_admin' ? null : (parseInt(userLimit) || 10),
         })
 
         res.status(201).json({
@@ -1807,6 +1829,7 @@ router.post("/admins/create", authenticateAdmin, requireSuperAdmin, async (req, 
                 email: newAdmin.email,
                 role: newAdmin.role,
                 status: newAdmin.status,
+                userLimit: newAdmin.userLimit,  // ← use newAdmin, not req.body calculation
             }
         })
     } catch (err) {

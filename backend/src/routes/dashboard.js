@@ -6,16 +6,16 @@ import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
 import Request from "../models/Request.js";
 import Review from "../models/Review.js";
-import User from "../models/User.js"; // ✅ ADD THIS LINE
+import User from "../models/User.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { Op } from 'sequelize';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import sanitizeHtml from 'sanitize-html';
 import { customAlphabet } from 'nanoid';
-import { transporter } from "./otp.js"; // adjust path as needed
+import { transporter } from "./otp.js";
 
 
-const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 8); // 8 chars
+const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 8);
 const router = express.Router();
 
 
@@ -409,8 +409,6 @@ router.get('/user/plan', authenticate, async (req, res) => {
 // ============================================
 // CONTACT ROUTES
 // ============================================
-
-// ✅ Create a new contact
 // ✅ Create a new contact
 router.post(
     "/contact",

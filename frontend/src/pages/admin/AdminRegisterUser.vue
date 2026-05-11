@@ -2,6 +2,18 @@
   <div class="admin-register-wrapper">
     <div class="register-card">
       <div class="form-container">
+
+        <!-- Add this above the action buttons -->
+        <div v-if="userLimitInfo" class="limit-banner" :class="{ 'limit-warning': userLimitInfo.remaining <= 2 }">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ userLimitInfo.usersCreated }} / {{ userLimitInfo.userLimit }} users created
+          &nbsp;({{ userLimitInfo.remaining }} remaining)
+        </div>
+
+
         <!-- Name Field -->
         <div class="form-group">
           <label class="form-label">Full Name</label>
@@ -262,6 +274,16 @@ const searchQuery = ref('')
 const dropdownRef = ref(null)
 const searchInputRef = ref(null)
 
+// In script setup — fetch this from your stats endpoint on mount
+const userLimitInfo = ref(null)
+
+onMounted(async () => {
+  try {
+    const res = await adminApi.get('/stats/overview')
+    userLimitInfo.value = res.data.userLimitInfo  // null for super_admin
+  } catch (e) { /* ignore */ }
+})
+
 // Countries data
 const allCountries = ref(
     countriesData.map(country => ({
@@ -415,6 +437,23 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.limit-banner {
+  padding: 12px 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  color: #166534;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.limit-banner.limit-warning {
+  background: #fef9c3;
+  border-color: #fde047;
+  color: #854d0e;
+}
+
 /* =========================================
    1. Base Layout & Structure
    ========================================= */

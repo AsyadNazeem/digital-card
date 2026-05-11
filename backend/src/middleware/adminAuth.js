@@ -23,7 +23,8 @@ export const authenticateAdmin = async (req, res, next) => {
             id: admin.id,
             role: admin.role,
             username: admin.username,
-            email: admin.email
+            email: admin.email,
+            userLimit: admin.userLimit
         };
 
         next();

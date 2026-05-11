@@ -29,6 +29,11 @@ const Admin = sequelize.define("Admin", {
         defaultValue: 'admin',
         allowNull: false
     },
+    userLimit: {
+        type: DataTypes.INTEGER,
+        defaultValue: 10,
+        allowNull: true,   // ← null means unlimited (super_admin)
+    },
     status: {
         type: DataTypes.ENUM("active","inactive"),
         defaultValue: "active"

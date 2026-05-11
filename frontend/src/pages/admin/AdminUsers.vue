@@ -2063,15 +2063,36 @@ async function saveLimits() {
 
   savingLimits.value = true
   try {
-    await adminApi.patch(`/user/${selectedUser.value.id}/limits`, {
-      companyLimit: updatedLimits.value.companyLimit,
-      contactLimit: updatedLimits.value.contactLimit,
-      plan: updatedPlan.value
-    })
+    const planDefaults = {
+      free: { companyLimit: 1, contactLimit: 1, reviewLimit: 1 },
+      plus: { companyLimit: 2, contactLimit: 6, reviewLimit: 2 },
+      pro:  { companyLimit: 5, contactLimit: 15, reviewLimit: 5 },
+    }
 
+    // If plan changed, use plan defaults; otherwise use manually set limits
+    const planChanged = updatedPlan.value !== selectedUser.value?.plan
+    const defaults = planChanged ? planDefaults[updatedPlan.value] : null
 
-    originalLimits.value = {...updatedLimits.value}
+    const payload = {
+      plan: updatedPlan.value,
+      companyLimit: defaults ? defaults.companyLimit : updatedLimits.value.companyLimit,
+      contactLimit: defaults ? defaults.contactLimit : updatedLimits.value.contactLimit,
+      reviewLimit:  defaults ? defaults.reviewLimit  : (selectedUser.value.reviewLimit || 1),
+    }
+
+    await adminApi.patch(`/user/${selectedUser.value.id}/limits`, payload)
+
+    // Update local UI state
+    if (defaults) {
+      updatedLimits.value.companyLimit = defaults.companyLimit
+      updatedLimits.value.contactLimit = defaults.contactLimit
+    }
+
+    originalLimits.value = { ...updatedLimits.value }
     selectedUser.value.plan = updatedPlan.value
+    selectedUser.value.companyLimit = updatedLimits.value.companyLimit
+    selectedUser.value.contactLimit = updatedLimits.value.contactLimit
+
     await adminStore.fetchUsers()
     alert('Limits updated successfully!')
   } catch (err) {

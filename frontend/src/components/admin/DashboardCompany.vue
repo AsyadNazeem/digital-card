@@ -60,7 +60,7 @@
                     <polyline points="17 8 12 3 7 8"></polyline>
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                   </svg>
-                  <span class="upload-text">{{ logoFileName || 'Click to upload logo (optional)' }}</span>
+                  <span class="upload-text">{{ logoFileName || 'Click to upload logo (optional) · Max 10MB (auto-compressed to 1MB)' }}</span>
                 </label>
                 <div v-if="logoPreview" class="image-preview">
                   <img :src="logoPreview" alt="Logo preview"/>
@@ -402,6 +402,47 @@ const saving = ref(false)
 const showLogoCropper = ref(false)
 const tempLogoSrc = ref('')
 
+const compressImage = (file, maxSizeMB = 1) => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      let quality = 0.92;
+
+      const maxDimension = 1600;
+      if (width > maxDimension || height > maxDimension) {
+        const scale = Math.min(maxDimension / width, maxDimension / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const tryCompress = () => {
+        canvas.toBlob((blob) => {
+          if (blob.size <= maxSizeMB * 1024 * 1024 || quality <= 0.4) {
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+          } else {
+            quality -= 0.1;
+            canvas.toBlob(b => resolve(new File([b], file.name, { type: 'image/jpeg' })), 'image/jpeg', quality);
+          }
+        }, 'image/jpeg', quality);
+      };
+
+      tryCompress();
+    };
+
+    img.src = url;
+  });
+};
+
 function isValidUrl(string) {
   try {
     const url = new URL(string);
@@ -553,18 +594,26 @@ watch(() => props.company, (newCompany) => {
   }
 }, {immediate: true})
 
-function handleLogoUpload(e) {
-  const file = e.target.files[0]
-  if (file) {
-    logoFileName.value = file.name
+async function handleLogoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      tempLogoSrc.value = event.target.result
-      showLogoCropper.value = true
-    }
-    reader.readAsDataURL(file)
+  if (file.size > 10 * 1024 * 1024) {
+    alert('Image size must be less than 10MB.');
+    return;
   }
+
+  const processedFile = file.size > 1 * 1024 * 1024
+      ? await compressImage(file, 1)
+      : file;
+
+  logoFileName.value = processedFile.name;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    tempLogoSrc.value = event.target.result;
+    showLogoCropper.value = true;
+  };
+  reader.readAsDataURL(processedFile);
 }
 
 function handleLogoCropped(blob) {

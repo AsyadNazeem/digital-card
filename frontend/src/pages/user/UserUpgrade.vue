@@ -8,7 +8,8 @@
           <h2 class="upgrade-modal-title">Choose Your Plan</h2>
           <button class="qr-close-btn" @click="$emit('close')" type="button">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
@@ -19,7 +20,8 @@
           <!-- Info strip -->
           <div class="info-strip">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/>
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
               <line x1="12" y1="8" x2="12.01" y2="8"/>
             </svg>
             <span>
@@ -33,8 +35,8 @@
           <div class="plans-grid">
 
             <!-- Free -->
-            <div class="plan-card" :class="{ 'current-plan': currentPlan === 'free' }">
-              <span v-if="currentPlan === 'free'" class="current-badge">
+            <div class="plan-card" :class="{ 'current-plan': fetchedPlan === 'free' }">
+              <span v-if="fetchedPlan === 'free'" class="current-badge">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
@@ -51,43 +53,55 @@
               </div>
               <ul class="plan-features">
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
                   1 Company (limited features)
                 </li>
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
                   1 Contact
                 </li>
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
                   1 Review
                 </li>
                 <li class="disabled">
-                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
                   No Analytics
                 </li>
                 <li class="disabled">
-                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
                   No Premium Themes
                 </li>
               </ul>
               <button
                   class="plan-btn"
-                  :class="currentPlan === 'free' ? 'btn-current' : 'btn-outline'"
-                  :disabled="currentPlan === 'free'"
-                  type="button"
+                  :class="fetchedPlan === 'free' ? 'btn-current' : 'btn-outline'"
+                  :disabled="fetchedPlan === 'free'"
               >
-                {{ currentPlan === 'free' ? 'Current Plan' : 'Choose Free' }}
+                {{ fetchedPlan === 'free' ? 'Current Plan' : 'Choose Free' }}
               </button>
             </div>
 
             <!-- Plus -->
-            <div class="plan-card" :class="{ 'current-plan': currentPlan === 'plus', featured: currentPlan !== 'plus' }">
-              <span v-if="currentPlan === 'plus'" class="current-badge">
+            <div class="plan-card" :class="{ 'current-plan': fetchedPlan === 'plus', featured: fetchedPlan !== 'plus' }">
+<span v-if="fetchedPlan === 'plus'" class="current-badge">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
@@ -103,25 +117,54 @@
                 </div>
               </div>
               <ul class="plan-features">
-                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 2 Companies (full features)</li>
-                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 6 Contacts</li>
-                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 2 Reviews</li>
-                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Analytics Included</li>
-                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Plus Themes</li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  2 Companies (full features)
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  6 Contacts
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  2 Reviews
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Analytics Included
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Plus Themes
+                </li>
               </ul>
               <button
                   class="plan-btn"
-                  :class="currentPlan === 'plus' ? 'btn-current' : 'btn-primary'"
-                  :disabled="currentPlan === 'plus'"
-                  type="button"
+                  :class="fetchedPlan === 'plus' ? 'btn-current' : 'btn-primary'"
+                  :disabled="fetchedPlan === 'plus'"
               >
-                {{ currentPlan === 'plus' ? 'Current Plan' : 'Choose Plus →' }}
+                {{ fetchedPlan === 'plus' ? 'Current Plan' : 'Choose Plus →' }}
               </button>
             </div>
 
             <!-- Premium -->
-            <div class="plan-card" :class="{ 'current-plan': currentPlan === 'premium' }">
-              <span v-if="currentPlan === 'premium'" class="current-badge">
+            <div class="plan-card" :class="{ 'current-plan': fetchedPlan === 'premium' }">
+<span v-if="fetchedPlan === 'premium'" class="current-badge">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
@@ -137,19 +180,48 @@
                 </div>
               </div>
               <ul class="plan-features">
-                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 5 Companies (full features)</li>
-                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 15 Contacts</li>
-                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 5 Reviews</li>
-                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Analytics Included</li>
-                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> All Premium Themes</li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  5 Companies (full features)
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  15 Contacts
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  5 Reviews
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Analytics Included
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  All Premium Themes
+                </li>
               </ul>
               <button
                   class="plan-btn"
-                  :class="currentPlan === 'premium' ? 'btn-current' : 'btn-outline'"
-                  :disabled="currentPlan === 'premium'"
-                  type="button"
+                  :class="fetchedPlan === 'premium' ? 'btn-current' : 'btn-outline'"
+                  :disabled="fetchedPlan === 'premium'"
               >
-                {{ currentPlan === 'premium' ? 'Current Plan' : 'Choose Premium →' }}
+                {{ fetchedPlan === 'premium' ? 'Current Plan' : 'Choose Premium →' }}
               </button>
             </div>
 
@@ -170,19 +242,40 @@
 </template>
 
 <script setup>
-import { inject, ref } from 'vue';
+import {inject, ref, watch} from 'vue';
+import api from '@/services/api.js';
 
 const isDarkMode = inject('isDarkMode', ref(false));
 
-defineProps({
+const props = defineProps({
   open: Boolean,
-  currentPlan: { type: String, default: 'free' }
+  currentPlan: {type: String, default: 'free'}
 });
 
 defineEmits(['close']);
 
+const fetchedPlan = ref(props.currentPlan);
+
+// Fetch the live plan from the backend whenever the modal opens
+watch(() => props.open, async (isOpen) => {
+  if (isOpen) {
+    try {
+      const res = await api.get('/dashboard/user/plan');
+      let plan = (res.data?.plan || 'free').toLowerCase();
+      // Normalize DB value 'pro' to display name 'premium'
+      if (plan === 'pro') plan = 'premium';
+      fetchedPlan.value = plan;
+    } catch {
+      let plan = (props.currentPlan || 'free').toLowerCase();
+      if (plan === 'pro') plan = 'premium';
+      fetchedPlan.value = plan;
+    }
+  }
+}, {immediate: true});
+
 function planLabel(plan) {
-  return { free: 'Free Plan', plus: 'Plus Plan', premium: 'Premium Plan' }[plan] ?? 'Free Plan';
+  const normalized = plan === 'pro' ? 'premium' : plan;
+  return { free: 'Free Plan', plus: 'Plus Plan', premium: 'Premium Plan' }[normalized] ?? 'Free Plan';
 }
 </script>
 
@@ -204,9 +297,9 @@ function planLabel(plan) {
   --c-danger: #b83232;
   --c-danger-light: #fdf0f0;
   --c-success: #2d6a50;
-  --c-shadow-sm: 0 2px 6px rgba(28,20,16,0.08), 0 1px 2px rgba(28,20,16,0.04);
-  --c-shadow-md: 0 6px 20px rgba(28,20,16,0.10), 0 2px 6px rgba(28,20,16,0.06);
-  --c-shadow-lg: 0 16px 48px rgba(28,20,16,0.16), 0 4px 12px rgba(28,20,16,0.08);
+  --c-shadow-sm: 0 2px 6px rgba(28, 20, 16, 0.08), 0 1px 2px rgba(28, 20, 16, 0.04);
+  --c-shadow-md: 0 6px 20px rgba(28, 20, 16, 0.10), 0 2px 6px rgba(28, 20, 16, 0.06);
+  --c-shadow-lg: 0 16px 48px rgba(28, 20, 16, 0.16), 0 4px 12px rgba(28, 20, 16, 0.08);
   --c-radius: 14px;
   --c-radius-sm: 8px;
   --c-radius-xs: 5px;
@@ -231,19 +324,25 @@ function planLabel(plan) {
   --c-danger: #e06060;
   --c-danger-light: #281414;
   --c-success: #60b88a;
-  --c-shadow-sm: 0 2px 6px rgba(0,0,0,0.3);
-  --c-shadow-md: 0 6px 20px rgba(0,0,0,0.4);
-  --c-shadow-lg: 0 16px 48px rgba(0,0,0,0.5);
+  --c-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --c-shadow-md: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --c-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
-*, *::before, *::after { box-sizing: border-box; }
-button { font-family: inherit; cursor: pointer; }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
 
 /* Overlay */
 .upgrade-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(16,14,20,0.6);
+  background: rgba(16, 14, 20, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -292,12 +391,20 @@ button { font-family: inherit; cursor: pointer; }
   background: var(--c-surface-2);
   border: 1.5px solid var(--c-border);
   border-radius: var(--c-radius-xs);
-  width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--c-text-secondary);
   transition: all 0.15s;
 }
-.qr-close-btn:hover { border-color: var(--c-danger); color: var(--c-danger); background: var(--c-danger-light); }
+
+.qr-close-btn:hover {
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+  background: var(--c-danger-light);
+}
 
 /* Body */
 .upgrade-modal-body {
@@ -319,7 +426,12 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 13px;
   color: var(--c-text-secondary);
 }
-.info-strip svg { color: var(--c-accent); flex-shrink: 0; margin-top: 1px; }
+
+.info-strip svg {
+  color: var(--c-accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
 
 /* Plans grid */
 .plans-grid {
@@ -340,27 +452,37 @@ button { font-family: inherit; cursor: pointer; }
   transition: box-shadow 0.22s, border-color 0.22s, transform 0.18s;
   position: relative;
 }
-.plan-card:hover { box-shadow: var(--c-shadow-md); border-color: var(--c-accent-2); transform: translateY(-3px); }
+
+.plan-card:hover {
+  box-shadow: var(--c-shadow-md);
+  border-color: var(--c-accent-2);
+  transform: translateY(-3px);
+}
 
 .plan-card.current-plan {
   border-color: var(--c-accent);
-  box-shadow: 0 0 0 3px rgba(124,92,78,0.14), var(--c-shadow-sm);
+  box-shadow: 0 0 0 3px rgba(124, 92, 78, 0.14), var(--c-shadow-sm);
 }
+
 .dark-mode .plan-card.current-plan {
-  box-shadow: 0 0 0 3px rgba(196,144,110,0.18), var(--c-shadow-sm);
+  box-shadow: 0 0 0 3px rgba(196, 144, 110, 0.18), var(--c-shadow-sm);
 }
 
 /* Current badge — mirrors .active-badge */
 .current-badge {
   position: absolute;
-  top: 14px; right: 14px;
-  display: inline-flex; align-items: center; gap: 5px;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 4px 11px;
   background: linear-gradient(135deg, var(--c-accent), var(--c-accent-2));
   color: #fff;
   border-radius: var(--c-radius-pill);
-  font-size: 11px; font-weight: 700;
-  box-shadow: 0 2px 8px rgba(124,92,78,0.35);
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(124, 92, 78, 0.35);
   letter-spacing: 0.02em;
 }
 
@@ -372,62 +494,107 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 .plan-title {
-  font-size: 17px; font-weight: 750;
+  font-size: 17px;
+  font-weight: 750;
   color: var(--c-accent);
   letter-spacing: -0.3px;
   margin-bottom: 6px;
 }
 
 .plan-price {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; color: var(--c-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--c-text-muted);
 }
-.plan-price svg { flex-shrink: 0; color: var(--c-text-muted); }
+
+.plan-price svg {
+  flex-shrink: 0;
+  color: var(--c-text-muted);
+}
 
 /* Feature list */
 .plan-features {
   list-style: none;
-  padding: 0; margin: 0;
+  padding: 0;
+  margin: 0;
   flex: 1;
-  display: flex; flex-direction: column; gap: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
   margin-bottom: 20px;
 }
+
 .plan-features li {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; color: var(--c-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--c-text-secondary);
 }
-.plan-features li.disabled { color: var(--c-text-muted); text-decoration: line-through; }
-.feat-check { color: var(--c-success); flex-shrink: 0; }
-.feat-cross { color: var(--c-text-muted); flex-shrink: 0; }
+
+.plan-features li.disabled {
+  color: var(--c-text-muted);
+  text-decoration: line-through;
+}
+
+.feat-check {
+  color: var(--c-success);
+  flex-shrink: 0;
+}
+
+.feat-cross {
+  color: var(--c-text-muted);
+  flex-shrink: 0;
+}
 
 /* Buttons — mirror save-btn / cancel-btn */
 .plan-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 11px 20px;
   border-radius: var(--c-radius-sm);
-  font-size: 13px; font-weight: 750;
+  font-size: 13px;
+  font-weight: 750;
   transition: all 0.15s;
   letter-spacing: 0.01em;
   width: 100%;
 }
 
 .btn-primary {
-  background: var(--c-accent); color: #fff;
+  background: var(--c-accent);
+  color: #fff;
   border: none;
-  box-shadow: 0 2px 8px rgba(124,92,78,0.3);
+  box-shadow: 0 2px 8px rgba(124, 92, 78, 0.3);
 }
-.btn-primary:hover { background: var(--c-accent-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,92,78,0.4); }
+
+.btn-primary:hover {
+  background: var(--c-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(124, 92, 78, 0.4);
+}
 
 .btn-outline {
-  background: var(--c-surface-2); color: var(--c-text-secondary);
+  background: var(--c-surface-2);
+  color: var(--c-text-secondary);
   border: 1.5px solid var(--c-border);
 }
-.btn-outline:hover { border-color: var(--c-accent); color: var(--c-accent); background: var(--c-accent-light); }
+
+.btn-outline:hover {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+  background: var(--c-accent-light);
+}
 
 .btn-current {
-  background: var(--c-surface-2); color: var(--c-text-muted);
+  background: var(--c-surface-2);
+  color: var(--c-text-muted);
   border: 1.5px solid var(--c-border);
-  cursor: default; opacity: 0.7;
+  cursor: default;
+  opacity: 0.7;
 }
 
 /* Contact note */
@@ -437,44 +604,95 @@ button { font-family: inherit; cursor: pointer; }
   border-top: 1.5px solid var(--c-border);
   text-align: center;
 }
-.contact-note p { font-size: 13px; color: var(--c-text-muted); }
-.contact-note a { color: var(--c-accent); font-weight: 650; text-decoration: none; }
-.contact-note a:hover { color: var(--c-accent-hover); text-decoration: underline; }
+
+.contact-note p {
+  font-size: 13px;
+  color: var(--c-text-muted);
+}
+
+.contact-note a {
+  color: var(--c-accent);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.contact-note a:hover {
+  color: var(--c-accent-hover);
+  text-decoration: underline;
+}
 
 /* Modal transition */
-.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.22s ease; }
-.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
+.modal-fade-enter-active, .modal-fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.modal-fade-enter-from, .modal-fade-leave-to {
+  opacity: 0;
+}
 
 /* Tablet */
 @media (max-width: 900px) {
-  .upgrade-modal-header { padding: 18px 20px; }
-  .upgrade-modal-body { padding: 20px; }
-  .plans-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .upgrade-modal-header {
+    padding: 18px 20px;
+  }
+
+  .upgrade-modal-body {
+    padding: 20px;
+  }
+
+  .plans-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
 }
 
 /* Mobile */
 @media (max-width: 640px) {
-  .upgrade-overlay { padding: 0; align-items: flex-end; }
+  .upgrade-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
   .upgrade-modal {
     max-height: 92vh;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     border-bottom: none;
   }
-  .upgrade-modal-header { padding: 16px; }
-  .upgrade-modal-title { font-size: 18px; }
-  .upgrade-modal-body { padding: 16px; }
-  .plans-grid { grid-template-columns: 1fr; gap: 12px; }
-  .plan-card:hover { transform: none; }
+
+  .upgrade-modal-header {
+    padding: 16px;
+  }
+
+  .upgrade-modal-title {
+    font-size: 18px;
+  }
+
+  .upgrade-modal-body {
+    padding: 16px;
+  }
+
+  .plans-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .plan-card:hover {
+    transform: none;
+  }
 }
 
 /* Touch */
 @media (hover: none) and (pointer: coarse) {
-  .qr-close-btn, .plan-btn { min-height: 44px; }
+  .qr-close-btn, .plan-btn {
+    min-height: 44px;
+  }
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition-duration: 0.01ms !important; }
+  * {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>

@@ -8,7 +8,7 @@
       <div class="list-header">
         <div class="list-header-left">
           <h2 class="page-title">Companies</h2>
-          <span class="company-count-pill">{{ userCompanies.length }} total</span>
+          <span class="company-count-pill">{{ userCompanies.length }} <span style="opacity:0.5">/</span> {{ userLimits.companyLimit }} companies</span>
         </div>
         <button
             v-if="companyCount < userLimits.companyLimit"
@@ -286,7 +286,7 @@
                   <line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
                 <span class="dropzone-text">{{ logoPreview ? 'Change logo' : 'Upload logo' }}</span>
-                <span class="dropzone-hint">PNG, JPG up to 5MB</span>
+                <span class="dropzone-hint">PNG, JPG · Max 10MB (auto-compressed to 1MB)</span>
               </div>
             </label>
           </div>
@@ -672,6 +672,49 @@ const companyForm = ref({
   streetAddress: '', streetAddressLine2: '', city: '', postalCode: '', poBox: '', label: ''
 });
 
+// Image compression utility — compresses to under 1MB before cropping
+const compressImage = (file, maxSizeMB = 1) => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      let quality = 0.92;
+
+      // Scale down dimensions if image is very large
+      const maxDimension = 1600;
+      if (width > maxDimension || height > maxDimension) {
+        const scale = Math.min(maxDimension / width, maxDimension / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const tryCompress = () => {
+        canvas.toBlob((blob) => {
+          if (blob.size <= maxSizeMB * 1024 * 1024 || quality <= 0.4) {
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+          } else {
+            quality -= 0.1;
+            canvas.toBlob(b => resolve(new File([b], file.name, { type: 'image/jpeg' })), 'image/jpeg', quality);
+          }
+        }, 'image/jpeg', quality);
+      };
+
+      tryCompress();
+    };
+
+    img.src = url;
+  });
+};
+
 // ── Computed (unchanged) ──
 const isBrochureDisabled = computed(() => userPlan.value === 'free');
 
@@ -757,35 +800,45 @@ const resetForm = () => {
   customSocialMedia.value = [];
 };
 
-const handleLogoUpload = (e) => {
+const handleLogoUpload = async (e) => {
   const file = e.target.files[0];
   if (!file) return;
+
   if (!file.type.startsWith('image/')) {
     showAlert({
       type: 'error',
       title: 'Invalid File',
       message: 'Please upload an image file (PNG, JPG, etc.).',
       confirmLabel: 'OK'
-    }); // ← NEW
+    });
     return;
   }
-  if (file.size > 5 * 1024 * 1024) {
+
+  // Hard limit at 10MB — anything beyond is unreasonable even before compression
+  if (file.size > 10 * 1024 * 1024) {
     showAlert({
       type: 'warning',
       title: 'File Too Large',
-      message: 'Image size must be less than 5MB.',
+      message: 'Image size must be less than 10MB.',
       confirmLabel: 'OK'
-    }); // ← NEW
+    });
     return;
   }
+
   logoFileName.value = file.name;
+
+  // Compress silently if over 1MB, then open cropper
+  const processedFile = file.size > 1 * 1024 * 1024
+      ? await compressImage(file, 1)
+      : file;
+
   const reader = new FileReader();
   reader.onload = (ev) => {
     tempImageSrc.value = ev.target.result;
     cropperType.value = 'logo';
     showCropperModal.value = true;
   };
-  reader.readAsDataURL(file);
+  reader.readAsDataURL(processedFile);
 };
 
 const handleCroppedImage = (blob) => {
@@ -1203,6 +1256,11 @@ a {
   font-weight: 600;
   padding: 3px 10px;
   border-radius: var(--c-radius-pill);
+}
+
+.remaining-pill {
+  background: var(--c-success-light);
+  color: var(--c-success);
 }
 
 .add-btn {

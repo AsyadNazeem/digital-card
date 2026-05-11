@@ -8,7 +8,7 @@
       <div class="list-header">
         <div class="list-header-left">
           <h2 class="page-title">Contacts</h2>
-          <span class="count-pill">{{ contacts.length }} total</span>
+          <span class="count-pill">{{ contacts.length }} <span style="opacity:0.5">/</span> {{ userLimits.contactLimit }} contacts</span>
         </div>
         <button
             v-if="contactCount < userLimits.contactLimit"
@@ -317,7 +317,7 @@
                   <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
                 <span class="dropzone-text">{{ photoPreview ? 'Change photo' : 'Upload photo' }}</span>
-                <span class="dropzone-hint">PNG, JPG · Max 5MB · Square preferred</span>
+                <span class="dropzone-hint">PNG, JPG · Max 10MB (auto-compressed to 1MB) · Square preferred</span>
               </div>
             </label>
           </div>
@@ -737,6 +737,47 @@ const contactForm = ref({
   companyId: '', photo: null, status: 'active', existingPhotoPath: null
 });
 
+const compressImage = (file, maxSizeMB = 1) => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      let quality = 0.92;
+
+      const maxDimension = 1600;
+      if (width > maxDimension || height > maxDimension) {
+        const scale = Math.min(maxDimension / width, maxDimension / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const tryCompress = () => {
+        canvas.toBlob((blob) => {
+          if (blob.size <= maxSizeMB * 1024 * 1024 || quality <= 0.4) {
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+          } else {
+            quality -= 0.1;
+            canvas.toBlob(b => resolve(new File([b], file.name, { type: 'image/jpeg' })), 'image/jpeg', quality);
+          }
+        }, 'image/jpeg', quality);
+      };
+
+      tryCompress();
+    };
+
+    img.src = url;
+  });
+};
+
 // ── FIXED: Explicit setter for contactType to ensure reactivity ──
 function setContactType(type) {
   contactType.value = type;
@@ -920,16 +961,21 @@ async function handlePhotoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
   if (!file.type.startsWith('image/')) {
-    await showAlert({ type: 'error', title: 'Invalid File', message: 'Please select an image file (PNG, JPG, etc.).', confirmLabel: 'OK' }); // ← NEW
+    await showAlert({ type: 'error', title: 'Invalid File', message: 'Please select an image file (PNG, JPG, etc.).', confirmLabel: 'OK' });
     return;
   }
-  if (file.size > 5 * 1024 * 1024) {
-    await showAlert({ type: 'warning', title: 'File Too Large', message: 'Image size must be less than 5MB.', confirmLabel: 'OK' }); // ← NEW
+  if (file.size > 10 * 1024 * 1024) {
+    await showAlert({ type: 'warning', title: 'File Too Large', message: 'Image size must be less than 10MB.', confirmLabel: 'OK' });
     return;
   }
+
+  const processedFile = file.size > 1 * 1024 * 1024
+      ? await compressImage(file, 1)
+      : file;
+
   const reader = new FileReader();
   reader.onload = (e) => { tempImageSrc.value = e.target.result; cropperType.value = 'photo'; showCropperModal.value = true; };
-  reader.readAsDataURL(file);
+  reader.readAsDataURL(processedFile);
 }
 
 function handleCroppedImage(blob) {
@@ -1322,6 +1368,11 @@ a { text-decoration: none; }
   padding: 4px 11px;
   border-radius: var(--c-radius-pill);
   letter-spacing: 0.02em;
+}
+
+.remaining-pill {
+  background: var(--c-success-light);
+  color: var(--c-success);
 }
 
 .add-btn {
