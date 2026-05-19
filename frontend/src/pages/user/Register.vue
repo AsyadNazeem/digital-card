@@ -1,5 +1,5 @@
 <template>
-  <div class="auth-wrapper">
+  <div class="auth-wrapper" :class="{ 'dark-mode': isDark }">
     <!-- Left Side - Branding -->
     <div class="branding-section">
       <div class="branding-content">
@@ -46,8 +46,8 @@
         </div>
 
         <!-- Google Register -->
-        <button class="google-btn" @click="handleGoogleRegister" :disabled="loading">
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="google-icon" />
+        <button class="oauth-btn google-btn" @click="handleGoogleRegister" :disabled="loading">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="oauth-icon" />
           <span>Sign up with Google</span>
         </button>
 
@@ -191,35 +191,46 @@
           </div>
 
           <!-- Password -->
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <div class="input-group">
-              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-              <input
-                  v-model="password"
-                  :type="showPassword ? 'text' : 'password'"
-                  class="form-input"
-                  placeholder="Create a strong password"
-                  required
-              />
-              <button type="button" @click="showPassword = !showPassword" class="password-toggle">
-                <svg v-if="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
+          <div class="form-row">
+
+            <!-- Password -->
+            <div class="form-group half">
+              <label class="form-label">Password</label>
+              <div class="input-group">
+                <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
-                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
+
+                <input
+                    v-model="password"
+                    :type="showPassword ? 'text' : 'password'"
+                    class="form-input"
+                    placeholder="Create password"
+                    required
+                />
+              </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group half">
+              <label class="form-label">Confirm Password</label>
+              <div class="input-group">
+                <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
-              </button>
+
+                <input
+                    v-model="confirmPassword"
+                    :type="showPassword ? 'text' : 'password'"
+                    class="form-input"
+                    placeholder="Confirm password"
+                    required
+                />
+              </div>
             </div>
-            <div class="password-strength">
-              <div class="strength-bar" :class="passwordStrength.class" :style="{ width: passwordStrength.width }"></div>
-            </div>
-            <p class="password-hint">{{ passwordStrength.text }}</p>
+
           </div>
 
           <!-- Terms -->
@@ -261,21 +272,21 @@
 </template>
 
 <script setup>
-// Copy ALL the script from your Register.vue here
-// I'll include the essential parts:
-
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick, inject } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '../services/api'
-import countriesData from '../assets/country_code.json'
-import Applesigninbutton from "@/components/user/Applesigninbutton.vue";
+import api from '../../services/api.js'
+import countriesData from '../../assets/country_code.json'
+import Applesigninbutton from "@/components/user/Applesigninbutton.vue"
 
 const router = useRouter()
+const { isDark, toggleDarkMode } = inject('theme')
+
 const countryCode = ref("+1")
 const name = ref('')
 const email = ref('')
 const phone = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const message = ref('')
 const messageType = ref('error')
 const showPassword = ref(false)
@@ -452,6 +463,12 @@ async function register() {
     return
   }
 
+  if (password.value !== confirmPassword.value) {
+    messageType.value = 'error'
+    message.value = 'Passwords do not match.'
+    return
+  }
+
   if (!otpVerified.value) {
     messageType.value = 'error'
     message.value = 'Please verify your email address before registering.'
@@ -477,6 +494,7 @@ async function register() {
       phone: phone.value.trim(),
       password: password.value.trim(),
       countryCode: countryCode.value,
+      country: selectedCountry.value?.fullName || null,
     })
 
     messageType.value = 'success'
@@ -495,7 +513,6 @@ async function register() {
 }
 
 async function handleGoogleRegister() {
-  // Copy your Google register function from the original file
   try {
     loading.value = true
     message.value = ""
@@ -573,14 +590,342 @@ async function handleGoogleRegister() {
 </script>
 
 <style scoped>
-.has-action {
+/* ═══════════════════════════════════════════════════════
+   DESIGN TOKENS — Matching features page color theme
+═══════════════════════════════════════════════════════ */
+:root {
+  --c-bg:             #faf9f7;
+  --c-surface:        #ffffff;
+  --c-border:         #e8e3dc;
+  --c-text-primary:   #1c1410;
+  --c-text-secondary: #5a4f46;
+  --c-text-muted:     #9e8e84;
+  --c-accent:         #7c5c4e;
+  --c-accent-2:       #a07060;
+  --c-accent-hover:   #5e443a;
+  --c-accent-light:   #f0e8e4;
+  --c-accent-subtle:  #f8f3f0;
+  --c-success:        #2d6a50;
+  --c-error:          #cf1322;
+  --c-warning:        #faad14;
+}
+
+.auth-wrapper.dark-mode {
+  --c-bg:             #100e14;
+  --c-surface:        #1a1720;
+  --c-border:         #2c2838;
+  --c-text-primary:   #f2ede8;
+  --c-text-secondary: #a89490;
+  --c-text-muted:     #6a5e5a;
+  --c-accent:         #c4906e;
+  --c-accent-2:       #d4a880;
+  --c-accent-hover:   #d4a070;
+  --c-accent-light:   #281e18;
+  --c-accent-subtle:  #1e1612;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  background: var(--c-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  color: var(--c-text-primary);
+  transition: background-color 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BRANDING SECTION
+═══════════════════════════════════════════════════════ */
+.branding-section {
+  flex: 1;
+  background: linear-gradient(135deg, var(--c-accent-hover) 0%, var(--c-accent) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 3rem;
+  position: relative;
+  overflow: hidden;
+  max-height: 100vh;
+  transition: background 0.3s ease;
+}
+
+/* Dark mode branding - professional deep color */
+.auth-wrapper.dark-mode .branding-section {
+  background: linear-gradient(135deg, #0d0b10 0%, #1a1720 100%);
+}
+
+.branding-section::before {
+  content: '';
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: rgba(196, 144, 110, 0.08);
+  border-radius: 50%;
+  top: -200px;
+  right: -200px;
+  transition: background 0.3s ease;
+}
+
+.auth-wrapper.dark-mode .branding-section::before {
+  background: rgba(196, 144, 110, 0.05);
+}
+
+.branding-section::after {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: rgba(196, 144, 110, 0.05);
+  border-radius: 50%;
+  bottom: -150px;
+  left: -150px;
+  transition: background 0.3s ease;
+}
+
+.auth-wrapper.dark-mode .branding-section::after {
+  background: rgba(196, 144, 110, 0.03);
+}
+
+.branding-content {
+  max-width: 500px;
+  z-index: 1;
+  color: white;
+}
+
+.logo-container {
+  margin-bottom: 2rem;
+}
+
+.main-logo {
+  width: 280px;
+  height: auto;
+  filter: brightness(1.1);
+}
+
+.brand-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #f5e6d3;
+  transition: color 0.3s ease;
+}
+
+.auth-wrapper.dark-mode .brand-title {
+  color: #d4a880;
+}
+
+.brand-description {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2.5rem;
+  transition: color 0.3s ease;
+}
+
+.auth-wrapper.dark-mode .brand-description {
+  color: rgba(242, 237, 232, 0.85);
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.feature-item svg {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ═══════════════════════════════════════════════════════
+   FORM SECTION
+═══════════════════════════════════════════════════════ */
+.form-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--c-bg);
+  overflow-y: auto;
+  transition: background-color 0.3s ease;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 500px;
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--c-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.form-subtitle {
+  font-size: 1rem;
+  color: var(--c-text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   OAUTH BUTTONS
+═══════════════════════════════════════════════════════ */
+.oauth-btn {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: var(--c-surface);
+  border: 2px solid var(--c-border);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--c-text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.3s;
+  margin-bottom: 1rem;
+  height: 50px;
+}
+
+.oauth-btn:hover:not(:disabled) {
+  border-color: var(--c-accent);
+  background: var(--c-accent-subtle);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 92, 78, 0.15);
+}
+
+.oauth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.oauth-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--c-border);
+}
+
+.divider span {
+  position: relative;
+  background: var(--c-bg);
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  color: var(--c-text-muted);
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════════════════ */
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--c-text-primary);
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--c-text-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 3rem;
+  background: var(--c-surface);
+  border: 2px solid var(--c-border);
+  border-radius: 12px;
+  font-size: 0.95rem;
+  color: var(--c-text-primary);
+  transition: all 0.3s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  background: var(--c-surface);
+  box-shadow: 0 0 0 4px rgba(124, 92, 78, 0.1);
+}
+
+.dark-mode .form-input:focus {
+  box-shadow: 0 0 0 4px rgba(196, 144, 110, 0.1);
+}
+
+.form-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-input::placeholder {
+  color: var(--c-text-muted);
+}
+
+.form-input.has-action {
   padding-right: 100px !important;
 }
 
 .input-action-btn {
   position: absolute;
   right: 8px;
-  background: #5c4033;
+  background: var(--c-accent);
   color: white;
   border: none;
   border-radius: 8px;
@@ -593,7 +938,7 @@ async function handleGoogleRegister() {
 }
 
 .input-action-btn:hover:not(:disabled) {
-  background: #3e2a23;
+  background: var(--c-accent-hover);
 }
 
 .input-action-btn:disabled {
@@ -604,7 +949,7 @@ async function handleGoogleRegister() {
 .verified-badge {
   position: absolute;
   right: 12px;
-  color: #52c41a;
+  color: var(--c-success);
   font-size: 1.5rem;
   font-weight: bold;
 }
@@ -622,14 +967,16 @@ async function handleGoogleRegister() {
 }
 
 .input-message.success {
-  color: #52c41a;
+  color: var(--c-success);
 }
 
 .input-message.error {
-  color: #ff4d4f;
+  color: var(--c-error);
 }
 
-/* Phone Input */
+/* ═══════════════════════════════════════════════════════
+   PHONE INPUT & COUNTRY SELECTOR
+═══════════════════════════════════════════════════════ */
 .phone-input-wrapper {
   display: flex;
   gap: 0.75rem;
@@ -645,25 +992,26 @@ async function handleGoogleRegister() {
   align-items: center;
   gap: 0.5rem;
   padding: 0.875rem 1rem;
-  background: #fafaf8;
-  border: 2px solid #e5e1dc;
+  background: var(--c-surface);
+  border: 2px solid var(--c-border);
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #2d1f1a;
+  color: var(--c-text-primary);
   cursor: pointer;
   transition: all 0.3s;
   white-space: nowrap;
+  height: 51px;
 }
 
 .country-btn:hover {
-  border-color: #5c4033;
-  background: white;
+  border-color: var(--c-accent);
+  background: var(--c-accent-subtle);
 }
 
 .dropdown-icon {
   transition: transform 0.2s;
-  color: #9b8b7e;
+  color: var(--c-text-muted);
 }
 
 .dropdown-icon.open {
@@ -675,13 +1023,18 @@ async function handleGoogleRegister() {
   top: calc(100% + 0.5rem);
   left: 0;
   width: 320px;
-  background: white;
-  border: 2px solid #e5e1dc;
+  background: var(--c-surface);
+  border: 2px solid var(--c-border);
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(92, 64, 51, 0.15);
+  box-shadow: 0 8px 24px rgba(124, 92, 78, 0.15);
   z-index: 1000;
   max-height: 320px;
   overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.dark-mode .country-dropdown {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .dropdown-search {
@@ -689,11 +1042,11 @@ async function handleGoogleRegister() {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem;
-  border-bottom: 1px solid #e5e1dc;
+  border-bottom: 1px solid var(--c-border);
 }
 
 .dropdown-search svg {
-  color: #9b8b7e;
+  color: var(--c-text-muted);
   flex-shrink: 0;
 }
 
@@ -702,7 +1055,12 @@ async function handleGoogleRegister() {
   border: none;
   outline: none;
   font-size: 0.875rem;
-  color: #2d1f1a;
+  color: var(--c-text-primary);
+  background: transparent;
+}
+
+.search-input::placeholder {
+  color: var(--c-text-muted);
 }
 
 .country-list {
@@ -717,16 +1075,16 @@ async function handleGoogleRegister() {
   padding: 0.75rem 1rem;
   cursor: pointer;
   transition: background 0.2s;
-  border-bottom: 1px solid #f5f5f0;
+  border-bottom: 1px solid var(--c-border);
 }
 
 .country-option:hover {
-  background: #fafaf8;
+  background: var(--c-accent-subtle);
 }
 
 .country-option.active {
-  background: #f5e6d3;
-  border-left: 3px solid #5c4033;
+  background: var(--c-accent-light);
+  border-left: 3px solid var(--c-accent);
 }
 
 .country-flag {
@@ -737,19 +1095,19 @@ async function handleGoogleRegister() {
 .country-name {
   flex: 1;
   font-size: 0.875rem;
-  color: #2d1f1a;
+  color: var(--c-text-primary);
 }
 
 .country-code {
   font-size: 0.875rem;
-  color: #6b5d57;
+  color: var(--c-text-secondary);
   font-weight: 600;
 }
 
 .no-results {
   padding: 2rem 1rem;
   text-align: center;
-  color: #9b8b7e;
+  color: var(--c-text-muted);
   font-size: 0.875rem;
 }
 
@@ -776,10 +1134,21 @@ async function handleGoogleRegister() {
   transform: translateY(-5px);
 }
 
-/* Password Strength */
+/* ═══════════════════════════════════════════════════════
+   PASSWORD & FORM ROW
+═══════════════════════════════════════════════════════ */
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-group.half {
+  flex: 1;
+}
+
 .password-strength {
   height: 4px;
-  background: #e5e1dc;
+  background: var(--c-border);
   border-radius: 2px;
   overflow: hidden;
   margin-top: 0.5rem;
@@ -792,21 +1161,43 @@ async function handleGoogleRegister() {
 }
 
 .strength-bar.weak {
-  background: #ff4d4f;
+  background: var(--c-error);
 }
 
 .strength-bar.medium {
-  background: #faad14;
+  background: var(--c-warning);
 }
 
 .strength-bar.strong {
-  background: #52c41a;
+  background: var(--c-success);
 }
 
 .password-hint {
   font-size: 0.8rem;
-  color: #9b8b7e;
+  color: var(--c-text-muted);
   margin-top: 0.25rem;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CHECKBOX & TERMS
+═══════════════════════════════════════════════════════ */
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--c-text-primary);
+  margin: 0.5rem 0;
+}
+
+.checkbox-input {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: var(--c-accent);
+  margin-top: 0.125rem;
+  flex-shrink: 0;
 }
 
 .terms-checkbox {
@@ -815,304 +1206,24 @@ async function handleGoogleRegister() {
 }
 
 .terms-checkbox .link {
-  color: #5c4033;
+  color: var(--c-accent);
   text-decoration: none;
   font-weight: 600;
+  transition: color 0.2s;
 }
 
 .terms-checkbox .link:hover {
   text-decoration: underline;
+  color: var(--c-accent-hover);
 }
 
-/* All other styles from Login page */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.auth-wrapper {
-  min-height: 100vh;
-  display: flex;
-  background: #f5f5f0;
-}
-
-.branding-section {
-  flex: 1;
-  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 3rem;
-  position: relative;
-  overflow: hidden;
-  max-height: 100vh;
-}
-
-.branding-section::before {
-  content: '';
-  position: absolute;
-  width: 500px;
-  height: 500px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 50%;
-  top: -200px;
-  right: -200px;
-}
-
-.branding-section::after {
-  content: '';
-  position: absolute;
-  width: 400px;
-  height: 400px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 50%;
-  bottom: -150px;
-  left: -150px;
-}
-
-.branding-content {
-  max-width: 500px;
-  z-index: 1;
-  color: white;
-}
-
-.logo-container {
-  margin-bottom: 2rem;
-}
-
-.main-logo {
-  width: 280px;
-  height: auto;
-  filter: brightness(1.1);
-}
-
-.brand-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: #f5e6d3;
-}
-
-.brand-description {
-  font-size: 1.1rem;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 2.5rem;
-}
-
-.features {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.95);
-}
-
-.feature-item svg {
-  flex-shrink: 0;
-  color: #d4af37;
-}
-
-.form-section {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 2rem;
-  background: #ffffff;
-  overflow-y: auto;
-}
-
-.form-container {
-  width: 100%;
-  max-width: 460px;
-}
-
-.form-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.form-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #2d1f1a;
-  margin-bottom: 0.5rem;
-}
-
-.form-subtitle {
-  font-size: 1rem;
-  color: #6b5d57;
-}
-
-.google-btn {
-  width: 100%;
-  padding: 0.875rem 1.5rem;
-  background: white;
-  border: 2px solid #e5e1dc;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #2d1f1a;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  transition: all 0.3s;
-  margin-bottom: 1.5rem;
-  height: 50px;
-}
-
-.google-btn:hover:not(:disabled) {
-  border-color: #5c4033;
-  background: #fafaf8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.15);
-}
-
-.google-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.google-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.divider {
-  position: relative;
-  text-align: center;
-  margin: 1.5rem 0;
-}
-
-.divider::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 1px;
-  background: #e5e1dc;
-}
-
-.divider span {
-  position: relative;
-  background: white;
-  padding: 0 1rem;
-  font-size: 0.875rem;
-  color: #6b5d57;
-  font-weight: 500;
-}
-
-.register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #2d1f1a;
-}
-
-.input-group {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-icon {
-  position: absolute;
-  left: 1rem;
-  color: #9b8b7e;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.form-input {
-  width: 100%;
-  padding: 0.875rem 1rem 0.875rem 3rem;
-  background: #fafaf8;
-  border: 2px solid #e5e1dc;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  color: #2d1f1a;
-  transition: all 0.3s;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #5c4033;
-  background: white;
-  box-shadow: 0 0 0 4px rgba(92, 64, 51, 0.1);
-}
-
-.form-input:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.form-input::placeholder {
-  color: #9b8b7e;
-}
-
-.password-toggle {
-  position: absolute;
-  right: 1rem;
-  background: none;
-  border: none;
-  color: #9b8b7e;
-  cursor: pointer;
-  padding: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
-  z-index: 1;
-}
-
-.password-toggle:hover {
-  color: #5c4033;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  color: #2d1f1a;
-}
-
-.checkbox-input {
-  width: 1rem;
-  height: 1rem;
-  cursor: pointer;
-  accent-color: #5c4033;
-  margin-top: 0.125rem;
-  flex-shrink: 0;
-}
-
+/* ═══════════════════════════════════════════════════════
+   SUBMIT BUTTON & ALERTS
+═══════════════════════════════════════════════════════ */
 .submit-btn {
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
+  background: linear-gradient(135deg, var(--c-accent-hover) 0%, var(--c-accent) 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -1120,7 +1231,7 @@ async function handleGoogleRegister() {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(92, 64, 51, 0.3);
+  box-shadow: 0 4px 12px rgba(124, 92, 78, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1130,7 +1241,7 @@ async function handleGoogleRegister() {
 
 .submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(92, 64, 51, 0.4);
+  box-shadow: 0 6px 20px rgba(124, 92, 78, 0.4);
 }
 
 .submit-btn:disabled {
@@ -1171,42 +1282,47 @@ async function handleGoogleRegister() {
 }
 
 .alert.error {
-  background: #fff1f0;
-  color: #cf1322;
-  border: 1px solid #ffccc7;
+  background: rgba(207, 19, 34, 0.1);
+  color: var(--c-error);
+  border: 1px solid rgba(207, 19, 34, 0.2);
 }
 
 .alert.success {
-  background: #f6ffed;
-  color: #389e0d;
-  border: 1px solid #b7eb8f;
+  background: rgba(45, 106, 80, 0.1);
+  color: var(--c-success);
+  border: 1px solid rgba(45, 106, 80, 0.2);
 }
 
+/* ═══════════════════════════════════════════════════════
+   SIGNUP PROMPT
+═══════════════════════════════════════════════════════ */
 .signup-prompt {
   text-align: center;
   margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 1px solid #e5e1dc;
+  border-top: 1px solid var(--c-border);
 }
 
 .signup-prompt p {
   font-size: 0.95rem;
-  color: #6b5d57;
+  color: var(--c-text-secondary);
 }
 
 .signup-link {
-  color: #5c4033;
+  color: var(--c-accent);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
 }
 
 .signup-link:hover {
-  color: #3e2a23;
+  color: var(--c-accent-hover);
   text-decoration: underline;
 }
 
-/* Responsive */
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .branding-section {
     display: none;
@@ -1233,6 +1349,10 @@ async function handleGoogleRegister() {
   .country-btn {
     width: 100%;
   }
+
+  .form-row {
+    flex-direction: column;
+  }
 }
 
 @media (max-height: 900px) {
@@ -1245,4 +1365,24 @@ async function handleGoogleRegister() {
   }
 }
 
+/* ═══════════════════════════════════════════════════════
+   DARK MODE SPECIFIC OVERRIDES
+═══════════════════════════════════════════════════════ */
+.auth-wrapper.dark-mode .oauth-btn:hover:not(:disabled) {
+  border-color: var(--c-accent);
+  background: var(--c-accent-subtle);
+  box-shadow: 0 4px 12px rgba(196, 144, 110, 0.15);
+}
+
+.auth-wrapper.dark-mode .country-option:hover {
+  background: var(--c-accent-subtle);
+}
+
+.auth-wrapper.dark-mode .submit-btn {
+  box-shadow: 0 4px 12px rgba(196, 144, 110, 0.3);
+}
+
+.auth-wrapper.dark-mode .submit-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(196, 144, 110, 0.4);
+}
 </style>

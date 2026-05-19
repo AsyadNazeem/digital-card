@@ -33,6 +33,7 @@ import adminPermissionRoutes from './routes/adminPermissionRoutes.js';
 import walletRoutes from "./routes/wallet.js";
 import analyticsRoutes from "./routes/analytics.js";
 import appleRoutes from "./routes/appleAuth.js";
+import contactUs from "./routes/contactUs.js";
 
 // PATH
 import path from "path";
@@ -422,6 +423,7 @@ app.use("/api/themes", themeRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use("/api/auth", appleRoutes);
+app.use("/api/dashboard", contactUs);
 
 // HOME
 app.get("/", (req, res) => {

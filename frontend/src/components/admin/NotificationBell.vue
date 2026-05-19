@@ -5,7 +5,7 @@
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
       </svg>
-      <span v-if="count > 0" class="notification-badge">{{ displayCount }}</span>
+      <span v-if="totalCount > 0" class="notification-badge">{{ displayCount }}</span>
     </button>
 
     <transition name="dropdown">
@@ -15,19 +15,32 @@
           <button class="close-dropdown" @click="open = false" aria-label="Close">✕</button>
         </div>
 
-        <div v-if="count === 0" class="notifications-empty">
+        <div v-if="totalCount === 0" class="notifications-empty">
           <span class="empty-icon">🔕</span>
           <p>No new notifications</p>
         </div>
 
         <div v-else class="notifications-list" ref="listRef">
-          <div
-              v-for="r in pending"
-              :key="r.id"
-              class="notification-item"
-              @click="goToRequests"
-          >
-            <div class="notification-icon">📋</div>
+          <!-- ✅ MESSAGE NOTIFICATIONS -->
+          <div v-for="msg in pendingMessages" :key="`msg-${msg.id}`" class="notification-item message-notification" @click="goToMessages">
+            <div class="notification-icon message-icon">💬</div>
+            <div class="notification-content">
+              <p class="notification-title">New Message</p>
+              <p class="notification-desc">
+                <strong>{{ msg.senderName }}</strong>
+                <span v-if="msg.messageType !== 'contact'" class="message-badge" :class="`badge-${msg.messageType}`">
+                  {{ formatMessageType(msg.messageType) }}
+                </span>
+              </p>
+              <p class="notification-preview">{{ msg.subject }}</p>
+              <span class="notification-time">{{ formatTimeAgo(msg.createdAt) }}</span>
+            </div>
+            <div class="unread-indicator" v-if="!msg.isRead"></div>
+          </div>
+
+          <!-- ✅ REQUEST NOTIFICATIONS -->
+          <div v-for="r in pendingRequests" :key="`req-${r.id}`" class="notification-item request-notification" @click="goToRequests">
+            <div class="notification-icon request-icon">📋</div>
             <div class="notification-content">
               <p class="notification-title">New Limit Request</p>
               <p class="notification-desc">
@@ -40,10 +53,23 @@
           </div>
         </div>
 
-        <div v-if="count > 0" class="notifications-footer">
-          <button class="view-all-btn" @click="goToRequests">
-            View All Requests
-          </button>
+        <div v-if="totalCount > 0" class="notifications-footer">
+          <div class="notification-tabs">
+            <button
+                v-if="messageCount > 0"
+                class="tab-link"
+                @click="goToMessages"
+            >
+              Messages <span v-if="messageCount > 0" class="tab-badge">{{ messageCount }}</span>
+            </button>
+            <button
+                v-if="requestCount > 0"
+                class="tab-link"
+                @click="goToRequests"
+            >
+              Requests <span v-if="requestCount > 0" class="tab-badge">{{ requestCount }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </transition>
@@ -67,6 +93,26 @@ const open = ref(false)
 const dropdownRef = ref(null)
 const listRef = ref(null)
 let scrollPosition = 0
+
+// ✅ POLL FOR NEW MESSAGES AND REQUESTS
+let pollInterval = null
+
+function startPolling() {
+  // Poll every 30 seconds
+  pollInterval = setInterval(async () => {
+    if (admin.isAuthenticated) {
+      await admin.loadUnreadMessages()
+      await admin.loadRequests()
+    }
+  }, 30000)
+}
+
+function stopPolling() {
+  if (pollInterval) {
+    clearInterval(pollInterval)
+    pollInterval = null
+  }
+}
 
 // Mobile scroll lock with improved touch handling
 watch(open, (isOpen) => {
@@ -97,14 +143,47 @@ watch(open, (isOpen) => {
   }
 })
 
-const count = computed(() => admin.requests.filter(r => r.status === "pending").length)
-const pending = computed(() => admin.requests.filter(r => r.status === "pending").slice(0, 5))
+// ✅ COMPUTED PROPERTIES FOR MESSAGES AND REQUESTS
+
+// Unread messages (most recent first)
+const pendingMessages = computed(() => {
+  return admin.messages
+      .filter(m => !m.isRead)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5)
+})
+
+// Pending requests (most recent first)
+const pendingRequests = computed(() => {
+  return admin.requests
+      .filter(r => r.status === "pending")
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5)
+})
+
+// Count unread messages
+const messageCount = computed(() => {
+  return admin.messages.filter(m => !m.isRead).length
+})
+
+// Count pending requests
+const requestCount = computed(() => {
+  return admin.requests.filter(r => r.status === "pending").length
+})
+
+// Total count
+const totalCount = computed(() => messageCount.value + requestCount.value)
 
 // Display 99+ for counts over 99
-const displayCount = computed(() => count.value > 99 ? '99+' : count.value)
+const displayCount = computed(() => totalCount.value > 99 ? '99+' : totalCount.value)
 
 function toggle() {
   open.value = !open.value
+}
+
+function goToMessages() {
+  open.value = false
+  router.push("/admin/messages")
 }
 
 function goToRequests() {
@@ -125,6 +204,17 @@ function formatTimeAgo(dateString) {
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
   return date.toLocaleDateString();
+}
+
+// ✅ FORMAT MESSAGE TYPE BADGE
+function formatMessageType(type) {
+  const typeMap = {
+    'contact': '💬 Contact',
+    'plan_upgrade': '⬆️ Upgrade',
+    'plan_downgrade': '⬇️ Downgrade',
+    'support': '🆘 Support'
+  }
+  return typeMap[type] || type
 }
 
 // Close dropdown when clicking outside (desktop only)
@@ -226,6 +316,11 @@ onMounted(() => {
   document.addEventListener('touchmove', preventTouchMove, { passive: false })
   document.addEventListener('touchend', handleTouchEnd, { passive: true })
   document.addEventListener('wheel', preventWheel, { passive: false })
+
+  // ✅ LOAD INITIAL DATA AND START POLLING
+  admin.loadUnreadMessages()
+  admin.loadRequests()
+  startPolling()
 })
 
 onUnmounted(() => {
@@ -234,6 +329,9 @@ onUnmounted(() => {
   document.removeEventListener('touchmove', preventTouchMove)
   document.removeEventListener('touchend', handleTouchEnd)
   document.removeEventListener('wheel', preventWheel)
+
+  // ✅ STOP POLLING
+  stopPolling()
 
   // Cleanup scroll lock if component unmounts while open
   if (open.value && window.innerWidth <= 480) {
@@ -267,11 +365,13 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #5c4033;
 }
 
 .icon-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  background: #fafaf8;
 }
 
 .icon-btn:active {
@@ -291,13 +391,23 @@ onUnmounted(() => {
   min-width: 18px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.4);
+  }
 }
 
 .notifications-dropdown {
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
-  width: 380px;
+  width: 420px;
   max-height: 500px;
   background: white;
   border-radius: 16px;
@@ -389,6 +499,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: background 0.2s ease;
   background: white;
+  position: relative;
 }
 
 .notification-item:hover {
@@ -399,16 +510,33 @@ onUnmounted(() => {
   border-bottom: none;
 }
 
+.notification-item.message-notification {
+  background: #fafaf8;
+}
+
+.notification-item.message-notification:hover {
+  background: #f5f0eb;
+}
+
 .notification-icon {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
   flex-shrink: 0;
+}
+
+.notification-icon.message-icon {
+  background: rgba(76, 175, 80, 0.2);
+  color: #2e7d32;
+}
+
+.notification-icon.request-icon {
+  background: linear-gradient(135deg, #5c4033 0%, #3e2a23 100%);
+  color: white;
 }
 
 .notification-content {
@@ -426,7 +554,7 @@ onUnmounted(() => {
 .notification-desc {
   font-size: 0.8125rem;
   color: #6b5d57;
-  margin: 0 0 4px 0;
+  margin: 0 0 2px 0;
   line-height: 1.4;
   word-break: break-word;
 }
@@ -436,32 +564,109 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
+.message-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-plan_upgrade {
+  background: #c8e6c9;
+  color: #2e7d32;
+}
+
+.badge-plan_downgrade {
+  background: #ffcccc;
+  color: #c62828;
+}
+
+.badge-support {
+  background: #ffe0b2;
+  color: #e65100;
+}
+
+.notification-preview {
+  font-size: 0.75rem;
+  color: #9b8b7e;
+  margin: 2px 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .notification-time {
   font-size: 0.75rem;
   color: #9b8b7e;
 }
 
+.unread-indicator {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background: #4caf50;
+  border-radius: 50%;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 .notifications-footer {
-  padding: 12px 20px;
+  padding: 0;
   border-top: 1px solid #e5e1dc;
   background: white;
 }
 
-.view-all-btn {
-  width: 100%;
-  padding: 8px;
-  background: #fafaf8;
+.notification-tabs {
+  display: flex;
+  gap: 0;
+}
+
+.tab-link {
+  flex: 1;
+  padding: 12px 16px;
+  background: white;
   border: none;
-  border-radius: 8px;
+  border-right: 1px solid #e5e1dc;
   color: #5c4033;
   font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
 }
 
-.view-all-btn:hover {
-  background: #f5e6d3;
+.tab-link:last-child {
+  border-right: none;
+}
+
+.tab-link:hover {
+  background: #fafaf8;
+}
+
+.tab-link .tab-badge {
+  margin-left: 6px;
+  background: #ff3b30;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  min-width: 18px;
+  text-align: center;
+  display: inline-block;
 }
 
 /* Dropdown transitions for desktop */
@@ -494,7 +699,7 @@ onUnmounted(() => {
 /* Tablet Styles */
 @media (max-width: 1024px) {
   .notifications-dropdown {
-    width: 340px;
+    width: 380px;
   }
 }
 
@@ -652,11 +857,24 @@ onUnmounted(() => {
 
   .notifications-footer {
     flex-shrink: 0;
-    padding: 16px 20px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    padding: 0;
     background: white;
     border-top: 1px solid #e5e1dc;
     z-index: 2;
+  }
+
+  .notification-tabs {
+    flex-direction: column;
+  }
+
+  .tab-link {
+    border-right: none;
+    border-bottom: 1px solid #e5e1dc;
+    padding: 12px 16px;
+  }
+
+  .tab-link:last-child {
+    border-bottom: none;
   }
 }
 

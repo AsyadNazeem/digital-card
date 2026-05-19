@@ -276,8 +276,8 @@ import {computed, ref, watch} from 'vue'
 import adminApi from '../../services/adminApi'
 import {VITE_IMAGE_UPLOAD_URL} from '@/config.js'
 import {isValidPhoneNumber, parsePhoneNumber} from 'libphonenumber-js'
-import ImageCropperModal from "@/components/ImageCropper.vue"
-import CountryCodeDropdown from "@/components/CountryCodeDropdown.vue";
+import ImageCropperModal from "@/components/contactCard/ImageCropper.vue"
+import CountryCodeDropdown from "@/components/common/CountryCodeDropdown.vue";
 
 const props = defineProps({
   show: Boolean,

@@ -26,6 +26,18 @@ export const ADMIN_PAGES = [
         icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
         defaultRoles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.ADMIN],
     },
+    // ✅ MESSAGES - Now with correct structure matching other pages:
+    {
+        path: 'messages',
+        name: 'Messages',
+        component: 'AdminMessages',  // ✅ IMPORTANT: Match the Vue filename!
+        permission: 'view_messages',
+        category: 'Messaging',
+        description: 'View and manage user messages',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+        defaultRoles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.ADMIN],
+        showBadge: 'unreadMessages',
+    },
     {
         path: 'users/create',
         name: 'Create User',
@@ -34,7 +46,7 @@ export const ADMIN_PAGES = [
         category: 'User Management',
         description: 'Create new user accounts manually',
         icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-        defaultRoles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.ADMIN],  // ← add ADMIN_ROLES.ADMIN
+        defaultRoles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.ADMIN],
         hideFromSidebar: true,
     },
     {
@@ -46,7 +58,7 @@ export const ADMIN_PAGES = [
         description: 'View user registration requests',
         icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>',
         defaultRoles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.ADMIN],
-        showBadge: 'pendingRequests', // Show badge from store
+        showBadge: 'pendingRequests',
     },
     {
         path: 'themes',
@@ -85,35 +97,11 @@ export const ADMIN_PAGES = [
         permission: 'view_settings',
         category: 'System',
         description: 'View and modify system settings',
-        icon: '  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"\n' +
-            '               stroke="currentColor" stroke-width="1.8"\n' +
-            '               stroke-linecap="round" stroke-linejoin="round">\n' +
-            '            <path d="M19.14 12.94a7.48 7.48 0 0 0 .05-.94\n' +
-            '           7.48 7.48 0 0 0-.05-.94l2.03-1.58\n' +
-            '           a.5.5 0 0 0 .12-.65l-1.92-3.32\n' +
-            '           a.5.5 0 0 0-.6-.22l-2.39.96\n' +
-            '           a7.28 7.28 0 0 0-1.63-.94l-.36-2.54\n' +
-            '           a.5.5 0 0 0-.5-.42h-3.84\n' +
-            '           a.5.5 0 0 0-.5.42l-.36 2.54\n' +
-            '           a7.28 7.28 0 0 0-1.63.94l-2.39-.96\n' +
-            '           a.5.5 0 0 0-.6.22L2.71 8.83\n' +
-            '           a.5.5 0 0 0 .12.65l2.03 1.58\n' +
-            '           a7.48 7.48 0 0 0-.05.94\n' +
-            '           7.48 7.48 0 0 0 .05.94l-2.03 1.58\n' +
-            '           a.5.5 0 0 0-.12.65l1.92 3.32\n' +
-            '           a.5.5 0 0 0 .6.22l2.39-.96\n' +
-            '           a7.28 7.28 0 0 0 1.63.94l.36 2.54\n' +
-            '           a.5.5 0 0 0 .5.42h3.84\n' +
-            '           a.5.5 0 0 0 .5-.42l.36-2.54\n' +
-            '           a7.28 7.28 0 0 0 1.63-.94l2.39.96\n' +
-            '           a.5.5 0 0 0 .6-.22l1.92-3.32\n' +
-            '           a.5.5 0 0 0-.12-.65l-2.03-1.58z"/>\n' +
-            '            <circle cx="12" cy="12" r="3"/>\n' +
-            '          </svg>',
+        icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.48 7.48 0 0 0 .05-.94 7.48 7.48 0 0 0-.05-.94l2.03-1.58 a.5.5 0 0 0 .12-.65l-1.92-3.32 a.5.5 0 0 0-.6-.22l-2.39.96 a7.28 7.28 0 0 0-1.63-.94l-.36-2.54 a.5.5 0 0 0-.5-.42h-3.84 a.5.5 0 0 0-.5.42l-.36 2.54 a7.28 7.28 0 0 0-1.63.94l-2.39-.96 a.5.5 0 0 0-.6.22L2.71 8.83 a.5.5 0 0 0 .12.65l2.03 1.58 a7.48 7.48 0 0 0-.05.94 7.48 7.48 0 0 0 .05.94l-2.03 1.58 a.5.5 0 0 0-.12.65l1.92 3.32 a.5.5 0 0 0 .6.22l2.39-.96 a7.28 7.28 0 0 0 1.63.94l.36 2.54 a.5.5 0 0 0 .5.42h3.84 a.5.5 0 0 0 .5-.42l.36-2.54 a7.28 7.28 0 0 0 1.63-.94l2.39.96 a.5.5 0 0 0 .6-.22l1.92-3.32 a.5.5 0 0 0-.12-.65l-2.03-1.58z"/><circle cx="12" cy="12" r="3"/></svg>',
         defaultRoles: [ADMIN_ROLES.SUPER_ADMIN],
     },
     {
-        path: 'users',  // no new path needed, these are action permissions not pages
+        path: 'users',
         name: 'Delete User',
         component: 'AdminUsers',
         permission: 'delete_user',
@@ -178,17 +166,6 @@ export const ADMIN_PAGES = [
         defaultRoles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.ADMIN],
         hideFromSidebar: true,
     },
-    // ✅ TO ADD NEW PAGE: Just add one entry here with inline SVG!
-    // {
-    //     path: 'my-new-page',
-    //     name: 'My New Page',
-    //     component: 'AdminMyNewPage',
-    //     permission: 'access_my_new_page',
-    //     category: 'My Category',
-    //     description: 'What this page does',
-    //     icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>',
-    //     defaultRoles: [ADMIN_ROLES.SUPER_ADMIN],
-    // },
 ]
 
 // Auto-generate permissions object

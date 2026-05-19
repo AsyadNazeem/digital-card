@@ -105,7 +105,8 @@ const props = defineProps({
 
 const emit = defineEmits(['notification-click', 'view-all-notifications']);
 
-const isDarkMode = inject('isDarkMode', ref(false));
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 
 const showNotifications = ref(false);
 const dropdownRef = ref(null);

@@ -74,7 +74,7 @@
 </template>
 
 <script setup>
-import { VITE_IMAGE_UPLOAD_URL } from '../config.js';
+import { VITE_IMAGE_UPLOAD_URL } from '../../config.js';
 
 defineProps({
   locale: String,

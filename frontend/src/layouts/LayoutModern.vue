@@ -230,9 +230,9 @@
 <script setup>
 import { computed } from 'vue';
 import { VITE_IMAGE_UPLOAD_URL } from '../config.js';
-import ReviewPopup from '../components/ReviewPopup.vue';
-import WhatsAppPopup from '../components/WhatsAppPopup.vue';
-import ContactPopup from '../components/ContactPopup.vue';
+import ReviewPopup from '../components/contactCard/ReviewPopup.vue';
+import WhatsAppPopup from '../components/contactCard/WhatsAppPopup.vue';
+import ContactPopup from '../components/contactCard/ContactPopup.vue';
 
 const props = defineProps({
   company: Object,

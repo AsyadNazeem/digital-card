@@ -1,3 +1,91 @@
+/* =========================================================
+   ROOT / TOKENS
+========================================================= */
+
+:root, .landing-page {
+    --c-bg: #ffffff;
+    --c-surface: #ffffff;
+    --c-surface-2: #faf9f7;
+    --c-border: #e8e3dc;
+    --c-text-primary: #1c1410;
+    --c-text-secondary: #5a4f46;
+    --c-text-muted: #9e8e84;
+    --c-accent: #7c5c4e;
+    --c-accent-2: #a07060;
+    --c-accent-hover: #5e443a;
+    --c-accent-light: #f0e8e4;
+    --c-accent-subtle: #f8f3f0;
+}
+
+.landing-page {
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--c-text-primary);
+    background: radial-gradient(circle at top left, rgba(124, 92, 78, 0.08), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(124, 92, 78, 0.06), transparent 25%),
+    var(--c-bg);
+    transition: background 0.4s ease, color 0.4s ease;
+}
+
+.landing-page.dark-mode {
+    --c-bg: #131118;
+    --c-surface: #1a1720;
+    --c-surface-2: #1e1b26;
+    --c-border: #2c2838;
+    --c-text-primary: #f2ede8;
+    --c-text-secondary: #a89490;
+    --c-text-muted: #6a5e5a;
+    --c-accent: #c4906e;
+    --c-accent-2: #d4a880;
+    --c-accent-hover: #d4a070;
+    --c-accent-light: #281e18;
+    --c-accent-subtle: #1e1612;
+    background: radial-gradient(circle at top left, rgba(124, 92, 78, 0.16), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(124, 92, 78, 0.10), transparent 25%),
+    #0d0712;
+}
+
+/* =========================================================
+   SHARED TOKENS (new sections)
+========================================================= */
+
+.pill-badge {
+    display: inline-flex;
+    padding: 8px 18px;
+    border-radius: 100px;
+    background: var(--c-accent-subtle);
+    border: 1px solid var(--c-border);
+    color: var(--c-accent);
+    font-size: 0.70rem;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: clamp(2.2rem, 4vw, 3.8rem);
+    font-weight: 900;
+    line-height: 1.08;
+    letter-spacing: -1.5px;
+    color: var(--c-text-primary);
+    margin: 0 0 18px;
+}
+
+.section-title em {
+    font-style: italic;
+    font-family: Georgia, serif;
+    color: var(--c-accent);
+}
+
+.section-desc {
+    color: var(--c-text-secondary);
+    line-height: 1.8;
+    font-size: 1.02rem;
+    max-width: 560px;
+}
+
+
 html, body {
     margin: 0 !important;
     padding: 0 !important;
@@ -58,3 +146,18 @@ body.modal-open .admin-content {
 }
 
 
+
+/* Hide scrollbar for Chrome, Safari and Edge */
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for Firefox */
+html {
+    scrollbar-width: none;
+}
+
+/* Hide scrollbar for IE and old Edge */
+body {
+    -ms-overflow-style: none;
+}

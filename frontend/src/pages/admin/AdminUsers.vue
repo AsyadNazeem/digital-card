@@ -61,7 +61,19 @@
           <option value="all">All Users</option>
           <option value="local">Local Users</option>
           <option value="google">Google Users</option>
+          <option value="apple">Apple Users</option>
         </select>
+
+        <!-- ✅ Plan Filter -->
+        <select v-model="filterPlan" class="filter-select">
+          <option value="all">All Plans</option>
+          <option value="free">Free</option>
+          <option value="demo">Demo</option>
+          <option value="plus">Plus</option>
+          <option value="pro">Pro</option>
+          <option value="custom">Custom</option>
+        </select>
+
         <select v-model="sortOrder" class="filter-select">
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
@@ -423,14 +435,12 @@
               <div class="plan-section">
                 <span class="plan-label">User Plan</span>
 
-                <select
-                    v-model="updatedPlan"
-                    class="plan-select"
-                    :disabled="!can(PERMISSIONS.EDIT_USER_LIMITS)"
-                >
+                <select v-model="updatedPlan" class="plan-select" :disabled="!can(PERMISSIONS.EDIT_USER_LIMITS)">
                   <option value="free">Free</option>
+                  <option value="demo">Demo</option>
                   <option value="plus">Plus</option>
                   <option value="pro">Pro</option>
+                  <option value="custom">Custom</option>
                 </select>
               </div>
 
@@ -455,13 +465,14 @@
                   <span class="limit-value">{{ updatedLimits.companyLimit }}</span>
                   <div class="limit-buttons">
                     <button @click="updateLimit('company', -1)" class="btn-limit"
-                            :disabled="updatedLimits.companyLimit <= 1">
+                            :disabled=" updatedPlan === 'free' || updatedPlan === 'demo' || updatedLimits.companyLimit <= ( updatedPlan === 'plus' ? 2 : updatedPlan === 'pro' ? 5 : 1)">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                            stroke-width="2">
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                       </svg>
                     </button>
-                    <button @click="updateLimit('company', 1)" class="btn-limit">
+                    <button @click="updateLimit('company', 1)" class="btn-limit"
+                            :disabled="updatedPlan === 'free' || updatedPlan === 'demo'">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                            stroke-width="2">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -495,13 +506,14 @@
                   <span class="limit-value">{{ updatedLimits.contactLimit }}</span>
                   <div class="limit-buttons">
                     <button @click="updateLimit('contact', -1)" class="btn-limit"
-                            :disabled="updatedLimits.contactLimit <= 1">
+                            :disabled="updatedPlan === 'free' || updatedPlan === 'demo' || updatedLimits.contactLimit <= (updatedPlan === 'plus' ? 5 : updatedPlan === 'pro' ? 15 : updatedPlan === 'custom' ? 30 : 1)">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                            stroke-width="2">
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                       </svg>
                     </button>
-                    <button @click="updateLimit('contact', 1)" class="btn-limit">
+                    <button @click="updateLimit('contact', 1)" class="btn-limit"
+                            :disabled="updatedPlan === 'free' || updatedPlan === 'demo'">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                            stroke-width="2">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -691,9 +703,11 @@
                               title="Delete Company"
                               style="margin-left: 6px;"
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2">
                               <polyline points="3 6 5 6 21 6"></polyline>
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                              <path
+                                  d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                             </svg>
                           </button>
                         </td>
@@ -906,7 +920,8 @@
                                   class="btn-view-card"
                                   title="Copy Google Wallet link"
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2">
                                   <rect x="9" y="9" width="13" height="13" rx="2"></rect>
                                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                 </svg>
@@ -918,7 +933,8 @@
                                   class="btn-view-card"
                                   title="Download Apple Wallet .pkpass file"
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2">
                                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                   <polyline points="7 10 12 15 17 10"></polyline>
                                   <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -926,9 +942,11 @@
                                 A-Wallet
                               </button>
                               <button @click.stop="deleteContact(contact)" class="btn-card-action delete">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2">
                                   <polyline points="3 6 5 6 21 6"></polyline>
-                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                  <path
+                                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                 </svg>
                                 Delete
                               </button>
@@ -1035,9 +1053,11 @@
                           QR
                         </button>
                         <button @click="deleteContact(contact)" class="btn-card-action delete">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2">
                             <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <path
+                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                           </svg>
                           Delete
                         </button>
@@ -1404,7 +1424,6 @@ const selectedContact = ref(null)
 
 const adminStore = useAdminStore()
 const searchQuery = ref('')
-const filterProvider = ref('all')
 const showModal = ref(false)
 const selectedUser = ref(null)
 const activeTab = ref('companies')
@@ -1421,12 +1440,13 @@ const selectedCompanyFilter = ref('all')
 const currentPage = ref(1);
 const itemsPerPage = 10; // you can change this
 
-// Sorting
-const sortOrder = ref("newest"); // "newest" or "oldest"
-
 // Add these new refs for create mode
 const isCreatingCompany = ref(false)
 const isCreatingContact = ref(false)
+
+const filterProvider = ref('all')
+const filterPlan = ref('all')
+const sortOrder = ref("newest");
 
 const review = ref([])
 const canCreateReview = computed(() => {
@@ -1632,11 +1652,11 @@ async function downloadAppleWallet(contact) {
 
     const response = await adminApi.post(
         '/apple-wallet/pass',
-        { contact: walletContact },
-        { responseType: 'blob' }
+        {contact: walletContact},
+        {responseType: 'blob'}
     );
 
-    const blob = new Blob([response.data], { type: 'application/vnd.apple.pkpass' });
+    const blob = new Blob([response.data], {type: 'application/vnd.apple.pkpass'});
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -1822,6 +1842,23 @@ const filteredUsers = computed(() => {
         u.phone?.toLowerCase().includes(query)
     )
   }
+
+// ✅ Plan filter
+  if (filterPlan.value !== 'all') {
+    users = users.filter(
+        user => user.plan === filterPlan.value
+    )
+  }
+
+  // Sort
+  users.sort((a, b) => {
+    const dateA = new Date(a.createdAt)
+    const dateB = new Date(b.createdAt)
+
+    return sortOrder.value === 'newest'
+        ? dateB - dateA
+        : dateA - dateB
+  })
 
   return users
 })
@@ -2039,20 +2076,41 @@ async function openReviewShareModal(reviewItem) {
   }
 }
 
+// Replace updateLimit
 function updateLimit(type, change) {
+  if (updatedPlan.value === 'free' || updatedPlan.value === 'demo') {
+    alert('⚠️ Free and Demo plan users cannot have increased limits. Please upgrade the user first.')
+    return
+  }
+
+  const planMinimums = {
+    free: {companyLimit: 1, contactLimit: 1},
+    demo: {companyLimit: 1, contactLimit: 1},
+    plus: {companyLimit: 2, contactLimit: 5},
+    pro: {companyLimit: 5, contactLimit: 15},
+    custom: {companyLimit: 1, contactLimit: 1},   // admin sets manually
+  }
+
+  const minimums = planMinimums[updatedPlan.value]
+
   if (type === 'company') {
     const newValue = updatedLimits.value.companyLimit + change
-    if (newValue >= 1) {
-      updatedLimits.value.companyLimit = newValue
+    if (newValue < minimums.companyLimit) {
+      alert(`⚠️ Minimum is ${minimums.companyLimit} company for this plan.`)
+      return
     }
+    updatedLimits.value.companyLimit = newValue
   } else if (type === 'contact') {
     const newValue = updatedLimits.value.contactLimit + change
-    if (newValue >= 1) {
-      updatedLimits.value.contactLimit = newValue
+    if (newValue < minimums.contactLimit) {
+      alert(`⚠️ Minimum is ${minimums.contactLimit} contact for this plan.`)
+      return
     }
+    updatedLimits.value.contactLimit = newValue
   }
 }
 
+// Replace saveLimits
 async function saveLimits() {
   if (!can(PERMISSIONS.EDIT_USER_LIMITS)) {
     alert('You do not have permission to edit user limits')
@@ -2064,31 +2122,36 @@ async function saveLimits() {
   savingLimits.value = true
   try {
     const planDefaults = {
-      free: { companyLimit: 1, contactLimit: 1, reviewLimit: 1 },
-      plus: { companyLimit: 2, contactLimit: 6, reviewLimit: 2 },
-      pro:  { companyLimit: 5, contactLimit: 15, reviewLimit: 5 },
+      free: {companyLimit: 1, contactLimit: 1, reviewLimit: 1},
+      demo: {companyLimit: 1, contactLimit: 1, reviewLimit: 1},
+      plus: {companyLimit: 2, contactLimit: 5, reviewLimit: 2},
+      pro: {companyLimit: 5, contactLimit: 15, reviewLimit: 5},
+      custom: {companyLimit: 5, contactLimit: 30, reviewLimit: 10},
     }
 
-    // If plan changed, use plan defaults; otherwise use manually set limits
     const planChanged = updatedPlan.value !== selectedUser.value?.plan
-    const defaults = planChanged ? planDefaults[updatedPlan.value] : null
 
+    // If plan changed → backend will use defaults. Send current UI values for same-plan manual overrides.
     const payload = {
       plan: updatedPlan.value,
-      companyLimit: defaults ? defaults.companyLimit : updatedLimits.value.companyLimit,
-      contactLimit: defaults ? defaults.contactLimit : updatedLimits.value.contactLimit,
-      reviewLimit:  defaults ? defaults.reviewLimit  : (selectedUser.value.reviewLimit || 1),
+      companyLimit: updatedLimits.value.companyLimit,
+      contactLimit: updatedLimits.value.contactLimit,
+      reviewLimit: selectedUser.value.reviewLimit || 1,
+    }
+
+    // If plan changed, pre-update UI to show the defaults immediately
+    if (planChanged) {
+      const defaults = planDefaults[updatedPlan.value]
+      updatedLimits.value.companyLimit = defaults.companyLimit
+      updatedLimits.value.contactLimit = defaults.contactLimit
+      payload.companyLimit = defaults.companyLimit
+      payload.contactLimit = defaults.contactLimit
+      payload.reviewLimit = defaults.reviewLimit
     }
 
     await adminApi.patch(`/user/${selectedUser.value.id}/limits`, payload)
 
-    // Update local UI state
-    if (defaults) {
-      updatedLimits.value.companyLimit = defaults.companyLimit
-      updatedLimits.value.contactLimit = defaults.contactLimit
-    }
-
-    originalLimits.value = { ...updatedLimits.value }
+    originalLimits.value = {...updatedLimits.value}
     selectedUser.value.plan = updatedPlan.value
     selectedUser.value.companyLimit = updatedLimits.value.companyLimit
     selectedUser.value.contactLimit = updatedLimits.value.contactLimit
@@ -2296,6 +2359,18 @@ onMounted(() => {
 .plan-badge.small {
   font-size: 0.65rem;
   padding: 0.25rem 0.65rem;
+}
+
+.plan-badge.demo {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border: none;
+}
+
+.plan-badge.custom {
+  background: linear-gradient(135deg, #5c4033 0%, #d4af37 100%);
+  color: white;
+  border: none;
 }
 
 /* Header layout */
@@ -2982,17 +3057,61 @@ onMounted(() => {
   transition: all 0.15s;
 }
 
-.users-table th:nth-child(1)  { width: 3%; }   /* # */
-.users-table th:nth-child(2)  { width: 10%; }  /* Name */
-.users-table th:nth-child(3)  { width: 12%; }  /* Email */
-.users-table th:nth-child(4)  { width: 8%; }  /* Phone */
-.users-table th:nth-child(5)  { width: 8%; }   /* Provider */
-.users-table th:nth-child(6)  { width: 8%; }  /* Registration */
-.users-table th:nth-child(7)  { width: 8%; }   /* Company Limit */
-.users-table th:nth-child(8)  { width: 8%; }   /* Contact Limit */
-.users-table th:nth-child(9)  { width: 9%; }   /* Joined */
-.users-table th:nth-child(10) { width: 7%; }   /* Plan */
-.users-table th:nth-child(11) { width: 7%; }   /* Actions */
+.users-table th:nth-child(1) {
+  width: 3%;
+}
+
+/* # */
+.users-table th:nth-child(2) {
+  width: 10%;
+}
+
+/* Name */
+.users-table th:nth-child(3) {
+  width: 12%;
+}
+
+/* Email */
+.users-table th:nth-child(4) {
+  width: 8%;
+}
+
+/* Phone */
+.users-table th:nth-child(5) {
+  width: 8%;
+}
+
+/* Provider */
+.users-table th:nth-child(6) {
+  width: 8%;
+}
+
+/* Registration */
+.users-table th:nth-child(7) {
+  width: 8%;
+}
+
+/* Company Limit */
+.users-table th:nth-child(8) {
+  width: 8%;
+}
+
+/* Contact Limit */
+.users-table th:nth-child(9) {
+  width: 9%;
+}
+
+/* Joined */
+.users-table th:nth-child(10) {
+  width: 7%;
+}
+
+/* Plan */
+.users-table th:nth-child(11) {
+  width: 7%;
+}
+
+/* Actions */
 
 .clickable-row {
   cursor: pointer;

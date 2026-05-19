@@ -41,11 +41,7 @@
     </div>
   </div>
 
-  <div
-      class="public-card-container"
-      v-if="loaded"
-      :dir="locale === 'ar' ? 'rtl' : 'ltr'"
-  >
+  <div class="public-card-container" v-if="loaded" :dir="locale === 'ar' ? 'rtl' : 'ltr'">
 
     <!-- INDIVIDUAL CARD -->
     <template v-if="contactType === 'individual'">
@@ -771,9 +767,9 @@
 import {computed, onMounted, ref, watch} from "vue";
 import {useRoute} from "vue-router";
 import {useI18n} from 'vue-i18n';
-import api from "../services/api";
-import {API_BASE_URL, VITE_IMAGE_UPLOAD_URL} from "../config.js";
-import {translateBatch} from "../utils/translator";
+import api from "../../services/api.js";
+import {API_BASE_URL, VITE_IMAGE_UPLOAD_URL} from "../../config.js";
+import {translateBatch} from "../../utils/translator.js";
 
 const route = useRoute();
 const {t, locale} = useI18n();

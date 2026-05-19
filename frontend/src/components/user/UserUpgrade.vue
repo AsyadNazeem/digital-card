@@ -53,39 +53,38 @@
               </div>
               <ul class="plan-features">
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   1 Company (limited features)
                 </li>
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   1 Contact
                 </li>
-                <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
-                    <polyline points="20 6 9 17 4 12"/>
+                <li class="disabled">
+                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
-                  1 Review
+                  Google Wallet
                 </li>
                 <li class="disabled">
-                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                  Apple Wallet
+                </li>
+                <li class="disabled">
+                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
                   No Analytics
                 </li>
                 <li class="disabled">
-                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  <svg class="feat-cross" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
                   No Premium Themes
                 </li>
@@ -94,14 +93,15 @@
                   class="plan-btn"
                   :class="fetchedPlan === 'free' ? 'btn-current' : 'btn-outline'"
                   :disabled="fetchedPlan === 'free'"
+                  @click="() => handlePlanClick('free')"
               >
-                {{ fetchedPlan === 'free' ? 'Current Plan' : 'Choose Free' }}
+                {{ fetchedPlan === 'free' ? 'Current Plan' : 'Contact Admin' }}
               </button>
             </div>
 
             <!-- Plus -->
             <div class="plan-card" :class="{ 'current-plan': fetchedPlan === 'plus', featured: fetchedPlan !== 'plus' }">
-<span v-if="fetchedPlan === 'plus'" class="current-badge">
+              <span v-if="fetchedPlan === 'plus'" class="current-badge">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
@@ -118,36 +118,37 @@
               </div>
               <ul class="plan-features">
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   2 Companies (full features)
                 </li>
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  6 Contacts
+                  5 Contacts
                 </li>
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  2 Reviews
+                  Google Wallet
                 </li>
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Apple Wallet
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   Analytics Included
                 </li>
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   Plus Themes
@@ -157,14 +158,15 @@
                   class="plan-btn"
                   :class="fetchedPlan === 'plus' ? 'btn-current' : 'btn-primary'"
                   :disabled="fetchedPlan === 'plus'"
+                  @click="() => handlePlanClick('plus')"
               >
-                {{ fetchedPlan === 'plus' ? 'Current Plan' : 'Choose Plus →' }}
+                {{ fetchedPlan === 'plus' ? 'Current Plan' : 'Contact Admin →' }}
               </button>
             </div>
 
             <!-- Premium -->
             <div class="plan-card" :class="{ 'current-plan': fetchedPlan === 'premium' }">
-<span v-if="fetchedPlan === 'premium'" class="current-badge">
+              <span v-if="fetchedPlan === 'premium'" class="current-badge">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
@@ -181,36 +183,37 @@
               </div>
               <ul class="plan-features">
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   5 Companies (full features)
                 </li>
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   15 Contacts
                 </li>
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  5 Reviews
+                  Google Wallet
                 </li>
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Apple Wallet
+                </li>
+                <li>
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   Analytics Included
                 </li>
                 <li>
-                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5">
+                  <svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   All Premium Themes
@@ -220,19 +223,74 @@
                   class="plan-btn"
                   :class="fetchedPlan === 'premium' ? 'btn-current' : 'btn-outline'"
                   :disabled="fetchedPlan === 'premium'"
+                  @click="() => handlePlanClick('premium')"
               >
-                {{ fetchedPlan === 'premium' ? 'Current Plan' : 'Choose Premium →' }}
+                {{ fetchedPlan === 'premium' ? 'Current Plan' : 'Contact Admin →' }}
+              </button>
+            </div>
+
+            <!-- Custom -->
+            <div class="plan-card custom-plan" :class="{ 'current-plan': fetchedPlan === 'custom' }">
+              <span v-if="fetchedPlan === 'custom'" class="current-badge">...Current</span>
+              <div class="plan-top">
+                <div class="plan-title">Custom</div>
+                <div class="plan-price">Tailored for large organisations</div>
+              </div>
+              <ul class="plan-features">
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg> Custom number of Companies</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg> Min. 30 Contacts</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg> Google Wallet</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg> Apple Wallet</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg> Analytics Included</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg> All Premium Themes</li>
+                <li><svg class="feat-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg> Dedicated Account Manager</li>
+              </ul>
+              <button class="plan-btn btn-outline" @click="() => handlePlanClick('custom')">
+                Contact Admin →
               </button>
             </div>
 
           </div>
 
           <!-- Contact note -->
+          <!-- Contact note -->
           <div class="contact-note">
             <p>
               Ready to upgrade? Contact us at
               <a href="mailto:hello@tapmy.name">hello@tapmy.name</a>
             </p>
+
+            <!-- Demo Request CTA -->
+<!--            <div class="demo-request-section">-->
+<!--              <button-->
+<!--                  class="demo-request-btn"-->
+<!--                  @click="handleDemoRequest"-->
+<!--              >-->
+<!--                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">-->
+<!--                  <polygon points="5 3 19 12 5 21 5 3"/>-->
+<!--                </svg>-->
+
+<!--                Request Live Demo-->
+<!--              </button>-->
+
+<!--              <p class="demo-request-text">-->
+<!--                Want a guided walkthrough of TapMyName for your team or organisation?-->
+<!--              </p>-->
+<!--            </div>-->
           </div>
 
         </div>
@@ -245,14 +303,15 @@
 import {inject, ref, watch} from 'vue';
 import api from '@/services/api.js';
 
-const isDarkMode = inject('isDarkMode', ref(false));
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 
 const props = defineProps({
   open: Boolean,
   currentPlan: {type: String, default: 'free'}
 });
 
-defineEmits(['close']);
+const emit = defineEmits(['close', 'open-plan-contact']);
 
 const fetchedPlan = ref(props.currentPlan);
 
@@ -262,7 +321,6 @@ watch(() => props.open, async (isOpen) => {
     try {
       const res = await api.get('/dashboard/user/plan');
       let plan = (res.data?.plan || 'free').toLowerCase();
-      // Normalize DB value 'pro' to display name 'premium'
       if (plan === 'pro') plan = 'premium';
       fetchedPlan.value = plan;
     } catch {
@@ -275,7 +333,32 @@ watch(() => props.open, async (isOpen) => {
 
 function planLabel(plan) {
   const normalized = plan === 'pro' ? 'premium' : plan;
-  return { free: 'Free Plan', plus: 'Plus Plan', premium: 'Premium Plan' }[normalized] ?? 'Free Plan';
+  return {
+    free:    'Free Plan',
+    demo:    'Demo Plan',
+    plus:    'Plus Plan',
+    premium: 'Premium Plan',
+    custom:  'Custom Plan',
+  }[normalized] ?? 'Free Plan';
+}
+
+function handlePlanClick(targetPlan) {
+  // Don't do anything if clicking current plan
+  if (targetPlan === fetchedPlan.value) return;
+
+  // Emit event to parent to open contact form
+  // Parent should listen and call contactForm.openPlanRequest()
+  emit('open-plan-contact', {
+    targetPlan,
+    currentPlan: fetchedPlan.value
+  });
+}
+
+function handleDemoRequest() {
+  emit('open-plan-contact', {
+    targetPlan: 'demo',
+    currentPlan: fetchedPlan.value
+  })
 }
 </script>
 
@@ -358,14 +441,53 @@ button {
   border: 1.5px solid var(--c-border);
   border-radius: var(--c-radius);
   width: 100%;
-  max-width: 920px;
-  max-height: 90vh;
+  max-width: 1120px;
+  max-height: 230vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: var(--c-shadow-lg);
   margin: auto;
   color: var(--c-text-primary);
+}
+
+.demo-request-section {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--c-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.demo-request-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--c-accent), var(--c-accent-2));
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: var(--c-shadow-sm);
+}
+
+.demo-request-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--c-shadow-md);
+}
+
+.demo-request-text {
+  font-size: 12px;
+  color: var(--c-text-secondary);
+  text-align: center;
+  margin: 0;
+  max-width: 320px;
+  line-height: 1.5;
 }
 
 /* Header */
@@ -436,7 +558,7 @@ button {
 /* Plans grid */
 .plans-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
 }
 
@@ -462,6 +584,17 @@ button {
 .plan-card.current-plan {
   border-color: var(--c-accent);
   box-shadow: 0 0 0 3px rgba(124, 92, 78, 0.14), var(--c-shadow-sm);
+}
+
+.plan-card.custom-plan {
+  border: 1.5px dashed var(--c-accent);
+  background: var(--c-accent-subtle);
+}
+.plan-card.custom-plan .plan-title {
+  background: linear-gradient(135deg, var(--c-accent), var(--c-accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .dark-mode .plan-card.current-plan {

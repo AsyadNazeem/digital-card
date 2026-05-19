@@ -68,7 +68,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, inject } from 'vue'
-import countriesData from '../assets/country_code.json'
+import countriesData from '../../assets/country_code.json'
 
 // Inject dark mode state
 const isDarkMode = inject('isDarkMode', ref(false))

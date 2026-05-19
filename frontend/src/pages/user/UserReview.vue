@@ -286,7 +286,8 @@ import api from '@/services/api.js';
 import AlertModal from '@/components/user/AlertModal.vue';          // ← NEW
 import { useAlert } from '@/composables/useAlert.js';               // ← NEW
 
-const isDarkMode = inject('isDarkMode', ref(false));
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 
 const props = defineProps({
   activeTab: { type: String, required: true },

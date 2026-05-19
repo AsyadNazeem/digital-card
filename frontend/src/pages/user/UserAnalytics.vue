@@ -411,7 +411,8 @@ import { computed, inject, nextTick, ref, watch } from 'vue';
 import api from '@/services/api.js';
 import Chart from 'chart.js/auto';
 
-const isDarkMode = inject('isDarkMode', ref(false));
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 
 const props = defineProps({
   activeTab: { type: String, required: true },
@@ -448,7 +449,7 @@ let browserChartInstance = null;
 let peakHoursChartInstance = null;
 
 // ── Computed ──
-const hasAnalyticsAccess = computed(() => ['plus', 'pro'].includes(props.userPlan));
+const hasAnalyticsAccess = computed(() => ['plus', 'pro', 'demo', 'custom'].includes(props.userPlan));
 
 // ── Data Loading ──
 async function loadAnalytics() {

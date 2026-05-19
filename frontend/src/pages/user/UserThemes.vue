@@ -380,11 +380,12 @@
 <script setup>
 import {inject, onMounted, ref} from 'vue';
 import api from '@/services/api.js';
-import RealThemePreview from '@/components/RealThemePreview.vue';
+import RealThemePreview from '@/components/contactCard/RealThemePreview.vue';
 import AlertModal from '@/components/user/AlertModal.vue'; // ← NEW
 import {useAlert} from '@/composables/useAlert.js'; // ← NEW
 
-const isDarkMode = inject('isDarkMode', ref(false));
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 
 const props = defineProps({
   activeTab: {type: String, required: true}

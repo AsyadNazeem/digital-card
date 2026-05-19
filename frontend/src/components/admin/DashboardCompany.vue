@@ -336,8 +336,8 @@
 import {ref, watch} from 'vue'
 import adminApi from '../../services/adminApi'
 import {VITE_IMAGE_UPLOAD_URL} from '@/config.js'
-import CountrySelector from "@/components/CountrySelector.vue"
-import ImageCropperModal from "@/components/ImageCropper.vue"
+import CountrySelector from "@/components/common/CountrySelector.vue"
+import ImageCropperModal from "@/components/contactCard/ImageCropper.vue"
 import {QuillEditor} from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import Quill from 'quill'

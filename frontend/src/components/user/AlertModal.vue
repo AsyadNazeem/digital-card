@@ -81,7 +81,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['confirm', 'cancel']);
-const isDarkMode = inject('isDarkMode', ref(false));
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 
 function onOverlayClick() {
   if (props.closeOnOverlay) emit('cancel');

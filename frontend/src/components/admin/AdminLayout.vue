@@ -22,21 +22,31 @@ const admin = useAdminStore()
 // Use the shared sidebar state - this automatically updates when sidebar toggles
 const { isCollapsed, isMobile, initialize, cleanup } = useSidebar()
 
+let pollInterval = null          // ✅ ADD THIS - Track the interval
+let messageInterval = null       // ✅ ADD THIS - Track messages interval
+
 onMounted(() => {
   admin.initializeAuth()
   admin.loadRequests()
+  admin.loadUnreadMessages()     // ✅ ADD THIS - Load unread messages on startup
 
   // Initialize sidebar state
   initialize()
 
   // Poll for new requests every 30 seconds
-  const pollInterval = setInterval(() => {
+  pollInterval = setInterval(() => {
     admin.loadRequests()
+  }, 30000)
+
+  // ✅ ADD THIS BLOCK - Poll for new messages every 30 seconds
+  messageInterval = setInterval(() => {
+    admin.loadUnreadMessages()
   }, 30000)
 
   onUnmounted(() => {
     cleanup()
-    clearInterval(pollInterval)
+    clearInterval(pollInterval)      // ✅ UPDATED - Use variable
+    clearInterval(messageInterval)   // ✅ ADD THIS
   })
 })
 </script>

@@ -145,7 +145,7 @@
 
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue';
-import { API_BASE_URL } from '../config.js';
+import { API_BASE_URL } from '../../config.js';
 
 const props = defineProps({
   theme: {

@@ -610,12 +610,13 @@ import api from '@/services/api.js';
 import {VITE_IMAGE_UPLOAD_URL} from '@/config.js';
 import {QuillEditor} from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
-import CountrySelector from '@/components/CountrySelector.vue';
-import ImageCropperModal from '@/components/ImageCropper.vue';
+import CountrySelector from '@/components/common/CountrySelector.vue';
+import ImageCropperModal from '@/components/contactCard/ImageCropper.vue';
 import AlertModal from '@/components/user/AlertModal.vue'; // ← NEW
 import {useAlert} from '@/composables/useAlert.js'; // ← NEW
 
-const isDarkMode = inject('isDarkMode', ref(false));
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 
 const props = defineProps({
   activeTab: {type: String, required: true},
@@ -1394,6 +1395,10 @@ a {
   background: linear-gradient(135deg, var(--c-accent-subtle) 0%, var(--c-surface) 100%);
   border-bottom: 1px solid var(--c-border);
   position: relative;
+}
+
+.company-tab.dark-mode .card-top {
+  background: linear-gradient(135deg, #1e1612 0%, #1e1b27 100%);
 }
 
 .card-logo-wrap {

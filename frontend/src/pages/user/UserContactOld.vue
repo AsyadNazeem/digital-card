@@ -492,10 +492,10 @@ import {computed, inject, nextTick, onMounted, ref, watch} from 'vue';
 import {useRouter} from 'vue-router';
 import api from '@/services/api.js';
 import {API_BASE_URL, VITE_FRONTEND_URL, VITE_IMAGE_UPLOAD_URL} from '@/config.js';
-import CountryCodeDropdown from '@/components/CountryCodeDropdown.vue';
+import CountryCodeDropdown from '@/components/common/CountryCodeDropdown.vue';
 import {isValidPhoneNumber, parsePhoneNumber} from 'libphonenumber-js';
 import QRCode from "qrcode";
-import ImageCropperModal from '@/components/ImageCropper.vue';
+import ImageCropperModal from '@/components/contactCard/ImageCropper.vue';
 
 const router = useRouter();
 const isDarkMode = inject('isDarkMode', ref(false));

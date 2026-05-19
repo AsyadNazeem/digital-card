@@ -195,17 +195,17 @@
 
 <script setup>
 import { computed } from 'vue';
-import HeaderSection from '../components/HeaderSection.vue';
-import IdentitySection from '../components/IdentitySection.vue';
-import PrimaryButtons from '../components/PrimaryButtons.vue';
-import SaveContactButton from '../components/SaveContactButton.vue';
-import SecondaryButtons from '../components/SecondaryButtons.vue';
-import CompanyInfo from '../components/CompanyInfo.vue';
-import SocialSection from '../components/SocialSection.vue';
-import FooterSection from '../components/FooterSection.vue';
-import ReviewPopup from '../components/ReviewPopup.vue';
-import WhatsAppPopup from '../components/WhatsAppPopup.vue';
-import ContactPopup from '../components/ContactPopup.vue';
+import HeaderSection from '../components/contactCard/HeaderSection.vue';
+import IdentitySection from '../components/contactCard/IdentitySection.vue';
+import PrimaryButtons from '../components/contactCard/PrimaryButtons.vue';
+import SaveContactButton from '../components/contactCard/SaveContactButton.vue';
+import SecondaryButtons from '../components/contactCard/SecondaryButtons.vue';
+import CompanyInfo from '../components/contactCard/CompanyInfo.vue';
+import SocialSection from '../components/contactCard/SocialSection.vue';
+import FooterSection from '../components/contactCard/FooterSection.vue';
+import ReviewPopup from '../components/contactCard/ReviewPopup.vue';
+import WhatsAppPopup from '../components/contactCard/WhatsAppPopup.vue';
+import ContactPopup from '../components/contactCard/ContactPopup.vue';
 
 const props = defineProps({
   company: Object,

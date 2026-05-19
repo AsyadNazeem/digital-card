@@ -123,8 +123,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import api from '../services/api';
-import { translateBatch } from '../utils/translator';
+import api from '../../services/api.js';
+import { translateBatch } from '../../utils/translator.js';
 
 const route = useRoute();
 const locale = ref('en');

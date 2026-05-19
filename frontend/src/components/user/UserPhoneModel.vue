@@ -47,12 +47,13 @@
 
 <script setup>
 import { ref, inject } from 'vue'; // Add inject
-import CountryCodeDropdown from '@/components/CountryCodeDropdown.vue';
+import CountryCodeDropdown from '@/components/common/CountryCodeDropdown.vue';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import api from '@/services/api';
 
 // Add this line after your imports
-const isDarkMode = inject('isDarkMode', ref(false));
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 
 const props = defineProps({
   showPhonePopup: {

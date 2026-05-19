@@ -48,7 +48,8 @@ defineProps({
 
 defineEmits(['close', 'confirm']);
 
-const isDarkMode = inject('isDarkMode', ref(false));
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 </script>
 
 <style scoped>

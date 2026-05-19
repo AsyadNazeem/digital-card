@@ -232,9 +232,11 @@ const hasMoreNotifications = computed(() => {
   )
 })
 
+
 const getBadgeCount = (badgeKey) => {
   const counts = {
     pendingRequests: adminStore.pendingRequestsCount || 0,
+    unreadMessages: adminStore.unreadMessagesCount || 0,  // ✅ ADD THIS LINE
   }
   return counts[badgeKey] || 0
 }

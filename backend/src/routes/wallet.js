@@ -6,6 +6,7 @@ import https from "https";
 import http from "http";
 import { fileURLToPath } from "url";
 import { authenticateToken } from "../middleware/authMiddleware.js";
+import User from "../models/User.js";
 import { PKPass } from "passkit-generator";
 import { buildThumbnail, buildStrip, buildLogo } from "../controllers/passImageComposer.js";
 
@@ -58,6 +59,94 @@ const ORIGINS = (process.env.GW_ORIGINS || "").split(",").filter(Boolean);
 
 const IMAGE_BASE_URL =
     process.env.IMAGE_UPLOAD_URL || "https://tapmy.name";
+
+/* ═══════════════════════════════════════════════════════════
+   ✅ PLAN-BASED ACCESS VALIDATION MIDDLEWARE
+═══════════════════════════════════════════════════════════ */
+
+/**
+ * Middleware to validate wallet access based on user plan
+ * Free plan users are blocked, paid plan users have access
+ */
+async function validateWalletAccess(req, res, next) {
+    try {
+        const user = await User.findByPk(req.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        // ✅ Block free plan users
+        if (user.plan === 'free') {
+            console.warn(`[WALLET BLOCKED] User ${req.userId} on free plan attempted wallet access`);
+
+            return res.status(403).json({
+                message: "Wallet features are only available on paid plans. Please upgrade to use Google Wallet or Apple Wallet.",
+                feature: "wallet",
+                requiresUpgrade: true,
+                currentPlan: "free",
+                accessDenied: true
+            });
+        }
+
+        // ✅ Attach user plan to request for logging
+        req.userPlan = user.plan;
+
+        console.log(`[WALLET ACCESS GRANTED] User ${req.userId} on ${user.plan} plan`);
+
+        next();
+
+    } catch (err) {
+        console.error("❌ Wallet access validation error:", err);
+        res.status(500).json({
+            message: "Error validating wallet access",
+            error: err.message
+        });
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ✅ WALLET ACCESS CHECK ENDPOINT (For Frontend)
+═══════════════════════════════════════════════════════════ */
+
+/**
+ * GET /wallet/access-check
+ * Returns user's wallet access status and available features
+ */
+router.get("/access-check", authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findByPk(req.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        const hasWalletAccess = user.plan !== 'free';
+
+        return res.json({
+            currentPlan: user.plan || 'free',
+            hasWalletAccess: hasWalletAccess,
+            features: {
+                googleWallet: hasWalletAccess,
+                appleWallet: hasWalletAccess,
+                googleWalletLink: hasWalletAccess,
+                appleWalletFile: hasWalletAccess
+            },
+            planName: user.plan === 'free' ? 'Free' : (user.plan?.charAt(0).toUpperCase() + user.plan?.slice(1))
+        });
+
+    } catch (err) {
+        console.error("❌ Access check error:", err);
+        res.status(500).json({
+            message: "Error checking wallet access",
+            error: err.message
+        });
+    }
+});
 
 /* -------------------------------------------------------
    HELPER: IMAGE LOADER
@@ -237,11 +326,11 @@ function createSaveJwtForContact({ objectIdSuffix, contact }) {
     };
 }
 
-/* -------------------------------------------------------
-   GOOGLE ROUTE
-------------------------------------------------------- */
+/* ═══════════════════════════════════════════════════════════
+   ✅ GOOGLE WALLET ROUTES (WITH PLAN VALIDATION)
+═══════════════════════════════════════════════════════════ */
 
-router.post("/google/save-url", authenticateToken, async (req, res) => {
+router.post("/google/save-url", authenticateToken, validateWalletAccess, async (req, res) => {
     try {
 
         const { contact, objectIdSuffix } = req.body;
@@ -271,9 +360,9 @@ router.post("/google/save-url", authenticateToken, async (req, res) => {
     }
 });
 
-/* -------------------------------------------------------
-   APPLE WALLET STATUS
-------------------------------------------------------- */
+/* ═══════════════════════════════════════════════════════════
+   ✅ APPLE WALLET STATUS (No restriction needed)
+═══════════════════════════════════════════════════════════ */
 
 router.get("/apple/status", (req, res) => {
 
@@ -287,7 +376,11 @@ router.get("/apple/status", (req, res) => {
 
 });
 
-router.post("/apple/pass", authenticateToken, async (req, res) => {
+/* ═══════════════════════════════════════════════════════════
+   ✅ APPLE WALLET PASS (WITH PLAN VALIDATION)
+═══════════════════════════════════════════════════════════ */
+
+router.post("/apple/pass", authenticateToken, validateWalletAccess, async (req, res) => {
     try {
 
         if (!APPLE_CONFIGURED) {

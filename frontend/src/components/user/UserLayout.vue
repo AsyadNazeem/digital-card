@@ -21,13 +21,15 @@
     <!-- MODALS — outside main content -->
     <UserSettings
         :open="showSettings"
+        :user-plan="userPlan"
         @close="showSettings = false"
+        @open-upgrade="showUpgrade = true"
     />
-
     <UserUpgrade
         :open="showUpgrade"
         :current-plan="userPlan"
         @close="showUpgrade = false"
+        @open-plan-contact="handlePlanContact"
     />
 
     <RequestLimitPopup
@@ -35,6 +37,8 @@
         :contact-count="contactCount"
         :review-count="reviewCount"
         :user-limits="userLimits"
+        :userPlan="userPlan"
+        @open-upgrade="showUpgrade = true"
         @banner-visibility="onBannerVisibility"
     />
 
@@ -63,6 +67,7 @@
           :active-tab="activeTab"
           :contact-count="contactCount"
           :user-limits="userLimits"
+          :user-plan="userPlan"
           @contact-added="contactCount = $event"
           @contact-deleted="contactCount = $event"
           @contact-updated="loadData"
@@ -90,183 +95,373 @@
           v-if="activeTab === 'theme'"
           :active-tab="activeTab"
       />
+
+      <!-- Contact Float Widget — UPDATED -->
+      <UserContactFloat ref="contactFormRef"/>
     </main>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue';
-import api from '@/services/api.js';
-import UserSettings from '@/components/user/UserSettings.vue';
-import RequestLimitPopup from '@/components/user/UserRequestModel.vue';
-import UserCompanySection from '@/pages/user/UserCompany.vue';
-import UserContactSection from '@/pages/user/UserContact.vue';
-import UserReviewSection from '@/pages/user/UserReview.vue';
-import UserAnalytics from '@/pages/user/UserAnalytics.vue';
-import UserTheme from '@/pages/user/UserThemes.vue';
-import UserPhoneModal from '@/components/user/UserPhoneModel.vue';
-import UserHeader from "@/components/user/UserHeader.vue";
-import UserNavbar from "@/components/user/UserNavbar.vue";
-import UserUpgrade from '@/pages/user/UserUpgrade.vue';
-import { useRouter } from 'vue-router';
+import {
+  computed,
+  onMounted,
+  onUnmounted,
+  provide,
+  ref,
+  inject
+} from 'vue'
 
-const router = useRouter();
+import api from '@/services/api.js'
+import UserSettings from '@/components/user/UserSettings.vue'
+import RequestLimitPopup from '@/components/user/UserRequestModel.vue'
+import UserCompanySection from '@/pages/user/UserCompany.vue'
+import UserContactSection from '@/pages/user/UserContact.vue'
+import UserReviewSection from '@/pages/user/UserReview.vue'
+import UserAnalytics from '@/pages/user/UserAnalytics.vue'
+import UserTheme from '@/pages/user/UserThemes.vue'
+import UserPhoneModal from '@/components/user/UserPhoneModel.vue'
+import UserHeader from "@/components/user/UserHeader.vue"
+import UserNavbar from "@/components/user/UserNavbar.vue"
+import UserUpgrade from '@/components/user/UserUpgrade.vue'
+import UserContactFloat from '@/components/user/UserContactFloat.vue'
 
-// ── State ──
-const activeTab        = ref('company');
-const showSettings     = ref(false);
-const showPhonePopup   = ref(false);
-const showUpgrade      = ref(false);
-const contacts         = ref([]);
-const sidebarExpanded  = ref(true);
-const userName         = ref('John Doe');
-const userRole         = ref('User');
-const userPlan         = ref('free');
-const mainContentRef   = ref(null);
-const isDarkMode       = ref(localStorage.getItem('darkMode') === 'true');
-const isBannerVisible  = ref(false);
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+// ═══════════════════════════════════════════════
+// GLOBAL THEME FROM APP.VUE
+// ═══════════════════════════════════════════════
+
+const theme = inject('theme')
+
+const isDarkMode = theme.isDark
+
+const toggleDarkMode = theme.toggleDarkMode
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+
+const activeTab       = ref('company')
+const showSettings    = ref(false)
+const showPhonePopup  = ref(false)
+const showUpgrade     = ref(false)
+
+const contacts        = ref([])
+
+const sidebarExpanded = ref(true)
+
+const userName        = ref('John Doe')
+const userRole        = ref('User')
+const userPlan        = ref('free')
+
+const mainContentRef  = ref(null)
+
+// ═══════════════════════════════════════════════
+// CONTACT FORM REF — UPDATED
+// ═══════════════════════════════════════════════
+
+const contactFormRef = ref(null)
+
+const isBannerVisible = ref(false)
 
 // Counts
-const companyCount = ref(0);
-const contactCount = ref(0);
-const reviewCount  = ref(0);
+const companyCount = ref(0)
+const contactCount = ref(0)
+const reviewCount  = ref(0)
 
 const userLimits = ref({
   companyLimit: 3,
   contactLimit: 10,
   reviewLimit: 5,
   role: 'user'
-});
+})
 
-// ── Provide ──
-provide('activeTab',  activeTab);
-provide('isDarkMode', isDarkMode);
+// ═══════════════════════════════════════════════
+// PROVIDE
+// ═══════════════════════════════════════════════
 
-// ── Dark mode persistence ──
-watch(isDarkMode, (v) => { localStorage.setItem('darkMode', v.toString()); }, { immediate: true });
+provide('activeTab', activeTab)
 
-// ── Banner handler ──
+// ═══════════════════════════════════════════════
+// BANNER
+// ═══════════════════════════════════════════════
+
 function onBannerVisibility(visible) {
-  isBannerVisible.value = visible;
+  isBannerVisible.value = visible
 }
 
-// ── Responsive ──
-const isMobile = ref(typeof window !== 'undefined' && window.innerWidth <= 1024);
-function handleResize() { isMobile.value = window.innerWidth <= 1024; }
+// ═══════════════════════════════════════════════
+// RESPONSIVE
+// ═══════════════════════════════════════════════
 
-// ── Margin / height calculations ──
-const HEADER_H      = 64;
-const SIDEBAR_W     = 260;
-const SIDEBAR_W_COL = 72;
+const isMobile = ref(
+    typeof window !== 'undefined' &&
+    window.innerWidth <= 1024
+)
+
+function handleResize() {
+  isMobile.value = window.innerWidth <= 1024
+}
+
+// ═══════════════════════════════════════════════
+// LAYOUT CALCULATIONS
+// ═══════════════════════════════════════════════
+
+const HEADER_H      = 64
+const SIDEBAR_W     = 260
+const SIDEBAR_W_COL = 72
 
 const bannerHeight = computed(() => {
-  if (!isBannerVisible.value) return 0;
-  if (isMobile.value) return 48;
-  if (window.innerWidth <= 1024) return 52;
-  return 56;
-});
+
+  if (!isBannerVisible.value) return 0
+
+  if (isMobile.value) return 48
+
+  if (window.innerWidth <= 1024) return 52
+
+  return 56
+})
 
 const mainContentStyle = computed(() => {
-// In mainContentStyle computed, change the topOffset to account for banner:
-  const topOffset = HEADER_H + bannerHeight.value; // Add banner height
+
+  const topOffset = HEADER_H + bannerHeight.value
 
   if (isMobile.value) {
+
     return {
-      marginTop:  `${topOffset}px`,
-      height:     `calc(100vh - ${topOffset}px)`,
+      marginTop: `${topOffset}px`,
+      height: `calc(100vh - ${topOffset}px)`,
       marginLeft: '0px',
-      width:      '100vw',
-      transition: 'margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    };
+      width: '100vw',
+
+      transition:
+          'margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1), ' +
+          'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+    }
   }
 
-  const sideW = sidebarExpanded.value ? SIDEBAR_W : SIDEBAR_W_COL;
+  const sideW = sidebarExpanded.value
+      ? SIDEBAR_W
+      : SIDEBAR_W_COL
 
   return {
-    marginTop:  `${topOffset}px`,
-    height:     `calc(100vh - ${topOffset}px)`,
+    marginTop: `${topOffset}px`,
+    height: `calc(100vh - ${topOffset}px)`,
     marginLeft: `${sideW}px`,
-    width:      `calc(100vw - ${sideW}px)`,
-    transition: 'margin-left 0.3s ease, width 0.3s ease, margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  };
-});
+    width: `calc(100vw - ${sideW}px)`,
 
-// ── Auth / data ──
-const token = localStorage.getItem('token');
+    transition:
+        'margin-left 0.3s ease, ' +
+        'width 0.3s ease, ' +
+        'margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1), ' +
+        'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+  }
+})
+
+// ═══════════════════════════════════════════════
+// PLAN CONTACT HANDLER — UPDATED
+// ═══════════════════════════════════════════════
+
+/**
+ * Handle when user clicks a plan button in upgrade modal
+ * Closes upgrade modal and opens contact form with plan context
+ */
+function handlePlanContact({ targetPlan, currentPlan }) {
+  showUpgrade.value = false
+
+  // Small delay to ensure modal closes before opening contact form
+  setTimeout(() => {
+    if (contactFormRef.value) {
+      contactFormRef.value.openPlanRequest(targetPlan, currentPlan)
+    }
+  }, 200)
+}
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+
+const token = localStorage.getItem('token')
 
 function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  router.push('/login');
+
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+
+  router.push('/login')
 }
+
+// ═══════════════════════════════════════════════
+// USER PHONE CHECK
+// ═══════════════════════════════════════════════
 
 async function checkUserPhone() {
-  if (!token) { router.push('/login'); return; }
-  try {
-    const res = await api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
-    if (res.data.name) userName.value = res.data.name;
-    if (res.data.role) userRole.value = res.data.role;
-    if (!res.data.phone) showPhonePopup.value = true;
-  } catch (err) {
-    if (err.response?.status === 401) router.push('/login');
+
+  if (!token) {
+    router.push('/login')
+    return
   }
-}
 
-function handlePhoneAdded() {
-  showPhonePopup.value = false;
-  loadData();
-}
-
-async function loadData() {
-  if (!token) { router.push('/login'); return; }
   try {
-    const res = await api.get('/dashboard/data', { headers: { Authorization: `Bearer ${token}` } });
-    contacts.value     = res.data.contacts  || [];
-    companyCount.value = res.data.companies?.length || 0;
-    contactCount.value = res.data.contacts?.length  || 0;
 
-    const userRes  = await api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
-    const userData = userRes.data;
-    userLimits.value = {
-      companyLimit: userData.companyLimit || 3,
-      contactLimit: userData.contactLimit || 10,
-      reviewLimit:  userData.reviewLimit  || 5,
-      role:         userData.role         || 'user'
-    };
+    const res = await api.get('/auth/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
 
-    const reviewRes   = await api.get('/dashboard/reviews', { headers: { Authorization: `Bearer ${token}` } });
-    reviewCount.value = reviewRes.data.reviews?.length || 0;
+    if (res.data.name) {
+      userName.value = res.data.name
+    }
+
+    if (res.data.role) {
+      userRole.value = res.data.role
+    }
+
+    if (!res.data.phone) {
+      showPhonePopup.value = true
+    }
+
   } catch (err) {
+
     if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      router.push('/login');
+      router.push('/login')
     }
   }
 }
 
-async function loadUserPlan() {
-  try {
-    const res  = await api.get('/dashboard/user/plan', { headers: { Authorization: `Bearer ${token}` } });
-    userPlan.value = (res.data.plan || 'free').toLowerCase();
-  } catch { userPlan.value = 'free'; }
+function handlePhoneAdded() {
+  showPhonePopup.value = false
+  loadData()
 }
 
-function toggleSidebar()  { sidebarExpanded.value = !sidebarExpanded.value; }
-function toggleDarkMode()  { isDarkMode.value = !isDarkMode.value; }
+// ═══════════════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════════════
+
+async function loadData() {
+
+  if (!token) {
+    router.push('/login')
+    return
+  }
+
+  try {
+
+    const res = await api.get('/dashboard/data', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    contacts.value =
+        res.data.contacts || []
+
+    companyCount.value =
+        res.data.companies?.length || 0
+
+    contactCount.value =
+        res.data.contacts?.length || 0
+
+    const userRes = await api.get('/auth/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    const userData = userRes.data
+
+    userLimits.value = {
+      companyLimit: userData.companyLimit || 3,
+      contactLimit: userData.contactLimit || 10,
+      reviewLimit: userData.reviewLimit || 5,
+      role: userData.role || 'user'
+    }
+
+    const reviewRes = await api.get('/dashboard/reviews', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    reviewCount.value =
+        reviewRes.data.reviews?.length || 0
+
+  } catch (err) {
+
+    if (err.response?.status === 401) {
+
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+
+      router.push('/login')
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// USER PLAN
+// ═══════════════════════════════════════════════
+
+async function loadUserPlan() {
+
+  try {
+
+    const res = await api.get('/dashboard/user/plan', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    userPlan.value =
+        (res.data.plan || 'free').toLowerCase()
+
+  } catch {
+
+    userPlan.value = 'free'
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════
+
+function toggleSidebar() {
+  sidebarExpanded.value = !sidebarExpanded.value
+}
+
+// ═══════════════════════════════════════════════
+// LIFECYCLE
+// ═══════════════════════════════════════════════
 
 onMounted(() => {
-  checkUserPhone();
-  loadData();
-  loadUserPlan();
-  window.addEventListener('resize', handleResize);
-});
+
+  checkUserPhone()
+
+  loadData()
+
+  loadUserPlan()
+
+  window.addEventListener(
+      'resize',
+      handleResize
+  )
+})
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
-});
 
-defineExpose({ activeTab });
+  window.removeEventListener(
+      'resize',
+      handleResize
+  )
+})
+
+defineExpose({
+  activeTab
+})
 </script>
 
 <style scoped>

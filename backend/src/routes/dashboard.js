@@ -789,12 +789,21 @@ router.get("/contacts/stats", authenticate, async (req, res) => {
 // LIMIT INCREASE REQUESTS
 // ============================================
 
-// ✅ Submit limit increase request
-// ✅ Submit limit increase request
+// ✅ Submit limit increase request - DEMO PLAN CHECK
 router.post("/request-limits", authenticateToken, async (req, res) => {
     try {
         const userId = req.userId;
         const { companies, contacts, reviews, reason } = req.body;
+
+        // ✅ NEW: Check if user is on demo plan
+        const user = await User.findByPk(userId);
+        if (user && user.plan === 'demo') {
+            return res.status(403).json({
+                message: "Demo plan users cannot request additional limits. Please upgrade to a paid plan.",
+                limitReached: true,
+                isDemoUser: true
+            });
+        }
 
         if (!companies && !contacts && !reviews) {
             return res.status(400).json({
@@ -812,7 +821,7 @@ router.post("/request-limits", authenticateToken, async (req, res) => {
         });
 
         // ✅ Fetch user details for email
-        const user = await User.findByPk(userId);
+        const userDetails = await User.findByPk(userId);
 
         // ✅ Send admin notification email (non-blocking)
         try {
@@ -849,11 +858,11 @@ router.post("/request-limits", authenticateToken, async (req, res) => {
                                 <table class="info-table">
                                     <tr>
                                         <td>User</td>
-                                        <td>${user?.name || "N/A"}</td>
+                                        <td>${userDetails?.name || "N/A"}</td>
                                     </tr>
                                     <tr>
                                         <td>Email</td>
-                                        <td>${user?.email || "N/A"}</td>
+                                        <td>${userDetails?.email || "N/A"}</td>
                                     </tr>
                                     <tr>
                                         <td>Request ID</td>

@@ -17,6 +17,12 @@ export const ADMIN_PAGES = [
         defaultRoles: ['super_admin', 'admin'],
     },
     {
+        permission: 'view_messages',
+        category: 'User Management',
+        description: 'View messages sent by users through contact form or support requests',
+        defaultRoles: ['super_admin'],
+    },
+    {
         permission: 'create_user',
         category: 'User Management',
         description: 'Create new user accounts manually',

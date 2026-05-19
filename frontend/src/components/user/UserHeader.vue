@@ -52,7 +52,8 @@
 import { ref, inject } from 'vue'
 import UserNotification from './UserNotification.vue'
 
-const isDarkMode = inject('isDarkMode', ref(false))
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 
 defineProps({
   notifications: {

@@ -12,10 +12,16 @@
         </svg>
       </div>
       <div class="limit-banner-text">
-        <h3>You've reached your limit!</h3>
-        <p>Request more companies, contacts, or reviews from the admin to continue adding.</p>
+        <h3>{{ bannerTitle }}</h3>
+        <p>{{ bannerMessage }}</p>
       </div>
-      <button class="btn-request" @click="showRequestModal = true">
+      <button v-if="isDemoUser" class="btn-upgrade" @click="$emit('open-upgrade')">
+        <svg fill="none" height="15" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15">
+          <path d="M12 2l2.9 6 6.6.9-4.8 4.7 1.1 6.6L12 17l-5.8 3.2 1.1-6.6L2.5 8.9l6.6-.9z"/>
+        </svg>
+        Choose a Plan
+      </button>
+      <button v-else class="btn-request" @click="showRequestModal = true">
         <svg fill="none" height="15" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
@@ -26,7 +32,7 @@
 
   <!-- Request Limit Increase Modal -->
   <transition name="modal-fade">
-    <div v-if="showRequestModal" class="modal-overlay" @click.self="showRequestModal = false">
+    <div v-if="showRequestModal && !isDemoUser" class="modal-overlay" @click.self="showRequestModal = false">
       <div :class="['request-modal-container', { 'dark-mode': isDarkMode }]">
 
         <!-- Modal Header -->
@@ -270,16 +276,18 @@
 import {computed, inject, onUnmounted, ref, watch} from "vue";
 import api from "@/services/api";
 
-const isDarkMode = inject('isDarkMode', ref(false));
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 
 const props = defineProps({
   companyCount: {type: Number, required: true},
   contactCount: {type: Number, required: true},
   reviewCount: {type: Number, required: true},
   userLimits: {type: Object, required: true},
+  userPlan: {type: String, default: 'free'},
 });
 
-const emit = defineEmits(['banner-visibility']);
+const emit = defineEmits(['banner-visibility', 'open-upgrade']);
 
 const showRequestModal = ref(false);
 const requestForm = ref({companies: 0, contacts: 0, reviews: 0, reason: ""});
@@ -287,7 +295,28 @@ const requestLoading = ref(false);
 const requestMessage = ref("");
 const requestSuccess = ref(false);
 
+// ✅ Compute if user is on demo plan
+const isDemoUser = computed(() => {
+  return (props.userPlan || '').toLowerCase() === 'demo';
+});
+
+// ✅ Dynamic banner text based on plan
+const bannerTitle = computed(() => {
+  if (isDemoUser.value) {
+    return 'You are on the Demo Plan';
+  }
+  return 'You\'ve reached your limit!';
+});
+
+const bannerMessage = computed(() => {
+  if (isDemoUser.value) {
+    return 'Demo plan has limited features. Upgrade to a plan to unlock more companies, contacts, and reviews.';
+  }
+  return 'Request more companies, contacts, or reviews from the admin to continue adding.';
+});
+
 const showBanner = computed(() =>
+    isDemoUser.value ||
     props.companyCount >= props.userLimits.companyLimit ||
     props.contactCount >= props.userLimits.contactLimit ||
     props.reviewCount >= props.userLimits.reviewLimit
@@ -353,6 +382,14 @@ async function submitRequest() {
   } catch (err) {
     requestSuccess.value = false;
     requestMessage.value = err.response?.data?.message || "Failed to submit request.";
+
+    // ✅ Handle demo user error
+    if (err.response?.data?.isDemoUser) {
+      setTimeout(() => {
+        showRequestModal.value = false;
+        emit('open-upgrade');
+      }, 1500);
+    }
   } finally {
     requestLoading.value = false;
   }
@@ -437,7 +474,6 @@ input, textarea {
 /* ══════════════════════════════════════
    BANNER
 ══════════════════════════════════════ */
-/* KEEP only this, remove the transition line: */
 .limit-banner {
   position: fixed;
   top: 64px;
@@ -449,7 +485,6 @@ input, textarea {
   z-index: 101;
   box-shadow: var(--c-shadow-sm);
   animation: slideDown 0.3s ease-out;
-  /* transition line removed */
 }
 
 .limit-banner.dark-mode {
@@ -528,6 +563,28 @@ input, textarea {
   background: var(--c-accent-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(124, 92, 78, .4);
+}
+
+.btn-upgrade {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  background: linear-gradient(135deg, var(--c-accent), var(--c-accent-2));
+  color: #fff;
+  border: none;
+  border-radius: var(--c-radius-sm);
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: all 0.18s;
+  box-shadow: 0 2px 8px rgba(124, 92, 78, .35);
+  letter-spacing: 0.01em;
+}
+
+.btn-upgrade:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(124, 92, 78, .5);
 }
 
 /* ══════════════════════════════════════
@@ -645,7 +702,7 @@ input, textarea {
   gap: 0;
 }
 
-/* ── Section Labels (same as contact) ── */
+/* ── Section Labels ── */
 .section-label {
   display: flex;
   align-items: center;
@@ -780,7 +837,7 @@ input, textarea {
   margin-bottom: 20px;
 }
 
-/* ── Fields Grid (matches contact) ── */
+/* ── Fields Grid ── */
 .fields-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -947,7 +1004,7 @@ input, textarea {
   color: var(--c-danger);
 }
 
-/* ── Bottom Actions (matches contact) ── */
+/* ── Bottom Actions ── */
 .form-bottom-actions {
   display: flex;
   gap: 12px;
@@ -1004,7 +1061,6 @@ input, textarea {
   transform: none;
 }
 
-/* Spin */
 .spin-icon {
   animation: spin 0.9s linear infinite;
 }
@@ -1065,7 +1121,7 @@ input, textarea {
     display: none;
   }
 
-  .btn-request {
+  .btn-request, .btn-upgrade {
     padding: 8px 14px;
     font-size: 12px;
   }
@@ -1135,7 +1191,7 @@ input, textarea {
    TOUCH TARGETS
 ══════════════════════════════════════ */
 @media (hover: none) and (pointer: coarse) {
-  .qty-btn, .btn-request, .save-btn, .cancel-btn, .btn-close {
+  .qty-btn, .btn-request, .btn-upgrade, .save-btn, .cancel-btn, .btn-close {
     min-height: 44px;
   }
 

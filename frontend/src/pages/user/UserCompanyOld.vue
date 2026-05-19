@@ -628,8 +628,8 @@ import api from '@/services/api.js';
 import { VITE_IMAGE_UPLOAD_URL, API_BASE_URL } from '@/config.js';
 import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
-import CountrySelector from '@/components/CountrySelector.vue';
-import ImageCropperModal from '@/components/ImageCropper.vue';
+import CountrySelector from '@/components/common/CountrySelector.vue';
+import ImageCropperModal from '@/components/contactCard/ImageCropper.vue';
 
 // Inject dark mode state
 const isDarkMode = inject('isDarkMode', ref(false));

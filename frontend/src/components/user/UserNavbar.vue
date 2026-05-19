@@ -230,7 +230,8 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'toggle-sidebar', 'open-settings', 'open-upgrade', 'logout']);
 
 // Inject dark mode state from parent
-const isDarkMode = inject('isDarkMode', ref(false));
+const theme = inject('theme', { isDark: ref(false) })
+const isDarkMode = theme.isDark
 
 const showMoreMenu = ref(false);
 const showProfilePopup = ref(false);
@@ -1013,7 +1014,7 @@ function handleMobileProfileAction(actionId) {
 
 .desktop-sidebar.collapsed .user-profile {
   justify-content: center;
-  padding: 0.5rem 0;   /* same here */
+  padding: 0.5rem 0; /* same here */
   gap: 0;
 }
 

@@ -191,46 +191,35 @@
           </div>
 
           <!-- Password -->
-          <div class="form-row">
-
-            <!-- Password -->
-            <div class="form-group half">
-              <label class="form-label">Password</label>
-              <div class="input-group">
-                <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="input-group">
+              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <input
+                  v-model="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  class="form-input"
+                  placeholder="Create a strong password"
+                  required
+              />
+              <button type="button" @click="showPassword = !showPassword" class="password-toggle">
+                <svg v-if="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
                 </svg>
-
-                <input
-                    v-model="password"
-                    :type="showPassword ? 'text' : 'password'"
-                    class="form-input"
-                    placeholder="Create password"
-                    required
-                />
-              </div>
-            </div>
-
-            <!-- Confirm Password -->
-            <div class="form-group half">
-              <label class="form-label">Confirm Password</label>
-              <div class="input-group">
-                <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
                 </svg>
-
-                <input
-                    v-model="confirmPassword"
-                    :type="showPassword ? 'text' : 'password'"
-                    class="form-input"
-                    placeholder="Confirm password"
-                    required
-                />
-              </div>
+              </button>
             </div>
-
+            <div class="password-strength">
+              <div class="strength-bar" :class="passwordStrength.class" :style="{ width: passwordStrength.width }"></div>
+            </div>
+            <p class="password-hint">{{ passwordStrength.text }}</p>
           </div>
 
           <!-- Terms -->
@@ -277,8 +266,8 @@
 
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '../services/api'
-import countriesData from '../assets/country_code.json'
+import api from '../../services/api.js'
+import countriesData from '../../assets/country_code.json'
 import Applesigninbutton from "@/components/user/Applesigninbutton.vue";
 
 const router = useRouter()
@@ -287,7 +276,6 @@ const name = ref('')
 const email = ref('')
 const phone = ref('')
 const password = ref('')
-const confirmPassword = ref('')
 const message = ref('')
 const messageType = ref('error')
 const showPassword = ref(false)
@@ -464,12 +452,6 @@ async function register() {
     return
   }
 
-  if (password.value !== confirmPassword.value) {
-    messageType.value = 'error'
-    message.value = 'Passwords do not match.'
-    return
-  }
-
   if (!otpVerified.value) {
     messageType.value = 'error'
     message.value = 'Please verify your email address before registering.'
@@ -489,14 +471,12 @@ async function register() {
     loading.value = true
     message.value = ''
 
-// Change this in your register() function:
     const res = await api.post('/auth/register', {
       name: name.value.trim(),
       email: email.value.trim(),
       phone: phone.value.trim(),
       password: password.value.trim(),
-      countryCode: countryCode.value,           // keeps dial code e.g. +94
-      country: selectedCountry.value?.fullName || null,
+      countryCode: countryCode.value,
     })
 
     messageType.value = 'success'
@@ -674,7 +654,6 @@ async function handleGoogleRegister() {
   cursor: pointer;
   transition: all 0.3s;
   white-space: nowrap;
-  height: 51px;
 }
 
 .country-btn:hover {
@@ -948,12 +927,12 @@ async function handleGoogleRegister() {
   justify-content: center;
   padding: 2rem 2rem;
   background: #ffffff;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 .form-container {
   width: 100%;
-  max-width: 500px;
+  max-width: 460px;
 }
 
 .form-header {
@@ -1112,17 +1091,6 @@ async function handleGoogleRegister() {
   color: #5c4033;
 }
 
-.form-row {
-  display: flex;
-  gap: 1rem;
-}
-
-.form-group.half {
-  flex: 1;
-}
-
-
-
 .checkbox-label {
   display: flex;
   align-items: flex-start;
@@ -1265,11 +1233,7 @@ async function handleGoogleRegister() {
   .country-btn {
     width: 100%;
   }
-
-  .form-row {
-    flex-direction: column;
-  }
-  }
+}
 
 @media (max-height: 900px) {
   .form-section {

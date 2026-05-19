@@ -26,13 +26,13 @@
 import { computed, onMounted, ref, watch, markRaw } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from 'vue-i18n';
-import api from "../services/api";
-import { API_BASE_URL, VITE_IMAGE_UPLOAD_URL } from "../config.js";
-import { translateBatch } from "../utils/translator";
+import api from "../../services/api.js";
+import { API_BASE_URL, VITE_IMAGE_UPLOAD_URL } from "../../config.js";
+import { translateBatch } from "../../utils/translator.js";
 
 // Import layouts
-import LayoutClassic from "../layouts/LayoutClassic.vue";
-import LayoutModern from "../layouts/LayoutModern.vue";
+import LayoutClassic from "../../layouts/LayoutClassic.vue";
+import LayoutModern from "../../layouts/LayoutModern.vue";
 
 const route = useRoute();
 const { t, locale } = useI18n();
