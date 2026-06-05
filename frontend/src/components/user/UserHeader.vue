@@ -8,6 +8,30 @@
       />
 
       <div class="header-right">
+
+        <!-- ── Plan Status Pill (ALWAYS VISIBLE) ─────────────────────────────────── -->
+        <div
+            v-if="planPill.visible"
+            class="plan-pill"
+            :class="planPill.color"
+            :title="planPill.tooltip"
+        >
+          <!-- Pulsing dot -->
+          <span class="pill-dot" :class="planPill.color"></span>
+
+          <!-- Icon -->
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"
+               class="pill-icon">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+
+          <span class="pill-text">{{ planPill.label }}</span>
+        </div>
+        <!-- ──────────────────────────────────────────────────────────────────────── -->
+
         <button
             class="icon-button"
             :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
@@ -49,8 +73,10 @@
 </template>
 
 <script setup>
-import { ref, inject } from 'vue'
+import { ref, inject, computed, onMounted } from 'vue'
 import UserNotification from './UserNotification.vue'
+import {API_BASE_URL, VITE_FRONTEND_URL, VITE_IMAGE_UPLOAD_URL} from '@/config.js';
+import axios from 'axios'
 
 const theme = inject('theme', { isDark: ref(false) })
 const isDarkMode = theme.isDark
@@ -77,10 +103,128 @@ function handleNotificationClick(notification) {
 function handleViewAllNotifications() {
   emit('view-all-notifications')
 }
+
+// ── Plan status pill ──────────────────────────────────────────────────────────
+// ✅ NOW SHOWS FOR ALL PLANS: free, demo, expired, and active paid plans
+
+const activePlan = ref(null)  // raw data from API
+
+async function fetchActivePlan() {
+  try {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      console.warn('❌ No token found for plan fetch')
+      return
+    }
+
+    const { data } = await axios.get(`${API_BASE_URL}/api/dashboard/user/plan`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    console.log('📊 Plan data received:', data)
+    activePlan.value = data
+  } catch (err) {
+    console.warn('❌ Plan fetch failed:', err?.response?.status, err?.message)
+  }
+}
+
+// ✅ UPDATED: Computed pill state — shows for ALL plans
+const planPill = computed(() => {
+  const data = activePlan.value
+
+  // ✅ CHANGED: Always show pill (removed the early null check)
+  if (!data) {
+    return {
+      visible: false
+    }
+  }
+
+  const plan = data.plan || 'free'
+  const duration = data.duration || 'monthly'
+  const endDate = data.endDate ? new Date(data.endDate) : null
+
+  // ========================================
+  // CASE 1: Free or Demo Plan
+  // ========================================
+  if (plan === 'free') {
+    return {
+      visible: true,
+      color: 'gray',
+      label: 'Free',
+      tooltip: 'You are on the Free plan. Upgrade to get more features.',
+    }
+  }
+
+  if (plan === 'demo') {
+    return {
+      visible: true,
+      color: 'blue',
+      label: 'Demo',
+      tooltip: 'You are on the Demo plan.',
+    }
+  }
+
+  // ========================================
+  // CASE 2: Paid Plan (plus, pro, enterprise, etc)
+  // ========================================
+
+  // ✅ Plan is expired (endDate is null or in the past)
+  if (!endDate) {
+    // Plan is expired
+    return {
+      visible: true,
+      color: 'red',
+      label: 'Expired',
+      tooltip: `Your ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan has expired. Please upgrade.`,
+    }
+  }
+
+  // ✅ Plan is active with endDate in the future
+  const now = new Date()
+  const msLeft = endDate - now
+
+  if (msLeft <= 0) {
+    // Already expired
+    return {
+      visible: true,
+      color: 'red',
+      label: 'Expired',
+      tooltip: `Your ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan has expired. Please upgrade.`,
+    }
+  }
+
+  // ✅ Plan is still active - show remaining days
+  const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24))
+
+  // Color logic:
+  //   monthly  → red if ≤ 10 days, green otherwise
+  //   annually → red if ≤ 30 days (final month), green otherwise
+  const redThreshold = duration === 'annually' ? 30 : 10
+  const color = daysLeft <= redThreshold ? 'red' : 'green'
+
+  const label = daysLeft === 1
+      ? `${plan} · 1 day left`
+      : `${plan} · ${daysLeft} days left`
+
+  const expireDate = endDate.toLocaleDateString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric'
+  })
+
+  return {
+    visible: true,
+    color,
+    label,
+    tooltip: `${plan.charAt(0).toUpperCase() + plan.slice(1)} plan (${duration}) — expires ${expireDate}`,
+  }
+})
+
+onMounted(() => {
+  fetchActivePlan()
+})
 </script>
 
 <style scoped>
-/* ══ CSS Custom Properties — mirrors Theme tab exactly ══ */
+/* ══ CSS Custom Properties ══ */
 .top-header {
   --c-bg: #ffffff;
   --c-surface: #ffffff;
@@ -98,8 +242,29 @@ function handleViewAllNotifications() {
   --c-shadow-sm: 0 2px 6px rgba(28,20,16,0.08), 0 1px 2px rgba(28,20,16,0.04);
   --c-radius-sm: 8px;
   --c-radius-xs: 5px;
-  font-family: 'Segoe UI', 'SF Pro Display', system-ui, -apple-system, sans-serif;
 
+  /* Pill colours — light mode */
+  --pill-green-bg:     #f0fdf4;
+  --pill-green-border: #bbf7d0;
+  --pill-green-text:   #15803d;
+  --pill-green-dot:    #22c55e;
+
+  --pill-red-bg:       #fff1f2;
+  --pill-red-border:   #fecdd3;
+  --pill-red-text:     #be123c;
+  --pill-red-dot:      #f43f5e;
+
+  --pill-gray-bg:      #f3f4f6;
+  --pill-gray-border:  #e5e7eb;
+  --pill-gray-text:    #374151;
+  --pill-gray-dot:     #9ca3af;
+
+  --pill-blue-bg:      #eff6ff;
+  --pill-blue-border:  #bfdbfe;
+  --pill-blue-text:    #1e40af;
+  --pill-blue-dot:     #3b82f6;
+
+  font-family: 'Segoe UI', 'SF Pro Display', system-ui, -apple-system, sans-serif;
   position: fixed;
   top: 0;
   left: 0;
@@ -127,6 +292,27 @@ function handleViewAllNotifications() {
   --c-accent-subtle: #1e1612;
   --c-shadow-xs: 0 1px 2px rgba(0,0,0,0.2);
   --c-shadow-sm: 0 2px 6px rgba(0,0,0,0.3);
+
+  /* Pill colours — dark mode */
+  --pill-green-bg:     #052e16;
+  --pill-green-border: #166534;
+  --pill-green-text:   #4ade80;
+  --pill-green-dot:    #4ade80;
+
+  --pill-red-bg:       #1c0b0e;
+  --pill-red-border:   #9f1239;
+  --pill-red-text:     #fb7185;
+  --pill-red-dot:      #fb7185;
+
+  --pill-gray-bg:      #1f2937;
+  --pill-gray-border:  #374151;
+  --pill-gray-text:    #d1d5db;
+  --pill-gray-dot:     #9ca3af;
+
+  --pill-blue-bg:      #0c1e3d;
+  --pill-blue-border:  #1e3a8a;
+  --pill-blue-text:    #93c5fd;
+  --pill-blue-dot:     #3b82f6;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -155,7 +341,107 @@ button { font-family: inherit; cursor: pointer; }
   gap: 6px;
 }
 
-/* Icon buttons — mirrors sub-tab-btn / qr-close-btn style */
+/* ── Plan Status Pill ──────────────────────────────────────────────────────── */
+.plan-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  height: 28px;
+  border-radius: 9999px;
+  border: 1px solid;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: default;
+  transition: opacity 0.2s;
+  margin-right: 4px;
+}
+
+/* ✅ Color variants */
+.plan-pill.green {
+  background:    var(--pill-green-bg);
+  border-color:  var(--pill-green-border);
+  color:         var(--pill-green-text);
+}
+
+.plan-pill.red {
+  background:    var(--pill-red-bg);
+  border-color:  var(--pill-red-border);
+  color:         var(--pill-red-text);
+}
+
+.plan-pill.gray {
+  background:    var(--pill-gray-bg);
+  border-color:  var(--pill-gray-border);
+  color:         var(--pill-gray-text);
+}
+
+.plan-pill.blue {
+  background:    var(--pill-blue-bg);
+  border-color:  var(--pill-blue-border);
+  color:         var(--pill-blue-text);
+}
+
+/* Pulsing status dot */
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pill-dot.green {
+  background: var(--pill-green-dot);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+.pill-dot.red {
+  background: var(--pill-red-dot);
+  animation: pulse-red 1.4s ease-in-out infinite;
+}
+
+.pill-dot.gray {
+  background: var(--pill-gray-dot);
+  animation: pulse-gray 2s ease-in-out infinite;
+}
+
+.pill-dot.blue {
+  background: var(--pill-blue-dot);
+  animation: pulse-blue 2s ease-in-out infinite;
+}
+
+.pill-icon {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.pill-text {
+  line-height: 1;
+}
+
+@keyframes pulse-green {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1;   transform: scale(1);   box-shadow: 0 0 0 0 var(--pill-red-dot); }
+  50%       { opacity: 0.7; transform: scale(1.2); box-shadow: 0 0 0 3px transparent;       }
+}
+
+@keyframes pulse-gray {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.6; transform: scale(0.9); }
+}
+
+@keyframes pulse-blue {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.6; transform: scale(0.9); }
+}
+
+/* Icon buttons */
 .icon-button {
   position: relative;
   display: flex;
@@ -201,6 +487,16 @@ button { font-family: inherit; cursor: pointer; }
     width: 38px;
     height: 38px;
   }
+
+  /* On very small screens hide the label, keep dot + icon only */
+  .pill-text {
+    display: none;
+  }
+
+  .plan-pill {
+    padding: 0 7px;
+    gap: 4px;
+  }
 }
 
 /* Touch targets */
@@ -214,6 +510,6 @@ button { font-family: inherit; cursor: pointer; }
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; }
+  .pill-dot { animation: none !important; }
 }
-
 </style>

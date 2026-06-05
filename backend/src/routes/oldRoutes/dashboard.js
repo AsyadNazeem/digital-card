@@ -93,28 +93,6 @@ function isValidUrl(string) {
     }
 }
 
-// ✅ Helper: fetch the active UserPlan record for a user, auto-expiring if past endDate
-async function getActivePlan(userId) {
-    const activePlan = await UserPlan.findOne({
-        where: { userId, status: 'active' },
-        order: [['createdAt', 'DESC']],
-    });
-
-    if (!activePlan) return null;
-
-    // Free/demo plans never expire
-    if (!['free', 'demo'].includes(activePlan.planType)) {
-        const now = new Date();
-
-        if (activePlan.endDate && now >= new Date(activePlan.endDate)) {
-            await activePlan.update({ status: 'expired' });
-            return null;
-        }
-    }
-
-    return activePlan;
-}
-
 
 // ============================================
 // COMPANY ROUTES
@@ -136,18 +114,6 @@ router.post("/company", authenticate, uploadCompanyLogo, async (req, res) => {
         if (!req.file) {
             return res.status(400).json({
                 message: "Company logo is required"
-            });
-        }
-
-        // ✅ Check company limit from UserPlan
-        const activePlan = await getActivePlan(req.userId);
-        const companyLimit = activePlan?.companyLimit ?? 1;
-        const companyCount = await Company.count({ where: { userId: req.userId } });
-
-        if (companyCount >= companyLimit) {
-            return res.status(403).json({
-                message: "You've reached your company limit. Please request more from admin.",
-                limitReached: true
             });
         }
 
@@ -426,121 +392,70 @@ router.get("/companies", authenticate, async (req, res) => {
     }
 });
 
-// ✅ GET /user/plan — reads plan details from UserPlan table
 router.get('/user/plan', authenticate, async (req, res) => {
     try {
-        console.log('📡 [GET /user/plan] Fetching plan for user:', req.userId);
-
-        // ✅ Fetch the most recent active UserPlan record for this user
-        const activePlanRecord = await UserPlan.findOne({
-            where: { userId: req.userId, status: 'active' },
-            order: [['createdAt', 'DESC']],
+        const user = await User.findByPk(req.userId, {
+            attributes: ['plan', 'duration', 'companyLimit', 'contactLimit', 'reviewLimit']
         });
 
-        console.log('🔍 Raw UserPlan record:', JSON.stringify(activePlanRecord?.dataValues, null, 2));
-
-        // Fallback defaults when no plan record exists (allows basic usage, not hard block)
-        if (!activePlanRecord) {
-            console.log('ℹ️ No UserPlan record found, returning free defaults');
-            return res.json({
-                plan:         'free',
-                duration:     'monthly',
-                companyLimit: 1,
-                contactLimit: 1,
-                reviewLimit:  1,
-                endDate:      null,
-            });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        const {
-            planType,
-            duration,
-            companyLimit,
-            contactLimit,
-            reviewLimit,
-            status,
-            startDate,
-            endDate: recordEndDate,
-        } = activePlanRecord;
-
-        // Initialize endDate as null
         let endDate = null;
 
-        // ✅ Only calculate endDate for non-free/demo plans
-        if (!['free', 'demo'].includes(planType)) {
-            if (status === 'active') {
-                // Case 1: explicit endDate stored on the record
-                if (recordEndDate) {
-                    const endDateObj = new Date(recordEndDate);
-                    const now = new Date();
+        try {
+            const activePlanRecord = await UserPlan.findOne({
+                where: { userId: req.userId },  // remove status filter temporarily
+                order: [['createdAt', 'DESC']],
+            });
 
-                    console.log('📅 Checking explicit endDate:', {
-                        endDate: endDateObj.toISOString(),
-                        now: now.toISOString(),
-                        isExpired: now >= endDateObj
-                    });
+            console.log('🔍 Raw UserPlan record:', JSON.stringify(activePlanRecord?.dataValues, null, 2));
 
-                    if (now >= endDateObj) {
-                        console.log('⚠️ Plan is EXPIRED');
-                        await activePlanRecord.update({ status: 'expired' });
-                        endDate = null;
-                    } else {
-                        endDate = endDateObj.toISOString();
-                        console.log('✅ Plan is ACTIVE, expires:', endDate);
-                    }
-                }
-                // Case 2: calculate from startDate
-                else if (startDate) {
-                    const calcEndDate = new Date(startDate);
-                    duration === 'annually'
-                        ? calcEndDate.setFullYear(calcEndDate.getFullYear() + 1)
-                        : calcEndDate.setMonth(calcEndDate.getMonth() + 1);
+            if (activePlanRecord) {
+                const status   = activePlanRecord.status;
+                const end      = activePlanRecord.endDate;
+                const start    = activePlanRecord.startDate;
 
-                    const now = new Date();
+                if (status === 'active') {
+                    if (end) {
+                        if (new Date() > new Date(end)) {
+                            await activePlanRecord.update({ status: 'expired' });
+                            endDate = null;
+                        } else {
+                            endDate = new Date(end).toISOString();
+                        }
+                    } else if (start) {
+                        const calcEnd = new Date(start);
+                        user.duration === 'annually'
+                            ? calcEnd.setFullYear(calcEnd.getFullYear() + 1)
+                            : calcEnd.setMonth(calcEnd.getMonth() + 1);
 
-                    console.log('📅 Calculated endDate from startDate:', {
-                        startDate: new Date(startDate).toISOString(),
-                        duration,
-                        calcEndDate: calcEndDate.toISOString(),
-                        now: now.toISOString(),
-                        isExpired: now >= calcEndDate
-                    });
-
-                    if (now >= calcEndDate) {
-                        console.log('⚠️ Plan is EXPIRED (calculated)');
-                        await activePlanRecord.update({ status: 'expired' });
-                        endDate = null;
-                    } else {
-                        endDate = calcEndDate.toISOString();
-                        console.log('✅ Plan is ACTIVE (calculated), expires:', endDate);
+                        endDate = new Date() > calcEnd ? null : calcEnd.toISOString();
                     }
                 }
             }
-        } else {
-            console.log('ℹ️ Plan is free/demo, no expiry');
+
+        } catch (planErr) {
+            console.warn('UserPlan lookup failed:', planErr.message);
         }
 
-        const response = {
-            plan:         planType     || 'free',
-            duration:     duration     || 'monthly',
-            companyLimit: companyLimit ?? 1,
-            contactLimit: contactLimit ?? 1,
-            reviewLimit:  reviewLimit  ?? 1,
-            endDate,
-        };
+        console.log('📤 Returning endDate:', endDate);
 
-        console.log('📤 Returning plan response:', response);
-        return res.json(response);
+        return res.json({
+            plan:         user.plan     || 'free',
+            duration:     user.duration || 'monthly',
+            companyLimit: user.companyLimit,
+            contactLimit: user.contactLimit,
+            reviewLimit:  user.reviewLimit,
+            endDate,
+        });
 
     } catch (err) {
-        console.error('❌ Error in /user/plan:', err);
-        return res.status(500).json({
-            message: 'Failed to fetch user plan',
-            error: process.env.NODE_ENV === 'development' ? err.message : undefined
-        });
+        console.error('❌ Error fetching user plan:', err);
+        res.status(500).json({ message: 'Failed to fetch user plan' });
     }
 });
-
 // ============================================
 // CONTACT ROUTES
 // ============================================
@@ -629,18 +544,6 @@ router.post(
             if (existingContact) {
                 return res.status(409).json({
                     message: "This mobile number is already registered"
-                });
-            }
-
-            // ✅ Check contact limit from UserPlan
-            const activePlan = await getActivePlan(req.userId);
-            const contactLimit = activePlan?.contactLimit ?? 1;
-            const contactCount = await Contact.count({ where: { userId: req.userId } });
-
-            if (contactCount >= contactLimit) {
-                return res.status(403).json({
-                    message: "You've reached your contact limit. Please request more from admin.",
-                    limitReached: true
                 });
             }
 
@@ -798,6 +701,143 @@ router.delete("/contact/:id", authenticate, async (req, res) => {
 });
 
 
+router.get('/user/plan', authenticate, async (req, res) => {
+    try {
+        console.log('📡 [GET /user/plan] Fetching plan for user:', req.userId);
+
+        // Get user basic plan info
+        const user = await User.findByPk(req.userId, {
+            attributes: ['id', 'plan', 'duration', 'companyLimit', 'contactLimit', 'reviewLimit']
+        });
+
+        if (!user) {
+            console.error('❌ User not found:', req.userId);
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        console.log('✅ User found:', {
+            plan: user.plan,
+            duration: user.duration,
+            limits: {
+                companies: user.companyLimit,
+                contacts: user.contactLimit,
+                reviews: user.reviewLimit
+            }
+        });
+
+        // Initialize endDate as null
+        let endDate = null;
+
+        // ✅ Only calculate endDate for non-free plans
+        if (!['free', 'demo'].includes(user.plan)) {
+            try {
+                // Get the active plan record
+                const activePlan = await UserPlan.findOne({
+                    where: { userId: req.userId },
+                    order: [['createdAt', 'DESC']],
+                    limit: 1
+                });
+
+                console.log('📋 Active plan record found:', activePlan ? {
+                    id: activePlan.id,
+                    status: activePlan.status,
+                    startDate: activePlan.startDate,
+                    endDate: activePlan.endDate,
+                    createdAt: activePlan.createdAt
+                } : 'None');
+
+                if (activePlan) {
+                    const status = activePlan.status;
+                    const recordEndDate = activePlan.endDate;
+                    const recordStartDate = activePlan.startDate;
+
+                    // ✅ Case 1: Plan has explicit endDate (preferred)
+                    if (recordEndDate) {
+                        const endDateObj = new Date(recordEndDate);
+                        const now = new Date();
+
+                        console.log('📅 Checking explicit endDate:', {
+                            endDate: endDateObj.toISOString(),
+                            now: now.toISOString(),
+                            isExpired: now >= endDateObj
+                        });
+
+                        if (now >= endDateObj) {
+                            // Plan is expired
+                            console.log('⚠️ Plan is EXPIRED');
+                            await activePlan.update({ status: 'expired' });
+                            endDate = null; // Don't return endDate if already expired
+                        } else {
+                            // Plan is still active
+                            endDate = endDateObj.toISOString();
+                            console.log('✅ Plan is ACTIVE, expires:', endDate);
+                        }
+                    }
+                    // ✅ Case 2: Calculate from startDate if no endDate
+                    else if (recordStartDate) {
+                        const startDateObj = new Date(recordStartDate);
+                        const calcEndDate = new Date(startDateObj);
+
+                        // Add duration (monthly = 1 month, annually = 1 year)
+                        if (user.duration === 'annually') {
+                            calcEndDate.setFullYear(calcEndDate.getFullYear() + 1);
+                        } else {
+                            // Default to monthly
+                            calcEndDate.setMonth(calcEndDate.getMonth() + 1);
+                        }
+
+                        const now = new Date();
+
+                        console.log('📅 Calculated endDate from startDate:', {
+                            startDate: startDateObj.toISOString(),
+                            duration: user.duration,
+                            calcEndDate: calcEndDate.toISOString(),
+                            now: now.toISOString(),
+                            isExpired: now >= calcEndDate
+                        });
+
+                        if (now >= calcEndDate) {
+                            // Calculated date has passed, plan is expired
+                            console.log('⚠️ Plan is EXPIRED (calculated)');
+                            await activePlan.update({ status: 'expired' });
+                            endDate = null;
+                        } else {
+                            endDate = calcEndDate.toISOString();
+                            console.log('✅ Plan is ACTIVE (calculated), expires:', endDate);
+                        }
+                    }
+                }
+            } catch (planErr) {
+                console.warn('⚠️ UserPlan lookup failed:', planErr.message);
+                // Continue without endDate if lookup fails
+            }
+        } else {
+            console.log('ℹ️ Plan is free/demo, no expiry');
+        }
+
+        // ✅ Final response
+        const response = {
+            plan: user.plan || 'free',
+            duration: user.duration || 'monthly',
+            companyLimit: user.companyLimit,
+            contactLimit: user.contactLimit,
+            reviewLimit: user.reviewLimit,
+            endDate: endDate  // ← This is the key field for the popup
+        };
+
+        console.log('📤 Returning plan response:', response);
+
+        return res.json(response);
+
+    } catch (err) {
+        console.error('❌ Error in /user/plan:', err);
+        return res.status(500).json({
+            message: 'Failed to fetch user plan',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
+    }
+});
+
 // ============================================
 // MOBILE NUMBER VALIDATION
 // ============================================
@@ -943,11 +983,9 @@ router.post("/request-limits", authenticateToken, async (req, res) => {
         const userId = req.userId;
         const { companies, contacts, reviews, reason } = req.body;
 
-        // ✅ Read plan from UserPlan table
-        const activePlan = await getActivePlan(userId);
-        const currentPlan = activePlan?.planType || 'free';
-
-        if (currentPlan === 'demo') {
+        // ✅ NEW: Check if user is on demo plan
+        const user = await User.findByPk(userId);
+        if (user && user.plan === 'demo') {
             return res.status(403).json({
                 message: "Demo plan users cannot request additional limits. Please upgrade to a paid plan.",
                 limitReached: true,
@@ -970,7 +1008,7 @@ router.post("/request-limits", authenticateToken, async (req, res) => {
             status: "pending"
         });
 
-        // ✅ Fetch user details for email (only fields that remain on User)
+        // ✅ Fetch user details for email
         const userDetails = await User.findByPk(userId);
 
         // ✅ Send admin notification email (non-blocking)
@@ -1154,18 +1192,16 @@ function isValidUrlOrEmpty(v) {
     }
 }
 
-// ✅ POST /reviews — check limit from UserPlan
+// Update the POST /reviews endpoint to check limits (replace existing)
 router.post("/reviews", authenticate, async (req, res) => {
     try {
-        // ✅ Read reviewLimit from UserPlan instead of User
-        const activePlan = await getActivePlan(req.userId);
-        const reviewLimit = activePlan?.reviewLimit ?? 1;
-
+        // Check review limit first
+        const user = await User.findByPk(req.userId);
         const currentCount = await Review.count({
             where: { userId: req.userId }
         });
 
-        if (currentCount >= reviewLimit) {
+        if (currentCount >= user.reviewLimit) {
             return res.status(403).json({
                 message: "You've reached your review limit. Please request more from admin.",
                 limitReached: true
@@ -1276,15 +1312,13 @@ router.delete("/reviews/:id", authenticate, async (req, res) => {
     }
 });
 
-// ✅ POST /reviews/bulk-save — check limit from UserPlan
+// Update bulk-save to also check limits (replace existing)
 router.post("/reviews/bulk-save", authenticate, async (req, res) => {
     const items = Array.isArray(req.body.items) ? req.body.items : [];
     if (!items.length) return res.status(400).json({ message: "No items provided" });
 
-    // ✅ Read reviewLimit from UserPlan instead of User
-    const activePlan = await getActivePlan(req.userId);
-    const reviewLimit = activePlan?.reviewLimit ?? 1;
-
+    // Check review limit
+    const user = await User.findByPk(req.userId);
     const currentCount = await Review.count({
         where: { userId: req.userId }
     });
@@ -1292,9 +1326,9 @@ router.post("/reviews/bulk-save", authenticate, async (req, res) => {
     // Count new items (those without id)
     const newItemsCount = items.filter(item => !item.id).length;
 
-    if (currentCount + newItemsCount > reviewLimit) {
+    if (currentCount + newItemsCount > user.reviewLimit) {
         return res.status(403).json({
-            message: `You can only add ${reviewLimit - currentCount} more review(s). Please request more from admin.`,
+            message: `You can only add ${user.reviewLimit - currentCount} more review(s). Please request more from admin.`,
             limitReached: true
         });
     }

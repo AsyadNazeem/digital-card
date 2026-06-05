@@ -1,36 +1,4 @@
-<!--
-  ============================================================
-  APPLE SIGN IN — Frontend Integration for TapMyName
-  ============================================================
 
-  HOW TO USE:
-  1. Add the <AppleSignInButton /> component inside your Login.vue
-     and Register.vue, right alongside your Google button.
-
-  2. Add the required .env variable to your frontend:
-       VITE_APPLE_CLIENT_ID=com.tapmyname.app   (your Services ID)
-
-  3. Install nothing extra — Apple uses a JS SDK loaded from CDN.
-  ============================================================
--->
-
-<!-- ============================================================
-     STEP 1 — Paste this <script> block in your index.html <head>
-     ============================================================ -->
-<!--
-  In /index.html, inside <head>:
-
-  <script
-    type="text/javascript"
-    src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js">
-  </script>
--->
-
-
-<!-- ============================================================
-     STEP 2 — AppleSignInButton.vue  (new reusable component)
-              Save to: src/components/AppleSignInButton.vue
-     ============================================================ -->
 <template>
   <button class="apple-btn" @click="handleAppleSignIn" :disabled="loading">
     <svg class="apple-icon" viewBox="0 0 24 24">
@@ -92,21 +60,6 @@ async function handleAppleSignIn() {
 
     // ✅ Trigger the Apple Sign In popup
     const response = await window.AppleID.auth.signIn()
-
-    /*
-      response shape:
-      {
-        authorization: {
-          code:           string,   // one-time auth code
-          id_token:       string,   // JWT identity token ← most important
-          state:          string,
-        },
-        user?: {                    // ⚠️ ONLY present on first login!
-          name:  { firstName, lastName },
-          email: string,
-        }
-      }
-    */
 
     if (!response?.authorization?.id_token) {
       throw new Error('No identity token received from Apple')

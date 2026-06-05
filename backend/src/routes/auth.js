@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/User.js";
+import UserPlan from "../models/UserPlan.js"; // ✅ IMPORT
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import axios from "axios";
 import dotenv from "dotenv";
@@ -50,6 +51,37 @@ transporter.verify((error, success) => {
         console.log("✅ Email server ready for authRoutes (welcome & password reset emails)");
     }
 });
+
+// ========== HELPER FUNCTION: Create free plan for new user ==========
+// ✅ This function creates a free plan record in the UserPlan table
+// ✅ NOW EXPORTED - Used by ALL registration methods
+export async function createFreePlan(userId) {
+    try {
+        console.log(`📋 Creating free plan for user ${userId}`);
+
+        const freePlan = await UserPlan.create({
+            userId,
+            planType: "free",    // ✅ IMPORTANT: planType field (not plan)
+            plan: "free",        // optional, but good for consistency
+            duration: "monthly",
+            companyLimit: 1,
+            contactLimit: 1,
+            reviewLimit: 1,
+            startDate: new Date(),
+            endDate: null,       // Free plans don't expire
+            status: "active",
+            assignedBy: "system",
+            previousPlan: null,
+            notes: "Initial free plan created at registration",
+        });
+
+        console.log(`✅ Free plan created for user ${userId}, plan ID: ${freePlan.id}`);
+        return freePlan;
+    } catch (err) {
+        console.error(`❌ Error creating free plan for user ${userId}:`, err);
+        throw err; // Re-throw so registration fails if plan creation fails
+    }
+}
 
 // ========== EXISTING ROUTES ==========
 
@@ -191,6 +223,8 @@ async function sendWelcomeEmail(user) {
                     <div class="info-box">
                         <strong>✅ Account Created Successfully</strong><br>
                         You're all set! You can now access your dashboard and start creating your digital business card.
+                        <br><br>
+                        <strong>📋 Your Plan:</strong> Free Plan (1 Company, 1 Contact, 1 Review)
                     </div>
                     
                     <div style="text-align: center; margin: 30px 0;">
@@ -245,9 +279,10 @@ async function sendWelcomeEmail(user) {
 }
 
 
+// ✅ REGISTRATION METHOD 1: Email/Password Registration
 router.post("/register", async (req, res) => {
     try {
-        const { name, email, phone, password, countryCode, country } = req.body;  // add country
+        const { name, email, phone, password, countryCode, country } = req.body;
 
         if (!name || !email || !phone || !password || !countryCode)
             return res.status(400).json({ message: "All fields are required" });
@@ -277,8 +312,19 @@ router.post("/register", async (req, res) => {
             registrationType: "self",
             selectedThemeId: 1,
             plan: "free",
-            country: country || null,   // add this
+            country: country || null,
         });
+
+        console.log("✅ User registered:", user.id);
+
+        // ✅ CREATE FREE PLAN FOR THIS USER
+        try {
+            await createFreePlan(user.id);
+        } catch (planErr) {
+            console.error("❌ Failed to create free plan, rolling back user creation");
+            await user.destroy();
+            return res.status(500).json({ message: "Failed to initialize user plan" });
+        }
 
         // ✅ Send welcome email after successful registration
         console.log("📧 Sending welcome email...");
@@ -413,6 +459,19 @@ router.post("/google", async (req, res) => {
                 googleId,
                 provider: "google",
             });
+
+            // ✅ CREATE FREE PLAN FOR NEW GOOGLE USER
+            try {
+                await createFreePlan(user.id);
+            } catch (planErr) {
+                console.error("❌ Failed to create free plan for Google user, rolling back");
+                await user.destroy();
+                return res.status(500).json({ message: "Failed to initialize user plan" });
+            }
+
+            // ✅ Send welcome email for new Google users
+            console.log("📧 Sending welcome email for Google user...");
+            await sendWelcomeEmail(user);
         }
 
         const jwtToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -429,6 +488,7 @@ router.post("/google", async (req, res) => {
     }
 });
 
+// ✅ REGISTRATION METHOD 2: Google Register (OAuth2 Code Exchange)
 router.post("/google-register", async (req, res) => {
     try {
         console.log("🔵 Google register request received");
@@ -500,10 +560,21 @@ router.post("/google-register", async (req, res) => {
                 googleId: googleId,
                 provider: 'google',
                 registrationType: 'google',
-                selectedThemeId: '1'
+                selectedThemeId: '1',
+                plan: "free"
             });
 
             console.log("✅ user created:", user.id);
+
+            // ✅ CREATE FREE PLAN FOR THIS NEW GOOGLE USER
+            try {
+                await createFreePlan(user.id);
+                console.log("✅ Free plan created for new Google user");
+            } catch (planErr) {
+                console.error("❌ Failed to create free plan, rolling back user creation");
+                await user.destroy();
+                return res.status(500).json({ message: "Failed to initialize user plan" });
+            }
 
             // ✅ Send welcome email for new users
             console.log("📧 Sending welcome email...");

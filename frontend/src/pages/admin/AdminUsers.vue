@@ -433,15 +433,26 @@
             <!-- Limits Section -->
             <div class="limits-section">
               <div class="plan-section">
-                <span class="plan-label">User Plan</span>
+                <div class="plan-controls">
+                  <div class="plan-control-item">
+                    <span class="plan-label">User Plan</span>
+                    <select v-model="updatedPlan" class="plan-select" :disabled="!can(PERMISSIONS.EDIT_USER_LIMITS)">
+                      <option value="free">Free</option>
+                      <option value="demo">Demo</option>
+                      <option value="plus">Plus</option>
+                      <option value="pro">Pro</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </div>
 
-                <select v-model="updatedPlan" class="plan-select" :disabled="!can(PERMISSIONS.EDIT_USER_LIMITS)">
-                  <option value="free">Free</option>
-                  <option value="demo">Demo</option>
-                  <option value="plus">Plus</option>
-                  <option value="pro">Pro</option>
-                  <option value="custom">Custom</option>
-                </select>
+                  <div class="duration-control-item">
+                    <span class="plan-label">Duration</span>
+                    <select v-model="updatedDuration" class="duration-select" :disabled="updatedPlan === 'free' || !can(PERMISSIONS.EDIT_USER_LIMITS)">
+                      <option value="monthly">Monthly</option>
+                      <option value="annually">Annually</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
               <div class="limit-card">
@@ -1407,6 +1418,7 @@ const showEditReviewModal = ref(false)
 const selectedReview = ref(null)
 
 const updatedPlan = ref('free')
+const updatedDuration = ref('monthly')
 
 
 const showQrPopup = ref(false);
@@ -1435,6 +1447,8 @@ const originalLimits = ref({companyLimit: 0, contactLimit: 0})
 const savingLimits = ref(false)
 
 const selectedCompanyFilter = ref('all')
+
+
 
 // Pagination
 const currentPage = ref(1);
@@ -1864,10 +1878,18 @@ const filteredUsers = computed(() => {
 })
 
 const limitsChanged = computed(() => {
+  if (!selectedUser.value) return false
+
+  const originalPlan = selectedUser.value.plan || 'free'
+  const originalDuration = selectedUser.value.duration || 'monthly'
+  const originalCompany = selectedUser.value.companyLimit || 1
+  const originalContact = selectedUser.value.contactLimit || 1
+
   return (
-      updatedLimits.value.companyLimit !== originalLimits.value.companyLimit ||
-      updatedLimits.value.contactLimit !== originalLimits.value.contactLimit ||
-      updatedPlan.value !== selectedUser.value?.plan
+      updatedLimits.value.companyLimit !== originalCompany ||
+      updatedLimits.value.contactLimit !== originalContact ||
+      updatedPlan.value !== originalPlan ||
+      updatedDuration.value !== originalDuration
   )
 })
 
@@ -1903,6 +1925,7 @@ async function openUserDetails(user) {
   activeTab.value = 'companies'
   selectedCompanyFilter.value = 'all'
   updatedPlan.value = user.plan || 'free'
+  updatedDuration.value = user.duration || 'monthly'
 
 
   // Mobile scroll lock (only on screens <= 768px)
@@ -2134,6 +2157,7 @@ async function saveLimits() {
     // If plan changed → backend will use defaults. Send current UI values for same-plan manual overrides.
     const payload = {
       plan: updatedPlan.value,
+      duration: updatedDuration.value,
       companyLimit: updatedLimits.value.companyLimit,
       contactLimit: updatedLimits.value.contactLimit,
       reviewLimit: selectedUser.value.reviewLimit || 1,
@@ -2153,6 +2177,7 @@ async function saveLimits() {
 
     originalLimits.value = {...updatedLimits.value}
     selectedUser.value.plan = updatedPlan.value
+    selectedUser.value.duration = updatedDuration.value
     selectedUser.value.companyLimit = updatedLimits.value.companyLimit
     selectedUser.value.contactLimit = updatedLimits.value.contactLimit
 
@@ -3979,6 +4004,105 @@ onMounted(() => {
 .btn-delete-mobile:active {
   background: #fecaca;
   transform: scale(0.95);
+}
+
+/* ========================================
+   PLAN CONTROLS - DURATION DROPDOWN
+======================================== */
+
+.plan-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.plan-control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.duration-control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* DURATION SELECT DROPDOWN */
+.duration-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  min-width: 120px;
+  padding: 8px 36px 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid #e5e1dc;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f6f4 100%),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%235c4033' stroke-width='2'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") no-repeat right 12px center;
+
+  background-size: 16px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: #5c4033;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(92, 64, 51, 0.15);
+  width: 100%;
+}
+
+.duration-select:hover:not(:disabled) {
+  border-color: #5c4033;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(92, 64, 51, 0.25);
+}
+
+.duration-select:focus {
+  outline: none;
+  border-color: #5c4033;
+  box-shadow: 0 0 0 3px rgba(92, 64, 51, 0.15),
+  0 4px 14px rgba(92, 64, 51, 0.25);
+}
+
+.duration-select:disabled {
+  background: #f1ede8;
+  color: #8a7b75;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* UPDATE PLAN SECTION FOR GRID LAYOUT */
+.plan-section {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8f6f4 0%, #f1ede8 100%);
+  border: 1px solid #e5e1dc;
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+  .plan-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-section {
+    flex-direction: column;
+    padding: 14px 16px;
+    align-items: stretch;
+  }
+
+  .plan-control-item,
+  .duration-control-item {
+    width: 100%;
+  }
 }
 
 /* ========================================

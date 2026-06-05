@@ -1,4 +1,3 @@
-// models/User.js
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
@@ -115,6 +114,13 @@ const User = sequelize.define(
             type: DataTypes.ENUM("free", "plus", "pro", "demo", "custom"),
             defaultValue: "free",
             allowNull: false,
+        },
+
+        duration: {
+            type: DataTypes.ENUM("monthly", "annually"),
+            allowNull: true,
+            defaultValue: "monthly",
+            comment: "Billing cycle for the user's current plan",
         },
 
         // Add these fields to your User model definition

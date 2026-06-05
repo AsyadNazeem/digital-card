@@ -99,6 +99,13 @@
       <!-- Contact Float Widget — UPDATED -->
       <UserContactFloat ref="contactFormRef"/>
     </main>
+
+    <!-- ✅ PLAN EXPIRED POPUP — FIXED DATA PASSING -->
+    <UserPlanExpiredPopup
+        :key="planExpiredData"
+        :plan-data="planExpiredData"
+        @upgrade="showUpgrade = true"
+    />
   </div>
 </template>
 
@@ -109,7 +116,8 @@ import {
   onUnmounted,
   provide,
   ref,
-  inject
+  inject,
+  watch
 } from 'vue'
 
 import api from '@/services/api.js'
@@ -125,6 +133,7 @@ import UserHeader from "@/components/user/UserHeader.vue"
 import UserNavbar from "@/components/user/UserNavbar.vue"
 import UserUpgrade from '@/components/user/UserUpgrade.vue'
 import UserContactFloat from '@/components/user/UserContactFloat.vue'
+import UserPlanExpiredPopup from '@/components/user/UserPlanExpiredPopup.vue'
 
 import { useRouter } from 'vue-router'
 
@@ -135,9 +144,7 @@ const router = useRouter()
 // ═══════════════════════════════════════════════
 
 const theme = inject('theme')
-
 const isDarkMode = theme.isDark
-
 const toggleDarkMode = theme.toggleDarkMode
 
 // ═══════════════════════════════════════════════
@@ -150,21 +157,17 @@ const showPhonePopup  = ref(false)
 const showUpgrade     = ref(false)
 
 const contacts        = ref([])
-
 const sidebarExpanded = ref(true)
 
 const userName        = ref('John Doe')
 const userRole        = ref('User')
 const userPlan        = ref('free')
 
+// ✅ CRITICAL: This object holds the complete plan data including endDate
+const planExpiredData = ref(null)
+
 const mainContentRef  = ref(null)
-
-// ═══════════════════════════════════════════════
-// CONTACT FORM REF — UPDATED
-// ═══════════════════════════════════════════════
-
 const contactFormRef = ref(null)
-
 const isBannerVisible = ref(false)
 
 // Counts
@@ -215,28 +218,21 @@ const SIDEBAR_W     = 260
 const SIDEBAR_W_COL = 72
 
 const bannerHeight = computed(() => {
-
   if (!isBannerVisible.value) return 0
-
   if (isMobile.value) return 48
-
   if (window.innerWidth <= 1024) return 52
-
   return 56
 })
 
 const mainContentStyle = computed(() => {
-
   const topOffset = HEADER_H + bannerHeight.value
 
   if (isMobile.value) {
-
     return {
       marginTop: `${topOffset}px`,
       height: `calc(100vh - ${topOffset}px)`,
       marginLeft: '0px',
       width: '100vw',
-
       transition:
           'margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1), ' +
           'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -252,7 +248,6 @@ const mainContentStyle = computed(() => {
     height: `calc(100vh - ${topOffset}px)`,
     marginLeft: `${sideW}px`,
     width: `calc(100vw - ${sideW}px)`,
-
     transition:
         'margin-left 0.3s ease, ' +
         'width 0.3s ease, ' +
@@ -262,17 +257,12 @@ const mainContentStyle = computed(() => {
 })
 
 // ═══════════════════════════════════════════════
-// PLAN CONTACT HANDLER — UPDATED
+// PLAN CONTACT HANDLER
 // ═══════════════════════════════════════════════
 
-/**
- * Handle when user clicks a plan button in upgrade modal
- * Closes upgrade modal and opens contact form with plan context
- */
 function handlePlanContact({ targetPlan, currentPlan }) {
   showUpgrade.value = false
 
-  // Small delay to ensure modal closes before opening contact form
   setTimeout(() => {
     if (contactFormRef.value) {
       contactFormRef.value.openPlanRequest(targetPlan, currentPlan)
@@ -287,10 +277,8 @@ function handlePlanContact({ targetPlan, currentPlan }) {
 const token = localStorage.getItem('token')
 
 function logout() {
-
   localStorage.removeItem('token')
   localStorage.removeItem('user')
-
   router.push('/login')
 }
 
@@ -299,14 +287,12 @@ function logout() {
 // ═══════════════════════════════════════════════
 
 async function checkUserPhone() {
-
   if (!token) {
     router.push('/login')
     return
   }
 
   try {
-
     const res = await api.get('/auth/me', {
       headers: {
         Authorization: `Bearer ${token}`
@@ -326,7 +312,6 @@ async function checkUserPhone() {
     }
 
   } catch (err) {
-
     if (err.response?.status === 401) {
       router.push('/login')
     }
@@ -343,28 +328,21 @@ function handlePhoneAdded() {
 // ═══════════════════════════════════════════════
 
 async function loadData() {
-
   if (!token) {
     router.push('/login')
     return
   }
 
   try {
-
     const res = await api.get('/dashboard/data', {
       headers: {
         Authorization: `Bearer ${token}`
       }
     })
 
-    contacts.value =
-        res.data.contacts || []
-
-    companyCount.value =
-        res.data.companies?.length || 0
-
-    contactCount.value =
-        res.data.contacts?.length || 0
+    contacts.value = res.data.contacts || []
+    companyCount.value = res.data.companies?.length || 0
+    contactCount.value = res.data.contacts?.length || 0
 
     const userRes = await api.get('/auth/me', {
       headers: {
@@ -387,43 +365,69 @@ async function loadData() {
       }
     })
 
-    reviewCount.value =
-        reviewRes.data.reviews?.length || 0
+    reviewCount.value = reviewRes.data.reviews?.length || 0
 
   } catch (err) {
-
     if (err.response?.status === 401) {
-
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-
       router.push('/login')
     }
   }
 }
 
 // ═══════════════════════════════════════════════
-// USER PLAN
+// USER PLAN — ✅ FIXED & IMPROVED
 // ═══════════════════════════════════════════════
 
 async function loadUserPlan() {
+  if (!token) {
+    console.warn('❌ No token, skipping plan load')
+    return
+  }
 
   try {
+    console.log('📡 Fetching user plan...')
 
     const res = await api.get('/dashboard/user/plan', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` }
     })
 
-    userPlan.value =
-        (res.data.plan || 'free').toLowerCase()
+    console.log('✅ Plan response received:', res.data)
 
-  } catch {
+    // Update user plan
+    userPlan.value = (res.data.plan || 'free').toLowerCase()
 
+    // ✅ CRITICAL: Create a fresh object to ensure reactivity
+    // This is key - we create a NEW object reference so Vue detects the change
+    const newPlanData = {
+      plan: res.data.plan || 'free',
+      duration: res.data.duration || 'monthly',
+      endDate: res.data.endDate,  // ← May be null if expired or free plan
+      companyLimit: res.data.companyLimit,
+      contactLimit: res.data.contactLimit,
+      reviewLimit: res.data.reviewLimit
+    }
+
+    console.log('✅ Setting planExpiredData to:', newPlanData)
+
+    // Assign the new object - this triggers reactivity
+    planExpiredData.value = newPlanData
+
+    console.log('✅ planExpiredData ref updated, current value:', planExpiredData.value)
+
+  } catch (err) {
+    console.error('❌ Error fetching plan:', err)
     userPlan.value = 'free'
+    planExpiredData.value = null
   }
 }
+
+// ✅ Watch for external updates to plan data (e.g., from upgrade modal)
+watch(() => userPlan, () => {
+  console.log('👁️ userPlan changed, reloading plan data')
+  loadUserPlan()
+})
 
 // ═══════════════════════════════════════════════
 // SIDEBAR
@@ -438,29 +442,22 @@ function toggleSidebar() {
 // ═══════════════════════════════════════════════
 
 onMounted(() => {
+  console.log('🚀 Dashboard mounted, loading data...')
 
   checkUserPhone()
-
   loadData()
+  loadUserPlan()  // ← Load plan on mount
 
-  loadUserPlan()
-
-  window.addEventListener(
-      'resize',
-      handleResize
-  )
+  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
-
-  window.removeEventListener(
-      'resize',
-      handleResize
-  )
+  window.removeEventListener('resize', handleResize)
 })
 
 defineExpose({
-  activeTab
+  activeTab,
+  loadUserPlan  // ✅ Expose so other components can trigger reload
 })
 </script>
 
@@ -483,7 +480,6 @@ defineExpose({
 }
 
 .dashboard-wrapper.dark-mode { background: #131118; }
-
 
 @media (max-width: 1024px) {
   .main-content {

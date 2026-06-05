@@ -112,27 +112,6 @@ function isValidUrl(string) {
     }
 }
 
-// ✅ Helper: fetch active UserPlan for a user, auto-expiring if past endDate
-async function getActivePlan(userId) {
-    const activePlan = await UserPlan.findOne({
-        where: { userId, status: 'active' },
-        order: [['createdAt', 'DESC']],
-    });
-
-    if (!activePlan) return null;
-
-    // Free/demo plans never expire
-    if (!['free', 'demo'].includes(activePlan.planType)) {
-        const now = new Date();
-        if (activePlan.endDate && now >= new Date(activePlan.endDate)) {
-            await activePlan.update({ status: 'expired' });
-            return null;
-        }
-    }
-
-    return activePlan;
-}
-
 // ✅ GET: Overview stats
 router.get("/stats/overview", authenticateAdmin, async (req, res) => {
     try {
@@ -194,9 +173,6 @@ router.get("/stats/overview", authenticateAdmin, async (req, res) => {
 });
 
 // ✅ GET: All users
-// ✅ NOTE: plan, companyLimit, contactLimit, reviewLimit are now read from UserPlan.
-//          This list endpoint still returns the snapshot columns from User for display speed.
-//          For live plan data per-user, call GET /user/:userId/plan-history.
 router.get("/users", authenticateAdmin, async (req, res) => {
     try {
         // Build where clause based on role
@@ -208,23 +184,12 @@ router.get("/users", authenticateAdmin, async (req, res) => {
             where: whereClause,
             attributes: [
                 "id", "name", "phone", "email", "provider",
-                "registrationType", "createdBy", "createdAt"
+                "registrationType", "companyLimit", "contactLimit",
+                "reviewLimit", "createdBy",
+                "createdAt", "plan"
             ],
             order: [["createdAt", "DESC"]],
         });
-
-        // ✅ Attach active plan data from UserPlan for each user
-        const usersWithPlan = await Promise.all(users.map(async (u) => {
-            const activePlan = await getActivePlan(u.id);
-            return {
-                ...u.toJSON(),
-                plan:         activePlan?.planType    ?? 'free',
-                duration:     activePlan?.duration    ?? 'monthly',
-                companyLimit: activePlan?.companyLimit ?? 1,
-                contactLimit: activePlan?.contactLimit ?? 1,
-                reviewLimit:  activePlan?.reviewLimit  ?? 1,
-            };
-        }));
 
         await logAdminAction({
             adminId: req.admin.id,
@@ -235,7 +200,7 @@ router.get("/users", authenticateAdmin, async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        res.json({ users: usersWithPlan });
+        res.json({users});
     } catch (err) {
         console.error("Error fetching users:", err);
         res.status(500).json({message: "Error fetching users"});
@@ -325,9 +290,7 @@ router.get("/user/:userId/contacts", authenticateAdmin, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PATCH /user/:userId/limits
-// ✅ Reads current limits from UserPlan. Updates UserPlan (source of truth).
-//    Also keeps User snapshot columns in sync for backwards compatibility.
+// REPLACE your existing PATCH /user/:userId/limits with this
 // ─────────────────────────────────────────────────────────────────────────────
 
 router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
@@ -350,14 +313,6 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
         const user = await User.findByPk(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        // ✅ Fetch current plan from UserPlan (source of truth)
-        const currentActivePlan = await getActivePlan(userId);
-        const currentPlanType   = currentActivePlan?.planType    ?? 'free';
-        const currentDuration   = currentActivePlan?.duration    ?? 'monthly';
-        const currentCompanyLim = currentActivePlan?.companyLimit ?? 1;
-        const currentContactLim = currentActivePlan?.contactLimit ?? 1;
-        const currentReviewLim  = currentActivePlan?.reviewLimit  ?? 1;
-
         // ── Plan defaults & minimums ─────────────────────────────────────────
         const planDefaults = {
             free:   { companyLimit: 1,  contactLimit: 1,  reviewLimit: 1  },
@@ -375,60 +330,68 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
             custom: { companyLimit: 5, contactLimit: 30 },
         };
 
-        const newPlanType  = plan || currentPlanType;
-        const planChanged  = plan && plan !== currentPlanType;
-        const newDuration  = duration || currentDuration;
+        const currentPlan = plan || user.plan;
+        const planChanged = plan && plan !== user.plan;
+        const newDuration = duration || user.duration || "monthly";
 
         const newCompanyLimit = planChanged
             ? planDefaults[plan].companyLimit
-            : parseInt(companyLimit) || currentCompanyLim;
+            : parseInt(companyLimit) || user.companyLimit;
 
         const newContactLimit = planChanged
             ? planDefaults[plan].contactLimit
-            : parseInt(contactLimit) || currentContactLim;
+            : parseInt(contactLimit) || user.contactLimit;
 
         const newReviewLimit = planChanged
             ? planDefaults[plan].reviewLimit
-            : parseInt(reviewLimit) || currentReviewLim;
+            : parseInt(reviewLimit) || user.reviewLimit;
 
         // ── Basic validation ─────────────────────────────────────────────────
         if (newCompanyLimit < 1 || newContactLimit < 1) {
             return res.status(400).json({ message: "Limits must be at least 1" });
         }
 
-        const minimums = planMinimums[newPlanType];
+        const minimums = planMinimums[currentPlan];
         if (
             newCompanyLimit < minimums.companyLimit ||
             newContactLimit < minimums.contactLimit
         ) {
             return res.status(400).json({
-                message: `Limits cannot be below ${newPlanType} plan minimums ` +
+                message: `Limits cannot be below ${currentPlan} plan minimums ` +
                     `(${minimums.companyLimit} companies, ${minimums.contactLimit} contacts).`,
             });
         }
 
         // ── DUPLICATE PREVENTION ─────────────────────────────────────────────
+        // Check if there's already an active plan with the exact same values.
+        // If nothing actually changed, skip creating a new row.
         const nothingChanged =
-            currentPlanType   === newPlanType      &&
-            currentDuration   === newDuration      &&
-            currentCompanyLim === newCompanyLimit   &&
-            currentContactLim === newContactLimit   &&
-            currentReviewLim  === newReviewLimit;
+            user.plan         === currentPlan     &&
+            user.duration     === newDuration      &&
+            user.companyLimit === newCompanyLimit   &&
+            user.contactLimit === newContactLimit   &&
+            user.reviewLimit  === newReviewLimit;
 
         if (nothingChanged) {
+            // Fetch the current active plan record to return it
+            const existingPlan = await UserPlan.findOne({
+                where: { userId, status: "active" },
+                order: [["createdAt", "DESC"]],
+            });
+
             return res.json({
                 success: true,
                 message: "No changes detected — nothing was updated",
                 noChange: true,
                 user: {
                     id:           user.id,
-                    companyLimit: currentCompanyLim,
-                    contactLimit: currentContactLim,
-                    reviewLimit:  currentReviewLim,
-                    plan:         currentPlanType,
-                    duration:     currentDuration,
+                    companyLimit: user.companyLimit,
+                    contactLimit: user.contactLimit,
+                    reviewLimit:  user.reviewLimit,
+                    plan:         user.plan,
+                    duration:     user.duration,
                 },
-                planRecord: currentActivePlan || null,
+                planRecord: existingPlan || null,
             });
         }
 
@@ -436,44 +399,62 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
         const startDate = new Date();
         let endDate = null;
 
-        if (!["free", "demo"].includes(newPlanType)) {
+        if (!["free", "demo"].includes(currentPlan)) {
             endDate = new Date(startDate);
             if (newDuration === "annually") {
-                endDate.setFullYear(endDate.getFullYear() + 1);
+                endDate.setFullYear(endDate.getFullYear() + 1); // +1 year
             } else {
-                endDate.setDate(endDate.getDate() + 30);
+                endDate.setDate(endDate.getDate() + 30);        // +30 days
             }
         }
 
         // ── Determine the action type ─────────────────────────────────────────
+        // This is used for the status of the OLD plan row and for logging.
+        //
+        // Scenarios:
+        //   "renew"    — same plan, same/different duration, reset end date
+        //   "upgrade"  — moving to a higher tier plan
+        //   "downgrade"— moving to a lower tier plan (including free)
+        //   "adjust"   — only limits changed, same plan
         const planTier = { free: 0, demo: 0, plus: 1, pro: 2, custom: 3 };
-        const previousPlanType = currentPlanType;
+        const previousPlan = user.plan;
 
         let actionType = "adjust";
         if (planChanged) {
-            if (newPlanType === previousPlanType) {
+            if (currentPlan === previousPlan) {
                 actionType = "renew";
-            } else if (planTier[newPlanType] > planTier[previousPlanType]) {
+            } else if (planTier[currentPlan] > planTier[previousPlan]) {
                 actionType = "upgrade";
             } else {
-                actionType = "downgrade";
+                actionType = "downgrade"; // includes downgrade to free
             }
-        } else if (currentDuration !== newDuration) {
-            actionType = "renew";
+        } else if (user.duration !== newDuration) {
+            actionType = "renew"; // same plan, billing cycle changed → treat as renewal
         }
 
         // ── Persist changes ──────────────────────────────────────────────────
 
-        // 1. Mark existing active UserPlan rows as superseded
+        // 1. Update user row
+        await user.update({
+            companyLimit: newCompanyLimit,
+            contactLimit: newContactLimit,
+            reviewLimit:  newReviewLimit,
+            plan:         currentPlan,
+            duration:     newDuration,
+        });
+
+        // 2. Mark existing active UserPlan rows with appropriate status
+        //    - "renew" / "upgrade" / "downgrade" → superseded
+        //    - "adjust" (just limit change, same plan) → superseded too
         await UserPlan.update(
             { status: "superseded" },
             { where: { userId, status: "active" } }
         );
 
-        // 2. Insert new UserPlan history row (source of truth)
+        // 3. Insert new UserPlan history row
         const newUserPlan = await UserPlan.create({
             userId,
-            planType:     newPlanType,
+            planType:     currentPlan,  // ✅ ADD THIS
             duration:     newDuration,
             companyLimit: newCompanyLimit,
             contactLimit: newContactLimit,
@@ -482,17 +463,8 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
             endDate,
             status:       "active",
             assignedBy:   req.admin.username || req.admin.email || "admin",
-            previousPlan: previousPlanType !== newPlanType ? previousPlanType : null,
-            notes:        buildNotes(actionType, previousPlanType, newPlanType, newDuration),
-        });
-
-        // 3. Keep User snapshot in sync (for backwards compat with other code still reading User)
-        await user.update({
-            companyLimit: newCompanyLimit,
-            contactLimit: newContactLimit,
-            reviewLimit:  newReviewLimit,
-            plan:         newPlanType,
-            duration:     newDuration,
+            previousPlan: previousPlan !== currentPlan ? previousPlan : null,
+            notes:        buildNotes(actionType, previousPlan, currentPlan, newDuration),
         });
 
         // 4. Log the admin action
@@ -502,17 +474,17 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
             targetType:  "user",
             targetId:    userId,
             targetName:  user.name || user.email,
-            description: `[${actionType.toUpperCase()}] Plan set to ${newPlanType} (${newDuration}) for ${user.email}`,
+            description: `[${actionType.toUpperCase()}] Plan set to ${currentPlan} (${newDuration}) for ${user.email}`,
             changes: {
                 before: {
-                    plan:         previousPlanType,
-                    duration:     currentDuration,
-                    companyLimit: currentCompanyLim,
-                    contactLimit: currentContactLim,
-                    reviewLimit:  currentReviewLim,
+                    plan:         previousPlan,
+                    duration:     user.duration,
+                    companyLimit: user.companyLimit,
+                    contactLimit: user.contactLimit,
+                    reviewLimit:  user.reviewLimit,
                 },
                 after: {
-                    plan:         newPlanType,
+                    plan:         currentPlan,
                     duration:     newDuration,
                     companyLimit: newCompanyLimit,
                     contactLimit: newContactLimit,
@@ -526,15 +498,15 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
 
         res.json({
             success:    true,
-            message:    buildSuccessMessage(actionType, newPlanType, newDuration, endDate),
+            message:    buildSuccessMessage(actionType, currentPlan, newDuration, endDate),
             actionType,
             user: {
                 id:           user.id,
-                companyLimit: newCompanyLimit,
-                contactLimit: newContactLimit,
-                reviewLimit:  newReviewLimit,
-                plan:         newPlanType,
-                duration:     newDuration,
+                companyLimit: user.companyLimit,
+                contactLimit: user.contactLimit,
+                reviewLimit:  user.reviewLimit,
+                plan:         user.plan,
+                duration:     user.duration,
             },
             planRecord: {
                 id:        newUserPlan.id,
@@ -553,7 +525,7 @@ router.patch("/user/:userId/limits", authenticateAdmin, async (req, res) => {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS  (add these outside the router, at the bottom of the file)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function buildNotes(actionType, previousPlan, currentPlan, duration) {
@@ -584,8 +556,8 @@ function buildSuccessMessage(actionType, plan, duration, endDate) {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NEW ROUTE: Cancel plan → reset to free
 // POST /user/:userId/plan-cancel
-// ✅ Reads current plan from UserPlan. Resets to free in both UserPlan + User.
 // ─────────────────────────────────────────────────────────────────────────────
 
 router.post("/user/:userId/plan-cancel", authenticateAdmin, async (req, res) => {
@@ -595,13 +567,20 @@ router.post("/user/:userId/plan-cancel", authenticateAdmin, async (req, res) => 
         const user = await User.findByPk(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        // ✅ Read current plan from UserPlan
-        const currentActivePlan = await getActivePlan(userId);
-        const currentPlanType   = currentActivePlan?.planType ?? 'free';
-
-        if (currentPlanType === "free") {
+        if (user.plan === "free") {
             return res.status(400).json({ message: "User is already on the Free plan" });
         }
+
+        const previousPlan = user.plan;
+
+        // Reset user to free plan defaults
+        await user.update({
+            plan:         "free",
+            duration:     "monthly",
+            companyLimit: 1,
+            contactLimit: 1,
+            reviewLimit:  1,
+        });
 
         // Mark current active plan as cancelled
         await UserPlan.update(
@@ -612,7 +591,8 @@ router.post("/user/:userId/plan-cancel", authenticateAdmin, async (req, res) => 
         // Insert a free plan record to mark the cancellation
         const cancelRecord = await UserPlan.create({
             userId,
-            planType:     "free",
+            plan:         "free",
+            planType:     "free",  // ✅ ADD THIS
             duration:     "monthly",
             companyLimit: 1,
             contactLimit: 1,
@@ -621,17 +601,8 @@ router.post("/user/:userId/plan-cancel", authenticateAdmin, async (req, res) => 
             endDate:      null,
             status:       "active",
             assignedBy:   req.admin.username || req.admin.email || "admin",
-            previousPlan: currentPlanType,
-            notes:        `Cancelled ${currentPlanType} plan — reset to Free`,
-        });
-
-        // ✅ Keep User snapshot in sync
-        await user.update({
-            plan:         "free",
-            duration:     "monthly",
-            companyLimit: 1,
-            contactLimit: 1,
-            reviewLimit:  1,
+            previousPlan,
+            notes:        `Cancelled ${previousPlan} plan — reset to Free`,
         });
 
         await logAdminAction({
@@ -640,14 +611,14 @@ router.post("/user/:userId/plan-cancel", authenticateAdmin, async (req, res) => 
             targetType:  "user",
             targetId:    userId,
             targetName:  user.name || user.email,
-            description: `Cancelled ${currentPlanType} plan for ${user.email} — reset to Free`,
+            description: `Cancelled ${previousPlan} plan for ${user.email} — reset to Free`,
             ipAddress:   getClientIp(req),
             userAgent:   req.headers["user-agent"],
         });
 
         res.json({
             success:    true,
-            message:    `${currentPlanType} plan cancelled. User reset to Free.`,
+            message:    `${previousPlan} plan cancelled. User reset to Free.`,
             actionType: "cancel",
             planRecord: cancelRecord,
         });
@@ -659,36 +630,27 @@ router.post("/user/:userId/plan-cancel", authenticateAdmin, async (req, res) => 
 
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NEW ROUTE: Renew expiring/expired plan
 // POST /user/:userId/plan-renew
-// ✅ Reads current plan from UserPlan. Keeps User snapshot in sync.
 // ─────────────────────────────────────────────────────────────────────────────
 
 router.post("/user/:userId/plan-renew", authenticateAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
-        const { duration } = req.body;
+        const { duration } = req.body; // optionally change duration on renewal
 
         const user = await User.findByPk(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        // ✅ Read current plan from UserPlan (may be expired — check both active+expired)
-        const latestPlan = await UserPlan.findOne({
-            where: { userId, status: { [Op.in]: ['active', 'expired'] } },
-            order: [['createdAt', 'DESC']],
-        });
-
-        const currentPlanType = latestPlan?.planType ?? user.plan ?? 'free';
-        const currentDuration = latestPlan?.duration ?? user.duration ?? 'monthly';
-
-        if (["free", "demo"].includes(currentPlanType)) {
+        if (["free", "demo"].includes(user.plan)) {
             return res.status(400).json({
                 message: "Free and Demo plans do not need renewal. Use the plan update endpoint to upgrade.",
             });
         }
 
-        const newDuration = duration || currentDuration;
+        const newDuration = duration || user.duration || "monthly";
 
-        // Calculate new end date from NOW
+        // Calculate new end date from NOW (not from old endDate, so no gaps)
         const startDate = new Date();
         const endDate   = new Date(startDate);
 
@@ -701,30 +663,30 @@ router.post("/user/:userId/plan-renew", authenticateAdmin, async (req, res) => {
         // Mark old active/expired rows as superseded
         await UserPlan.update(
             { status: "superseded" },
-            { where: { userId, status: { [Op.in]: ['active', 'expired'] } } }
+            { where: { userId, status: ["active", "expired"] } }
         );
 
         // Create fresh renewal record
         const renewRecord = await UserPlan.create({
             userId,
-            planType:     currentPlanType,
+            plan:         user.plan,
+            planType:     user.plan,  // ✅ ADD THIS
             duration:     newDuration,
-            companyLimit: latestPlan?.companyLimit ?? 1,
-            contactLimit: latestPlan?.contactLimit ?? 1,
-            reviewLimit:  latestPlan?.reviewLimit  ?? 1,
+            companyLimit: user.companyLimit,
+            contactLimit: user.contactLimit,
+            reviewLimit:  user.reviewLimit,
             startDate,
             endDate,
             status:       "active",
             assignedBy:   req.admin.username || req.admin.email || "admin",
             previousPlan: null,
-            notes:        `Plan renewed: ${currentPlanType} (${newDuration}) — expires ${endDate.toLocaleDateString()}`,
+            notes:        `Plan renewed: ${user.plan} (${newDuration}) — expires ${endDate.toLocaleDateString()}`,
         });
 
-        // ✅ Keep User snapshot in sync
-        await user.update({
-            plan:     currentPlanType,
-            duration: newDuration,
-        });
+        // Update user duration if it changed
+        if (user.duration !== newDuration) {
+            await user.update({ duration: newDuration });
+        }
 
         await logAdminAction({
             adminId:     req.admin.id,
@@ -732,7 +694,7 @@ router.post("/user/:userId/plan-renew", authenticateAdmin, async (req, res) => {
             targetType:  "user",
             targetId:    userId,
             targetName:  user.name || user.email,
-            description: `Renewed ${currentPlanType} plan (${newDuration}) for ${user.email} until ${endDate.toLocaleDateString()}`,
+            description: `Renewed ${user.plan} plan (${newDuration}) for ${user.email} until ${endDate.toLocaleDateString()}`,
             ipAddress:   getClientIp(req),
             userAgent:   req.headers["user-agent"],
         });
@@ -743,7 +705,7 @@ router.post("/user/:userId/plan-renew", authenticateAdmin, async (req, res) => {
             actionType: "renew",
             planRecord: {
                 id:        renewRecord.id,
-                plan:      renewRecord.planType,
+                plan:      renewRecord.plan,
                 duration:  renewRecord.duration,
                 startDate: renewRecord.startDate,
                 endDate:   renewRecord.endDate,
@@ -758,8 +720,7 @@ router.post("/user/:userId/plan-renew", authenticateAdmin, async (req, res) => {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GET /user/:userId/plan-history
-// ✅ Reads all plan data from UserPlan only.
+// GET: Full plan history for a user
 // ─────────────────────────────────────────────────────────────────────────────
 
 router.get("/user/:userId/plan-history", authenticateAdmin, async (req, res) => {
@@ -789,13 +750,13 @@ router.get("/user/:userId/plan-history", authenticateAdmin, async (req, res) => 
             success: true,
             userId,
             currentPlan: {
-                plan:           activePlan?.planType    ?? 'free',
-                duration:       activePlan?.duration    ?? 'monthly',
-                companyLimit:   activePlan?.companyLimit ?? 1,
-                contactLimit:   activePlan?.contactLimit ?? 1,
-                reviewLimit:    activePlan?.reviewLimit  ?? 1,
+                plan:           user.plan,
+                duration:       user.duration,
+                companyLimit:   user.companyLimit,
+                contactLimit:   user.contactLimit,
+                reviewLimit:    user.reviewLimit,
                 endDate:        activePlan?.endDate || null,
-                daysUntilExpiry,
+                daysUntilExpiry,                         // handy for frontend warnings
                 isExpiringSoon: daysUntilExpiry !== null && daysUntilExpiry <= 7,
                 isExpired:      activePlan?.status === "expired",
             },
@@ -840,7 +801,7 @@ router.get("/requests", authenticateAdmin, async (req, res) => {
         const requests = await Request.findAll({
             include: [{
                 model: User,
-                attributes: ["id", "name", "email"],
+                attributes: ["id", "name", "email", "companyLimit", "contactLimit", "reviewLimit"],
             }],
             order: [["createdAt", "DESC"]],
         });
@@ -862,7 +823,6 @@ router.get("/requests", authenticateAdmin, async (req, res) => {
 });
 
 // ✅ POST: Approve request
-// ✅ Updates UserPlan limits (source of truth) + keeps User snapshot in sync.
 router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
     try {
         const request = await Request.findByPk(req.params.id, {
@@ -878,49 +838,16 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
         }
 
         const user = request.User;
-
-        // ✅ Get current limits from UserPlan
-        const currentActivePlan = await getActivePlan(user.id);
-        const currentCompanyLim = currentActivePlan?.companyLimit ?? 1;
-        const currentContactLim = currentActivePlan?.contactLimit ?? 1;
-        const currentReviewLim  = currentActivePlan?.reviewLimit  ?? 1;
-
         const oldLimits = {
-            companyLimit: currentCompanyLim,
-            contactLimit: currentContactLim,
-            reviewLimit:  currentReviewLim,
+            companyLimit: user.companyLimit,
+            contactLimit: user.contactLimit,
+            reviewLimit: user.reviewLimit
         };
 
-        const newCompanyLimit = currentCompanyLim + request.requestedCompanies;
-        const newContactLimit = currentContactLim + request.requestedContacts;
-        const newReviewLimit  = currentReviewLim  + request.requestedReviews;
-
-        // ✅ Mark old active plan as superseded, create updated plan record
-        await UserPlan.update(
-            { status: "superseded" },
-            { where: { userId: user.id, status: "active" } }
-        );
-
-        await UserPlan.create({
-            userId:       user.id,
-            planType:     currentActivePlan?.planType ?? 'free',
-            duration:     currentActivePlan?.duration ?? 'monthly',
-            companyLimit: newCompanyLimit,
-            contactLimit: newContactLimit,
-            reviewLimit:  newReviewLimit,
-            startDate:    currentActivePlan?.startDate ?? new Date(),
-            endDate:      currentActivePlan?.endDate   ?? null,
-            status:       "active",
-            assignedBy:   req.admin.username || req.admin.email || "admin",
-            previousPlan: null,
-            notes:        `Limits increased via approved request #${req.params.id}`,
-        });
-
-        // ✅ Keep User snapshot in sync
         await user.update({
-            companyLimit: newCompanyLimit,
-            contactLimit: newContactLimit,
-            reviewLimit:  newReviewLimit,
+            companyLimit: user.companyLimit + request.requestedCompanies,
+            contactLimit: user.contactLimit + request.requestedContacts,
+            reviewLimit: user.reviewLimit + request.requestedReviews,
         });
 
         await request.update({status: "approved"});
@@ -935,14 +862,14 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
             changes: {
                 before: oldLimits,
                 after: {
-                    companyLimit: newCompanyLimit,
-                    contactLimit: newContactLimit,
-                    reviewLimit:  newReviewLimit,
+                    companyLimit: user.companyLimit,
+                    contactLimit: user.contactLimit,
+                    reviewLimit: user.reviewLimit
                 },
                 requested: {
                     companies: request.requestedCompanies,
-                    contacts:  request.requestedContacts,
-                    reviews:   request.requestedReviews,
+                    contacts: request.requestedContacts,
+                    reviews: request.requestedReviews
                 }
             },
             ipAddress: getClientIp(req),
@@ -953,9 +880,9 @@ router.post("/request/:id/approve", authenticateAdmin, async (req, res) => {
             message: "Request approved successfully",
             request,
             newLimits: {
-                companyLimit: newCompanyLimit,
-                contactLimit: newContactLimit,
-                reviewLimit:  newReviewLimit,
+                companyLimit: user.companyLimit,
+                contactLimit: user.contactLimit,
+                reviewLimit: user.reviewLimit,
             },
         });
     } catch (err) {
@@ -1006,7 +933,6 @@ router.post("/request/:id/reject", authenticateAdmin, async (req, res) => {
 });
 
 // ✅ POST: Create user
-// ✅ Creates a UserPlan record alongside the User row.
 router.post("/create-user", authenticateAdmin, async (req, res) => {
     try {
         if (req.admin.role !== 'super_admin') {
@@ -1080,21 +1006,6 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
             status: "active",
             country: country || null,
             createdBy: req.admin.username || null,
-        });
-
-        // ✅ Create initial UserPlan record (source of truth)
-        await UserPlan.create({
-            userId:       newUser.id,
-            planType:     'free',
-            duration:     'monthly',
-            companyLimit: parseInt(companyLimit),
-            contactLimit: parseInt(contactLimit),
-            reviewLimit:  1,
-            startDate:    new Date(),
-            endDate:      null,
-            status:       'active',
-            assignedBy:   req.admin.username || req.admin.email || 'admin',
-            notes:        'Initial plan created on user registration',
         });
 
         await logAdminAction({
@@ -1434,7 +1345,6 @@ router.put("/user/:userId/contact/:contactId", authenticateAdmin, (req, res) => 
 });
 
 // ✅ POST: Create company
-// ✅ Reads companyLimit from UserPlan (source of truth).
 router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
     uploadCompanyLogo(req, res, async (err) => {
         if (err) {
@@ -1453,12 +1363,8 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
                 return res.status(404).json({message: "user not found"});
             }
 
-            // ✅ Read companyLimit from UserPlan
-            const activePlan   = await getActivePlan(userId);
-            const companyLimit = activePlan?.companyLimit ?? 1;
-
             const companyCount = await Company.count({where: {userId}});
-            if (companyCount >= companyLimit) {
+            if (companyCount >= user.companyLimit) {
                 return res.status(400).json({
                     message: "Company limit reached for this user"
                 });
@@ -1580,7 +1486,6 @@ router.post("/user/:userId/company", authenticateAdmin, (req, res) => {
 });
 
 // ✅ POST: Create contact
-// ✅ Reads contactLimit from UserPlan (source of truth).
 router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
     uploadPhoto(req, res, async (err) => {
         if (err) {
@@ -1597,12 +1502,8 @@ router.post("/user/:userId/contact", authenticateAdmin, (req, res) => {
                 return res.status(404).json({message: "user not found"});
             }
 
-            // ✅ Read contactLimit from UserPlan
-            const activePlan   = await getActivePlan(userId);
-            const contactLimit = activePlan?.contactLimit ?? 1;
-
             const contactCount = await Contact.count({where: {userId}});
-            if (contactCount >= contactLimit) {
+            if (contactCount >= user.contactLimit) {
                 return res.status(400).json({
                     message: "Contact limit reached for this user"
                 });
@@ -1777,7 +1678,6 @@ router.get("/user/:userId/review/:reviewId", authenticateAdmin, async (req, res)
 });
 
 // ✅ POST: Create review
-// ✅ Reads reviewLimit from UserPlan (source of truth).
 router.post("/user/:userId/review", authenticateAdmin, async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -1787,12 +1687,8 @@ router.post("/user/:userId/review", authenticateAdmin, async (req, res) => {
             return res.status(404).json({message: "user not found"});
         }
 
-        // ✅ Read reviewLimit from UserPlan
-        const activePlan  = await getActivePlan(userId);
-        const reviewLimit = activePlan?.reviewLimit ?? 1;
-
         const reviewCount = await Review.count({where: {userId}});
-        if (reviewCount >= reviewLimit) {
+        if (reviewCount >= user.reviewLimit) {
             return res.status(400).json({
                 message: "Review limit reached for this user"
             });
@@ -2108,6 +2004,7 @@ router.get("/messages/unread-count", authenticateAdmin, async (req, res) => {
         let whereClause = { isRead: false };
         let includeClause = [];
 
+        // Normal admin can only see unread count for their users' messages
         if (req.admin.role !== 'super_admin') {
             includeClause = [{
                 model: User,
@@ -2141,6 +2038,7 @@ router.get("/messages", authenticateAdmin, async (req, res) => {
         let includeClause = [];
 
         if (req.admin.role !== 'super_admin') {
+            // Normal admin sees only messages from users they created
             includeClause = [{
                 model: User,
                 as: 'User',

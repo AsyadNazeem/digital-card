@@ -239,7 +239,16 @@
 
         <div class="company-details">
           <h2 v-if="displayCompanyName">{{ displayCompanyName }}</h2>
-          <h2 v-if="company.website">{{ company.displayUrl }}</h2>
+
+          <h2 v-if="company.website">
+            <a
+                :href="company.website"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+              {{ company.displayUrl }}
+            </a>
+          </h2>
         </div>
 
         <!-- Social Links -->
@@ -684,9 +693,18 @@
           </div>
 
           <!-- Company Details -->
-          <div class="company-details company-details-group">
+          <div class="company-details">
             <h2 v-if="displayCompanyName">{{ displayCompanyName }}</h2>
-            <h2 v-if="company.website">{{ company.displayUrl }}</h2>
+
+            <h2 v-if="company.website">
+              <a
+                  :href="company.website"
+                  target="_blank"
+                  rel="noopener noreferrer"
+              >
+                {{ company.displayUrl }}
+              </a>
+            </h2>
           </div>
 
           <!-- Social Links -->

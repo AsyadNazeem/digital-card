@@ -17,6 +17,7 @@ import Review from "./models/Review.js";
 import ContactCardView from "./models/ContactCardView.js";
 import ContactCardClick from "./models/ContactCardClick.js";
 import AnalyticsSummary from "./models/AnalyticsSummary.js";
+import UserPlan from "./models/UserPlan.js";
 
 // ROUTES
 import authRoutes from "./routes/auth.js";
@@ -59,9 +60,10 @@ const models = {
     UserPermission,
     PermissionChange,
     Review,
-    ContactCardView,      // ✅ ADD
-    ContactCardClick,     // ✅ ADD
-    AnalyticsSummary      // ✅ ADD
+    ContactCardView,
+    ContactCardClick,
+    AnalyticsSummary,
+    UserPlan,
 };
 
 
@@ -77,6 +79,23 @@ app.use(express.urlencoded({ extended: true }));
 
 // Static storage for uploaded images
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+// API ROUTES
+app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/public", publicRoutes);
+app.use("/api/admin/themes", adminThemeRoutes);
+app.use("/api/admin/auth", adminAuthRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/admin", adminLogRoutes);
+app.use('/api/admin/permissions', adminPermissionRoutes);
+app.use("/api/otp", otpRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/themes", themeRoutes);
+app.use("/api/wallet", walletRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use("/api/auth", appleRoutes);
+app.use("/api/dashboard", contactUs);
 
 
 // ✅ PUBLIC REVIEW API ENDPOINT - for frontend to fetch data
@@ -405,25 +424,6 @@ app.get("/:mobile", async (req, res, next) => {
         return res.status(500).send('Error loading card');
     }
 });
-
-
-
-// API ROUTES
-app.use("/api/auth", authRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/public", publicRoutes);
-app.use("/api/admin/themes", adminThemeRoutes);
-app.use("/api/admin/auth", adminAuthRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/admin", adminLogRoutes);
-app.use('/api/admin/permissions', adminPermissionRoutes);
-app.use("/api/otp", otpRoutes);
-app.use("/api/settings", settingsRoutes);
-app.use("/api/themes", themeRoutes);
-app.use("/api/wallet", walletRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use("/api/auth", appleRoutes);
-app.use("/api/dashboard", contactUs);
 
 // HOME
 app.get("/", (req, res) => {
