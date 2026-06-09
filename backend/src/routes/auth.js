@@ -310,6 +310,7 @@ router.post("/register", async (req, res) => {
             password: hashedPassword,
             provider: "local",
             registrationType: "self",
+            createdBy: "self",
             selectedThemeId: 1,
             plan: "free",
             country: country || null,
@@ -458,6 +459,7 @@ router.post("/google", async (req, res) => {
                 password: null,
                 googleId,
                 provider: "google",
+                createdBy: "google",
             });
 
             // ✅ CREATE FREE PLAN FOR NEW GOOGLE USER

@@ -222,20 +222,12 @@
           <!-- Company Bio -->
           <div class="form-group full-width">
             <label class="form-label">Company Bio</label>
-            <QuillEditor
-                v-model:content="form.bio"
-                contentType="html"
-                theme="snow"
-                :toolbar="[
-                  ['bold', 'italic', 'underline'],
-                  [{ 'header': [1, 2, 3, false] }],
-                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                  ['link'],
-                  ['clean']
-                ]"
-                class="quill-editor"
-                placeholder="Enter company bio..."
-            />
+            <Suspense>
+              <CompanyBioEditor
+                  v-if="showForm"
+                  v-model="form.bio"
+              />
+            </Suspense>
             <p class="field-hint">Use the toolbar to format your text</p>
           </div>
 
@@ -333,14 +325,18 @@
 </template>
 
 <script setup>
-import {ref, watch} from 'vue'
+import {ref, watch, defineAsyncComponent} from 'vue'
 import adminApi from '../../services/adminApi'
 import {VITE_IMAGE_UPLOAD_URL} from '@/config.js'
 import CountrySelector from "@/components/common/CountrySelector.vue"
 import ImageCropperModal from "@/components/contactCard/ImageCropper.vue"
-import {QuillEditor} from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import Quill from 'quill'
+
+
+const CompanyBioEditor = defineAsyncComponent(() =>
+    import('@/components/common/CompanyBioEditor.vue')
+)
+
 
 // Configure Quill to use <p> tags
 const Block = Quill.import('blots/block');
@@ -398,6 +394,8 @@ const logoFile = ref(null)
 const logoFileName = ref('')
 const logoPreview = ref('')
 const saving = ref(false)
+
+const showForm = ref(true)
 
 const showLogoCropper = ref(false)
 const tempLogoSrc = ref('')

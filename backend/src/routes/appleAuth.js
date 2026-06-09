@@ -202,6 +202,7 @@ router.post("/apple", async (req, res) => {
                     registrationType: "apple",
                     selectedThemeId:  1,
                     plan:             "free",
+                    createdBy: "apple",
                 });
 
                 console.log("✅ New user created:", dbUser.id);

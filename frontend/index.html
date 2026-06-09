@@ -1,27 +1,112 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <link rel="icon" type="image/png" href="/logo.png"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta charset="UTF-8" />
+
+    <title>TapMyName | Digital Business Cards with QR Codes & Wallet Integration</title>
+
+    <meta
+            name="description"
+            content="Create professional digital business cards with QR codes, Apple Wallet and Google Wallet integration. Share your contact information instantly with TapMyName."
+    />
+
+    <meta
+            name="keywords"
+            content="digital business card, QR business card, Apple Wallet business card, Google Wallet business card, NFC card, TapMyName"
+    />
+
+    <meta name="author" content="TapMyName" />
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://tapmy.name/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/logo.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="TapMyName" />
+    <meta property="og:title" content="TapMyName | Digital Business Cards" />
+    <meta
+            property="og:description"
+            content="Create professional digital business cards with QR codes, Apple Wallet and Google Wallet integration."
+    />
+    <meta property="og:url" content="https://tapmy.name/" />
+    <meta
+            property="og:image"
+            content="https://tapmy.name/images/social-preview.webp"
+    />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+            name="twitter:title"
+            content="TapMyName | Digital Business Cards"
+    />
+    <meta
+            name="twitter:description"
+            content="Create professional digital business cards with QR codes, Apple Wallet and Google Wallet integration."
+    />
+    <meta
+            name="twitter:image"
+            content="https://tapmy.name/images/social-preview.webp"
+    />
+
+    <!-- Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
+
+    <!-- Fonts -->
     <link
             rel="stylesheet"
             href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
     />
 
-    <link rel="https://cdn.rawgit.com/mfd/f3d96ec7f0e8f034cc22ea73b3797b59/raw/856f1dbb8d807aabceb80b6d4f94b464df461b3e/gotham.css">
-    <!-- Add this to your index.html <head> section -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-    <title>TapMyName - Digital Business Cards</title>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap"
+            rel="stylesheet"
+    />
+
+    <!-- Hero image preload -->
+    <link
+            rel="preload"
+            as="image"
+            href="/images/Iphone-mockup.webp"
+    />
+
+    <!-- Hero videos preload -->
+    <link
+            rel="preload"
+            href="/videos/DigitalCardSRDark.webm"
+            as="video"
+            type="video/webm"
+    />
+
+    <link
+            rel="preload"
+            href="/videos/DigitalCardSR.webm"
+            as="video"
+            type="video/webm"
+    />
+
+    <!-- Apple Sign In -->
     <script
-            type="text/javascript"
-            src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js">
+            src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"
+            defer>
     </script>
+
 </head>
 <body>
+
 <div id="app"></div>
+
 <script type="module" src="/src/main.js"></script>
+
 </body>
 </html>

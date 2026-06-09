@@ -11,13 +11,24 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
-import AdminSidebar from "./AdminSidebar.vue"
-import AdminHeader from "./AdminHeader.vue"
-import { useAdminStore } from '@/store/adminStore.js'
-import { useSidebar } from '@/composables/useSidebar.js'
+  import { onMounted, onUnmounted } from 'vue'
+  import { useHead } from '@vueuse/head'
+  import AdminSidebar from "./AdminSidebar.vue"
+  import AdminHeader from "./AdminHeader.vue"
+  import { useAdminStore } from '@/store/adminStore.js'
+  import { useSidebar } from '@/composables/useSidebar.js'
 
-const admin = useAdminStore()
+  useHead({
+  title: 'Admin Dashboard | TapMyName',
+  meta: [
+{
+  name: 'robots',
+  content: 'noindex, nofollow'
+}
+  ]
+})
+
+  const admin = useAdminStore()
 
 // Use the shared sidebar state - this automatically updates when sidebar toggles
 const { isCollapsed, isMobile, initialize, cleanup } = useSidebar()
@@ -25,30 +36,27 @@ const { isCollapsed, isMobile, initialize, cleanup } = useSidebar()
 let pollInterval = null          // ✅ ADD THIS - Track the interval
 let messageInterval = null       // ✅ ADD THIS - Track messages interval
 
-onMounted(() => {
-  admin.initializeAuth()
-  admin.loadRequests()
-  admin.loadUnreadMessages()     // ✅ ADD THIS - Load unread messages on startup
-
-  // Initialize sidebar state
-  initialize()
-
-  // Poll for new requests every 30 seconds
-  pollInterval = setInterval(() => {
+  onMounted(() => {
+    admin.initializeAuth()
     admin.loadRequests()
-  }, 30000)
-
-  // ✅ ADD THIS BLOCK - Poll for new messages every 30 seconds
-  messageInterval = setInterval(() => {
     admin.loadUnreadMessages()
-  }, 30000)
+
+    initialize()
+
+    pollInterval = setInterval(() => {
+      admin.loadRequests()
+    }, 30000)
+
+    messageInterval = setInterval(() => {
+      admin.loadUnreadMessages()
+    }, 30000)
+  })
 
   onUnmounted(() => {
     cleanup()
-    clearInterval(pollInterval)      // ✅ UPDATED - Use variable
-    clearInterval(messageInterval)   // ✅ ADD THIS
+    clearInterval(pollInterval)
+    clearInterval(messageInterval)
   })
-})
 </script>
 
 <style scoped>

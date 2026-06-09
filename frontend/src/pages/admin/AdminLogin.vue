@@ -4,7 +4,15 @@
     <div class="admin-branding">
       <div class="branding-content">
         <div class="logo-container">
-          <img src="/images/logo.jpeg" alt="TapMyName" class="admin-logo" />
+          <img
+              src="/images/logo.webp"
+              alt="TapMyName Digital Business Card Platform"
+              class="admin-logo"
+              width="800"
+              height="173"
+              loading="eager"
+              fetchpriority="high"
+          />
         </div>
         <h1 class="admin-brand-title">Admin Portal</h1>
         <p class="admin-brand-description">
@@ -154,6 +162,17 @@ const message = ref("")
 const messageType = ref("error")
 const isLoading = ref(false)
 const showPassword = ref(false)
+import { useHead } from '@vueuse/head'
+
+useHead({
+  title: 'Admin Login | TapMyName',
+  meta: [
+    {
+      name: 'robots',
+      content: 'noindex, nofollow'
+    }
+  ]
+})
 
 async function login() {
   try {

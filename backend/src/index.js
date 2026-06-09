@@ -35,6 +35,7 @@ import walletRoutes from "./routes/wallet.js";
 import analyticsRoutes from "./routes/analytics.js";
 import appleRoutes from "./routes/appleAuth.js";
 import contactUs from "./routes/contactUs.js";
+import publicContactUs from "./routes/user.js";  // landing page (public)
 
 // PATH
 import path from "path";
@@ -96,6 +97,8 @@ app.use("/api/wallet", walletRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use("/api/auth", appleRoutes);
 app.use("/api/dashboard", contactUs);
+
+app.use("/api/contact", publicContactUs);  // public landing page form
 
 
 // ✅ PUBLIC REVIEW API ENDPOINT - for frontend to fetch data

@@ -3,12 +3,12 @@
     <div class="page-header">
       <button
           v-if="can(PERMISSIONS.CREATE_USER)"
-          @click="$router.push('/admin/users/create')"
           class="btn-create"
+          @click="$router.push('/admin/users/create')"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
+        <svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18">
+          <line x1="12" x2="12" y1="5" y2="19"></line>
+          <line x1="5" x2="19" y1="12" y2="12"></line>
         </svg>
         Create User
       </button>
@@ -17,24 +17,24 @@
     <div class="users-table-card">
       <div class="admin-role-banner">
         <div v-if="isSuperAdmin" class="role-indicator super">
-          <svg xmlns="http://www.w3.org/2000/svg"
-               width="16" height="16"
-               viewBox="0 0 24 24"
-               fill="currentColor">
+          <svg fill="currentColor"
+               height="16" viewBox="0 0 24 24"
+               width="16"
+               xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2l2.9 6 6.6.9-4.8 4.7 1.1 6.6L12 17l-5.8 3.2 1.1-6.6L2.5 8.9l6.6-.9z"/>
           </svg>
           Super Admin Access
         </div>
 
         <div v-else class="role-indicator normal">
-          <svg xmlns="http://www.w3.org/2000/svg"
-               width="16" height="16"
-               viewBox="0 0 24 24"
-               fill="none"
-               stroke="currentColor"
-               stroke-width="2"
+          <svg fill="none"
+               height="16" stroke="currentColor"
                stroke-linecap="round"
-               stroke-linejoin="round">
+               stroke-linejoin="round"
+               stroke-width="2"
+               viewBox="0 0 24 24"
+               width="16"
+               xmlns="http://www.w3.org/2000/svg">
             <path d="M20 21v-2a4 4 0 0 0-3-3.9"/>
             <path d="M4 21v-2a4 4 0 0 1 3-3.9"/>
             <circle cx="12" cy="7" r="4"/>
@@ -44,18 +44,25 @@
       </div>
       <div class="table-controls">
         <div class="search-box">
-          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2">
+          <svg class="search-icon" fill="none" height="18" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+               width="18">
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
           </svg>
           <input
               v-model="searchQuery"
-              type="text"
-              placeholder="Search users..."
               class="search-input"
+              placeholder="Search users..."
+              type="text"
           />
         </div>
+
+        <select v-model="filterCreatedBy" class="filter-select">
+          <option value="all">All Creators</option>
+          <option v-for="admin in uniqueAdmins" :key="admin" :value="admin">
+            {{ admin }}
+          </option>
+        </select>
 
         <select v-model="filterProvider" class="filter-select">
           <option value="all">All Users</option>
@@ -84,16 +91,16 @@
       <div class="table-wrapper">
         <!-- Loading State -->
         <div v-if="adminStore.loading" class="loading-state">
-          <svg class="spinner" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2">
-            <line x1="12" y1="2" x2="12" y2="6"></line>
-            <line x1="12" y1="18" x2="12" y2="22"></line>
-            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
-            <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
-            <line x1="2" y1="12" x2="6" y2="12"></line>
-            <line x1="18" y1="12" x2="22" y2="12"></line>
-            <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
-            <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+          <svg class="spinner" fill="none" height="48" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+               width="48">
+            <line x1="12" x2="12" y1="2" y2="6"></line>
+            <line x1="12" x2="12" y1="18" y2="22"></line>
+            <line x1="4.93" x2="7.76" y1="4.93" y2="7.76"></line>
+            <line x1="16.24" x2="19.07" y1="16.24" y2="19.07"></line>
+            <line x1="2" x2="6" y1="12" y2="12"></line>
+            <line x1="18" x2="22" y1="12" y2="12"></line>
+            <line x1="4.93" x2="7.76" y1="19.07" y2="16.24"></line>
+            <line x1="16.24" x2="19.07" y1="7.76" y2="4.93"></line>
           </svg>
           <p>Loading users...</p>
         </div>
@@ -111,44 +118,45 @@
             <th>Company Limit</th>
             <th>Contact Limit</th>
             <th>Joined</th>
+            <th>Created By</th>
             <th>Plan</th>
             <th>Actions</th>
           </tr>
           </thead>
           <tbody>
-          <tr v-for="(user, index) in paginatedUsers" :key="user.id" @click="openUserDetails(user)"
-              class="clickable-row">
+          <tr v-for="(user, index) in paginatedUsers" :key="user.id" class="clickable-row"
+              @click="openUserDetails(user)">
             <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
             <td class="user-name">{{ user.name }}</td>
             <td class="user-email">{{ user.email }}</td>
             <td class="text-muted">{{ user.phone || 'N/A' }}</td>
             <td>
-      <span class="badge" :class="user.provider">
+      <span :class="user.provider" class="badge">
   <template v-if="user.provider === 'google'">
-    <svg xmlns="http://www.w3.org/2000/svg"
-         width="16" height="16"
-         viewBox="0 0 24 24"
-         fill="none"
-         stroke="currentColor"
-         stroke-width="2"
+    <svg fill="none"
+         height="16" stroke="currentColor"
          stroke-linecap="round"
-         stroke-linejoin="round">
+         stroke-linejoin="round"
+         stroke-width="2"
+         viewBox="0 0 24 24"
+         width="16"
+         xmlns="http://www.w3.org/2000/svg">
       <path d="M21 12a9 9 0 1 1-3-6.7"/>
-      <line x1="21" y1="3" x2="12" y2="12"/>
+      <line x1="21" x2="12" y1="3" y2="12"/>
     </svg>
     Google
   </template>
 
   <template v-else>
-    <svg xmlns="http://www.w3.org/2000/svg"
-         width="16" height="16"
-         viewBox="0 0 24 24"
-         fill="none"
-         stroke="currentColor"
-         stroke-width="2"
+    <svg fill="none"
+         height="16" stroke="currentColor"
          stroke-linecap="round"
-         stroke-linejoin="round">
-      <rect x="3" y="5" width="18" height="14" rx="2"/>
+         stroke-linejoin="round"
+         stroke-width="2"
+         viewBox="0 0 24 24"
+         width="16"
+         xmlns="http://www.w3.org/2000/svg">
+      <rect height="14" rx="2" width="18" x="3" y="5"/>
       <polyline points="3 7 12 13 21 7"/>
     </svg>
     Local
@@ -156,26 +164,27 @@
 </span>
             </td>
             <td>
-        <span class="badge" :class="user.registrationType">
+        <span :class="user.registrationType" class="badge">
           {{ getRegistrationTypeLabel(user.registrationType) }}
         </span>
             </td>
             <td class="text-center">{{ user.companyLimit }}</td>
             <td class="text-center">{{ user.contactLimit }}</td>
             <td class="text-muted">{{ formatDate(user.createdAt) }}</td>
+            <td class="text-muted">{{ user.createdBy || 'Self / OAuth' }}</td>
             <td>
-  <span class="plan-badge" :class="user.plan">
+  <span :class="user.plan" class="plan-badge">
     {{ user.plan?.toUpperCase() }}
   </span>
             </td>
             <td class="actions" @click.stop>
               <button
                   v-if="can(PERMISSIONS.DELETE_USER)"
-                  @click="deleteUser(user.id)"
                   class="btn-delete"
                   title="Delete User"
+                  @click="deleteUser(user.id)"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16">
                   <polyline points="3 6 5 6 21 6"></polyline>
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
@@ -189,10 +198,10 @@
         <!-- Mobile Card View -->
         <div v-else-if="isMobile && !adminStore.loading" class="mobile-card-view">
           <div v-if="paginatedUsers.length === 0" class="empty-state">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg fill="none" height="48" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="48">
               <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              <line x1="12" x2="12" y1="8" y2="12"></line>
+              <line x1="12" x2="12.01" y1="16" y2="16"></line>
             </svg>
             <p>No users found</p>
           </div>
@@ -213,31 +222,31 @@
                   <div class="user-name">{{ user.name }}</div>
                   <div class="user-email">{{ user.email }}</div>
                 </div>
-                <span class="provider-badge-mobile" :class="user.provider">
+                <span :class="user.provider" class="provider-badge-mobile">
   <template v-if="user.provider === 'google'">
-    <svg xmlns="http://www.w3.org/2000/svg"
-         width="14" height="14"
-         viewBox="0 0 24 24"
-         fill="none"
-         stroke="currentColor"
-         stroke-width="2"
+    <svg fill="none"
+         height="14" stroke="currentColor"
          stroke-linecap="round"
-         stroke-linejoin="round">
+         stroke-linejoin="round"
+         stroke-width="2"
+         viewBox="0 0 24 24"
+         width="14"
+         xmlns="http://www.w3.org/2000/svg">
       <path d="M21 12a9 9 0 1 1-3-6.7"/>
-      <line x1="21" y1="3" x2="12" y2="12"/>
+      <line x1="21" x2="12" y1="3" y2="12"/>
     </svg>
   </template>
 
   <template v-else>
-    <svg xmlns="http://www.w3.org/2000/svg"
-         width="14" height="14"
-         viewBox="0 0 24 24"
-         fill="none"
-         stroke="currentColor"
-         stroke-width="2"
+    <svg fill="none"
+         height="14" stroke="currentColor"
          stroke-linecap="round"
-         stroke-linejoin="round">
-      <rect x="3" y="5" width="18" height="14" rx="2"/>
+         stroke-linejoin="round"
+         stroke-width="2"
+         viewBox="0 0 24 24"
+         width="14"
+         xmlns="http://www.w3.org/2000/svg">
+      <rect height="14" rx="2" width="18" x="3" y="5"/>
       <polyline points="3 7 12 13 21 7"/>
     </svg>
   </template>
@@ -249,14 +258,14 @@
                 <div class="detail-row">
                   <div class="detail-item">
       <span class="detail-label">
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="16" height="16"
-             viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2"
+        <svg fill="none"
+             height="16" stroke="currentColor"
              stroke-linecap="round"
-             stroke-linejoin="round">
+             stroke-linejoin="round"
+             stroke-width="2"
+             viewBox="0 0 24 24"
+             width="16"
+             xmlns="http://www.w3.org/2000/svg">
           <path d="M22 16.9v3a2 2 0 0 1-2.2 2
                    19.8 19.8 0 0 1-8.6-3.1
                    19.5 19.5 0 0 1-6-6
@@ -276,21 +285,21 @@
 
                   <div class="detail-item">
       <span class="detail-label">
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="16" height="16"
-             viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2"
+        <svg fill="none"
+             height="16" stroke="currentColor"
              stroke-linecap="round"
-             stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="16" rx="2"/>
-          <line x1="7" y1="8" x2="17" y2="8"/>
-          <line x1="7" y1="12" x2="17" y2="12"/>
+             stroke-linejoin="round"
+             stroke-width="2"
+             viewBox="0 0 24 24"
+             width="16"
+             xmlns="http://www.w3.org/2000/svg">
+          <rect height="16" rx="2" width="18" x="3" y="4"/>
+          <line x1="7" x2="17" y1="8" y2="8"/>
+          <line x1="7" x2="17" y1="12" y2="12"/>
         </svg>
         Type
       </span>
-                    <span class="badge-small" :class="user.registrationType">
+                    <span :class="user.registrationType" class="badge-small">
         {{
                         getRegistrationTypeLabel(user.registrationType)
                             .replace('👤 ', '')
@@ -302,17 +311,18 @@
                 </div>
 
                 <div class="detail-row">
+
                   <div class="detail-item">
       <span class="detail-label">
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="16" height="16"
-             viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2"
+        <svg fill="none"
+             height="16" stroke="currentColor"
              stroke-linecap="round"
-             stroke-linejoin="round">
-          <rect x="3" y="7" width="18" height="13" rx="2"/>
+             stroke-linejoin="round"
+             stroke-width="2"
+             viewBox="0 0 24 24"
+             width="16"
+             xmlns="http://www.w3.org/2000/svg">
+          <rect height="13" rx="2" width="18" x="3" y="7"/>
           <path d="M16 3h-8v4h8z"/>
         </svg>
         Companies
@@ -322,14 +332,14 @@
 
                   <div class="detail-item">
       <span class="detail-label">
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="16" height="16"
-             viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2"
+        <svg fill="none"
+             height="16" stroke="currentColor"
              stroke-linecap="round"
-             stroke-linejoin="round">
+             stroke-linejoin="round"
+             stroke-width="2"
+             viewBox="0 0 24 24"
+             width="16"
+             xmlns="http://www.w3.org/2000/svg">
           <circle cx="9" cy="7" r="4"/>
           <path d="M17 11a4 4 0 1 0 0-8"/>
           <path d="M3 21v-2a6 6 0 0 1 12 0v2"/>
@@ -340,38 +350,46 @@
                     <span class="limit-badge">{{ user.contactLimit }}</span>
                   </div>
                 </div>
+                <div class="detail-row">
+                  <div class="detail-item">
+                    <span class="detail-label">Created By</span>
+                    <span class="detail-value">{{ user.createdBy || 'Self' }}</span>
+                  </div>
+                </div>
               </div>
 
               <!-- Card Footer -->
               <div class="card-footer">
                 <div class="joined-date">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14">
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>
                   <span>{{ formatDate(user.createdAt) }}</span>
                 </div>
+
                 <button
                     v-if="can(PERMISSIONS.DELETE_USER)"
-                    @click.stop="deleteUser(user.id)"
                     class="btn-delete-mobile"
                     title="Delete User"
+                    @click.stop="deleteUser(user.id)"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                   </svg>
                 </button>
               </div>
+
             </div>
           </div>
         </div>
 
         <!-- Pagination -->
-        <div class="pagination-controls" v-if="totalPages > 1 && !adminStore.loading">
+        <div v-if="totalPages > 1 && !adminStore.loading" class="pagination-controls">
           <button
-              class="page-btn"
               :disabled="currentPage === 1"
+              class="page-btn"
               @click="currentPage--"
           >
             ← Prev
@@ -382,8 +400,8 @@
     </span>
 
           <button
-              class="page-btn"
               :disabled="currentPage === totalPages"
+              class="page-btn"
               @click="currentPage++"
           >
             Next →
@@ -392,10 +410,10 @@
 
         <!-- No Data State -->
         <div v-if="!adminStore.loading && filteredUsers.length === 0" class="no-data">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg fill="none" height="48" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="48">
             <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            <line x1="12" x2="12" y1="8" y2="12"></line>
+            <line x1="12" x2="12.01" y1="16" y2="16"></line>
           </svg>
           <p>No users found</p>
         </div>
@@ -416,16 +434,16 @@
                   <p class="modal-subtitle">{{ selectedUser?.email }}</p>
                 </div>
                 <span
-                    class="plan-badge small"
                     :class="selectedUser?.plan"
+                    class="plan-badge small"
                 >
       {{ selectedUser?.plan?.toUpperCase() || 'FREE' }}
     </span>
               </div>
-              <button @click="closeModal" class="btn-close">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
+              <button class="btn-close" @click="closeModal">
+                <svg fill="none" height="24" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="24">
+                  <line x1="18" x2="6" y1="6" y2="18"></line>
+                  <line x1="6" x2="18" y1="6" y2="18"></line>
                 </svg>
               </button>
             </div>
@@ -436,7 +454,7 @@
                 <div class="plan-controls">
                   <div class="plan-control-item">
                     <span class="plan-label">User Plan</span>
-                    <select v-model="updatedPlan" class="plan-select" :disabled="!can(PERMISSIONS.EDIT_USER_LIMITS)">
+                    <select v-model="updatedPlan" :disabled="!can(PERMISSIONS.EDIT_USER_LIMITS)" class="plan-select">
                       <option value="free">Free</option>
                       <option value="demo">Demo</option>
                       <option value="plus">Plus</option>
@@ -447,7 +465,8 @@
 
                   <div class="duration-control-item">
                     <span class="plan-label">Duration</span>
-                    <select v-model="updatedDuration" class="duration-select" :disabled="updatedPlan === 'free' || !can(PERMISSIONS.EDIT_USER_LIMITS)">
+                    <select v-model="updatedDuration" :disabled="updatedPlan === 'free' || !can(PERMISSIONS.EDIT_USER_LIMITS)"
+                            class="duration-select">
                       <option value="monthly">Monthly</option>
                       <option value="annually">Annually</option>
                     </select>
@@ -458,15 +477,15 @@
               <div class="limit-card">
                 <div class="limit-header">
                 <span class="limit-icon">
-  <svg xmlns="http://www.w3.org/2000/svg"
-       width="16" height="16"
-       viewBox="0 0 24 24"
-       fill="none"
-       stroke="currentColor"
-       stroke-width="2"
+  <svg fill="none"
+       height="16" stroke="currentColor"
        stroke-linecap="round"
-       stroke-linejoin="round">
-    <rect x="3" y="7" width="18" height="13" rx="2"/>
+       stroke-linejoin="round"
+       stroke-width="2"
+       viewBox="0 0 24 24"
+       width="16"
+       xmlns="http://www.w3.org/2000/svg">
+    <rect height="13" rx="2" width="18" x="3" y="7"/>
     <path d="M16 3h-8v4h8z"/>
   </svg>
 </span>
@@ -475,19 +494,19 @@
                 <div class="limit-controls">
                   <span class="limit-value">{{ updatedLimits.companyLimit }}</span>
                   <div class="limit-buttons">
-                    <button @click="updateLimit('company', -1)" class="btn-limit"
-                            :disabled=" updatedPlan === 'free' || updatedPlan === 'demo' || updatedLimits.companyLimit <= ( updatedPlan === 'plus' ? 2 : updatedPlan === 'pro' ? 5 : 1)">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                           stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <button :disabled=" updatedPlan === 'free' || updatedPlan === 'demo' || updatedLimits.companyLimit <= ( updatedPlan === 'plus' ? 2 : updatedPlan === 'pro' ? 5 : 1)" class="btn-limit"
+                            @click="updateLimit('company', -1)">
+                      <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                           width="14">
+                        <line x1="5" x2="19" y1="12" y2="12"></line>
                       </svg>
                     </button>
-                    <button @click="updateLimit('company', 1)" class="btn-limit"
-                            :disabled="updatedPlan === 'free' || updatedPlan === 'demo'">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                           stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <button :disabled="updatedPlan === 'free' || updatedPlan === 'demo'" class="btn-limit"
+                            @click="updateLimit('company', 1)">
+                      <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                           width="14">
+                        <line x1="12" x2="12" y1="5" y2="19"></line>
+                        <line x1="5" x2="19" y1="12" y2="12"></line>
                       </svg>
                     </button>
                   </div>
@@ -497,14 +516,14 @@
               <div class="limit-card">
                 <div class="limit-header">
                   <span class="limit-icon">
-  <svg xmlns="http://www.w3.org/2000/svg"
-       width="16" height="16"
-       viewBox="0 0 24 24"
-       fill="none"
-       stroke="currentColor"
-       stroke-width="2"
+  <svg fill="none"
+       height="16" stroke="currentColor"
        stroke-linecap="round"
-       stroke-linejoin="round">
+       stroke-linejoin="round"
+       stroke-width="2"
+       viewBox="0 0 24 24"
+       width="16"
+       xmlns="http://www.w3.org/2000/svg">
     <circle cx="9" cy="7" r="4"/>
     <path d="M17 11a4 4 0 1 0 0-8"/>
     <path d="M3 21v-2a6 6 0 0 1 12 0v2"/>
@@ -516,19 +535,19 @@
                 <div class="limit-controls">
                   <span class="limit-value">{{ updatedLimits.contactLimit }}</span>
                   <div class="limit-buttons">
-                    <button @click="updateLimit('contact', -1)" class="btn-limit"
-                            :disabled="updatedPlan === 'free' || updatedPlan === 'demo' || updatedLimits.contactLimit <= (updatedPlan === 'plus' ? 5 : updatedPlan === 'pro' ? 15 : updatedPlan === 'custom' ? 30 : 1)">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                           stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <button :disabled="updatedPlan === 'free' || updatedPlan === 'demo' || updatedLimits.contactLimit <= (updatedPlan === 'plus' ? 5 : updatedPlan === 'pro' ? 15 : updatedPlan === 'custom' ? 30 : 1)" class="btn-limit"
+                            @click="updateLimit('contact', -1)">
+                      <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                           width="14">
+                        <line x1="5" x2="19" y1="12" y2="12"></line>
                       </svg>
                     </button>
-                    <button @click="updateLimit('contact', 1)" class="btn-limit"
-                            :disabled="updatedPlan === 'free' || updatedPlan === 'demo'">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                           stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <button :disabled="updatedPlan === 'free' || updatedPlan === 'demo'" class="btn-limit"
+                            @click="updateLimit('contact', 1)">
+                      <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                           width="14">
+                        <line x1="12" x2="12" y1="5" y2="19"></line>
+                        <line x1="5" x2="19" y1="12" y2="12"></line>
                       </svg>
                     </button>
                   </div>
@@ -537,17 +556,17 @@
 
               <button
                   v-if="limitsChanged && can(PERMISSIONS.EDIT_USER_LIMITS)"
-                  @click="saveLimits"
-                  class="btn-save-limits"
                   :disabled="savingLimits"
+                  class="btn-save-limits"
+                  @click="saveLimits"
               >
-                <svg v-if="savingLimits" class="spinner-small" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="2" x2="12" y2="6"></line>
-                  <line x1="12" y1="18" x2="12" y2="22"></line>
+                <svg v-if="savingLimits" class="spinner-small" fill="none" height="16" stroke="currentColor" stroke-width="2"
+                     viewBox="0 0 24 24" width="16">
+                  <line x1="12" x2="12" y1="2" y2="6"></line>
+                  <line x1="12" x2="12" y1="18" y2="22"></line>
                 </svg>
                 <span v-else class="btn-save-content">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16">
     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
     <polyline points="17 21 17 13 7 13 7 21"></polyline>
     <polyline points="7 3 7 8 15 8"></polyline>
@@ -560,22 +579,22 @@
             <!-- Tabs -->
             <div class="tabs-container">
               <button
-                  @click="activeTab = 'companies'"
-                  class="tab-button"
                   :class="{ active: activeTab === 'companies' }"
+                  class="tab-button"
+                  @click="activeTab = 'companies'"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                   <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
                 Companies ({{ companies.length }})
               </button>
               <button
-                  @click="activeTab = 'contacts'"
-                  class="tab-button"
                   :class="{ active: activeTab === 'contacts' }"
+                  class="tab-button"
+                  @click="activeTab = 'contacts'"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                   <circle cx="9" cy="7" r="4"></circle>
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -585,11 +604,11 @@
               </button>
 
               <button
-                  @click="activeTab = 'review'"
-                  class="tab-button"
                   :class="{ active: activeTab === 'review' }"
+                  class="tab-button"
+                  @click="activeTab = 'review'"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                   <circle cx="9" cy="7" r="4"></circle>
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -603,10 +622,10 @@
             <div class="tab-content">
               <!-- Loading State -->
               <div v-if="loadingData" class="loading-state-small">
-                <svg class="spinner" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2">
-                  <line x1="12" y1="2" x2="12" y2="6"></line>
-                  <line x1="12" y1="18" x2="12" y2="22"></line>
+                <svg class="spinner" fill="none" height="32" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                     width="32">
+                  <line x1="12" x2="12" y1="2" y2="6"></line>
+                  <line x1="12" x2="12" y1="18" y2="22"></line>
                 </svg>
                 <p>Loading data...</p>
               </div>
@@ -616,11 +635,11 @@
 
                 <!-- Add Company Button -->
                 <div v-if="canCreateCompany" style="margin-bottom: 20px;">
-                  <button @click="createCompany" class="btn-primary"
-                          style="display: flex; align-items: center; gap: 8px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;"
+                          @click="createCompany">
+                    <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16">
+                      <line x1="12" x2="12" y1="5" y2="19"></line>
+                      <line x1="5" x2="19" y1="12" y2="12"></line>
                     </svg>
                     Add Company
                   </button>
@@ -632,7 +651,7 @@
 
                 <!-- Empty State -->
                 <div v-if="companies.length === 0" class="empty-state">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg fill="none" height="48" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="48">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                   </svg>
                   <p>No companies registered</p>
@@ -658,28 +677,28 @@
                         <td class="td-name">
                           <div class="name-cell">
                             <span class="cell-icon">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-    <line x1="9" y1="6" x2="9" y2="6.01"></line>
-    <line x1="15" y1="6" x2="15" y2="6.01"></line>
-    <line x1="9" y1="10" x2="9" y2="10.01"></line>
-    <line x1="15" y1="10" x2="15" y2="10.01"></line>
-    <line x1="9" y1="14" x2="9" y2="14.01"></line>
-    <line x1="15" y1="14" x2="15" y2="14.01"></line>
-    <line x1="9" y1="18" x2="15" y2="18"></line>
+  <svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18">
+    <rect height="20" rx="2" ry="2" width="16" x="4" y="2"></rect>
+    <line x1="9" x2="9" y1="6" y2="6.01"></line>
+    <line x1="15" x2="15" y1="6" y2="6.01"></line>
+    <line x1="9" x2="9" y1="10" y2="10.01"></line>
+    <line x1="15" x2="15" y1="10" y2="10.01"></line>
+    <line x1="9" x2="9" y1="14" y2="14.01"></line>
+    <line x1="15" x2="15" y1="14" y2="14.01"></line>
+    <line x1="9" x2="15" y1="18" y2="18"></line>
   </svg>
 </span>
                             <span>{{ company.companyName || 'Unnamed Company' }}</span>
                           </div>
                         </td>
                         <td class="td-website">
-                          <a v-if="company.website" :href="company.website" target="_blank" class="link-external">
+                          <a v-if="company.website" :href="company.website" class="link-external" target="_blank">
                             {{ company.displayUrl || company.website }}
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2">
+                            <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                 width="12">
                               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                               <polyline points="15 3 21 3 21 9"></polyline>
-                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                              <line x1="10" x2="21" y1="14" y2="3"></line>
                             </svg>
                           </a>
                           <span v-else class="text-muted">No website</span>
@@ -687,19 +706,19 @@
                         <td class="td-email">{{ company.email || '-' }}</td>
                         <td class="td-date">{{ formatDate(company.createdAt) }}</td>
                         <td class="td-status">
-                        <span class="status-badge" :class="company.status || 'active'">
+                        <span :class="company.status || 'active'" class="status-badge">
                           {{ (company.status || 'active').toUpperCase() }}
                         </span>
                         </td>
                         <td class="td-actions" style="display: flex">
                           <button
                               v-if="can(PERMISSIONS.EDIT_COMPANY)"
-                              @click="editCompany(company)"
                               class="btn-view-card"
                               title="Edit Company"
+                              @click="editCompany(company)"
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2">
+                            <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                 width="14">
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                             </svg>
@@ -709,13 +728,13 @@
 
                           <button
                               v-if="can(PERMISSIONS.DELETE_USER)"
-                              @click.stop="deleteCompany(company)"
                               class="btn-delete"
-                              title="Delete Company"
                               style="margin-left: 6px;"
+                              title="Delete Company"
+                              @click.stop="deleteCompany(company)"
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2">
+                            <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                 width="14">
                               <polyline points="3 6 5 6 21 6"></polyline>
                               <path
                                   d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -733,48 +752,48 @@
                     <div class="data-card-header">
                       <div class="data-card-title">
                     <span class="data-card-icon">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-    <line x1="9" y1="6" x2="9" y2="6.01"></line>
-    <line x1="15" y1="6" x2="15" y2="6.01"></line>
-    <line x1="9" y1="10" x2="9" y2="10.01"></line>
-    <line x1="15" y1="10" x2="15" y2="10.01"></line>
-    <line x1="9" y1="14" x2="9" y2="14.01"></line>
-    <line x1="15" y1="14" x2="15" y2="14.01"></line>
-    <line x1="9" y1="18" x2="15" y2="18"></line>
+  <svg fill="none" height="20" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="20">
+    <rect height="20" rx="2" ry="2" width="16" x="4" y="2"></rect>
+    <line x1="9" x2="9" y1="6" y2="6.01"></line>
+    <line x1="15" x2="15" y1="6" y2="6.01"></line>
+    <line x1="9" x2="9" y1="10" y2="10.01"></line>
+    <line x1="15" x2="15" y1="10" y2="10.01"></line>
+    <line x1="9" x2="9" y1="14" y2="14.01"></line>
+    <line x1="15" x2="15" y1="14" y2="14.01"></line>
+    <line x1="9" x2="15" y1="18" y2="18"></line>
   </svg>
 </span>
                         <span class="data-card-name">{{ company.companyName || 'Unnamed Company' }}</span>
                       </div>
-                      <span class="status-badge" :class="company.status || 'active'">
+                      <span :class="company.status || 'active'" class="status-badge">
         {{ (company.status || 'active').toUpperCase() }}
       </span>
                     </div>
                     <div class="data-card-body">
                       <div class="data-card-row">
                         <span class="data-card-label">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14">
     <circle cx="12" cy="12" r="10"></circle>
-    <line x1="2" y1="12" x2="22" y2="12"></line>
+    <line x1="2" x2="22" y1="12" y2="12"></line>
     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
   </svg>
   Website
 </span>
-                        <a v-if="company.website" :href="company.website" target="_blank" class="data-card-value link">
+                        <a v-if="company.website" :href="company.website" class="data-card-value link" target="_blank">
                           {{ company.displayUrl || 'View' }}
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
+                          <svg fill="none" height="10" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                               width="10">
                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                             <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                            <line x1="10" x2="21" y1="14" y2="3"></line>
                           </svg>
                         </a>
                         <span v-else class="data-card-value" style="color: #8a7b75;">No website</span>
                       </div>
                       <div class="data-card-row">
                        <span class="data-card-label">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+  <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14">
+    <rect height="16" rx="2" width="20" x="2" y="4"></rect>
     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
   </svg>
   Email
@@ -784,18 +803,18 @@
                     </div>
                     <div class="data-card-footer">
                       <div class="data-card-date">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
+                        <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                             width="12">
                           <circle cx="12" cy="12" r="10"></circle>
                           <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
                         <span>{{ formatDate(company.createdAt) }}</span>
                       </div>
                       <div class="data-card-actions">
-                        <button v-if="can(PERMISSIONS.EDIT_COMPANY)" @click="editCompany(company)"
-                                class="btn-card-action">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
+                        <button v-if="can(PERMISSIONS.EDIT_COMPANY)" class="btn-card-action"
+                                @click="editCompany(company)">
+                          <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                               width="12">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                           </svg>
@@ -810,11 +829,11 @@
               <div v-else-if="activeTab === 'contacts'">
 
                 <div v-if="canCreateContact" style="margin-bottom: 20px;">
-                  <button @click="createContact" class="btn-primary"
-                          style="display: flex; align-items: center; gap: 8px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;"
+                          @click="createContact">
+                    <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16">
+                      <line x1="12" x2="12" y1="5" y2="19"></line>
+                      <line x1="5" x2="19" y1="12" y2="12"></line>
                     </svg>
                     Add Contact
                   </button>
@@ -828,7 +847,7 @@
 
                 <!-- Company Filter Dropdown (only show if 2+ companies) -->
                 <div v-if="companies.length >= 2" class="company-filter-section">
-                  <label for="company-filter" class="filter-label">Filter by Company:</label>
+                  <label class="filter-label" for="company-filter">Filter by Company:</label>
                   <select id="company-filter" v-model="selectedCompanyFilter" class="company-filter-select">
                     <option value="all">All Companies</option>
                     <option v-for="company in companies" :key="company.id" :value="company.id">
@@ -839,7 +858,7 @@
 
 
                 <div v-if="contacts.length === 0" class="empty-state">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg fill="none" height="48" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="48">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                     <circle cx="9" cy="7" r="4"></circle>
                   </svg>
@@ -867,7 +886,7 @@
                         <td class="td-name">
                           <div class="name-cell">
                            <span class="cell-icon">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
     <circle cx="12" cy="7" r="4"></circle>
   </svg>
@@ -885,12 +904,12 @@
                             <div
                                 style="display: flex; margin-bottom: 10px; align-items: center; justify-content: center; gap: 5px;">
                               <button
-                                  @click="editContact(contact)"
                                   class="btn-view-card"
                                   title="Edit Contact"
+                                  @click="editContact(contact)"
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="2">
+                                <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                     width="14">
                                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                 </svg>
@@ -898,28 +917,28 @@
                               </button>
                               <a
                                   :href="getContactCardUrl(contact.mobile)"
-                                  target="_blank"
                                   class="btn-view-card"
+                                  target="_blank"
                                   title="View Contact Card"
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="2">
-                                  <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                                <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                     width="14">
+                                  <rect height="15" rx="2" ry="2" width="20" x="2" y="7"></rect>
                                   <polyline points="22 7 13 13 2 7"></polyline>
                                 </svg>
                                 View Card
                               </a>
                               <button
-                                  @click="openQrPopup1(contact)"
                                   class="btn-view-card"
                                   title="View Contact QR Code"
+                                  @click="openQrPopup1(contact)"
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="2">
-                                  <rect x="3" y="3" width="7" height="7"></rect>
-                                  <rect x="14" y="3" width="7" height="7"></rect>
-                                  <rect x="14" y="14" width="7" height="7"></rect>
-                                  <rect x="3" y="14" width="7" height="7"></rect>
+                                <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                     width="14">
+                                  <rect height="7" width="7" x="3" y="3"></rect>
+                                  <rect height="7" width="7" x="14" y="3"></rect>
+                                  <rect height="7" width="7" x="14" y="14"></rect>
+                                  <rect height="7" width="7" x="3" y="14"></rect>
                                 </svg>
                                 View QR
                               </button>
@@ -927,34 +946,34 @@
                             <!-- Replace the two wallet buttons in the desktop table td -->
                             <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
                               <button
-                                  @click="copyGoogleWallet(contact)"
                                   class="btn-view-card"
                                   title="Copy Google Wallet link"
+                                  @click="copyGoogleWallet(contact)"
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="2">
-                                  <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                                <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                     width="14">
+                                  <rect height="13" rx="2" width="13" x="9" y="9"></rect>
                                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                 </svg>
                                 G-Wallet
                               </button>
 
                               <button
-                                  @click="downloadAppleWallet(contact)"
                                   class="btn-view-card"
                                   title="Download Apple Wallet .pkpass file"
+                                  @click="downloadAppleWallet(contact)"
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="2">
+                                <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                     width="14">
                                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                   <polyline points="7 10 12 15 17 10"></polyline>
-                                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                                  <line x1="12" x2="12" y1="15" y2="3"></line>
                                 </svg>
                                 A-Wallet
                               </button>
-                              <button @click.stop="deleteContact(contact)" class="btn-card-action delete">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="2">
+                              <button class="btn-card-action delete" @click.stop="deleteContact(contact)">
+                                <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                     width="12">
                                   <polyline points="3 6 5 6 21 6"></polyline>
                                   <path
                                       d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -974,7 +993,7 @@
                     <div class="data-card-header">
                       <div class="data-card-title">
                        <span class="data-card-icon">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <svg fill="none" height="20" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="20">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
     <circle cx="12" cy="7" r="4"></circle>
   </svg>
@@ -985,8 +1004,8 @@
                     <div class="data-card-body">
                       <div class="data-card-row">
                         <span class="data-card-label">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+  <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14">
+    <rect height="16" rx="2" width="20" x="2" y="4"></rect>
     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
   </svg>
   Email
@@ -995,7 +1014,7 @@
                       </div>
                       <div class="data-card-row">
                     <span class="data-card-label">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14">
     <path
         d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
   </svg>
@@ -1005,12 +1024,12 @@
                       </div>
                       <div class="data-card-row">
                  <span class="data-card-label">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-    <line x1="9" y1="6" x2="9" y2="6.01"></line>
-    <line x1="15" y1="6" x2="15" y2="6.01"></line>
-    <line x1="9" y1="10" x2="9" y2="10.01"></line>
-    <line x1="15" y1="10" x2="15" y2="10.01"></line>
+  <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14">
+    <rect height="20" rx="2" ry="2" width="16" x="4" y="2"></rect>
+    <line x1="9" x2="9" y1="6" y2="6.01"></line>
+    <line x1="15" x2="15" y1="6" y2="6.01"></line>
+    <line x1="9" x2="9" y1="10" y2="10.01"></line>
+    <line x1="15" x2="15" y1="10" y2="10.01"></line>
   </svg>
   Company
 </span>
@@ -1018,8 +1037,8 @@
                       </div>
                       <div class="data-card-row">
        <span class="data-card-label">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+  <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14">
+    <rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
   </svg>
   Designation
@@ -1029,43 +1048,43 @@
                     </div>
                     <div class="data-card-footer">
                       <div class="data-card-date">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
+                        <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                             width="12">
                           <circle cx="12" cy="12" r="10"></circle>
                           <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
                         <span>{{ formatDate(contact.createdAt) }}</span>
                       </div>
                       <div class="data-card-actions">
-                        <button @click="editContact(contact)" class="btn-card-action">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
+                        <button class="btn-card-action" @click="editContact(contact)">
+                          <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                               width="12">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                           </svg>
                           Edit
                         </button>
-                        <a :href="getContactCardUrl(contact.mobile)" target="_blank" class="btn-card-action">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
-                            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                        <a :href="getContactCardUrl(contact.mobile)" class="btn-card-action" target="_blank">
+                          <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                               width="12">
+                            <rect height="15" rx="2" ry="2" width="20" x="2" y="7"></rect>
                             <polyline points="22 7 13 13 2 7"></polyline>
                           </svg>
                           Card
                         </a>
-                        <button @click="openQrPopup1(contact)" class="btn-card-action">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
+                        <button class="btn-card-action" @click="openQrPopup1(contact)">
+                          <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                               width="12">
+                            <rect height="7" width="7" x="3" y="3"></rect>
+                            <rect height="7" width="7" x="14" y="3"></rect>
+                            <rect height="7" width="7" x="14" y="14"></rect>
+                            <rect height="7" width="7" x="3" y="14"></rect>
                           </svg>
                           QR
                         </button>
-                        <button @click="deleteContact(contact)" class="btn-card-action delete">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
+                        <button class="btn-card-action delete" @click="deleteContact(contact)">
+                          <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                               width="12">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path
                                 d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -1081,11 +1100,11 @@
               <div v-else-if="activeTab === 'review'">
 
                 <div v-if="canCreateReview" style="margin-bottom: 20px;">
-                  <button @click="createReview" class="btn-primary"
-                          style="display: flex; align-items: center; gap: 8px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;"
+                          @click="createReview">
+                    <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16">
+                      <line x1="12" x2="12" y1="5" y2="19"></line>
+                      <line x1="5" x2="19" y1="12" y2="12"></line>
                     </svg>
                     Add Review
                   </button>
@@ -1096,11 +1115,11 @@
                 </div>
 
                 <div v-if="review.length === 0" class="empty-state">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg fill="none" height="48" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="48">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <line x1="16" x2="8" y1="13" y2="13"></line>
+                    <line x1="16" x2="8" y1="17" y2="17"></line>
                     <polyline points="10 9 9 9 8 9"></polyline>
                   </svg>
                   <p>No reviews registered</p>
@@ -1129,15 +1148,15 @@
                         <td class="td-name">
                           <div class="name-cell">
                       <span class="cell-icon">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-    <line x1="9" y1="6" x2="9" y2="6.01"></line>
-    <line x1="15" y1="6" x2="15" y2="6.01"></line>
-    <line x1="9" y1="10" x2="9" y2="10.01"></line>
-    <line x1="15" y1="10" x2="15" y2="10.01"></line>
-    <line x1="9" y1="14" x2="9" y2="14.01"></line>
-    <line x1="15" y1="14" x2="15" y2="14.01"></line>
-    <line x1="9" y1="18" x2="15" y2="18"></line>
+  <svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18">
+    <rect height="20" rx="2" ry="2" width="16" x="4" y="2"></rect>
+    <line x1="9" x2="9" y1="6" y2="6.01"></line>
+    <line x1="15" x2="15" y1="6" y2="6.01"></line>
+    <line x1="9" x2="9" y1="10" y2="10.01"></line>
+    <line x1="15" x2="15" y1="10" y2="10.01"></line>
+    <line x1="9" x2="9" y1="14" y2="14.01"></line>
+    <line x1="15" x2="15" y1="14" y2="14.01"></line>
+    <line x1="9" x2="15" y1="18" y2="18"></line>
   </svg>
 </span>
                             <span>{{ item.branchName }}</span>
@@ -1145,26 +1164,26 @@
                         </td>
                         <td class="td-designation">{{ item.location || '-' }}</td>
                         <td class="td-website">
-                          <a v-if="item.googleLink" :href="item.googleLink" target="_blank" class="link-external">
+                          <a v-if="item.googleLink" :href="item.googleLink" class="link-external" target="_blank">
                             View Link
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2">
+                            <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                 width="12">
                               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                               <polyline points="15 3 21 3 21 9"></polyline>
-                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                              <line x1="10" x2="21" y1="14" y2="3"></line>
                             </svg>
                           </a>
                           <span v-else class="text-muted">-</span>
                         </td>
                         <td class="td-website">
-                          <a v-if="item.tripadvisorLink" :href="item.tripadvisorLink" target="_blank"
-                             class="link-external">
+                          <a v-if="item.tripadvisorLink" :href="item.tripadvisorLink" class="link-external"
+                             target="_blank">
                             View Link
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2">
+                            <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                 width="12">
                               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                               <polyline points="15 3 21 3 21 9"></polyline>
-                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                              <line x1="10" x2="21" y1="14" y2="3"></line>
                             </svg>
                           </a>
                           <span v-else class="text-muted">-</span>
@@ -1172,28 +1191,28 @@
                         <td class="td-date">{{ formatDate(item.createdAt) }}</td>
                         <td class="td-actions">
                           <div style="display: flex; align-items: center; justify-content: center; gap: 5px">
-                            <button @click="editReview(item)" class="btn-view-card" title="Edit Review">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                   stroke-width="2">
+                            <button class="btn-view-card" title="Edit Review" @click="editReview(item)">
+                              <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                   width="14">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                               </svg>
                               Edit
                             </button>
-                            <button @click="openReviewShareModal(item)" class="btn-view-card" title="View Share Page">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                   stroke-width="2">
+                            <button class="btn-view-card" title="View Share Page" @click="openReviewShareModal(item)">
+                              <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                   width="14">
                                 <circle cx="18" cy="5" r="3"></circle>
                                 <circle cx="6" cy="12" r="3"></circle>
                                 <circle cx="18" cy="19" r="3"></circle>
-                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
+                                <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
                               </svg>
                               Share
                             </button>
-                            <button @click="deleteReview(item)" class="btn-delete" title="Delete Review">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                   stroke-width="2">
+                            <button class="btn-delete" title="Delete Review" @click="deleteReview(item)">
+                              <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                   width="14">
                                 <polyline points="3 6 5 6 21 6"></polyline>
                                 <path
                                     d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -1213,7 +1232,7 @@
                     <div class="data-card-header">
                       <div class="data-card-title">
                     <span class="data-card-icon">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <svg fill="none" height="20" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="20">
     <polygon
         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
   </svg>
@@ -1224,12 +1243,12 @@
                     <div class="data-card-body">
                       <div class="data-card-row">
     <span class="data-card-label">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-    <line x1="9" y1="6" x2="9" y2="6.01"></line>
-    <line x1="15" y1="6" x2="15" y2="6.01"></line>
-    <line x1="9" y1="10" x2="9" y2="10.01"></line>
-    <line x1="15" y1="10" x2="15" y2="10.01"></line>
+  <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14">
+    <rect height="20" rx="2" ry="2" width="16" x="4" y="2"></rect>
+    <line x1="9" x2="9" y1="6" y2="6.01"></line>
+    <line x1="15" x2="15" y1="6" y2="6.01"></line>
+    <line x1="9" x2="9" y1="10" y2="10.01"></line>
+    <line x1="15" x2="15" y1="10" y2="10.01"></line>
   </svg>
   Company
 </span>
@@ -1237,7 +1256,7 @@
                       </div>
                       <div class="data-card-row">
             <span class="data-card-label">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14">
     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
     <circle cx="12" cy="10" r="3"></circle>
   </svg>
@@ -1247,28 +1266,28 @@
                       </div>
                       <div class="data-card-row">
                         <span class="data-card-label">Google</span>
-                        <a v-if="item.googleLink" :href="item.googleLink" target="_blank"
-                           class="data-card-value link">
+                        <a v-if="item.googleLink" :href="item.googleLink" class="data-card-value link"
+                           target="_blank">
                           View Link
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
+                          <svg fill="none" height="10" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                               width="10">
                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                             <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                            <line x1="10" x2="21" y1="14" y2="3"></line>
                           </svg>
                         </a>
                         <span v-else class="data-card-value" style="color: #8a7b75;">-</span>
                       </div>
                       <div class="data-card-row">
                         <span class="data-card-label">Tripadvisor</span>
-                        <a v-if="item.tripadvisorLink" :href="item.tripadvisorLink" target="_blank"
-                           class="data-card-value link">
+                        <a v-if="item.tripadvisorLink" :href="item.tripadvisorLink" class="data-card-value link"
+                           target="_blank">
                           View Link
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
+                          <svg fill="none" height="10" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                               width="10">
                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                             <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                            <line x1="10" x2="21" y1="14" y2="3"></line>
                           </svg>
                         </a>
                         <span v-else class="data-card-value" style="color: #8a7b75;">-</span>
@@ -1276,36 +1295,36 @@
                     </div>
                     <div class="data-card-footer">
                       <div class="data-card-date">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
+                        <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                             width="12">
                           <circle cx="12" cy="12" r="10"></circle>
                           <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
                         <span>{{ formatDate(item.createdAt) }}</span>
                       </div>
                       <div class="data-card-actions">
-                        <button @click="editReview(item)" class="btn-card-action">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
+                        <button class="btn-card-action" @click="editReview(item)">
+                          <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                               width="12">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                           </svg>
                           Edit
                         </button>
-                        <button @click="openReviewShareModal(item)" class="btn-card-action">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
+                        <button class="btn-card-action" @click="openReviewShareModal(item)">
+                          <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                               width="12">
                             <circle cx="18" cy="5" r="3"></circle>
                             <circle cx="6" cy="12" r="3"></circle>
                             <circle cx="18" cy="19" r="3"></circle>
-                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
+                            <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
                           </svg>
                           Share
                         </button>
-                        <button @click="deleteReview(item)" class="btn-card-action delete">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                               stroke-width="2">
+                        <button class="btn-card-action delete" @click="deleteReview(item)">
+                          <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                               width="12">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path
                                 d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -1338,20 +1357,20 @@
 
             <div class="qr-actions">
               <button class="btn-download" @click="downloadQr">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                   <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                  <line x1="12" x2="12" y1="15" y2="3"></line>
                 </svg>
                 Download
               </button>
               <button class="btn-share" @click="sharePoster">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16">
                   <circle cx="18" cy="5" r="3"></circle>
                   <circle cx="6" cy="12" r="3"></circle>
                   <circle cx="18" cy="19" r="3"></circle>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                  <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
+                  <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
                 </svg>
                 Share Poster
               </button>
@@ -1364,8 +1383,8 @@
     <!-- Edit Company Modal -->
     <Teleport to="body">
       <DashboardEditCompany
-          :show="showEditCompanyModal"
           :company="selectedCompany"
+          :show="showEditCompanyModal"
           @close="showEditCompanyModal = false"
           @saved="handleCompanySaved"
       />
@@ -1374,8 +1393,8 @@
     <!-- Edit Contact Modal -->
     <Teleport to="body">
       <DashboardEditContact
-          :show="showEditContactModal"
           :contact="selectedContact"
+          :show="showEditContactModal"
           :userId="selectedUser?.id"
           @close="showEditContactModal = false"
           @saved="handleContactSaved"
@@ -1384,10 +1403,10 @@
 
     <Teleport to="body">
       <DashboardEditReview
-          :show="showEditReviewModal"
-          :review="selectedReview"
-          :userId="selectedUser?.id"
           :companies="companies"
+          :review="selectedReview"
+          :show="showEditReviewModal"
+          :userId="selectedUser?.id"
           @close="showEditReviewModal = false"
           @saved="handleReviewSaved"
       />
@@ -1447,7 +1466,6 @@ const originalLimits = ref({companyLimit: 0, contactLimit: 0})
 const savingLimits = ref(false)
 
 const selectedCompanyFilter = ref('all')
-
 
 
 // Pagination
@@ -1840,6 +1858,15 @@ async function sharePoster() {
   });
 }
 
+const filterCreatedBy = ref('all')
+
+const uniqueAdmins = computed(() => {
+  const admins = (adminStore.users || [])
+      .map(u => u.createdBy)
+      .filter(Boolean)
+  return [...new Set(admins)].sort()
+})
+
 
 const filteredUsers = computed(() => {
   let users = adminStore.users || []
@@ -1862,6 +1889,11 @@ const filteredUsers = computed(() => {
     users = users.filter(
         user => user.plan === filterPlan.value
     )
+  }
+
+  // Inside filteredUsers computed, add after filterPlan block:
+  if (filterCreatedBy.value !== 'all') {
+    users = users.filter(u => u.createdBy === filterCreatedBy.value)
   }
 
   // Sort

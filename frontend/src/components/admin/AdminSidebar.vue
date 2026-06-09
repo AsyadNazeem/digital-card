@@ -9,15 +9,19 @@
         <div class="logo">
           <img
               v-if="!isCollapsed"
-              src="../../assets/images/logo.jpeg"
-              alt="Dashboard Logo"
+              src="../../../public/images/logo.webp"
+              alt="TapMyName Admin Dashboard"
               class="header-logo"
+              width="800"
+              height="44"
           />
           <div v-else class="logo-icon">
             <img
-                src="../../assets/images/smallLogo.jpeg"
-                alt="Dashboard Logo"
+                src="../../../public/images/smallLogo.webp"
+                alt="TapMyName"
                 class="header-smallLogo"
+                width="44"
+                height="44"
             />
           </div>
         </div>

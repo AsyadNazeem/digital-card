@@ -176,6 +176,48 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useHead } from '@vueuse/head'
+
+useHead({
+  title: 'Pricing | TapMyName',
+  meta: [
+    {
+      name: 'description',
+      content:
+          'View TapMyName pricing plans for individuals, professionals, teams and enterprises. Digital business cards with Apple Wallet, Google Wallet, QR codes and analytics.'
+    },
+
+    {
+      property: 'og:title',
+      content: 'Pricing | TapMyName'
+    },
+    {
+      property: 'og:description',
+      content:
+          'Compare Free, Plus, Premium and Custom plans for TapMyName digital business cards.'
+    },
+    {
+      property: 'og:url',
+      content: 'https://tapmy.name/pricing'
+    },
+    {
+      property: 'og:type',
+      content: 'website'
+    },
+
+    {
+      name: 'twitter:card',
+      content: 'summary_large_image'
+    }
+  ],
+
+  link: [
+    {
+      rel: 'canonical',
+      href: 'https://tapmy.name/pricing'
+    }
+  ]
+})
 
 const annual  = ref(false)
 const openFaq = ref(null)

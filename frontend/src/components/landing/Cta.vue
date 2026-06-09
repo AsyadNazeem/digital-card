@@ -22,14 +22,15 @@
         </div>
 
         <h2>
-          Launch your company’s
-          <em>digital business cards.</em>
+          Your business card,
+          <em>smarter with QR</em>
+          and Wallet.
         </h2>
 
         <p>
-          Create employee cards, manage teams,
-          distribute Apple Wallet and Google Wallet passes,
-          and track engagement from one centralized dashboard.
+          Stop handing out paper. Give every employee a digital card
+          with a built-in QR code, saved straight to Apple or Google Wallet -
+          all created, distributed and tracked from one company dashboard.
         </p>
 
         <!-- Trust pills -->

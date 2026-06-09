@@ -5,7 +5,15 @@
     <div class="branding-section">
       <div class="branding-content">
         <div class="logo-container">
-          <img src="/images/logo.jpeg" alt="TapMyName" class="main-logo" />
+          <img
+              src="/images/logo.webp"
+              alt="TapMyName Digital Business Card Platform"
+              class="main-logo"
+              width="800"
+              height="173"
+              loading="eager"
+              fetchpriority="high"
+          />
         </div>
         <h1 class="brand-title">Welcome Back</h1>
         <p class="brand-description">
@@ -249,6 +257,28 @@ import { ref, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../services/api.js'
 import Applesigninbutton from '@/components/user/Applesigninbutton.vue'
+import { useHead } from '@vueuse/head'
+
+useHead({
+  title: 'Login | TapMyName',
+  meta: [
+    {
+      name: 'description',
+      content:
+          'Sign in to your TapMyName account to manage digital business cards, contacts, analytics, Apple Wallet and Google Wallet passes.'
+    },
+    {
+      name: 'robots',
+      content: 'noindex, nofollow'
+    }
+  ],
+  link: [
+    {
+      rel: 'canonical',
+      href: 'https://tapmy.name/login'
+    }
+  ]
+})
 
 const router = useRouter()
 

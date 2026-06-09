@@ -18,14 +18,16 @@
       </div>
 
       <h2 class="fs-title">
-        Everything your company needs
-        <span>to manage digital business cards.</span>
+        Everything your team needs
+        <span>to share smarter</span>
+        with QR &amp; Wallet.
       </h2>
 
       <p class="fs-subtitle">
-        Create employee business cards, distribute Apple Wallet
-        and Google Wallet passes, manage teams, share instantly
-        with QR and links, and track engagement from one dashboard.
+        One tap shares a contact. One scan saves it forever.
+        Distribute QR-powered business cards to every employee,
+        push them straight to Apple and Google Wallet, and track
+        every interaction from a single admin dashboard.
       </p>
 
     </div>

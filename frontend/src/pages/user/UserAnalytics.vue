@@ -409,7 +409,6 @@
 <script setup>
 import { computed, inject, nextTick, ref, watch } from 'vue';
 import api from '@/services/api.js';
-import Chart from 'chart.js/auto';
 
 const theme = inject('theme', { isDark: ref(false) })
 const isDarkMode = theme.isDark
@@ -447,6 +446,7 @@ let clicksChartInstance = null;
 let deviceChartInstance = null;
 let browserChartInstance = null;
 let peakHoursChartInstance = null;
+let Chart = null;
 
 // ── Computed ──
 const hasAnalyticsAccess = computed(() => ['plus', 'pro', 'demo', 'custom'].includes(props.userPlan));
@@ -483,14 +483,18 @@ async function loadAnalytics() {
 const CHART_COLORS = ['#7c5c4e', '#a07060', '#c19a6b', '#d4af37', '#5e443a', '#deb887'];
 const CHART_TOOLTIP = { backgroundColor: 'rgba(28,20,16,0.92)', padding: 12, titleColor: '#fff', bodyColor: '#f0e8e4', borderColor: '#7c5c4e', borderWidth: 1 };
 
-function renderCharts() {
+async function renderCharts() {
+  if (!Chart) {
+    const module = await import('chart.js/auto');
+    Chart = module.default;
+  }
+
   renderTimelineChart();
   renderClicksChart();
   renderDeviceChart();
   renderBrowserChart();
   renderPeakHoursChart();
 }
-
 function renderTimelineChart() {
   if (!timelineChart.value) return;
   if (timelineChartInstance) { timelineChartInstance.destroy(); timelineChartInstance = null; }

@@ -2,9 +2,13 @@
   <header :class="['top-header', { 'dark-mode': isDarkMode }]">
     <div class="header-content">
       <img
-          src="../../assets/images/logo.jpeg"
-          alt="Logo"
+          src="../../../public/images/logo.webp"
+          alt="Tapmyname digital business card Logo"
           class="header-logo"
+          width="800"
+          height="173"
+          loading="eager"
+          fetchpriority="high"
       />
 
       <div class="header-right">

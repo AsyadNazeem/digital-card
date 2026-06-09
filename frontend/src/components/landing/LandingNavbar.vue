@@ -2,7 +2,15 @@
   <nav class="navbar" :class="{ 'dark-mode': isDark }">
     <div class="nav-container">
       <router-link to="/" class="logo-wrap">
-        <img src="/images/logo.jpeg" alt="TapMyName" class="logo-img" />
+        <img
+            src="/images/logo.webp"
+            alt="TapMyName Digital Business Card Platform"
+            class="logo-img"
+            width="800"
+            height="173"
+            loading="eager"
+            fetchpriority="high"
+        />
       </router-link>
 
       <div class="nav-links">
@@ -12,7 +20,7 @@
         <router-link to="/features">Features</router-link>
         <router-link to="/pricing">Pricing</router-link>
         <router-link to="/contact">Contact</router-link>
-        <router-link to="/about">About</router-link>
+<!--        <router-link to="/about">About</router-link>-->
 
         <button class="theme-toggle" @click="toggleTheme" :title="isDark ? 'Switch to light' : 'Switch to dark'">
           <span v-if="isDark">☀</span>
@@ -35,7 +43,7 @@
         <router-link to="/features" @click="mobileOpen = false">Features</router-link>
         <router-link to="/pricing"  @click="mobileOpen = false">Pricing</router-link>
         <router-link to="/contact"  @click="mobileOpen = false">Contact</router-link>
-        <router-link to="/about"    @click="mobileOpen = false">About</router-link>
+<!--        <router-link to="/about"    @click="mobileOpen = false">About</router-link>-->
         <router-link to="/login"    @click="mobileOpen = false" class="mobile-login-btn">Login</router-link>
         <button class="theme-toggle mobile-theme" @click="toggleTheme">
           {{ isDark ? '☀ Light Mode' : '☾ Dark Mode' }}
@@ -114,11 +122,12 @@ function toggleTheme() {
 }
 
 .logo-img {
+  width: 203px;
   height: 44px;
-  width: auto;
   object-fit: contain;
   border-radius: 10px;
 }
+
 
 /* ── Desktop links ── */
 .nav-links {

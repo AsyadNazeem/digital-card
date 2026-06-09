@@ -1,5 +1,5 @@
 <template>
-  <div class="features-page" :class="{ 'dark-mode': isDark }">
+  <main class="features-page" :class="{ 'dark-mode': isDark }">
 
     <!-- ═══════════════════════════════════════════
          PHONE VIDEO SHOWCASE (HERO SECTION)
@@ -40,19 +40,21 @@
             >
               <source
                   :src="isDark
-    ? '/videos/DigitalCardSRDark.mp4'
-    : '/videos/DigitalCardSR.MP4'"
-                  type="video/mp4"
+    ? '/videos/DigitalCardSRDark.webm'
+    : '/videos/DigitalCardSR.webm'"
+                  type="video/webm"
               />
             </video>
 
             <!-- Phone frame sits ON TOP (z-index 3) -->
             <img
-                src="/images/Iphone-mockup.png"
+                src="/images/Iphone-mockup.webp"
                 alt="iPhone Mockup"
                 class="phone-frame"
                 ref="frameRef"
                 @load="onFrameLoad"
+                fetchpriority="high"
+                width="1024"
             />
           </div>
 
@@ -90,7 +92,7 @@
 
           <p class="showcase-subheading">
             Every team member gets a premium digital business card with built-in analytics, wallet integration, and team
-            management — all designed for enterprise adoption.
+            management - all designed for enterprise adoption.
           </p>
 
           <!-- Feature highlights row -->
@@ -170,7 +172,7 @@
             <span class="highlight">Natively.</span>
           </h2>
           <p class="wallet-subtitle">
-            Your digital card installs directly into the native wallet app on any device —
+            Your digital card installs directly into the native wallet app on any device -
             no app downloads, no friction, just tap and share.
           </p>
         </div>
@@ -185,7 +187,13 @@
               </svg>
               <span>Apple Wallet</span>
             </div>
-            <img :src=" isDark ? '/images/AppleWalletCard.png' : '/images/AppleWalletCardLight.png'" alt="Apple Wallet Card" class="wallet-phone__img apple" />
+            <img
+                :src="isDark ? '/images/AppleWalletCard.webp' : '/images/AppleWalletCardLight.webp'"
+                alt="TapMyName card in Apple Wallet"
+                class="wallet-phone__img apple"
+                width="240"
+                height="427"
+            />
           </div>
 
           <!-- Divider pill -->
@@ -202,15 +210,12 @@
               <span>Google Wallet</span>
             </div>
             <img
-                :src=" isDark ? '/images/GooglWalletCard.png' : '/images/googleWalletLight.png'"
-                :alt=" isDark ? 'Google Wallet Card Dark' : 'Google Wallet Card Light'" class="wallet-phone__img google"
+                :src="isDark ? '/images/GooglWalletCard.webp' : '/images/googleWalletLight.webp'"
+                :alt="isDark ? 'TapMyName card in Google Wallet dark mode' : 'TapMyName card in Google Wallet light mode'"
+                class="wallet-phone__img google"
+                width="290"
+                height="516"
             />
-
-<!--            <img-->
-<!--                :src="isDark ? '/images/analyticNewDark.png' : '/images/analyticNewLight.png'"-->
-<!--                :alt="isDark ? 'Analytics Dashboard Dark' : 'Analytics Dashboard Light'"-->
-<!--                class="analytics-laptop"-->
-<!--            />-->
           </div>
 
         </div>
@@ -239,7 +244,7 @@
 
           <p class="analytics-subtitle">
             Every view, click, and interaction is tracked in real time.
-            See who opened your card, when they did it, and what they tapped —
+            See who opened your card, when they did it, and what they tapped -
             so you can follow up at exactly the right moment.
           </p>
 
@@ -284,9 +289,11 @@
         <div class="analytics-visual">
           <div class="analytics-glow"></div>
           <img
-              :src="isDark ? '/images/analyticNewDark.png' : '/images/analyticNewLight.png'"
-              :alt="isDark ? 'Analytics Dashboard Dark' : 'Analytics Dashboard Light'"
+              :src="isDark ? '/images/analyticNewDark.webp' : '/images/analyticNewLight.webp'"
+              :alt="isDark ? 'Analytics dashboard dark mode' : 'Analytics dashboard light mode'"
               class="analytics-laptop"
+              width="1536"
+              height="1024"
           />
         </div>
 
@@ -314,7 +321,7 @@
 
           <p class="team-subtitle">
             Create companies, add employees, assign cards, and manage everyone
-            from a single dashboard — across desktop and mobile.
+            from a single dashboard - across desktop and mobile.
           </p>
 
           <div class="team-feature-list">
@@ -371,15 +378,19 @@
 
           <div class="team-slides">
             <img
-                src="/images/companyLight.png"
-                alt="Company Management Dashboard"
+                :src="isDark ? '/images/companyDark.webp' : '/images/companyLight.webp'"
+                :alt="isDark ? 'Company management dashboard dark mode' : 'Company management dashboard light mode'"
                 class="team-slide"
+                width="1310"
+                height="771"
                 :class="{ active: teamSlide === 0 }"
             />
             <img
-                src="/images/contactLight.png"
-                alt="Contact Management Dashboard"
+                :src="isDark ? '/images/contactDark.webp' : '/images/contactLight.webp'"
+                :alt="isDark ? 'Contact management dashboard dark mode' : 'Contact management dashboard light mode'"
                 class="team-slide"
+                width="1310"
+                height="771"
                 :class="{ active: teamSlide === 1 }"
             />
           </div>
@@ -410,7 +421,7 @@
 
           <p class="qr-subtitle">
             Every card comes with a unique QR code. Print it, share it,
-            embed it — works anywhere, no app required on the other end.
+            embed it - works anywhere, no app required on the other end.
           </p>
 
           <div class="qr-feature-list">
@@ -439,7 +450,7 @@
               <div class="qr-feature-icon">♾️</div>
               <div class="qr-feature-text">
                 <strong>Always Up to Date</strong>
-                <span>The QR never changes — update your card details and it reflects instantly.</span>
+                <span>The QR never changes - update your card details and it reflects instantly.</span>
               </div>
             </div>
           </div>
@@ -449,9 +460,11 @@
         <div class="qr-visual">
           <div class="qr-glow"></div>
           <img
-              :src="isDark ? '/images/qrDark.png' : '/images/qrlight.png'"
-              :alt="isDark ? 'QR Code Dark' : 'QR Code Light'"
+              :src="isDark ? '/images/qrDark.webp' : '/images/qrLight.webp'"
+              :alt="isDark ? 'Digital business card QR code dark mode' : 'Digital business card QR code light mode'"
               class="qr-image"
+              width="1536"
+              height="1024"
           />
         </div>
 
@@ -476,11 +489,12 @@
       </div>
     </section>
 
-  </div>
+  </main>
 </template>
 
 <script setup>
 import {inject, onMounted, onUnmounted, ref, watch} from 'vue'
+import { useHead } from '@vueuse/head'
 
 const { isDark, toggleDarkMode } = inject('theme')
 
@@ -497,6 +511,18 @@ let videoReady = false
 const teamSlide = ref(0)
 let teamTimer = null
 
+
+useHead({
+  title: 'Features | TapMyName',
+  meta: [
+    {
+      name: 'description',
+      content:
+          'Explore TapMyName features including digital business cards, Apple Wallet integration, Google Wallet support, QR codes, analytics, and team management.'
+    }
+  ]
+})
+
 function resetTeamTimer() {
   if (teamTimer) clearInterval(teamTimer)
   teamTimer = setInterval(() => {
@@ -504,7 +530,7 @@ function resetTeamTimer() {
   }, 4000)
 }
 
-/* ─── Screen corners as fractions of the PNG (1024 × 1536) ───
+/* ─── Screen corners as fractions of the webp (1024 × 1536) ───
    DO NOT CHANGE - Measured by scanning the actual pixel boundaries of the screen.
    TL = top-left, TR = top-right, BR = bottom-right, BL = bottom-left
    These are PERCENTAGES of the mockup image dimensions.                          */
@@ -592,7 +618,7 @@ function drawFrame() {
 
     We subdivide into a grid for smooth perspective correction.
   */
-  const SEGS = 8  // subdivision grid — higher = more accurate perspective
+  const SEGS = window.innerWidth < 768 ? 4 : 8  // subdivision grid — higher = more accurate perspective
 
   for (let row = 0; row < SEGS; row++) {
     for (let col = 0; col < SEGS; col++) {
@@ -768,7 +794,7 @@ const features = [
   {
     icon: '🔒',
     title: 'Secure Cloud Storage',
-    desc: 'Your data is encrypted and always synced — update your profile once and it reflects everywhere instantly.'
+    desc: 'Your data is encrypted and always synced - update your profile once and it reflects everywhere instantly.'
   },
   {
     icon: '🎨',
@@ -778,7 +804,7 @@ const features = [
   {
     icon: '🔗',
     title: 'QR Code Generation',
-    desc: 'Every card comes with a unique QR code. Print it, share it, embed it — works anywhere.'
+    desc: 'Every card comes with a unique QR code. Print it, share it, embed it - works anywhere.'
   },
   {
     icon: '📇',
@@ -788,7 +814,7 @@ const features = [
   {
     icon: '🌐',
     title: 'Public Profile Page',
-    desc: 'Each card gets a shareable link — a beautiful micro-site that works on any browser.'
+    desc: 'Each card gets a shareable link - a beautiful micro-site that works on any browser.'
   },
 ]
 </script>
@@ -1494,14 +1520,14 @@ const features = [
 }
 
 .wallet-phone__img {
-  width: 260px;          /* was 240px — bigger */
+  width: 240px;          /* was 240px — bigger */
   height: auto;
   display: block;
   filter: drop-shadow(0 32px 60px rgba(0, 0, 0, 0.35));
 }
 
 .google {
-  width: 320px;
+  width: 290px;
 }
 
 /* Divider between phones */
@@ -1680,7 +1706,7 @@ const features = [
 
 .analytics-laptop {
   width: 100%;
-  max-width: 680px;
+  max-width: 620px;
   height: auto;
   display: block;
   position: relative;
@@ -1826,11 +1852,12 @@ const features = [
 .team-slides {
   position: relative;
   width: 100%;
+  aspect-ratio: 1310 / 771;
   z-index: 1;
 }
 
 .team-slide {
-  width: 100%;
+  width: 90%;
   height: auto;
   display: block;
   position: absolute;
@@ -1999,7 +2026,7 @@ const features = [
 }
 
 .qr-image {
-  width: 130%;
+  width: 100%;
   max-width: 920px;        /* ← bigger, up from 600px */
   height: auto;
   display: block;
@@ -2259,6 +2286,15 @@ const features = [
 
   .showcase-headline {
     font-size: 1.8rem;
+  }
+
+  .phone-mockup,
+  .wallet-phone--apple,
+  .wallet-phone--google,
+  .analytics-laptop,
+  .qr-image,
+  .feature-badge {
+    animation: none;
   }
 }
 

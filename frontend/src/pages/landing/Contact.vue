@@ -41,7 +41,7 @@
 
           <div class="hours-block">
             <h4>Business Hours</h4>
-            <p>Mon – Fri: 9:00 AM – 6:00 PM (GMT+5:30)</p>
+            <p>Mon – Fri: 9:00 AM – 6:00 PM (PST)</p>
             <p>Weekends: Email support only</p>
           </div>
         </div>
@@ -100,7 +100,7 @@
       <div class="map-inner">
         <div class="map-placeholder">
           <span class="map-pin">📍</span>
-          <p>Colombo, Sri Lanka</p>
+          <p>California, USA</p>
           <span class="map-sub">Global team · Fully remote-friendly</span>
         </div>
       </div>
@@ -111,9 +111,53 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
+import { useHead } from '@vueuse/head'
+
+useHead({
+  title: 'Contact | TapMyName',
+  meta: [
+    {
+      name: 'description',
+      content:
+          'Contact TapMyName for sales enquiries, product demos, technical support, pricing questions, and digital business card solutions.'
+    },
+
+    {
+      property: 'og:title',
+      content: 'Contact | TapMyName'
+    },
+    {
+      property: 'og:description',
+      content:
+          'Get in touch with the TapMyName team for support, demos, pricing information, and business enquiries.'
+    },
+    {
+      property: 'og:url',
+      content: 'https://tapmy.name/contact'
+    },
+    {
+      property: 'og:type',
+      content: 'website'
+    },
+
+    {
+      name: 'twitter:card',
+      content: 'summary_large_image'
+    }
+  ],
+
+  link: [
+    {
+      rel: 'canonical',
+      href: 'https://tapmy.name/contact'
+    }
+  ]
+})
 
 const submitting = ref(false)
 const submitted  = ref(false)
+
+const apiBase = import.meta.env.VITE_API_BASE_URL || ''
 
 const form = reactive({
   firstName: '',
@@ -125,18 +169,42 @@ const form = reactive({
 
 async function handleSubmit() {
   submitting.value = true
-  // Simulate API call
-  await new Promise(r => setTimeout(r, 1400))
-  submitting.value = false
-  submitted.value  = true
-  Object.keys(form).forEach(k => (form[k] = ''))
-  setTimeout(() => (submitted.value = false), 4000)
+  try {
+    const res = await fetch(`${apiBase}/api/contact/contact-form`, {  // ← backticks, not quotes
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName: form.firstName,
+        lastName:  form.lastName,
+        email:     form.email,
+        subject:   form.subject,
+        message:   form.message,
+      }),
+    })
+
+    // Guard against HTML error pages returning instead of JSON
+    const contentType = res.headers.get("content-type") || ""
+    if (!contentType.includes("application/json")) {
+      throw new Error(`Server error (${res.status}) — check API URL and CORS config`)
+    }
+
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message)
+
+    submitted.value = true
+    Object.keys(form).forEach(k => (form[k] = ""))
+    setTimeout(() => (submitted.value = false), 4000)
+  } catch (err) {
+    console.error("Contact form error:", err)
+    alert("Failed to send message. Please try again.")
+  } finally {
+    submitting.value = false
+  }
 }
 
 const infoItems = [
-  { icon: '✉️', title: 'Email',    value: 'hello@tapmyname.com'  },
-  { icon: '📞', title: 'Phone',    value: '+94 11 234 5678'       },
-  { icon: '📍', title: 'Location', value: 'Colombo, Sri Lanka'    },
+  { icon: '✉️', title: 'Email',    value: 'hello@tapmyname.com' },
+  { icon: '📍', title: 'Location', value: 'California, USA' },
 ]
 
 const socials = [

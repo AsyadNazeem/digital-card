@@ -4,7 +4,13 @@
     <div class="footer-inner">
 
       <div class="footer-brand">
-        <img :src="'/images/logo.jpeg'" class="footer-logo" />
+        <img :src="'/images/logo.webp'"
+             class="footer-logo"
+             width="140"
+             height="30"
+             alt="TapMyName Logo"
+        />
+
         <p>Modern digital business cards for professionals and teams.</p>
         <div class="social-row">
           <a href="#" class="social-btn">𝕏</a>
@@ -45,10 +51,10 @@
 </template>
 
 <script setup>
-import { inject } from 'vue'
+import {inject} from 'vue'
 
 // Inject isDark from parent (LandingLayout) to sync theme
-const { isDark, toggleDarkMode } = inject('theme')
+const {isDark, toggleDarkMode} = inject('theme')
 </script>
 
 <style scoped>

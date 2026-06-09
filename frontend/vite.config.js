@@ -1,39 +1,55 @@
-import { defineConfig, loadEnv } from 'vite'
+import {defineConfig, loadEnv} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import * as path from "node:path";
+import {visualizer} from 'rollup-plugin-visualizer'
 
-// https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, process.cwd(), '')
+export default defineConfig(({mode}) => {
+    const env = loadEnv(mode, process.cwd(), '')
 
-  console.log('🔧 Building for mode:', mode)
-  console.log('🌐 API Base URL:', env.VITE_API_BASE_URL)
-  console.log('🏠 Frontend URL:', env.VITE_FRONTEND_URL)
+    console.log('🔧 Building for mode:', mode)
+    console.log('🌐 API Base URL:', env.VITE_API_BASE_URL)
+    console.log('🏠 Frontend URL:', env.VITE_FRONTEND_URL)
 
-  return {
-    plugins: [vue()],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-      },
-    },
-    base: '/',
+    return {
+        plugins: [
+            vue(),
+            visualizer({
+                open: true,
+                gzipSize: true,
+                brotliSize: true,
+            })
+        ],
+        resolve: {
+            alias: {
+                '@': path.resolve(__dirname, './src'),
+            },
+        },
+        base: '/',
 
-    build: {
-      manifest: true,
-      rollupOptions: {
-        output: {
-          entryFileNames: `assets/[name]-[hash].js`,
-          chunkFileNames: `assets/[name]-[hash].js`,
-          assetFileNames: `assets/[name]-[hash].[ext]`
+        build: {
+            manifest: true,
+            rollupOptions: {
+                output: {
+                    entryFileNames: `assets/[name]-[hash].js`,
+                    chunkFileNames: `assets/[name]-[hash].js`,
+                    assetFileNames: `assets/[name]-[hash].[ext]`
+                }
+            }
+        },
+
+        server: {
+            port: 5173,
+            strictPort: true,
+            proxy: {
+                '/api': {
+                    target: env.VITE_API_BASE_URL || 'http://localhost:4000',
+                    changeOrigin: true,
+                },
+                '/uploads': {
+                    target: env.VITE_API_BASE_URL || 'http://localhost:4000',
+                    changeOrigin: true,
+                }
+            }
         }
-      }
-    },
-
-    server: {
-      port: 5173,
-      strictPort: true,
     }
-  }
 })

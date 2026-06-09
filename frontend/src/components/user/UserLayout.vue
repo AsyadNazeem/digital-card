@@ -119,21 +119,53 @@ import {
   inject,
   watch
 } from 'vue'
-
+import { defineAsyncComponent } from 'vue'
 import api from '@/services/api.js'
 import UserSettings from '@/components/user/UserSettings.vue'
 import RequestLimitPopup from '@/components/user/UserRequestModel.vue'
-import UserCompanySection from '@/pages/user/UserCompany.vue'
-import UserContactSection from '@/pages/user/UserContact.vue'
-import UserReviewSection from '@/pages/user/UserReview.vue'
-import UserAnalytics from '@/pages/user/UserAnalytics.vue'
-import UserTheme from '@/pages/user/UserThemes.vue'
 import UserPhoneModal from '@/components/user/UserPhoneModel.vue'
 import UserHeader from "@/components/user/UserHeader.vue"
 import UserNavbar from "@/components/user/UserNavbar.vue"
 import UserUpgrade from '@/components/user/UserUpgrade.vue'
 import UserContactFloat from '@/components/user/UserContactFloat.vue'
 import UserPlanExpiredPopup from '@/components/user/UserPlanExpiredPopup.vue'
+import { useHead } from '@vueuse/head'
+
+useHead({
+  title: 'Dashboard | TapMyName',
+  meta: [
+    {
+      name: 'robots',
+      content: 'noindex, nofollow'
+    }
+  ],
+  link: [
+    {
+      rel: 'canonical',
+      href: 'https://tapmy.name/dashboard'
+    }
+  ]
+})
+
+const UserAnalytics = defineAsyncComponent(() =>
+    import('@/pages/user/UserAnalytics.vue')
+)
+
+const UserCompanySection = defineAsyncComponent(() =>
+    import('@/pages/user/UserCompany.vue')
+)
+
+const UserContactSection = defineAsyncComponent(() =>
+    import('@/pages/user/UserContact.vue')
+)
+
+const UserReviewSection = defineAsyncComponent(() =>
+    import('@/pages/user/UserReview.vue')
+)
+
+const UserTheme = defineAsyncComponent(() =>
+    import('@/pages/user/UserThemes.vue')
+)
 
 import { useRouter } from 'vue-router'
 

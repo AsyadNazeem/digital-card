@@ -475,20 +475,12 @@
             <span class="section-number">06</span>
             <span class="section-title">Company Bio</span>
           </div>
-          <QuillEditor
-              v-model:content="companyForm.bio"
-              contentType="html"
-              theme="snow"
-              :toolbar="[
-              ['bold','italic','underline'],
-              [{ header: [1,2,3,false] }],
-              [{ list: 'ordered' }, { list: 'bullet' }],
-              ['link'],
-              ['clean']
-            ]"
-              class="quill-editor"
-              placeholder="Write a short description of your company…"
-          />
+          <Suspense>
+            <CompanyBioEditor
+                v-if="showCompanyForm"
+                v-model="companyForm.bio"
+            />
+          </Suspense>
         </div>
 
         <!-- ── SECTION: Social Media ── -->
@@ -605,11 +597,9 @@
 </template>
 
 <script setup>
-import {computed, inject, onMounted, ref, watch} from 'vue';
+import {computed, inject, onMounted, ref, watch, defineAsyncComponent} from 'vue';
 import api from '@/services/api.js';
 import {VITE_IMAGE_UPLOAD_URL} from '@/config.js';
-import {QuillEditor} from '@vueup/vue-quill';
-import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import CountrySelector from '@/components/common/CountrySelector.vue';
 import ImageCropperModal from '@/components/contactCard/ImageCropper.vue';
 import AlertModal from '@/components/user/AlertModal.vue'; // ← NEW
@@ -623,6 +613,10 @@ const props = defineProps({
   companyCount: {type: Number, required: true},
   userLimits: {type: Object, required: true}
 });
+
+const CompanyBioEditor = defineAsyncComponent(() =>
+    import('@/components/common/CompanyBioEditor.vue')
+)
 
 const emit = defineEmits(['company-added', 'company-deleted', 'company-updated']);
 

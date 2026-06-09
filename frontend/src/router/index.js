@@ -1,22 +1,22 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Login from "../pages/user/Login.vue";
-import Register from "../pages/user/Register.vue";
-import UserLayout from "../components/user/UserLayout.vue";
-import PublicCard from "../pages/common/PublicCard.vue";
-import ResetPassword from "../pages/user/ResetPassword.vue";
-import AdminLogin from "../pages/admin/AdminLogin.vue";
-import ReviewShare from "../pages/common/ReviewShare.vue";
+const Login = () => import("../pages/user/Login.vue");
+const Register = () => import("../pages/user/Register.vue");
+const UserLayout = () => import("../components/user/UserLayout.vue");
+const PublicCard = () => import("../pages/common/PublicCard.vue");
+const ResetPassword = () => import("../pages/user/ResetPassword.vue");
+const AdminLogin = () => import("../pages/admin/AdminLogin.vue");
+const ReviewShare = () => import("../pages/common/ReviewShare.vue");
 
-// ── Landing shell + pages ──
-import LandingLayout from "../components/landing/LandingLayout.vue";
-import Home     from "../pages/landing/Home.vue";
-import Features from "../pages/landing/Features.vue";
-import Pricing  from "../pages/landing/Pricing.vue";
-import Contact  from "../pages/landing/Contact.vue";
-import About    from "../pages/landing/About.vue";
+const LandingLayout = () => import("../components/landing/LandingLayout.vue");
+const Home = () => import("../pages/landing/Home.vue");
+const Features = () => import("../pages/landing/Features.vue");
+const Pricing = () => import("../pages/landing/Pricing.vue");
+const Contact = () => import("../pages/landing/Contact.vue");
+// import About    from "../pages/landing/About.vue";
 
 // ✅ IMPORT AdminMessages directly from components
-import AdminMessages from "../components/admin/AdminMessage.vue";
+const AdminMessages = () =>
+    import("../components/admin/AdminMessage.vue");
 
 import { startIdleTimer, stopIdleTimer } from "../utils/idleLogout";
 import { useAdminStore } from "@/store/adminStore.js";
@@ -74,7 +74,7 @@ const routes = [
             { path: "features", name: "Features", component: Features },
             { path: "pricing",  name: "Pricing",  component: Pricing  },
             { path: "contact",  name: "Contact",  component: Contact  },
-            { path: "about",    name: "About",    component: About    },
+            // { path: "about",    name: "About",    component: About    },
         ],
     },
     // { path: "/", redirect: "/login" },

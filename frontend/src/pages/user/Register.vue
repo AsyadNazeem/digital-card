@@ -4,7 +4,15 @@
     <div class="branding-section">
       <div class="branding-content">
         <div class="logo-container">
-          <img src="/images/logo.jpeg" alt="TapMyName" class="main-logo" />
+          <img
+              src="/images/logo.webp"
+              alt="TapMyName Digital Business Card Platform"
+              class="main-logo"
+              width="800"
+              height="173"
+              loading="eager"
+              fetchpriority="high"
+          />
         </div>
         <h1 class="brand-title">Start Networking Smarter</h1>
         <p class="brand-description">
@@ -277,6 +285,28 @@ import { useRouter } from 'vue-router'
 import api from '../../services/api.js'
 import countriesData from '../../assets/country_code.json'
 import Applesigninbutton from "@/components/user/Applesigninbutton.vue"
+import { useHead } from '@vueuse/head'
+
+useHead({
+  title: 'Create Account | TapMyName',
+  meta: [
+    {
+      name: 'description',
+      content:
+          'Create your TapMyName account and start sharing digital business cards with QR codes, Apple Wallet, Google Wallet integration, contact sharing and analytics.'
+    },
+    {
+      name: 'robots',
+      content: 'noindex, nofollow'
+    }
+  ],
+  link: [
+    {
+      rel: 'canonical',
+      href: 'https://tapmy.name/register'
+    }
+  ]
+})
 
 const router = useRouter()
 const { isDark, toggleDarkMode } = inject('theme')

@@ -4,7 +4,15 @@
     <div class="branding-section">
       <div class="branding-content">
         <div class="logo-container">
-          <img src="/images/logo.jpeg" alt="TapMyName" class="main-logo" />
+          <img
+              src="/images/logo.webp"
+              alt="TapMyName Digital Business Card Platform"
+              class="main-logo"
+              width="800"
+              height="173"
+              loading="eager"
+              fetchpriority="high"
+          />
         </div>
         <h1 class="brand-title">Digital Business Cards</h1>
         <p class="brand-description">
